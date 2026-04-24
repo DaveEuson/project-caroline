@@ -101,11 +101,11 @@ Copy and paste this prompt into your existing AI to generate a highly tailored p
 ## Roadmap
 
 ```
-v1.0 — Ship it. The foundation.                                    [██████████]
-v2.0 — Agent layer (persistent memory, proactive messages).        [████████░░]
-v3.0 — Widget marketplace (community builds).                      [███░░░░░░░]
-v4.0 — Hardware agnostic (phones, tablets, cloud, Windows, Mac).   [█░░░░░░░░░]
-v5.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░░░░░░░░░]
+v0.1 — Core kiosk: chat, widgets, smart home, Pomodoro.            [██████████]
+v0.2 — Agent loop, auto-tasks, installer, CI pipeline.             [██████████]  ← you are here
+v0.3 — GitHub remote, public release, widget marketplace.          [░░░░░░░░░░]
+v1.0 — Hardware agnostic (Windows, Mac, tablet, cloud).            [░░░░░░░░░░]
+v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░░░░░░░░░]
 ```
 
 ---
