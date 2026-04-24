@@ -20,8 +20,6 @@ DIM='\033[2m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-# ── GITHUB SOURCE ─────────────────────────────────────────────
-GITHUB_RAW="https://raw.githubusercontent.com/daveeuson/project-caroline/main"
 
 # ── SPINNER ───────────────────────────────────────────────────
 spin() {
@@ -211,6 +209,7 @@ mkdir -p "$REAL_HOME/.node-red"
 cat > "$REAL_HOME/.node-red/settings.js" << 'SETTINGS_EOF'
 module.exports = {
     uiPort: process.env.PORT || 1880,
+    uiHost: "0.0.0.0",
     functionGlobalContext: {
         fs:     require('fs'),
         crypto: require('crypto'),
@@ -238,11 +237,12 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   fi
   echo -e "${GREEN}  ✓ Ollama installed${RESET}"
 
-  echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL} — this is her brain. Worth the wait.${RESET}"
-  # ollama serve >/dev/null 2>&1 &
-  # OLLAMA_PID=$!
-  # sleep 3
+  echo -e "${YELLOW}  ► Starting Ollama service...${RESET}"
+  sudo systemctl enable ollama 2>/dev/null || true
+  sudo systemctl start ollama 2>/dev/null || true
+  sleep 3
 
+  echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL} — this is her brain. Worth the wait.${RESET}"
   ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
   PULL_PID=$!
   spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
@@ -253,9 +253,6 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
     echo -e "${YELLOW}  ⚠ Model pull failed — run 'ollama pull ${OLLAMA_MODEL}' manually after install${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-pull.log${RESET}"
   fi
-
-  kill "$OLLAMA_PID" 2>/dev/null || true
-  wait "$OLLAMA_PID" 2>/dev/null || true
 fi
 
 # ── DATA DIRECTORY ───────────────────────────────────────────
@@ -271,37 +268,35 @@ phase "PHASE 4 — DEPLOYING CAROLINE'S PAYLOAD"
 
 mkdir -p "$CAROLINE_DIR"
 
-echo -e "${YELLOW}  ► Syncing Caroline files from GitHub...${RESET}"
+echo -e "${YELLOW}  ► Cloning Caroline from GitHub...${RESET}"
 
-download_file() {
-  local src="$1" dest="$2" label="$3"
-  if [ -f "$dest" ]; then
-    echo -e "${DIM}    $label already present — skipping download${RESET}"
-    return 0
-  fi
-  curl -fsSL "$src" -o "$dest" 2>/tmp/caroline-dl.log && \
-    echo -e "${GREEN}    ✓ Downloaded $label${RESET}" || {
-    echo -e "${YELLOW}    ⚠ Could not download $label — check internet connection${RESET}"
-    echo -e "${DIM}      Manual: curl -fsSL $src -o $dest${RESET}"
-    return 1
+CLONE_DIR="$REAL_HOME/project-caroline"
+
+if [ -d "$CLONE_DIR/.git" ]; then
+  echo -e "${DIM}    Repo already present — pulling latest...${RESET}"
+  git -C "$CLONE_DIR" pull --ff-only 2>/tmp/caroline-git.log || \
+    echo -e "${YELLOW}    ⚠ git pull failed — using existing clone${RESET}"
+else
+  git clone "https://github.com/daveeuson/project-caroline.git" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
+    echo -e "${RED}  ✗ Git clone failed. Check your internet connection.${RESET}"
+    echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
+    exit 1
   }
-}
+fi
 
-download_file "$GITHUB_RAW/caroline-kiosk.html"      "$CAROLINE_DIR/caroline-kiosk.html"      "caroline-kiosk.html"
-download_file "$GITHUB_RAW/flows.json"               "$CAROLINE_DIR/flows.json"               "flows.json"
-download_file "$GITHUB_RAW/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-agent-loop.json" "caroline-agent-loop.json (optional)"
-download_file "$GITHUB_RAW/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-auto-tasks.json" "caroline-auto-tasks.json (optional)"
-download_file "$GITHUB_RAW/assets/caroline.gif"      "$CAROLINE_DIR/caroline.gif"             "caroline.gif (avatar)"
-download_file "$GITHUB_RAW/assets/cat.gif"           "$CAROLINE_DIR/cat.gif"                  "cat.gif (avatar, optional)"
-download_file "$GITHUB_RAW/assets/robot.gif"         "$CAROLINE_DIR/robot.gif"                "robot.gif (avatar, optional)"
-download_file "$GITHUB_RAW/assets/ghost.gif"         "$CAROLINE_DIR/ghost.gif"                "ghost.gif (avatar, optional)"
+echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
+cp "$CLONE_DIR/index.html"                  "$CAROLINE_DIR/index.html"
+cp "$CLONE_DIR/flows.json"                  "$CAROLINE_DIR/flows.json"
+cp -f "$CLONE_DIR/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-agent-loop.json" 2>/dev/null || true
+cp -f "$CLONE_DIR/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-auto-tasks.json" 2>/dev/null || true
+cp -f "$CLONE_DIR/assets/caroline.gif"      "$CAROLINE_DIR/caroline.gif" 2>/dev/null || true
+cp -f "$CLONE_DIR/assets/cat.gif"           "$CAROLINE_DIR/cat.gif" 2>/dev/null || true
+cp -f "$CLONE_DIR/assets/robot.gif"         "$CAROLINE_DIR/robot.gif" 2>/dev/null || true
+cp -f "$CLONE_DIR/assets/ghost.gif"         "$CAROLINE_DIR/ghost.gif" 2>/dev/null || true
 
-if [ ! -f "$CAROLINE_DIR/caroline-kiosk.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; then
+if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; then
   echo ""
-  echo -e "${RED}  ✗ Core files are missing and could not be downloaded.${RESET}"
-  echo -e "${DIM}    Options:${RESET}"
-  echo -e "${DIM}    1. Check your internet connection and rerun the installer${RESET}"
-  echo -e "${DIM}    2. Copy files manually: scp caroline-kiosk.html ${REAL_USER}@$(hostname -I | awk '{print $1}'):~/caroline/${RESET}"
+  echo -e "${RED}  ✗ Core files missing after copy. Check clone at: ${CLONE_DIR}${RESET}"
   exit 1
 fi
 
@@ -363,7 +358,7 @@ sudo tee /etc/nginx/sites-available/caroline > /dev/null << EOF
 server {
     listen ${KIOSK_PORT};
     root ${CAROLINE_DIR};
-    index caroline-kiosk.html;
+    index index.html;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -494,7 +489,7 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
     sudo apt-get install -y -q xdotool unclutter 2>/dev/null || true
     sudo apt-get install -y -q firefox-esr
 
-    KIOSK_URL="http://localhost:${KIOSK_PORT}/caroline-kiosk.html"
+    KIOSK_URL="http://localhost:${KIOSK_PORT}/"
 
     # XDG autostart — works on LXDE, GNOME, and Wayfire (Pi OS Desktop default)
     mkdir -p "$REAL_HOME/.config/autostart"
@@ -510,12 +505,20 @@ EOF
     # labwc autostart — Pi OS Bookworm uses labwc as the Wayland compositor
     if command -v labwc &> /dev/null || [ -d "$REAL_HOME/.config/labwc" ]; then
       mkdir -p "$REAL_HOME/.config/labwc"
-      # Append only if not already present
-      if ! grep -q "caroline-kiosk" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
-        echo "sleep 3 && firefox-esr --kiosk --no-first-run ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
+      if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
+        echo "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
         chmod +x "$REAL_HOME/.config/labwc/autostart"
       fi
       echo -e "${DIM}    labwc autostart configured${RESET}"
+    fi
+
+    # wayfire autostart — legacy Pi OS Wayland compositor
+    if command -v wayfire &> /dev/null || [ -f "$REAL_HOME/.config/wayfire.ini" ]; then
+      mkdir -p "$REAL_HOME/.config"
+      if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
+        printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run %s"\n' "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
+      fi
+      echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
     fi
 
     echo -e "${GREEN}  ✓ Kiosk mode configured${RESET}"
