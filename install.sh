@@ -239,9 +239,9 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   echo -e "${GREEN}  ✓ Ollama installed${RESET}"
 
   echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL} — this is her brain. Worth the wait.${RESET}"
-  ollama serve >/dev/null 2>&1 &
-  OLLAMA_PID=$!
-  sleep 3
+  # ollama serve >/dev/null 2>&1 &
+  # OLLAMA_PID=$!
+  # sleep 3
 
   ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
   PULL_PID=$!
