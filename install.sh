@@ -74,8 +74,8 @@ echo -e "${MAGENTA} ██║     ██╔══██║██╔══██�
 echo -e "${CYAN} ╚██████╗██║  ██║██║  ██║╚██████╔╝███████╗██║██║ ╚████║███████╗${RESET}"
 echo -e "${CYAN}  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝${RESET}"
 echo ""
-echo -e "${DIM}  Your personal AI Chief of Staff — v${CAROLINE_VERSION}${RESET}"
-echo -e "${DIM}  Half toy. Half tool. Fully yours.${RESET}"
+echo -e "${BOLD}${CYAN}  PROJECT: CAROLINE${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
+echo -e "${DIM}  Your personal AI Chief of Staff.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -104,9 +104,9 @@ echo ""
 # ── USER INPUT ───────────────────────────────────────────────
 echo -e "${MAGENTA}  // IDENTITY MATRIX${RESET}"
 echo ""
-read -p "  Your name: " USER_NAME
-read -p "  Your timezone (e.g. America/Los_Angeles): " TIMEZONE
-read -p "  Your location (e.g. Portland, OR): " LOCATION
+read -p "  Your name: " USER_NAME </dev/tty
+read -p "  Your timezone (e.g. America/Los_Angeles): " TIMEZONE </dev/tty
+read -p "  Your location (e.g. Portland, OR): " LOCATION </dev/tty
 echo ""
 
 echo -e "${MAGENTA}  // NEURAL CORE SELECTION${RESET}"
@@ -123,7 +123,7 @@ if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo ""
 fi
 
-read -p "  Install Ollama for free local AI? (y/N): " INSTALL_OLLAMA
+read -p "  Install Ollama for free local AI? (y/N): " INSTALL_OLLAMA </dev/tty
 INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
 echo ""
 
@@ -132,7 +132,7 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   OLLAMA_MODEL="llama3.2"
   echo -e "${DIM}  Pulling llama3.2 by default. Choose a different model if you want:${RESET}"
   echo -e "${DIM}  (Options: llama3.2, phi3:mini, gemma2:2b — Enter to keep llama3.2)${RESET}"
-  read -p "  Model [llama3.2]: " OLLAMA_MODEL_INPUT
+  read -p "  Model [llama3.2]: " OLLAMA_MODEL_INPUT </dev/tty
   OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-llama3.2}"
   echo ""
   echo -e "${DIM}  Good. ${OLLAMA_MODEL} is her brain. Worth the wait.${RESET}"
@@ -148,7 +148,7 @@ echo ""
 echo -e "${DIM}  Kiosk mode locks Firefox ESR fullscreen on boot — ideal for a dedicated Pi display.${RESET}"
 echo -e "${DIM}  Skip this if you're just testing, or if you don't have a desktop environment.${RESET}"
 echo ""
-read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE
+read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
 echo ""
 
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
@@ -202,11 +202,11 @@ echo -e "${GREEN}  ✓ Node-RED ready${RESET}"
 # ── NODE-RED SETTINGS ────────────────────────────────────────
 echo -e "${YELLOW}  ► Calibrating personality matrix...${RESET}"
 
-mkdir -p "$REAL_HOME/.node-red"
+mkdir -p "$CAROLINE_DIR"
 
 # Write a minimal settings.js that enables require() in function nodes.
 # Single-quoted heredoc delimiter prevents shell expansion of the JS content.
-cat > "$REAL_HOME/.node-red/settings.js" << 'SETTINGS_EOF'
+cat > "$CAROLINE_DIR/settings.js" << 'SETTINGS_EOF'
 module.exports = {
     uiPort: process.env.PORT || 1880,
     uiHost: "0.0.0.0",
@@ -220,7 +220,7 @@ module.exports = {
 }
 SETTINGS_EOF
 
-sudo chown "$REAL_USER":"$REAL_USER" "$REAL_HOME/.node-red/settings.js"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/settings.js"
 
 echo -e "${GREEN}  ✓ Node-RED configured${RESET}"
 
@@ -324,14 +324,14 @@ if [ -f "$CAROLINE_DIR/caroline-auto-tasks.json" ]; then
   echo -e "${DIM}    Merged auto-tasks into flows${RESET}"
 fi
 
-cp "$FLOWS_FILE" "$REAL_HOME/.node-red/flows.json"
+cp "$FLOWS_FILE" "$CAROLINE_DIR/flows.json"
 
 echo -e "${GREEN}  ✓ Flows imported${RESET}"
 
 # ── NODE-RED PALETTE NODES ───────────────────────────────────
 echo -e "${YELLOW}  ► Installing Node-RED palette nodes...${RESET}"
 
-cd "$REAL_HOME/.node-red"
+cd "$CAROLINE_DIR"
 for NODE in "${PALETTE_NODES[@]}"; do
   npm install "$NODE" --save >/dev/null 2>&1 &
   NPM_PID=$!
@@ -435,10 +435,9 @@ After=network.target
 Type=simple
 User=${REAL_USER}
 WorkingDirectory=${CAROLINE_DIR}
-ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT}
+ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT} --userDir ${CAROLINE_DIR}
 Restart=on-failure
 RestartSec=5
-Environment=NODE_RED_HOME=${REAL_HOME}/.node-red
 
 [Install]
 WantedBy=multi-user.target
@@ -454,8 +453,9 @@ echo -e "${GREEN}  ✓ Caroline service enabled${RESET}"
 echo -e "${YELLOW}  ► Deploying Node-RED flows (no login required)...${RESET}"
 
 NR_READY=false
-for i in $(seq 1 30); do
-  if curl -sf "http://localhost:${NODE_RED_PORT}/" > /dev/null 2>&1; then
+echo -e "${DIM}    Waiting for Node-RED on port ${NODE_RED_PORT}...${RESET}"
+for i in $(seq 1 45); do
+  if curl -sf "http://localhost:${NODE_RED_PORT}/nodes" > /dev/null 2>&1; then
     NR_READY=true
     break
   fi
@@ -491,35 +491,34 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 
     KIOSK_URL="http://localhost:${KIOSK_PORT}/"
 
-    # XDG autostart — works on LXDE, GNOME, and Wayfire (Pi OS Desktop default)
+    # XDG autostart — most reliable method across all Pi OS window managers
     mkdir -p "$REAL_HOME/.config/autostart"
     cat > "$REAL_HOME/.config/autostart/caroline-kiosk.desktop" << EOF
 [Desktop Entry]
 Type=Application
-Name=Project: Caroline
-Exec=firefox-esr --kiosk --no-first-run ${KIOSK_URL}
-Hidden=false
+Name=Caroline Kiosk
+Comment=Launch Project: Caroline UI
+Exec=firefox-esr --kiosk --private-window http://localhost:${KIOSK_PORT}/
+Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
 
-    # labwc autostart — Pi OS Bookworm uses labwc as the Wayland compositor
-    if command -v labwc &> /dev/null || [ -d "$REAL_HOME/.config/labwc" ]; then
-      mkdir -p "$REAL_HOME/.config/labwc"
-      if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
-        echo "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
-        chmod +x "$REAL_HOME/.config/labwc/autostart"
-      fi
-      echo -e "${DIM}    labwc autostart configured${RESET}"
+    # labwc autostart — default Wayland compositor on Pi OS Bookworm (Pi 5)
+    # Written unconditionally: labwc may not be in PATH until first boot
+    mkdir -p "$REAL_HOME/.config/labwc"
+    if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
+      echo "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
+      chmod +x "$REAL_HOME/.config/labwc/autostart"
     fi
+    echo -e "${DIM}    labwc autostart configured${RESET}"
 
-    # wayfire autostart — legacy Pi OS Wayland compositor
-    if command -v wayfire &> /dev/null || [ -f "$REAL_HOME/.config/wayfire.ini" ]; then
-      mkdir -p "$REAL_HOME/.config"
-      if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
-        printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run %s"\n' "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
-      fi
-      echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
+    # wayfire autostart — older Bookworm installs / alternative compositor
+    # Written unconditionally: harmless if wayfire is not the active session
+    mkdir -p "$REAL_HOME/.config"
+    if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
+      printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run %s"\n' "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
     fi
+    echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
 
     echo -e "${GREEN}  ✓ Kiosk mode configured${RESET}"
   fi
