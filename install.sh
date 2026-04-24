@@ -47,7 +47,7 @@ phase() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="1.0.0"
+CAROLINE_VERSION="0.2.0-dev"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 AI_MODEL="anthropic/claude-haiku-4.5"
@@ -312,16 +312,20 @@ echo -e "${YELLOW}  ► Importing Node-RED flows...${RESET}"
 
 # Merge optional flow modules into main flows
 FLOWS_FILE="$CAROLINE_DIR/flows.json"
+MERGED_FLOWS_FILE="/tmp/caroline-merged-flows.json"
+rm -f "$MERGED_FLOWS_FILE"
 
 if [ -f "$CAROLINE_DIR/caroline-agent-loop.json" ]; then
-  jq -s '.[0] + .[1]' "$FLOWS_FILE" "$CAROLINE_DIR/caroline-agent-loop.json" > /tmp/caroline-merged-flows.json
-  FLOWS_FILE=/tmp/caroline-merged-flows.json
+  jq -s '.[0] + .[1]' "$FLOWS_FILE" "$CAROLINE_DIR/caroline-agent-loop.json" > "${MERGED_FLOWS_FILE}.tmp"
+  mv "${MERGED_FLOWS_FILE}.tmp" "$MERGED_FLOWS_FILE"
+  FLOWS_FILE="$MERGED_FLOWS_FILE"
   echo -e "${DIM}    Merged agent loop into flows${RESET}"
 fi
 
 if [ -f "$CAROLINE_DIR/caroline-auto-tasks.json" ]; then
-  jq -s '.[0] + .[1]' "$FLOWS_FILE" "$CAROLINE_DIR/caroline-auto-tasks.json" > /tmp/caroline-merged-flows.json
-  FLOWS_FILE=/tmp/caroline-merged-flows.json
+  jq -s '.[0] + .[1]' "$FLOWS_FILE" "$CAROLINE_DIR/caroline-auto-tasks.json" > "${MERGED_FLOWS_FILE}.tmp"
+  mv "${MERGED_FLOWS_FILE}.tmp" "$MERGED_FLOWS_FILE"
+  FLOWS_FILE="$MERGED_FLOWS_FILE"
   echo -e "${DIM}    Merged auto-tasks into flows${RESET}"
 fi
 

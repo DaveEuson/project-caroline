@@ -3,7 +3,11 @@
     "id": "caro-agent-inject",
     "type": "inject",
     "name": "Every 15 min",
-    "props": [{ "p": "payload" }],
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
     "repeat": "900",
     "crontab": "",
     "once": true,
@@ -13,7 +17,11 @@
     "payloadType": "date",
     "x": 120,
     "y": 80,
-    "wires": [["caro-agent-gather"]]
+    "wires": [
+      [
+        "caro-agent-gather"
+      ]
+    ]
   },
   {
     "id": "caro-agent-gather",
@@ -24,18 +32,26 @@
     "noerr": 0,
     "x": 320,
     "y": 80,
-    "wires": [["caro-agent-build-prompt"]]
+    "wires": [
+      [
+        "caro-agent-build-prompt"
+      ]
+    ]
   },
   {
     "id": "caro-agent-build-prompt",
     "type": "function",
     "name": "Build Agent Prompt",
-    "func": "const ctx = msg.agentContext;\n\nconst systemPrompt = `You are Caroline's autonomous context engine. You decide whether Caroline should proactively say something to the user right now.\\n\\nRules:\\n- Only speak if something is genuinely time-sensitive or useful\\n- Prefer brevity — one sentence max\\n- If nothing warrants attention, respond with exactly: SILENT\\n- No formatting, no markdown, no quotes`;\n\nconst userPrompt = `Current time: ${ctx.time}\\nUpcoming events: ${ctx.calendar}\\nOpen tasks: ${ctx.todos}\\nWeather: ${ctx.weather}\\nLast conversation:\\n${ctx.recent_chat}\\n\\nShould Caroline say something right now?`;\n\nconst provider = flow.get('ai_provider') || 'openrouter';\nconst model = provider === 'ollama'\n  ? (flow.get('ollama_model') || 'llama3.2')\n  : (flow.get('openrouter_model') || flow.get('ai_model') || 'anthropic/claude-haiku-4.5');\n\nif (provider === 'ollama') {\n  msg.url = (flow.get('ollama_url') || 'http://localhost:11434') + '/v1/chat/completions';\n  msg.headers = { 'Content-Type': 'application/json' };\n} else {\n  msg.url = 'https://openrouter.ai/api/v1/chat/completions';\n  const key = flow.get('openrouterKey') || '';\n  msg.headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };\n}\n\nmsg.payload = {\n  model,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user',   content: userPrompt }\n  ],\n  max_tokens: 80,\n  temperature: 0.7\n};\n\nreturn msg;",
+    "func": "const ctx = msg.agentContext;\n\nconst systemPrompt = `You are Caroline's autonomous context engine. You decide whether Caroline should proactively say something to the user right now.\n\nRules:\n- Only speak if something is genuinely time-sensitive or useful\n- Prefer brevity — one sentence max\n- If nothing warrants attention, respond with exactly: SILENT\n- No formatting, no markdown, no quotes`;\n\nconst userPrompt = `Current time: ${ctx.time}\nUpcoming events: ${ctx.calendar}\nOpen tasks: ${ctx.todos}\nWeather: ${ctx.weather}\nLast conversation:\n${ctx.recent_chat}\n\nShould Caroline say something right now?`;\n\nconst provider = flow.get('aiProvider') || flow.get('ai_provider') || 'openrouter';\nconst model = provider === 'ollama'\n  ? (flow.get('ollamaModel') || flow.get('ollama_model') || 'llama3.2')\n  : (flow.get('aiModel') || flow.get('openrouter_model') || flow.get('ai_model') || 'anthropic/claude-haiku-4.5');\n\nif (provider === 'ollama') {\n  msg.url = (flow.get('ollamaUrl') || flow.get('ollama_url') || 'http://localhost:11434').replace(/\\/+$/, '') + '/v1/chat/completions';\n  msg.headers = { 'Content-Type': 'application/json' };\n} else {\n  msg.url = 'https://openrouter.ai/api/v1/chat/completions';\n  const key = flow.get('openrouterKey') || '';\n  msg.headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };\n}\n\nmsg.payload = {\n  model,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user',   content: userPrompt }\n  ],\n  max_tokens: 80,\n  temperature: 0.7\n};\n\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "x": 540,
     "y": 80,
-    "wires": [["caro-agent-http"]]
+    "wires": [
+      [
+        "caro-agent-http"
+      ]
+    ]
   },
   {
     "id": "caro-agent-http",
@@ -51,7 +67,11 @@
     "authType": "",
     "x": 760,
     "y": 80,
-    "wires": [["caro-agent-parse"]]
+    "wires": [
+      [
+        "caro-agent-parse"
+      ]
+    ]
   },
   {
     "id": "caro-agent-parse",
@@ -62,7 +82,11 @@
     "noerr": 0,
     "x": 980,
     "y": 80,
-    "wires": [["caro-agent-ws-out"]]
+    "wires": [
+      [
+        "caro-agent-ws-out"
+      ]
+    ]
   },
   {
     "id": "caro-agent-ws-out",

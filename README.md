@@ -6,7 +6,7 @@
 
 ---
 
-![Project: Caroline — cyberpunk kiosk interface](screenshot.png)
+![Project: Caroline avatar](assets/caroline.gif)
 
 ## The Story
 
