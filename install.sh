@@ -291,6 +291,10 @@ download_file "$GITHUB_RAW/caroline-kiosk.html"      "$CAROLINE_DIR/caroline-kio
 download_file "$GITHUB_RAW/flows.json"               "$CAROLINE_DIR/flows.json"               "flows.json"
 download_file "$GITHUB_RAW/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-agent-loop.json" "caroline-agent-loop.json (optional)"
 download_file "$GITHUB_RAW/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-auto-tasks.json" "caroline-auto-tasks.json (optional)"
+download_file "$GITHUB_RAW/assets/caroline.gif"      "$CAROLINE_DIR/caroline.gif"             "caroline.gif (avatar)"
+download_file "$GITHUB_RAW/assets/cat.gif"           "$CAROLINE_DIR/cat.gif"                  "cat.gif (avatar, optional)"
+download_file "$GITHUB_RAW/assets/robot.gif"         "$CAROLINE_DIR/robot.gif"                "robot.gif (avatar, optional)"
+download_file "$GITHUB_RAW/assets/ghost.gif"         "$CAROLINE_DIR/ghost.gif"                "ghost.gif (avatar, optional)"
 
 if [ ! -f "$CAROLINE_DIR/caroline-kiosk.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; then
   echo ""
@@ -372,6 +376,15 @@ EOF
 
 sudo ln -sf /etc/nginx/sites-available/caroline /etc/nginx/sites-enabled/caroline
 sudo rm -f /etc/nginx/sites-enabled/default
+
+# Systemd drop-in: clear the port before nginx binds on every boot/restart
+sudo mkdir -p /etc/systemd/system/nginx.service.d
+sudo tee /etc/systemd/system/nginx.service.d/port-clear.conf > /dev/null << DROPIN_EOF
+[Service]
+ExecStartPre=/bin/sh -c 'fuser -k ${KIOSK_PORT}/tcp 2>/dev/null; true'
+DROPIN_EOF
+sudo systemctl daemon-reload
+
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
