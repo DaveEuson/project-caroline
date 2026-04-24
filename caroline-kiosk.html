@@ -114,6 +114,7 @@
 
   /* LAYOUT */
   #main { flex: 1; min-height: 0; display: flex; overflow: hidden; position: relative; z-index: 10; }
+  #center { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
   /* LEFT PANEL */
   #left { width: 200px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 10px 10px 12px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
@@ -665,7 +666,7 @@
 <div id="onboarding-overlay">
   <section id="caro-boot-panel">
     <div class="caro-boot-shell">
-      <img id="caro-boot-avatar" src="caroline.gif" alt="Project: Caroline"/>
+      <img id="caro-boot-avatar" src="caroline.gif" alt="Project: Caroline" onerror="this.style.opacity='0'"/>
       <div id="caro-boot-log"></div>
       <div id="caro-boot-ready" class="hidden">
         <span>[ READY FOR CONFIGURATION ]</span>
@@ -4048,7 +4049,7 @@ function renderChatStep(){
     ONB_AVATARS.forEach(a=>{
       const card=document.createElement('div');
       card.className='caro-avatar-card'+(onbState.avatarId===a.id?' active':'');
-      card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}"><h4>${a.title}</h4><p>${a.desc}</p>`;
+      card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}" onerror="this.style.display='none'"><h4>${a.title}</h4><p>${a.desc}</p>`;
       card.onclick=()=>{ onbState.avatarId=a.id; localStorage.setItem('caroline_avatar_id',a.id); renderChatStep(); };
       grid.appendChild(card);
     });
