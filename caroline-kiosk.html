@@ -2039,7 +2039,7 @@ async function saveSettings() {
 
   // Send key/model update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, discordToken: S.discordToken, discordChannelId: S.discordChannelId, calendarId: S.calendarId, tidesStation: S.tidesStation }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiProvider: S.aiProvider, aiModel: S.aiModel, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, discordToken: S.discordToken, discordChannelId: S.discordChannelId, calendarId: S.calendarId, tidesStation: S.tidesStation }));
   }
 
   // Persist settings to Node-RED (writes /data/caroline_settings.json)
@@ -2058,10 +2058,15 @@ async function saveSettings() {
         ttsEnabled: S.ttsEnabled,
         timezone: S.timezone,
         location: S.location,
+        cityName: S.cityName,
+        lat: S.lat,
+        lng: S.lng,
+        piIp: S.piIp,
         calendarId: S.calendarId,
         hueIp: S.hueIp,
         hueKey: S.hueKey,
         hueGroup: S.hueGroup,
+        hueGroupName: S.hueGroupName,
         tidesStation: S.tidesStation,
         discordEnabled: S.discordEnabled,
         discordToken: S.discordToken,
