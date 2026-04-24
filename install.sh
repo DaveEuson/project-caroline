@@ -3,7 +3,7 @@
 # ============================================================
 #   PROJECT: CAROLINE
 #   Personal AI Kiosk — install.sh
-#   github.com/you/caroline
+#   github.com/daveeuson/project-caroline
 # ============================================================
 
 set -e
