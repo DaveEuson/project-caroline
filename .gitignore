@@ -1,0 +1,35 @@
+# ── SECRETS & CREDENTIALS ────────────────────────────────────
+caroline_settings.json
+caroline_context.json
+caroline_history.json
+caroline-calendar.json
+carlinemoodtracker-*.json
+*.env
+.env.*
+*_key.json
+*-credentials.json
+
+# ── AVATARS (use Git LFS or host externally) ──────────────────
+*.gif
+*.mp4
+*.webm
+
+# ── NODE / SYSTEM ─────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+.npm/
+
+# ── OS JUNK ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── EDITOR ────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── BACKUPS & EXPORTS ─────────────────────────────────────────
+caroline-backup-*.json
+flows-backup.json

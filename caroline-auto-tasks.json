@@ -1,0 +1,50 @@
+[
+  {
+    "id": "caro-autotask-inject",
+    "type": "inject",
+    "name": "8 AM Daily + Boot",
+    "props": [{ "p": "payload" }],
+    "repeat": "",
+    "crontab": "00 08 * * *",
+    "once": true,
+    "onceDelay": 60,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 120,
+    "y": 80,
+    "wires": [["caro-autotask-check"]]
+  },
+  {
+    "id": "caro-autotask-check",
+    "type": "function",
+    "name": "Check Calendar for Auto Tasks",
+    "func": "const now = Date.now();\nconst windowEnd = now + (16 * 60 * 60 * 1000); // next 16 hours\n\nconst calEvents = flow.get('caroline_calendar') || global.get('caroline_calendar') || [];\nif (!calEvents.length) {\n  node.warn('AutoTask: no calendar events in context');\n  return null;\n}\n\n// Track which event keys we've already auto-tasked\nconst seen = flow.get('autotask_seen') || {};\n\n// Expire seen entries older than 2 days\nconst twoDaysAgo = now - (2 * 24 * 60 * 60 * 1000);\nObject.keys(seen).forEach(k => { if (seen[k] < twoDaysAgo) delete seen[k]; });\n\nconst newEvents = calEvents.filter(e => {\n  const start = new Date(e.start || e.time || '');\n  if (isNaN(start.getTime())) return false;\n  const ts = start.getTime();\n  if (ts < now || ts > windowEnd) return false;\n  const key = (e.summary || e.title || 'Untitled') + '|' + (e.start || e.time || '');\n  return !seen[key];\n});\n\nif (!newEvents.length) {\n  node.warn('AutoTask: no new upcoming events to task');\n  return null;\n}\n\nmsg = { newEvents, seen };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 360,
+    "y": 80,
+    "wires": [["caro-autotask-build"]]
+  },
+  {
+    "id": "caro-autotask-build",
+    "type": "function",
+    "name": "Build Auto Task Messages",
+    "func": "const events = msg.newEvents || [];\nconst seen = msg.seen || {};\nconst tasks = [];\n\nevents.forEach(e => {\n  const title = e.summary || e.title || 'Untitled Event';\n  const start = new Date(e.start || e.time || '');\n  const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });\n  const key = title + '|' + (e.start || e.time || '');\n\n  tasks.push({ text: 'Prep for: ' + title + ' @ ' + timeStr, tag: 'auto', createdAt: Date.now() });\n  seen[key] = Date.now();\n});\n\nflow.set('autotask_seen', seen);\n\nif (!tasks.length) return null;\n\nmsg = { payload: JSON.stringify({ type: 'todo_update', action: 'add', tasks }) };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 600,
+    "y": 80,
+    "wires": [["caro-autotask-ws"]]
+  },
+  {
+    "id": "caro-autotask-ws",
+    "type": "websocket out",
+    "name": "WebSocket → Kiosk",
+    "server": "f3e0e445bed3987b",
+    "client": "",
+    "x": 840,
+    "y": 80,
+    "wires": []
+  }
+]
