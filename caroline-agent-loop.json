@@ -77,7 +77,7 @@
     "id": "caro-agent-parse",
     "type": "function",
     "name": "Parse Response",
-    "func": "try {\n  const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload;\n  const text = (body.choices?.[0]?.message?.content || '').trim();\n\n  if (!text || text.toUpperCase() === 'SILENT' || text.toUpperCase().startsWith('SILENT')) {\n    node.warn('Agent: SILENT');\n    return null;\n  }\n\n  flow.set('agent_last_spoke', Date.now());\n\n  msg = { payload: JSON.stringify({ type: 'agent_message', text: text, source: 'proactive' }) };\n  return msg;\n} catch(e) {\n  node.error('Agent parse error: ' + e.message);\n  return null;\n}",
+    "func": "try {\n  const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload;\n  const text = (body.choices?.[0]?.message?.content || body.message?.content || '').trim();\n\n  if (!text || text.toUpperCase() === 'SILENT' || text.toUpperCase().startsWith('SILENT')) {\n    node.warn('Agent: SILENT');\n    return null;\n  }\n\n  flow.set('agent_last_spoke', Date.now());\n\n  msg = { payload: JSON.stringify({ type: 'agent_message', text: text, source: 'proactive' }) };\n  return msg;\n} catch(e) {\n  node.error('Agent parse error: ' + e.message);\n  return null;\n}",
     "outputs": 1,
     "noerr": 0,
     "x": 980,
