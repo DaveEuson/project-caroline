@@ -4186,12 +4186,9 @@ async function finalizeOnboarding(){
   updateSettingsStatus();
   const _overlay = document.getElementById('onboarding-overlay');
   if(_overlay){ _overlay.classList.remove('show'); _overlay.style.display='none'; }
-  document.body.classList.remove('idle-mode','focus-mode');
+  hideOsk();
+  document.body.classList.remove('idle-mode','focus-mode','osk-open');
   resetIdle();
-  const _main = document.getElementById('main');
-  const _topbar = document.getElementById('topbar');
-  if(_main){ _main.style.display=''; _main.style.opacity='1'; _main.style.visibility='visible'; }
-  if(_topbar){ _topbar.style.display=''; _topbar.style.opacity='1'; _topbar.style.visibility='visible'; }
   const greeted = localStorage.getItem('caro_first_greeted');
   if(!greeted){
     setTimeout(()=>{ addMessage(_onbFirstGreeting(),'caroline','display'); localStorage.setItem('caro_first_greeted','true'); }, 700);
