@@ -3264,9 +3264,10 @@ function showSpotifyIdle(msg) {
 
 setInterval(() => { updateBottomChat(); }, 5000);
 setTimeout(() => { updateBottomChat(); }, 2000);
-setTimeout(() => { refreshSpotifyToken().then(ok => { if (ok) fetchSpotifyNowPlaying(); }); }, 1500);
-if (spotifyToken) { fetchSpotifyNowPlaying(); spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000); }
-else { spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000); }
+if (S.features?.spotify) {
+  setTimeout(() => { refreshSpotifyToken().then(ok => { if (ok) fetchSpotifyNowPlaying(); }); }, 1500);
+  if (spotifyToken) { fetchSpotifyNowPlaying(); spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000); }
+}
 
 
 // ── TODO LIST ─────────────────────────────────
@@ -3621,16 +3622,6 @@ purgeExpiredTodos();
 setInterval(purgeExpiredTodos, 60 * 60 * 1000);
 document.getElementById('weather-city-label').textContent=S.cityName||S.location||'';
 
-setTimeout(async () => {
-  try {
-    const ok = await refreshSpotifyToken();
-    if (ok) {
-      await fetchSpotifyNowPlaying();
-    }
-  } catch (e) {
-    console.error('Startup Spotify refresh failed:', e);
-  }
-}, 1500);
 
 async function spotifyControl(url, method='POST') {
   try {
@@ -4018,7 +4009,7 @@ function renderChatStep(){
   const responseDelay = newCount > 0 ? (newCount - 1) * 2000 + 1200 : 0;
   _onbMsgTimers.push(setTimeout(()=>{
     response.innerHTML = '';
-    const _scroll=document.getElementById('caro-chat-scroll'); if(_scroll) _scroll.scrollTop=_scroll.scrollHeight;
+    const _scroll=document.getElementById('caro-chat-scroll');
 
   if(q.type==='text'){
     const wrap=document.createElement('div'); wrap.style.cssText='display:flex;gap:10px;align-items:center;';
@@ -4156,7 +4147,7 @@ function renderChatStep(){
       <div class="caro-summary-card"><h4>Modules</h4><ul>${mList}</ul></div>`;
     response.appendChild(grid);
   }
-  body.scrollTop=body.scrollHeight;
+  requestAnimationFrame(()=>{ if(_scroll) _scroll.scrollTop=_scroll.scrollHeight; });
   }, responseDelay)); // end setTimeout for response area
 }
 
@@ -4188,69 +4179,68 @@ async function finalizeOnboarding(){
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
 
-  // Push setup data to Node-RED; proceed to dashboard regardless of response
-  try {
-    await Promise.race([
-      fetch(httpBase() + '/admin/save-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userName:        S.userName,
-          aiProvider:      S.aiProvider      || 'openrouter',
-          aiModel:         S.aiModel         || 'anthropic/claude-haiku-4.5',
-          ollamaUrl:       S.ollamaUrl       || 'http://localhost:11434',
-          ollamaModel:     S.ollamaModel     || 'llama3.2',
-          openrouterKey:   S.openrouterKey   || '',
-          timezone:        S.timezone        || '',
-          location:        S.location        || '',
-          piIp:            S.piIp            || '',
-          hueIp:           S.hueIp           || '',
-          hueKey:          S.hueKey          || '',
-          calendarId:      S.calendarId      || '',
-          discordEnabled:  S.discordEnabled  || false,
-          discordToken:    S.discordToken    || '',
-          discordChannelId: S.discordChannelId || '',
-          setupComplete:   true
-        })
-      }),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
-    ]);
-    console.log('[Caroline] Setup settings synced to Node-RED.');
-  } catch(e) {
-    console.warn('[Caroline] Node-RED settings sync skipped (' + e.message + ') — loading dashboard anyway.');
-  }
-
-  if(onbState.serviceAccountPending){
-    try {
-      const resp = await fetch(httpBase()+'/admin/upload-service-account', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: onbState.serviceAccountPending
-      });
-      if(!resp.ok) throw new Error('HTTP '+resp.status);
-      console.log('[Caroline] Service account uploaded successfully');
-    } catch(err){
-      console.warn('[Caroline] Service account upload failed:', err);
-    }
-  }
-
+  // Reveal dashboard IMMEDIATELY — do not wait for any network operations
   applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
   const tn = document.getElementById('topbar-name');
   if(tn) tn.textContent = S.aiName;
   updateSettingsStatus();
-  document.getElementById('onboarding-overlay').classList.remove('show');
+  const _overlay = document.getElementById('onboarding-overlay');
+  if(_overlay){ _overlay.classList.remove('show'); _overlay.style.display='none'; }
   document.body.classList.remove('idle-mode','focus-mode');
   resetIdle();
-  const main = document.getElementById('main');
-  const topbar = document.getElementById('topbar');
-  if(main){ main.style.display=''; main.style.opacity='1'; main.style.visibility='visible'; }
-  if(topbar){ topbar.style.display=''; topbar.style.opacity='1'; topbar.style.visibility='visible'; }
+  const _main = document.getElementById('main');
+  const _topbar = document.getElementById('topbar');
+  if(_main){ _main.style.display=''; _main.style.opacity='1'; _main.style.visibility='visible'; }
+  if(_topbar){ _topbar.style.display=''; _topbar.style.opacity='1'; _topbar.style.visibility='visible'; }
   const greeted = localStorage.getItem('caro_first_greeted');
   if(!greeted){
     setTimeout(()=>{ addMessage(_onbFirstGreeting(),'caroline','display'); localStorage.setItem('caro_first_greeted','true'); }, 700);
   } else {
     setTimeout(()=>addMessage("You're back. I kept things warm for you.",'caroline','display'), 700);
   }
+
+  // Background: push setup data to Node-RED (non-blocking — dashboard already visible)
+  (async ()=>{
+    try {
+      await Promise.race([
+        fetch(httpBase() + '/admin/save-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userName:        S.userName,
+            aiProvider:      S.aiProvider      || 'openrouter',
+            aiModel:         S.aiModel         || 'anthropic/claude-haiku-4.5',
+            ollamaUrl:       S.ollamaUrl       || 'http://localhost:11434',
+            ollamaModel:     S.ollamaModel     || 'llama3.2',
+            openrouterKey:   S.openrouterKey   || '',
+            timezone:        S.timezone        || '',
+            location:        S.location        || '',
+            piIp:            S.piIp            || '',
+            hueIp:           S.hueIp           || '',
+            hueKey:          S.hueKey          || '',
+            calendarId:      S.calendarId      || '',
+            discordEnabled:  S.discordEnabled  || false,
+            discordToken:    S.discordToken    || '',
+            discordChannelId: S.discordChannelId || '',
+            setupComplete:   true
+          })
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+      ]);
+      console.log('[Caroline] Setup settings synced to Node-RED.');
+    } catch(e) {
+      console.warn('[Caroline] Node-RED settings sync skipped (' + e.message + ').');
+    }
+    if(onbState.serviceAccountPending){
+      try {
+        const resp = await fetch(httpBase()+'/admin/upload-service-account', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: onbState.serviceAccountPending
+        });
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        console.log('[Caroline] Service account uploaded successfully');
+      } catch(err){ console.warn('[Caroline] Service account upload failed:', err); }
+    }
+  })();
 }
 
 function _onbFirstGreeting(){

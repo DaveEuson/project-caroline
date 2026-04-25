@@ -288,6 +288,9 @@ echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
 cp -r "$CLONE_DIR/." "$CAROLINE_DIR/"
 # Flatten avatar GIFs to root so index.html can reference them as ./caroline.gif etc.
 cp -f "$CAROLINE_DIR/assets/"*.gif "$CAROLINE_DIR/" 2>/dev/null || true
+# Ensure nginx (www-data) can read all files
+sudo chmod -R 755 "$CAROLINE_DIR"
+sudo chown -R www-data:www-data "$CAROLINE_DIR/assets" 2>/dev/null || true
 
 if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; then
   echo ""
