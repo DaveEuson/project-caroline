@@ -351,6 +351,10 @@ done
 
 echo -e "${GREEN}  ✓ Palette nodes installed${RESET}"
 
+# TTS (optional — non-blocking)
+pip3 install edge-tts 2>/dev/null || true
+echo -e "${GREEN}  ✓ edge-tts installed (or skipped)${RESET}"
+
 # ── NGINX (serve kiosk on port 8080) ─────────────────────────
 phase "PHASE 5 — ACTIVATING INTERFACE"
 
