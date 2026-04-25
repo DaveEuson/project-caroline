@@ -211,6 +211,7 @@ module.exports = {
     uiPort: process.env.PORT || 1880,
     uiHost: "0.0.0.0",
     flowFile: 'flows.json',
+    httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE" },
     functionGlobalContext: {
         fs:     require('fs'),
         crypto: require('crypto'),
@@ -444,6 +445,12 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable caroline
+
+# Delete Node-RED runtime cache so it adopts flows.json cleanly on first boot
+# (stale .config files cause flows to load into a "Recovered Nodes" tab instead)
+rm -f "$CAROLINE_DIR/.config.runtime.json" 2>/dev/null || true
+rm -f "$CAROLINE_DIR/.config.nodes.json"   2>/dev/null || true
+
 sudo systemctl start caroline
 
 echo -e "${GREEN}  ✓ Caroline service enabled${RESET}"

@@ -42,7 +42,7 @@
   :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { width: 100%; height: 100%; overflow: hidden; background: #05050a; }
-  body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: 'Outfit', sans-serif; color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease, height 0.25s cubic-bezier(0.4,0,0.2,1); }
+  body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: 'Outfit', sans-serif; color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease; }
   body.osk-open { height: calc(100vh - 320px) !important; }
   body.osk-open #settings-modal { max-height: calc(100vh - 340px) !important; }
 
@@ -113,7 +113,7 @@
   .hist-empty { text-align: center; color: rgba(226,232,240,0.25); font-size: 13px; font-family: 'JetBrains Mono', monospace; margin-top: 40px; }
 
   /* LAYOUT */
-  #main { flex: 1; min-height: 0; display: flex; overflow: hidden; position: relative; z-index: 10; }
+  #main { flex: 1; min-height: 0; display: flex; flex-direction: row; overflow: hidden; position: relative; z-index: 10; }
   #center { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
   /* LEFT PANEL */
@@ -3856,6 +3856,10 @@ function _onbGetDeep(path){ const p=path.split('.'); let o=onbState; for(const k
 function startBootSequence(){
   const overlay = document.getElementById('onboarding-overlay');
   if(!overlay) return;
+  // Hide dashboard elements so the overlay is the only thing visible
+  ['topbar','main','bottom-bar'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.add('hidden');
+  });
   overlay.classList.add('show');
   const boot = document.getElementById('caro-boot-panel');
   const chat = document.getElementById('caro-chat-panel');
@@ -4186,6 +4190,10 @@ async function finalizeOnboarding(){
   updateSettingsStatus();
   const _overlay = document.getElementById('onboarding-overlay');
   if(_overlay){ _overlay.classList.remove('show'); _overlay.style.display='none'; }
+  // Reveal dashboard by removing .hidden — no inline style overrides needed
+  ['topbar','main','bottom-bar'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
+  });
   hideOsk();
   document.body.classList.remove('idle-mode','focus-mode','osk-open');
   resetIdle();
