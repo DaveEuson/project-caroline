@@ -3699,9 +3699,9 @@ const ONB_AVATARS = [
 ];
 
 const ONB_MODULES = [
-  { id:'aiCore',   title:'AI Core',   required:['apiKey'],
-    desc:'OpenRouter + conversation brain. Needed for chat.',
-    fields:[{ key:'apiKey', label:'OpenRouter API Key', type:'password', placeholder:'sk-or-v1-...' }] },
+  { id:'aiCore',   title:'AI Core',   required:[],
+    desc:'API Key only required for OpenRouter (Cloud). Ollama (Local) does not require a key.',
+    fields:[{ key:'apiKey', label:'OpenRouter API Key (Cloud only)', type:'password', placeholder:'sk-or-v1-...' }] },
   { id:'spotify',  title:'Spotify',   required:[],
     desc:'Now playing + auth flow. Full setup guide on GitHub.',
     githubNote: true, fields:[] },
@@ -3843,7 +3843,7 @@ function _onbModuleReady(id){
 function shouldRunOnboarding(){
   if(!localStorage.getItem('caro_onboarded')) return true;
   const m = S.onboardingModules||{};
-  if(m.aiCore?.enabled && !m.aiCore.apiKey) return true;
+  if(m.aiCore?.enabled && S.aiProvider !== 'ollama' && !m.aiCore.apiKey) return true;
   if(m.spotify?.enabled && !m.spotify.clientId) return true;
   return false;
 }
@@ -4174,6 +4174,37 @@ async function finalizeOnboarding(){
   localStorage.setItem('caroline_personality_prompt', _onbBuildPersonalityPrompt());
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
+
+  // Push setup data to Node-RED; proceed to dashboard regardless of response
+  try {
+    await Promise.race([
+      fetch(httpBase() + '/admin/save-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName:        S.userName,
+          aiProvider:      S.aiProvider      || 'openrouter',
+          aiModel:         S.aiModel         || 'anthropic/claude-haiku-4.5',
+          ollamaUrl:       S.ollamaUrl       || 'http://localhost:11434',
+          ollamaModel:     S.ollamaModel     || 'llama3.2',
+          openrouterKey:   S.openrouterKey   || '',
+          timezone:        S.timezone        || '',
+          location:        S.location        || '',
+          piIp:            S.piIp            || '',
+          hueIp:           S.hueIp           || '',
+          hueKey:          S.hueKey          || '',
+          calendarId:      S.calendarId      || '',
+          discordEnabled:  S.discordEnabled  || false,
+          discordToken:    S.discordToken    || '',
+          discordChannelId: S.discordChannelId || ''
+        })
+      }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+    ]);
+    console.log('[Caroline] Setup settings synced to Node-RED.');
+  } catch(e) {
+    console.warn('[Caroline] Node-RED settings sync skipped (' + e.message + ') — loading dashboard anyway.');
+  }
 
   if(onbState.serviceAccountPending){
     try {

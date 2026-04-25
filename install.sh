@@ -285,14 +285,7 @@ else
 fi
 
 echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
-cp "$CLONE_DIR/index.html"                  "$CAROLINE_DIR/index.html"
-cp "$CLONE_DIR/flows.json"                  "$CAROLINE_DIR/flows.json"
-cp -f "$CLONE_DIR/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-agent-loop.json" 2>/dev/null || true
-cp -f "$CLONE_DIR/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-auto-tasks.json" 2>/dev/null || true
-cp -f "$CLONE_DIR/assets/caroline.gif"      "$CAROLINE_DIR/caroline.gif" 2>/dev/null || true
-cp -f "$CLONE_DIR/assets/cat.gif"           "$CAROLINE_DIR/cat.gif" 2>/dev/null || true
-cp -f "$CLONE_DIR/assets/robot.gif"         "$CAROLINE_DIR/robot.gif" 2>/dev/null || true
-cp -f "$CLONE_DIR/assets/ghost.gif"         "$CAROLINE_DIR/ghost.gif" 2>/dev/null || true
+cp -r "$CLONE_DIR/." "$CAROLINE_DIR/"
 
 if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; then
   echo ""
@@ -491,7 +484,14 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 
     KIOSK_URL="http://localhost:${KIOSK_PORT}/"
 
-    # XDG autostart — most reliable method across all Pi OS window managers
+    # Remove any pre-existing Firefox autostart entries to prevent double-launch
+    rm -f "$REAL_HOME/.config/autostart/firefox"*.desktop 2>/dev/null || true
+    [ -f "$REAL_HOME/.config/labwc/autostart" ] && \
+      sed -i '/firefox/Id' "$REAL_HOME/.config/labwc/autostart" 2>/dev/null || true
+    [ -f "$REAL_HOME/.config/wayfire.ini" ] && \
+      sed -i '/firefox/Id' "$REAL_HOME/.config/wayfire.ini" 2>/dev/null || true
+
+    # XDG autostart — primary launch method across all Pi OS window managers
     mkdir -p "$REAL_HOME/.config/autostart"
     cat > "$REAL_HOME/.config/autostart/caroline-kiosk.desktop" << EOF
 [Desktop Entry]
