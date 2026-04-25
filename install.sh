@@ -500,7 +500,7 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 Type=Application
 Name=Caroline Kiosk
 Comment=Launch Project: Caroline UI
-Exec=firefox-esr --kiosk --private-window http://localhost:${KIOSK_PORT}/
+Exec=firefox-esr --kiosk --no-first-run http://localhost:${KIOSK_PORT}/
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
