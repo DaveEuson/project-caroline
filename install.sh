@@ -56,7 +56,7 @@ PALETTE_NODES=(
   "node-red-contrib-discord-advanced"
   "node-red-contrib-google-calendar"
   "node-red-contrib-google-sheets"
-  "node-red-contrib-huemagicgit add .git add ."
+  "node-red-contrib-huemagic"
 )
 
 # ── RESOLVE REAL USER (safe even if run with sudo) ───────────
@@ -328,6 +328,16 @@ cp "$FLOWS_FILE" "$CAROLINE_DIR/flows.json"
 
 echo -e "${GREEN}  ✓ Flows imported${RESET}"
 
+# ── GOOGLE SERVICE ACCOUNT PLACEHOLDER ───────────────────────
+SERVICE_ACCOUNT_FILE="$CAROLINE_DIR/service-account.json"
+if [ ! -f "$SERVICE_ACCOUNT_FILE" ]; then
+  echo '{}' > "$SERVICE_ACCOUNT_FILE"
+  chown "$REAL_USER:$REAL_USER" "$SERVICE_ACCOUNT_FILE"
+  chmod 600 "$SERVICE_ACCOUNT_FILE"
+  echo -e "${YELLOW}  ⚠ Created placeholder: $SERVICE_ACCOUNT_FILE${RESET}"
+  echo -e "${DIM}    Replace with your Google service account JSON to enable calendar/sheets${RESET}"
+fi
+
 # ── NODE-RED PALETTE NODES ───────────────────────────────────
 echo -e "${YELLOW}  ► Installing Node-RED palette nodes...${RESET}"
 
@@ -359,6 +369,7 @@ server {
     listen ${KIOSK_PORT};
     root ${CAROLINE_DIR};
     index index.html;
+    autoindex off;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -368,7 +379,7 @@ server {
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
 
     location / {
-        try_files \$uri \$uri/ =404;
+        try_files \$uri \$uri/ /index.html;
     }
 }
 EOF
