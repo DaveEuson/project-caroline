@@ -210,6 +210,7 @@ cat > "$CAROLINE_DIR/settings.js" << 'SETTINGS_EOF'
 module.exports = {
     uiPort: process.env.PORT || 1880,
     uiHost: "0.0.0.0",
+    flowFile: 'flows.json',
     functionGlobalContext: {
         fs:     require('fs'),
         crypto: require('crypto'),
@@ -447,11 +448,12 @@ sudo systemctl start caroline
 
 echo -e "${GREEN}  ✓ Caroline service enabled${RESET}"
 
-# ── DEPLOY FLOWS VIA ADMIN API ───────────────────────────────
-echo -e "${YELLOW}  ► Deploying Node-RED flows (no login required)...${RESET}"
+# ── VERIFY NODE-RED STARTED ──────────────────────────────────
+# flows.json is pre-copied to $CAROLINE_DIR and flowFile is set in settings.js,
+# so Node-RED loads it from disk on first boot — no HTTP API deploy needed.
+echo -e "${YELLOW}  ► Waiting for Node-RED to start...${RESET}"
 
 NR_READY=false
-echo -e "${DIM}    Waiting for Node-RED on port ${NODE_RED_PORT}...${RESET}"
 for i in $(seq 1 45); do
   if curl -sf "http://localhost:${NODE_RED_PORT}/nodes" > /dev/null 2>&1; then
     NR_READY=true
@@ -461,18 +463,9 @@ for i in $(seq 1 45); do
 done
 
 if [ "$NR_READY" = "true" ]; then
-  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-    -X POST "http://localhost:${NODE_RED_PORT}/flows" \
-    -H 'Content-Type: application/json' \
-    -H 'Node-RED-API-Version: v2' \
-    -d @"$FLOWS_FILE")
-  if [ "$HTTP_STATUS" = "204" ] || [ "$HTTP_STATUS" = "200" ]; then
-    echo -e "${GREEN}  ✓ Flows deployed — Node-RED is live${RESET}"
-  else
-    echo -e "${YELLOW}  ⚠ Flow deploy returned HTTP ${HTTP_STATUS} — Node-RED may need a manual restart${RESET}"
-  fi
+  echo -e "${GREEN}  ✓ Node-RED is live — flows loaded from disk${RESET}"
 else
-  echo -e "${YELLOW}  ⚠ Node-RED didn't respond in time — flows will load from disk on next boot${RESET}"
+  echo -e "${YELLOW}  ⚠ Node-RED didn't respond in time — it will load flows on next boot${RESET}"
 fi
 
 # ── KIOSK MODE ───────────────────────────────────────────────
