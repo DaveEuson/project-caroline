@@ -3693,10 +3693,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
-  { id:'pilot', title:'Red Pilot Girl', desc:'Curious, grounded, warm. The default energy.', src:'caroline.gif' },
-  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with soft neon energy.', src:'robot.gif' },
-  { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'cat.gif' },
-  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, softly haunted.', src:'ghost.gif' }
+  { id:'pilot', title:'Red Pilot Girl', desc:'Curious, grounded, warm. The default energy.', src:'./assets/caroline.gif' },
+  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with soft neon energy.', src:'./assets/robot.gif' },
+  { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'./assets/cat.gif' },
+  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, softly haunted.', src:'./assets/ghost.gif' }
 ];
 
 const ONB_MODULES = [
@@ -3875,7 +3875,7 @@ function startBootSequence(){
   const btn   = document.getElementById('caro-begin-btn');
   const avatar= document.getElementById('caro-boot-avatar');
   const a = ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
-  avatar.src = a.src || 'caroline.gif';
+  avatar.src = a.src || './assets/caroline.gif';
   log.innerHTML=''; ready.classList.add('hidden'); btn.classList.add('hidden');
   document.getElementById('wipe-memory-btn').classList.add('hidden');
   const lines=[
@@ -4055,7 +4055,7 @@ function renderChatStep(){
     ONB_AVATARS.forEach(a=>{
       const card=document.createElement('div');
       card.className='caro-avatar-card'+(onbState.avatarId===a.id?' active':'');
-      card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}" onerror="this.style.display='none'"><h4>${a.title}</h4><p>${a.desc}</p>`;
+      card.innerHTML=`<img src="${a.src||'./assets/caroline.gif'}" alt="${a.title}" onerror="this.style.display='none'"><h4>${a.title}</h4><p>${a.desc}</p>`;
       card.onclick=()=>{ onbState.avatarId=a.id; localStorage.setItem('caroline_avatar_id',a.id); onbState.index=Math.min(ONB_QUESTIONS.length-1,onbState.index+1); renderChatStep(); };
       grid.appendChild(card);
     });
@@ -4209,7 +4209,8 @@ async function finalizeOnboarding(){
           calendarId:      S.calendarId      || '',
           discordEnabled:  S.discordEnabled  || false,
           discordToken:    S.discordToken    || '',
-          discordChannelId: S.discordChannelId || ''
+          discordChannelId: S.discordChannelId || '',
+          setupComplete:   true
         })
       }),
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
@@ -4238,6 +4239,8 @@ async function finalizeOnboarding(){
   if(tn) tn.textContent = S.aiName;
   updateSettingsStatus();
   document.getElementById('onboarding-overlay').classList.remove('show');
+  document.body.classList.remove('idle-mode','focus-mode');
+  resetIdle();
   const main = document.getElementById('main');
   const topbar = document.getElementById('topbar');
   if(main){ main.style.display=''; main.style.opacity='1'; main.style.visibility='visible'; }
@@ -4284,8 +4287,20 @@ function maybeReturningGreeting(){
   setTimeout(()=>addMessage('You\'re back.'+extra,'caroline','display'),1000);
 }
 
-updateSettingsStatus();
-if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
+(async function bootstrap(){
+  // If localStorage was wiped (e.g. private mode, browser reset), restore onboarding state from Node-RED
+  if(!localStorage.getItem('caro_onboarded')){
+    try {
+      const r = await fetch(httpBase()+'/admin/get-settings', { signal: AbortSignal.timeout(2000) });
+      if(r.ok){
+        const d = await r.json();
+        if(d.setupComplete === true){ localStorage.setItem('caro_onboarded','true'); }
+      }
+    } catch(e) { /* Node-RED not ready yet — proceed to onboarding */ }
+  }
+  updateSettingsStatus();
+  if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
+})();
 
 /* ── ON-SCREEN KEYBOARD ────────────────────────────────────────── */
 const OSK_ROWS = [
