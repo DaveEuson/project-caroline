@@ -56,7 +56,7 @@ PALETTE_NODES=(
   "node-red-contrib-discord-advanced"
   "node-red-contrib-google-calendar"
   "node-red-contrib-google-sheets"
-  "node-red-contrib-huemagic"
+  "node-red-contrib-huemagicgit add .git add ."
 )
 
 # ── RESOLVE REAL USER (safe even if run with sudo) ───────────
@@ -486,6 +486,22 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 
     KIOSK_URL="http://localhost:${KIOSK_PORT}/"
 
+    # ── FIREFOX PROFILE: suppress first-run and crash-recovery screens ──
+    FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
+    mkdir -p "$FIREFOX_PROFILE_DIR"
+    cat > "$FIREFOX_PROFILE_DIR/user.js" << 'USERJS'
+user_pref("browser.sessionstore.resume_from_crash", false);
+user_pref("browser.aboutwelcome.enabled", false);
+user_pref("browser.startup.homepage_override.mstone", "ignore");
+user_pref("profile.default_content_setting_values.notifications", 2);
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+USERJS
+    chown -R "$REAL_USER:$REAL_USER" "$FIREFOX_PROFILE_DIR" 2>/dev/null || true
+    echo -e "${GREEN}  ✓ Firefox kiosk profile configured${RESET}"
+
     # Remove any pre-existing Firefox autostart entries to prevent double-launch
     rm -f "$REAL_HOME/.config/autostart/firefox"*.desktop 2>/dev/null || true
     [ -f "$REAL_HOME/.config/labwc/autostart" ] && \
@@ -500,7 +516,7 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 Type=Application
 Name=Caroline Kiosk
 Comment=Launch Project: Caroline UI
-Exec=firefox-esr --kiosk --no-first-run http://localhost:${KIOSK_PORT}/
+Exec=firefox-esr --kiosk --profile ${FIREFOX_PROFILE_DIR} http://localhost:${KIOSK_PORT}/
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
@@ -509,7 +525,7 @@ EOF
     # Written unconditionally: labwc may not be in PATH until first boot
     mkdir -p "$REAL_HOME/.config/labwc"
     if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
-      echo "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
+      echo "sleep 3 && /usr/bin/firefox-esr --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
       chmod +x "$REAL_HOME/.config/labwc/autostart"
     fi
     echo -e "${DIM}    labwc autostart configured${RESET}"
@@ -518,7 +534,7 @@ EOF
     # Written unconditionally: harmless if wayfire is not the active session
     mkdir -p "$REAL_HOME/.config"
     if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
-      printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && /usr/bin/firefox-esr --kiosk --no-first-run %s"\n' "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
+      printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && /usr/bin/firefox-esr --kiosk --profile %s %s"\n' "${FIREFOX_PROFILE_DIR}" "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
     fi
     echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
 
