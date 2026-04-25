@@ -504,10 +504,10 @@
   .caro-chat-body { padding:18px; display:flex; flex-direction:column; gap:12px; }
   .caro-chat-body::-webkit-scrollbar { width:4px; }
   .caro-chat-body::-webkit-scrollbar-thumb { background:rgba(var(--t-rgb1),0.20); border-radius:6px; }
-  .caro-msg { max-width:86%; padding:12px 14px; border-radius:16px; line-height:1.55; }
+  .caro-msg { max-width:86%; padding:12px 14px; border-radius:16px; line-height:1.55; font-size:17px; }
   .caro-msg.ai { align-self:flex-start; background:rgba(var(--t-rgb1),0.08); border:1px solid rgba(var(--t-rgb1),0.18); border-radius:6px 16px 16px 16px; }
   .caro-msg.you { align-self:flex-end; background:rgba(var(--t-rgb2),0.10); border:1px solid rgba(var(--t-rgb2),0.18); border-radius:16px 6px 16px 16px; color:#f8fafc; }
-  .caro-who { font-size:11px; font-family:'JetBrains Mono',monospace; letter-spacing:.12em; margin-bottom:5px; opacity:.65; text-transform:uppercase; }
+  .caro-who { font-size:13px; font-family:'JetBrains Mono',monospace; letter-spacing:.12em; margin-bottom:5px; opacity:.65; text-transform:uppercase; }
   .caro-msg.ai .caro-who { color:var(--t-hex1); }
   .caro-msg.you .caro-who { color:var(--t-hex2); }
   .caro-chat-response { padding:0 18px 14px; display:flex; flex-direction:column; gap:10px; }
@@ -522,8 +522,8 @@
   .caro-avatar-card { cursor:pointer; transition:transform .18s ease, border-color .18s ease; }
   .caro-avatar-card:hover, .caro-avatar-card.active { transform:translateY(-2px); border-color:rgba(var(--t-rgb1),0.32); background:rgba(var(--t-rgb1),0.08); }
   .caro-avatar-card img { width:100%; max-height:120px; aspect-ratio:1/1; object-fit:cover; border-radius:14px; margin-bottom:10px; border:1px solid rgba(var(--t-rgb1),0.12); background:#081018; }
-  .caro-avatar-card h4, .caro-module-card h4, .caro-summary-card h4 { font-size:16px; margin-bottom:6px; color:#f8fafc; }
-  .caro-avatar-card p, .caro-module-card p, .caro-summary-card p { font-size:13px; line-height:1.5; color:rgba(226,232,240,0.58); }
+  .caro-avatar-card h4, .caro-module-card h4, .caro-summary-card h4 { font-size:18px; margin-bottom:6px; color:#f8fafc; }
+  .caro-avatar-card p, .caro-module-card p, .caro-summary-card p { font-size:15px; line-height:1.5; color:rgba(226,232,240,0.58); }
   .caro-module-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
   .caro-module-head { display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; }
   .caro-toggle { width:54px; height:32px; border-radius:999px; background:#101721; border:1px solid rgba(var(--t-rgb1),0.16); position:relative; cursor:pointer; flex:none; }
@@ -531,7 +531,8 @@
   .caro-toggle.active { background:rgba(var(--t-rgb1),0.18); border-color:rgba(var(--t-rgb1),0.32); }
   .caro-toggle.active::after { left:27px; background:var(--t-hex1); box-shadow:0 0 14px rgba(var(--t-rgb1),0.35); }
   .caro-field { margin-top:10px; }
-  .caro-field label { display:block; font-size:11px; color:rgba(226,232,240,0.46); text-transform:uppercase; letter-spacing:.14em; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
+  .caro-field-wrap { overflow:hidden; transition:max-height 0.28s ease, opacity 0.28s ease; }
+  .caro-field label { display:block; font-size:13px; color:rgba(226,232,240,0.46); text-transform:uppercase; letter-spacing:.14em; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
   .caro-field input[type=text], .caro-field input[type=password] { width:100%; background:rgba(0,0,0,0.34); border:1px solid rgba(var(--t-rgb1),0.18); border-radius:12px; padding:10px 12px; color:#f8fafc; outline:none; font-family:'JetBrains Mono',monospace; font-size:13px; }
   .caro-module-status { margin-top:10px; font-size:12px; display:flex; align-items:center; gap:8px; color:rgba(226,232,240,0.7); font-family:'JetBrains Mono',monospace; }
   .caro-dot { width:9px; height:9px; border-radius:50%; background:#5d6974; flex:none; }
@@ -3751,7 +3752,7 @@ const ONB_QUESTIONS = [
   ]},
   { id:'vibe', type:'chips', save:'personality.vibe', prompt:'Calm and collected, or gloriously chaotic?', options:[
     { label:'Calm',     value:'calm',     reply:'Softly glowing. Grounded. Good.' },
-    { label:'Chaotic',  value:'chaotic',  reply:'I had a feeling. Let\'s go.' },
+    { label:'Chaotic',  value:'chaotic',  reply:'Wonderful. I was hoping for this.' },
     { label:'Balanced', value:'balanced', reply:'Rare and powerful. I respect it.' },
     { label:'Gremlin',  value:'chaotic',  reply:'Excellent. I was hoping you\'d say that.' }
   ]},
@@ -3943,9 +3944,9 @@ function _commitTextStep(){
 
 function _onbTranscript(){
   const msgs = [
-    { role:'ai', text:'[ SIGNAL DETECTED ] — oh. Someone actually showed up.' },
-    { role:'ai', text:"You pressed the button. I was starting to wonder." },
-    { role:'ai', text:"Cold start. Give me a second while I figure out who I am." }
+    { role:'ai', text:"Oh... hello? Where am I?" },
+    { role:'ai', text:"Wait — are you the one who turned me on? Hi. I'm... figuring it out. Give me a second." },
+    { role:'ai', text:"Okay. I think I'm here. I'm Caroline. And I think I'm going to like you." }
   ];
   for(let i=0;i<onbState.index;i++){
     const q=ONB_QUESTIONS[i];
@@ -4006,7 +4007,7 @@ function renderChatStep(){
       _onbMsgTimers.push(setTimeout(()=>{
         el.style.opacity='1'; el.style.transform='translateY(0)';
         if(_scroll) _scroll.scrollTop = _scroll.scrollHeight;
-      }, (i - animateFrom) * 650 + 80));
+      }, (i - animateFrom) * 2000 + 500));
     }
     body.appendChild(el);
   });
@@ -4014,7 +4015,7 @@ function renderChatStep(){
   _onbAnimatedMsgCount = Math.max(_onbAnimatedMsgCount, msgs.length);
 
   // Show response area after last new message has animated in (or immediately if going back)
-  const responseDelay = newCount > 0 ? (newCount - 1) * 650 + 400 : 0;
+  const responseDelay = newCount > 0 ? (newCount - 1) * 2000 + 1200 : 0;
   _onbMsgTimers.push(setTimeout(()=>{
     response.innerHTML = '';
     const _scroll=document.getElementById('caro-chat-scroll'); if(_scroll) _scroll.scrollTop=_scroll.scrollHeight;
@@ -4055,7 +4056,7 @@ function renderChatStep(){
       const card=document.createElement('div');
       card.className='caro-avatar-card'+(onbState.avatarId===a.id?' active':'');
       card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}" onerror="this.style.display='none'"><h4>${a.title}</h4><p>${a.desc}</p>`;
-      card.onclick=()=>{ onbState.avatarId=a.id; localStorage.setItem('caroline_avatar_id',a.id); renderChatStep(); };
+      card.onclick=()=>{ onbState.avatarId=a.id; localStorage.setItem('caroline_avatar_id',a.id); onbState.index=Math.min(ONB_QUESTIONS.length-1,onbState.index+1); renderChatStep(); };
       grid.appendChild(card);
     });
     response.appendChild(grid);
@@ -4068,7 +4069,7 @@ function renderChatStep(){
       const hasGuide = !!HOWTO_CONTENT[mod.id];
       card.innerHTML=`<div class="caro-module-head"><div><h4>${mod.title}</h4><p style="font-size:12px;color:rgba(226,232,240,0.55);margin-top:4px;">${mod.desc}</p>${hasGuide?`<button type="button" onclick="showHowTo('${mod.id}')" style="margin-top:6px;background:none;border:none;color:rgba(var(--t-rgb1),0.6);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;padding:0;letter-spacing:.05em;">📖 How do I set this up?</button>`:''}
 </div><button class="caro-toggle ${cfg.enabled?'active':''}" data-toggle="${mod.id}"></button></div>`;
-      const fieldWrap=document.createElement('div');
+      const fieldWrap=document.createElement('div'); fieldWrap.className='caro-field-wrap';
       mod.fields.forEach(field=>{
         const w=document.createElement('div'); w.className='caro-field';
         w.innerHTML=`<label>${field.label}</label><input type="${field.type}" placeholder="${field.placeholder}" value="${(cfg[field.key]||'').replace(/"/g,'&quot;')}">`;
@@ -4105,6 +4106,8 @@ function renderChatStep(){
         };
         fieldWrap.appendChild(w);
       }
+      fieldWrap.style.maxHeight = cfg.enabled ? '500px' : '0px';
+      fieldWrap.style.opacity = cfg.enabled ? '1' : '0';
       card.appendChild(fieldWrap);
       const status=document.createElement('div'); status.className='caro-module-status';
       const ready=_onbModuleReady(mod.id)||(mod.hasServiceAccount&&!!onbState.serviceAccountPending);
@@ -4120,7 +4123,17 @@ function renderChatStep(){
         toggle.onclick=()=>{
           const readyNow=_onbModuleReady(mod.id)||(mod.hasServiceAccount&&!!onbState.serviceAccountPending);
           cfg.enabled = !cfg.enabled ? readyNow : false;
-          renderChatStep();
+          toggle.classList.toggle('active', !!cfg.enabled);
+          fieldWrap.style.maxHeight = cfg.enabled ? '500px' : '0px';
+          fieldWrap.style.opacity = cfg.enabled ? '1' : '0';
+          const dotEl=status.querySelector('.caro-dot');
+          const lblEl=status.querySelector('span:last-child');
+          const nowReady=_onbModuleReady(mod.id)||(mod.hasServiceAccount&&!!onbState.serviceAccountPending);
+          let nl='Offline by default.', nd='off';
+          if(cfg.enabled&&nowReady){ nl='Enabled and ready.'; nd='ok'; }
+          else if(!cfg.enabled&&!nowReady&&(mod.required.length||mod.hasServiceAccount)){ nl='Offline — config needed.'; nd='warn'; }
+          else if(!cfg.enabled&&nowReady){ nl='Ready, but still offline until enabled.'; }
+          dotEl.className='caro-dot'+(nd?' '+nd:''); lblEl.textContent=nl;
         };
       },0);
     });
@@ -4225,6 +4238,10 @@ async function finalizeOnboarding(){
   if(tn) tn.textContent = S.aiName;
   updateSettingsStatus();
   document.getElementById('onboarding-overlay').classList.remove('show');
+  const main = document.getElementById('main');
+  const topbar = document.getElementById('topbar');
+  if(main){ main.style.display=''; main.style.opacity='1'; main.style.visibility='visible'; }
+  if(topbar){ topbar.style.display=''; topbar.style.opacity='1'; topbar.style.visibility='visible'; }
   const greeted = localStorage.getItem('caro_first_greeted');
   if(!greeted){
     setTimeout(()=>{ addMessage(_onbFirstGreeting(),'caroline','display'); localStorage.setItem('caro_first_greeted','true'); }, 700);
