@@ -285,6 +285,8 @@ OLLAMA_ENV_EOF
   wait "$PULL_PID"
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}  ✓ Model ${OLLAMA_MODEL} locked and loaded${RESET}"
+    echo -e "${YELLOW}  ► Warming ${OLLAMA_MODEL} into memory...${RESET}"
+    ollama run "$OLLAMA_MODEL" "hello" >/dev/null 2>&1 || true
   else
     echo -e "${YELLOW}  ⚠ Model pull failed — run 'ollama pull ${OLLAMA_MODEL}' manually after install${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-pull.log${RESET}"
@@ -344,9 +346,20 @@ echo -e "${GREEN}  ✓ Caroline payload ready${RESET}"
 # ── GOOGLE SERVICE ACCOUNT ───────────────────────────────────
 if [ -n "$GOOG_SA_PATH" ] && [ -f "$GOOG_SA_PATH" ]; then
   cp -f "$GOOG_SA_PATH" "$CAROLINE_DIR/caroline-calendar.json"
+  cp -f "$GOOG_SA_PATH" "$CAROLINE_DIR/service-account.json"
   sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline-calendar.json"
+  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/service-account.json"
   echo -e "${GREEN}  ✓ Google service account installed${RESET}"
 else
+  cat > "$CAROLINE_DIR/caroline-calendar.json" << 'GOOGLE_PLACEHOLDER_EOF'
+{
+  "type": "placeholder",
+  "private_key": "",
+  "client_email": ""
+}
+GOOGLE_PLACEHOLDER_EOF
+  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline-calendar.json"
+  chmod 600 "$CAROLINE_DIR/caroline-calendar.json"
   echo -e "${DIM}  ℹ Google Calendar: no service account configured — enable in Caroline settings later${RESET}"
 fi
 
@@ -379,7 +392,13 @@ echo -e "${GREEN}  ✓ Flows imported${RESET}"
 # ── GOOGLE SERVICE ACCOUNT PLACEHOLDER ───────────────────────
 SERVICE_ACCOUNT_FILE="$CAROLINE_DIR/service-account.json"
 if [ ! -f "$SERVICE_ACCOUNT_FILE" ]; then
-  echo '{}' > "$SERVICE_ACCOUNT_FILE"
+  cat > "$SERVICE_ACCOUNT_FILE" << 'GOOGLE_PLACEHOLDER_EOF'
+{
+  "type": "placeholder",
+  "private_key": "",
+  "client_email": ""
+}
+GOOGLE_PLACEHOLDER_EOF
   chown "$REAL_USER:$REAL_USER" "$SERVICE_ACCOUNT_FILE"
   chmod 600 "$SERVICE_ACCOUNT_FILE"
   echo -e "${YELLOW}  ⚠ Created placeholder: $SERVICE_ACCOUNT_FILE${RESET}"
@@ -506,6 +525,7 @@ Requires=ollama.service
 Type=simple
 User=${REAL_USER}
 WorkingDirectory=${CAROLINE_DIR}
+ExecStartPre=/bin/sleep 5
 ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT} --userDir ${CAROLINE_DIR}
 Restart=on-failure
 RestartSec=5
