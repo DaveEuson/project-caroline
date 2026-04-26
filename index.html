@@ -53,6 +53,8 @@
   .topbar-version { font-size: 9px; color: rgba(var(--t-rgb1),0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; margin-left: 2px; align-self: flex-end; margin-bottom: 3px; }
   .topbar-sub { font-size: 14px; color: rgba(148,163,184,0.6); font-family: 'JetBrains Mono', monospace; }
   .conn-pill { background: rgba(var(--t-rgb1), 0.1); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; padding: 2px 8px; font-size: 13px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; transition: all 0.5s ease; }
+  .ai-config-pill { display:none; background:rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.35); border-radius:20px; padding:2px 8px; font-size:11px; color:#fbbf24; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; white-space:nowrap; }
+  .ai-config-pill.show { display:inline-flex; align-items:center; }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
   #restart-btn { margin-left: 8px; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
@@ -801,11 +803,13 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
               <div class="settings-label" style="margin:0">Installed models</div>
               <button type="button" class="detect-btn" id="ollama-fetch-btn" onclick="fetchOllamaModels()">⟳ Refresh</button>
+              <button type="button" class="detect-btn" id="ollama-load-btn" onclick="loadOllamaModel()">Load Model</button>
             </div>
             <div id="ollama-model-cards" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;">
               <span id="ollama-cards-hint" style="font-size:11px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;align-self:center;">Hit ⟳ Refresh to scan installed models</span>
             </div>
             <input type="hidden" id="set-ollama-model" value=""/>
+            <div id="ollama-load-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
           </div>
 
           <!-- Pull new model -->
@@ -859,7 +863,9 @@
             <option value="0">NASA Live</option>
             <option value="1">Lofi Girl</option>
             <option value="2">Lofi Study</option>
-            <option value="3">Lofi Sleep</option>
+            <option value="3">ChillHop</option>
+            <option value="4">Jazz BGM</option>
+            <option value="5">NHK World</option>
           </select>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -1094,6 +1100,7 @@
   <span class="topbar-version">v0.2</span>
   <span class="topbar-sub">AI companion</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
+  <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI Model">AI KEY NEEDED</span>
   <span class="date-sep">│</span>
   <div id="date-strip">
     <span id="date-text">--/--/----</span>
@@ -1354,6 +1361,8 @@ if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
+S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
+localStorage.setItem('caro_settings', JSON.stringify(S));
 
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
 // Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
@@ -1382,6 +1391,7 @@ async function syncSettingsFromServer() {
     });
     localStorage.setItem('caro_settings', JSON.stringify(S));
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+    updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
     fetchWeather();
@@ -1480,7 +1490,11 @@ function getNodeRedUrl() {
   if (u.includes('[PI_IP]')) u = DEFAULT_NODE_RED_URL;
   if (u && !u.startsWith('http')) u = 'http://' + u;
   if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(u)) u = DEFAULT_NODE_RED_URL;
-  return u.replace(/\/+$/, '');
+  u = (u || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
+  if (S) S.nodeRedUrl = u;
+  const field = document.getElementById('set-nodered-url');
+  if (field && !field.value.trim()) field.value = u;
+  return u;
 }
 function getPiHost() {
   try { return new URL(getNodeRedUrl()).hostname; }
@@ -1699,6 +1713,15 @@ function onProviderChange(provider) {
     orKeyRow.style.display = '';
     olRows.style.display   = 'none';
   }
+  updateAiConfigIndicator(provider);
+}
+
+function updateAiConfigIndicator(provider) {
+  const pill = document.getElementById('ai-config-pill');
+  if (!pill) return;
+  const selected = provider || S.aiProvider || 'openrouter';
+  const needsKey = selected !== 'ollama' && !(S.openrouterKey || '').trim();
+  pill.classList.toggle('show', needsKey);
 }
 
 const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
@@ -1762,8 +1785,10 @@ async function fetchOllamaStatus() {
       text.style.color      = 'rgba(52,211,153,0.9)';
       if (ram) ram.textContent = gb;
     } else {
+      const selectedModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || '';
+      const installed = (_cachedOllamaModels || []).some(m => m.name === selectedModel);
       dot.style.background = '#fbbf24';
-      text.textContent     = '● Ollama online — no model loaded';
+      text.textContent     = installed ? '⚠ Model installed but not loaded — click to warm up' : '● Ollama online — no model loaded';
       text.style.color     = 'rgba(251,191,36,0.8)';
       if (ram) ram.textContent = '';
     }
@@ -1788,6 +1813,7 @@ async function fetchOllamaModels() {
     const models = d.models || [];
     _cachedOllamaModels = models;
     _renderOllamaCards(models);
+    fetchOllamaStatus();
     clog('info', 'Ollama models: ' + models.map(m => m.name).join(', '));
   } catch(e) {
     try {
@@ -1859,6 +1885,31 @@ async function startPull(model) {
     clog('err', 'ollama-pull: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; }
+  }
+}
+
+async function loadOllamaModel() {
+  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+  const statusEl = document.getElementById('ollama-load-status');
+  const btn = document.getElementById('ollama-load-btn');
+  if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'Loading ' + model + '...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-load', {
+      method: 'POST',
+      timeoutMs: 130000,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model })
+    }, 'Ollama load');
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    if (statusEl) statusEl.textContent = 'Model ready';
+    await fetchOllamaStatus();
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Load failed — ' + e.message;
+    clog('err', 'ollama-load: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Load Model'; }
   }
 }
 
@@ -2177,7 +2228,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, tidesStation: S.tidesStation }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
   }
 
   let nrSaveOk = false;
@@ -2222,6 +2273,7 @@ async function saveSettings() {
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
+  updateAiConfigIndicator();
 
   fb.classList.remove('error');
   if (nrSaveOk) {
@@ -2305,9 +2357,11 @@ const DEFAULT_CHANNELS = [
   { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'21X5lGlDOfg' },
   { name:'Lofi Girl',   icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
   { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
-  { name:'Lofi Sleep',  icon:'🌙', type:'youtube', ytId:'DWcJFNfaw9c' }
+  { name:'ChillHop',    icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
+  { name:'Jazz BGM',    icon:'🎷', type:'youtube', ytId:'Dx5qFachd3A' },
+  { name:'NHK World',   icon:'🌏', type:'iframe', url:'https://www3.nhk.or.jp/nhkworld/en/live/' }
 ];
-const CHANNEL_VERSION = 9;
+const CHANNEL_VERSION = 10;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
 let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
 let currentChannel = S.defaultChannel || 0;
@@ -2371,7 +2425,14 @@ function loadChannel(idx) {
   const ytFallback = document.getElementById('yt-fallback-link');
   const btn = document.getElementById('video-mute-btn');
   document.getElementById('channel-label').textContent = ch.icon + ' ' + ch.name.toUpperCase();
-  if (ch.type === 'hls') {
+  if (ch.type === 'iframe') {
+    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+    vid.pause(); vid.src=''; vid.style.display='none';
+    if (btn) btn.style.display='none';
+    iframe.style.display='block';
+    iframe.src = ch.url;
+    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
+  } else if (ch.type === 'hls') {
     iframe.style.display='none'; iframe.src=''; vid.style.display='block';
     if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
     if (btn) btn.style.display='block';
@@ -2394,7 +2455,7 @@ function loadChannel(idx) {
     vid.pause(); vid.src=''; vid.style.display='none';
     if (btn) btn.style.display='none';
     iframe.style.display='block';
-    const origin = encodeURIComponent(window.location.origin || ('http://' + (window.location.hostname || 'localhost') + ':8080'));
+    const origin = window.location.origin || ('http://' + (window.location.hostname || 'localhost') + ':8080');
     iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1&origin='+origin;
     if (ytFallback) {
       ytFallback.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(ch.ytId);
@@ -2713,7 +2774,7 @@ function connectWS(){
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart)
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, nodeRedUrl: S.nodeRedUrl, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, tidesStation: S.tidesStation }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
   };
   ws.onmessage = (e) => {
   if (seq !== wsConnectSeq) return;
@@ -2801,6 +2862,7 @@ if (!localStorage.getItem('caroline_configured')) {
 }
 
 document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+updateAiConfigIndicator();
 
 // ── SEND ──────────────────────────────────────
 const input=document.getElementById('msg-input');
@@ -2822,6 +2884,12 @@ function sendMessage(){
     addMessage(t,'user','display'); saveToMemory(memFact);
     const reply = 'Got it! Saved to memory: "' + memFact + '"';
     setTimeout(()=>{ addMessage(reply,'caroline','display'); speak(reply); }, 400);
+    return;
+  }
+  if ((S.aiProvider || 'openrouter') !== 'ollama' && !(S.openrouterKey || '').trim()) {
+    addMessage(t,'user','display');
+    addMessage('I need an OpenRouter API key to respond. Add it in Settings -> AI Model.', 'caroline', 'display');
+    updateAiConfigIndicator();
     return;
   }
   addMessage(t,'user','display'); showTyping();
@@ -3100,6 +3168,10 @@ function updateBottomChat() {
 }
 
 async function refreshSpotifyToken() {
+  if (!S.spotifyClientId) {
+    showSpotifyIdle('Spotify not configured');
+    return false;
+  }
   try {
     const r = await fetchJsonWithTimeout(httpBase() + '/spotify/refresh', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Spotify refresh');
     const d = await r.json();
@@ -3165,6 +3237,10 @@ async function spotifyApiGet(url) {
 }
 
 async function fetchSpotifyNowPlaying() {
+  if (!S.spotifyClientId) {
+    showSpotifyIdle('Spotify not configured');
+    return;
+  }
   if (!spotifyToken) {
     const refreshed = await refreshSpotifyToken();
     if (!refreshed) {
@@ -3243,9 +3319,11 @@ function showSpotifyIdle(msg) {
 
 setInterval(() => { updateBottomChat(); }, 5000);
 setTimeout(() => { updateBottomChat(); }, 2000);
-setTimeout(() => { refreshSpotifyToken().then(ok => { if (ok) fetchSpotifyNowPlaying(); }); }, 1500);
-if (spotifyToken) { fetchSpotifyNowPlaying(); spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000); }
-else { spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000); }
+if (S.spotifyClientId) {
+  setTimeout(() => { refreshSpotifyToken().then(ok => { if (ok) fetchSpotifyNowPlaying(); }); }, 1500);
+  fetchSpotifyNowPlaying();
+  spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000);
+}
 
 
 // ── TODO LIST ─────────────────────────────────
@@ -3442,6 +3520,7 @@ applyFeatures();
 if(S.cityName) document.getElementById('weather-city-label').textContent=S.cityName;
 
 setTimeout(async () => {
+  if (!S.spotifyClientId) return;
   try {
     const ok = await refreshSpotifyToken();
     if (ok) {
@@ -3453,6 +3532,7 @@ setTimeout(async () => {
 }, 1500);
 
 async function spotifyControl(url, method='POST') {
+  if (!S.spotifyClientId) return;
   try {
     if (!spotifyToken) {
       const ok = await refreshSpotifyToken();
@@ -3480,6 +3560,7 @@ async function spotifyControl(url, method='POST') {
 }
 
 async function spotifyTogglePlay() {
+  if (!S.spotifyClientId) return;
   try {
     if (!spotifyToken) { const ok = await refreshSpotifyToken(); if (!ok) return; }
     let state = await fetch("https://api.spoti" + "fy.com/v1/me/player", { headers: { 'Authorization': 'Bearer ' + spotifyToken } });
