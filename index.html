@@ -52,7 +52,10 @@
   .topbar-name { font-size: 18px; font-weight: 600; letter-spacing: 0.05em; color: #f8fafc; }
   .topbar-version { font-size: 9px; color: rgba(var(--t-rgb1),0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; margin-left: 2px; align-self: flex-end; margin-bottom: 3px; }
   .topbar-sub { font-size: 14px; color: rgba(148,163,184,0.6); font-family: 'JetBrains Mono', monospace; }
-  .conn-pill { background: rgba(var(--t-rgb1), 0.1); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; transition: all 0.5s ease; white-space: nowrap; }
+  .conn-pill { background: rgba(var(--t-rgb1), 0.1); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; transition: all 0.5s ease; white-space: nowrap; }
+  .conn-pill.ai-ok { color:#34d399; border-color:rgba(52,211,153,0.35); background:rgba(52,211,153,0.09); }
+  .conn-pill.ai-warn { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.09); }
+  .conn-pill.ai-fail { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.09); }
   .ai-config-pill { display:none; background:rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.35); border-radius:20px; padding:2px 8px; font-size:11px; color:#fbbf24; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; white-space:nowrap; }
   .ai-config-pill.show { display:inline-flex; align-items:center; }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
@@ -60,11 +63,7 @@
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
   #settings-topbar-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
   #settings-topbar-btn:hover { background: rgba(var(--t-rgb1),0.2); }
-  #date-strip { display: flex; align-items: center; gap: 8px; margin-left: 6px; }
-  #date-text { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: rgba(var(--t-rgb1), 0.7); white-space: nowrap; }
-  #holiday-text { font-size: 13px; color: rgba(250,204,21,0.85); font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; max-width: 180px; }
-  #holiday-icon { font-size: 14px; flex-shrink: 0; }
-  .date-sep { color: rgba(var(--t-rgb1), 0.2); font-size: 14px; }
+  #holiday-text { color: rgba(250,204,21,0.85); }
 
   /* RESTART MODAL */
   #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10500; align-items: center; justify-content: center; }
@@ -125,6 +124,8 @@
   #widgets { width: 100%; display: flex; flex-direction: column; gap: 6px; }
   .widget { background: rgba(255,255,255,0.02); border: 1px solid rgba(var(--t-rgb1), 0.1); border-radius: 10px; padding: 6px 10px; }
   .widget-label { font-size: 14px; color: rgba(226,232,240,0.45); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+  .today-row { display:flex; align-items:center; gap:7px; min-width:0; font-size:13px; color:#f8fafc; line-height:1.25; margin-top:4px; }
+  .today-row span:last-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #weather-main { display: flex; align-items: center; gap: 6px; }
   #weather-icon { font-size: 20px; }
   #weather-temp { font-size: 26px; font-weight: 300; }
@@ -421,8 +422,7 @@
     #avatar-outer { width: 180px; height: 180px; }
     #topbar { padding: 0 8px; gap: 6px; }
     .topbar-name { font-size: 15px; }
-    #holiday-text { max-width: 100px; }
-    #date-text { font-size: 11px; }
+    .topbar-sub { display:none; }
     #settings-modal { width: 98vw; max-height: 85vh; }
     #subtitle-text { font-size: 15px; }
     .quick-btn { padding: 8px 10px; font-size: 12px; }
@@ -439,7 +439,7 @@
     #avatar-outer { width: 140px; height: 140px; }
     #center { padding: 4px 6px; gap: 8px; }
     .quick-btn { padding: 7px 8px; font-size: 11px; }
-    #topbar-moon, #topbar-radio { display: none; }
+    #topbar-radio { display: none; }
   }
   .feat-toggle { display:flex; align-items:center; gap:10px; font-size:14px; color:#e2e8f0; cursor:pointer; padding:6px 10px; border-radius:10px; border:1px solid rgba(var(--t-rgb1),0.1); transition:background 0.2s; }
   .feat-toggle:hover { background:rgba(var(--t-rgb1),0.06); }
@@ -749,7 +749,7 @@
         <div id="openrouter-model-row" style="margin-top:14px">
           <div class="settings-row">
             <div><div class="settings-label">OpenRouter model</div><div class="settings-sub">Requires an OpenRouter API key</div></div>
-            <select class="settings-select" id="set-model">
+            <select class="settings-select" id="set-model" onchange="refreshAiStatusFromSettingsInputs()">
               <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 — Fast</option>
               <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Balanced</option>
               <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
@@ -858,15 +858,24 @@
             <option value="99999">Never</option>
           </select>
         </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(var(--t-rgb1),0.08);">
+          <div class="settings-label">Quick actions</div>
+          <div class="settings-sub">Four chat prompts shown under Caroline</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+            <input class="settings-input quick-action-input" id="quick-action-0" type="text" placeholder="Brief me" style="width:100%"/>
+            <input class="settings-input quick-action-input" id="quick-action-1" type="text" placeholder="Schedule" style="width:100%"/>
+            <input class="settings-input quick-action-input" id="quick-action-2" type="text" placeholder="Motivate" style="width:100%"/>
+            <input class="settings-input quick-action-input" id="quick-action-3" type="text" placeholder="Tasks" style="width:100%"/>
+          </div>
+        </div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
           <select class="settings-select" id="set-channel">
             <option value="0">NASA Live</option>
             <option value="1">Lofi Girl</option>
-            <option value="2">Lofi Study</option>
+            <option value="2">Study Music</option>
             <option value="3">ChillHop</option>
-            <option value="4">Jazz BGM</option>
-            <option value="5">ChillHop Music</option>
+            <option value="4">Ambient</option>
           </select>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -888,7 +897,7 @@
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub">AI API key — required for Cloud</div></div>
           <div style="display:flex;align-items:center;gap:6px;">
-            <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..."/>
+            <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..." oninput="refreshAiStatusFromSettingsInputs()"/>
             <button type="button" id="orkey-eye" onclick="toggleOrkeyVisibility()" style="background:none;border:1px solid rgba(var(--t-rgb1),0.25);border-radius:8px;padding:5px 8px;color:rgba(226,232,240,0.4);cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;" title="Show/hide key">👁</button>
           </div>
         </div>
@@ -1102,21 +1111,11 @@
   <span class="topbar-sub">AI companion</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI Model">AI KEY NEEDED</span>
-  <span class="date-sep">│</span>
-  <div id="date-strip">
-    <span id="date-text">--/--/----</span>
-    <span id="holiday-icon">🌿</span>
-    <span id="holiday-text">Loading...</span>
-  </div>
   <span id="time-icon" style="font-size:16px">🌅</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
   <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
     <span id="wifi-strength" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:rgba(var(--t-rgb1),0.5);">--</span>
-  </div>
-  <div id="topbar-moon" style="display:flex;align-items:center;gap:4px;margin-left:4px;cursor:pointer;position:relative;" title="Moon Phase">
-    <span id="moon-icon" style="font-size:14px;">🌑</span>
-    <span id="moon-name" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.6);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;"></span>
   </div>
   <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog">⚙️ Settings</button>
   <span id="restart-btn"><i class="ti ti-refresh"></i> RESTART</span>
@@ -1135,6 +1134,12 @@
         </div>
         <div id="forecast"></div>
         <div id="sun-row"><span>🌅 <span id="sunrise-time">--</span></span><span>🌇 <span id="sunset-time">--</span></span></div>
+      </div>
+      <div class="widget" id="widget-today">
+        <div class="widget-label">Today</div>
+        <div class="today-row"><span>📅</span><span id="today-date-text">Loading...</span></div>
+        <div class="today-row"><span id="moon-icon">🌑</span><span id="moon-name">Moon phase</span></div>
+        <div class="today-row"><span id="holiday-icon">✨</span><span id="holiday-text">Loading...</span></div>
       </div>
       <audio id="radio-audio" preload="none"></audio>
       <div class="widget" id="widget-radio">
@@ -1261,10 +1266,6 @@
         </div>
       </div>
       <div id="quick-btns">
-        <button class="quick-btn" onclick="quickSend('Good morning ' + (S.aiName||'Caroline') + '! Give me a quick brief - weather, anything I should know today.')"><i class="ti ti-sun"></i> Brief me</button>
-        <button class="quick-btn" onclick="quickSend('What do I have on today? Give me a heads up on my schedule.')"><i class="ti ti-calendar"></i> Schedule</button>
-        <button class="quick-btn" onclick="quickSend('Give me a quick motivation boost and one focus tip for right now.')"><i class="ti ti-bolt"></i> Motivate</button>
-        <button class="quick-btn" onclick="toggleTodo(); playBeep(700);"><i class="ti ti-checkbox"></i> Tasks</button>
       </div>
     </div>
   </div>
@@ -1272,7 +1273,7 @@
   <div id="news-panel">
     <div id="video-section">
       <div id="channel-bar">
-        <span id="channel-label">🔴 NHK WORLD LIVE</span>
+        <span id="channel-label">🚀 NASA LIVE</span>
         <button class="ch-btn" onclick="changeChannel(-1)"><i class="ti ti-chevron-left"></i></button>
         <button class="ch-btn" onclick="changeChannel(1)"><i class="ti ti-chevron-right"></i></button>
       </div>
@@ -1357,6 +1358,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
 const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const QUICK_ACTION_DEFAULTS = ['Brief me', 'Schedule', 'Motivate', 'Tasks'];
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
@@ -1364,6 +1366,31 @@ if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NO
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
 localStorage.setItem('caro_settings', JSON.stringify(S));
+let quickActions = normalizeQuickActions(JSON.parse(localStorage.getItem('caro_quick_actions') || 'null'));
+
+function normalizeQuickActions(actions) {
+  const source = Array.isArray(actions) ? actions : QUICK_ACTION_DEFAULTS;
+  return QUICK_ACTION_DEFAULTS.map((fallback, i) => String(source[i] || fallback).trim() || fallback);
+}
+
+function saveQuickActions() {
+  localStorage.setItem('caro_quick_actions', JSON.stringify(quickActions));
+}
+
+function renderQuickActions() {
+  const wrap = document.getElementById('quick-btns');
+  if (!wrap) return;
+  const icons = ['ti ti-sun', 'ti ti-calendar', 'ti ti-bolt', 'ti ti-checkbox'];
+  wrap.innerHTML = '';
+  quickActions.forEach((label, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-btn';
+    btn.type = 'button';
+    btn.innerHTML = '<i class="' + icons[i] + '"></i> ' + label.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    btn.onclick = () => quickSend(label);
+    wrap.appendChild(btn);
+  });
+}
 
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
 // Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
@@ -1629,6 +1656,11 @@ function toggleSettings() {
     document.getElementById('set-avatar').value = S.avatar;
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
+    quickActions = normalizeQuickActions(JSON.parse(localStorage.getItem('caro_quick_actions') || 'null'));
+    quickActions.forEach((label, i) => {
+      const el = document.getElementById('quick-action-' + i);
+      if (el) el.value = label;
+    });
     if (S.defaultChannel >= videoChannels.length) S.defaultChannel = 0;
     document.getElementById('set-channel').value = S.defaultChannel;
     document.getElementById('set-auto-theme').checked = S.autoTheme;
@@ -1714,15 +1746,30 @@ function onProviderChange(provider) {
     orKeyRow.style.display = '';
     olRows.style.display   = 'none';
   }
+  S.aiProvider = provider;
+  aiStatus = (provider !== 'ollama' && !(S.openrouterKey || '').trim()) ? 'fail' : 'warn';
+  updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
+  updateAiConfigIndicator(provider);
+}
+
+function refreshAiStatusFromSettingsInputs() {
+  const provider = (document.getElementById('set-ai-provider') || {}).value || S.aiProvider || 'ollama';
+  const model = (document.getElementById('set-model') || {}).value || S.aiModel;
+  const ollamaModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel;
+  const key = (document.getElementById('set-orkey') || {}).value || S.openrouterKey || '';
+  S.aiProvider = provider;
+  if (model) S.aiModel = model;
+  if (ollamaModel) S.ollamaModel = ollamaModel;
+  S.openrouterKey = key.trim();
+  aiStatus = (provider !== 'ollama' && !S.openrouterKey) ? 'fail' : 'warn';
+  updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
   updateAiConfigIndicator(provider);
 }
 
 function updateAiConfigIndicator(provider) {
   const pill = document.getElementById('ai-config-pill');
   if (!pill) return;
-  const selected = provider || S.aiProvider || 'openrouter';
-  const needsKey = selected !== 'ollama' && !(S.openrouterKey || '').trim();
-  pill.classList.toggle('show', needsKey);
+  pill.classList.remove('show');
 }
 
 function shortAiModelName(model) {
@@ -1739,13 +1786,25 @@ function shortAiModelName(model) {
 
 function aiModelLabel() {
   const provider = S.aiProvider || 'ollama';
+  if (provider !== 'ollama' && !(S.openrouterKey || '').trim()) return '⚠ No AI configured';
   const model = provider === 'ollama' ? (S.ollamaModel || 'llama3.2') : (S.aiModel || 'anthropic/claude-haiku-4.5');
-  return provider + ':' + shortAiModelName(model);
+  return provider === 'ollama' ? '🏠 Local: ' + shortAiModelName(model) : '☁ Cloud: ' + shortAiModelName(model);
 }
+
+let aiStatus = (S.aiProvider !== 'ollama' && !(S.openrouterKey || '').trim()) ? 'fail' : 'warn';
 
 function updateConnectionPill(status) {
   if (!pill) return;
-  pill.textContent = status + ' | ' + aiModelLabel();
+  const noAi = (S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim();
+  const cls = status === 'CONNECTED' ? (noAi ? 'ai-fail' : (aiStatus === 'ok' ? 'ai-ok' : aiStatus === 'fail' ? 'ai-fail' : 'ai-warn')) : 'ai-fail';
+  pill.classList.remove('ai-ok', 'ai-warn', 'ai-fail');
+  pill.classList.add(cls);
+  pill.textContent = '● ' + status + ' | ' + aiModelLabel();
+}
+
+function setAiStatus(status) {
+  aiStatus = status;
+  updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
 }
 
 function currentSettingsPayload(extra = {}) {
@@ -1767,6 +1826,8 @@ async function syncAiModelFromHealth() {
     if (h.aiProvider) S.aiProvider = h.aiProvider;
     if (h.aiModel) S.aiModel = h.aiModel;
     if (h.ollamaModel) S.ollamaModel = h.ollamaModel;
+    if ((S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim()) aiStatus = 'fail';
+    else if (aiStatus !== 'ok') aiStatus = 'warn';
     updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
     updateAiConfigIndicator();
   } catch(e) { /* health is best-effort */ }
@@ -1808,6 +1869,7 @@ function _renderOllamaCards(models) {
       document.querySelectorAll('.ollama-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       document.getElementById('set-ollama-model').value = name;
+      refreshAiStatusFromSettingsInputs();
     };
     cards.appendChild(card);
   });
@@ -2036,15 +2098,18 @@ async function testAiConnection(btn) {
       if (d.ok && d.models && d.models.length) {
         result.textContent = '✓ Ollama online — ' + d.models.length + ' model' + (d.models.length !== 1 ? 's' : '') + ' ready — ' + ms + 'ms';
         result.style.color = 'rgba(52,211,153,0.9)';
+        setAiStatus('ok');
       } else {
         result.textContent = '⚠ Ollama up but no models — pull one';
         result.style.color = 'rgba(251,191,36,0.9)';
+        setAiStatus('warn');
       }
     } else {
       const key = (document.getElementById('set-orkey') || {}).value?.trim() || S.openrouterKey;
       if (!key) {
         result.textContent = '✗ No OpenRouter key configured';
         result.style.color = '#f87171';
+        setAiStatus('fail');
       } else {
         const r = await fetch('https://openrouter.ai/api/v1/models', {
           headers: { 'Authorization': 'Bearer ' + key },
@@ -2054,9 +2119,11 @@ async function testAiConnection(btn) {
         if (r.ok) {
           result.textContent = '✓ OpenRouter key valid — ' + ms + 'ms';
           result.style.color = 'rgba(52,211,153,0.9)';
+          setAiStatus('ok');
         } else {
           result.textContent = '✗ OpenRouter rejected key (HTTP ' + r.status + ')';
           result.style.color = '#f87171';
+          setAiStatus('fail');
         }
       }
     }
@@ -2070,6 +2137,7 @@ async function testAiConnection(btn) {
         if (models.length) {
           result.textContent = '✓ Ollama direct online — Node-RED proxy timed out — ' + models.length + ' model' + (models.length !== 1 ? 's' : '') + ' — ' + ms + 'ms';
           result.style.color = 'rgba(251,191,36,0.9)';
+          setAiStatus('warn');
           return;
         }
       } catch(fallbackErr) {
@@ -2078,6 +2146,7 @@ async function testAiConnection(btn) {
     }
     result.textContent = '✗ ' + (provider === 'ollama' ? 'Ollama' : 'OpenRouter') + ' unreachable — ' + e.message;
     result.style.color = '#f87171';
+    setAiStatus('fail');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '⚡ Test Connection'; }
   }
@@ -2255,6 +2324,13 @@ async function saveSettings() {
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
   S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'llama3.2').trim();
+  aiStatus = (S.aiProvider !== 'ollama' && !S.openrouterKey) ? 'fail' : 'warn';
+  quickActions = normalizeQuickActions(QUICK_ACTION_DEFAULTS.map((fallback, i) => {
+    const el = document.getElementById('quick-action-' + i);
+    return el ? el.value : fallback;
+  }));
+  saveQuickActions();
+  renderQuickActions();
   S.hueIp = document.getElementById('set-hueip').value.trim();
   S.hueKey = document.getElementById('set-huekey').value.trim();
   const hgEl = document.getElementById('set-hue-group');
@@ -2405,12 +2481,11 @@ function changeAvatar(dir) {
 const DEFAULT_CHANNELS = [
   { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'21X5lGlDOfg' },
   { name:'Lofi Girl',   icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
-  { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
+  { name:'Study Music', icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
   { name:'ChillHop',    icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
-  { name:'Jazz BGM',    icon:'🎷', type:'youtube', ytId:'Dx5qFachd3A' },
-  { name:'ChillHop Music', icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' }
+  { name:'Ambient',     icon:'🌌', type:'youtube', ytId:'rUxyKA_-grg' }
 ];
-const CHANNEL_VERSION = 11;
+const CHANNEL_VERSION = 12;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
 let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
 let currentChannel = S.defaultChannel || 0;
@@ -2837,7 +2912,7 @@ function connectWS(){
   ws=new WebSocket(_wsUrl); ws.binaryType='blob';
   ws.onopen=()=>{
     if (seq !== wsConnectSeq) return;
-    updateConnectionPill('CONNECTED'); pill.style.color='var(--t-hex1)'; playBeep(1500);
+    updateConnectionPill('CONNECTED'); playBeep(1500);
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
@@ -2856,7 +2931,13 @@ function connectWS(){
       addMessage(t, 'caroline', 'display');
       speak(t);
       _trackRecv(t);
+      setAiStatus(/^⚠|OpenRouter key/i.test(t) ? 'fail' : 'ok');
       clog('recv', t.length > 60 ? t.slice(0,60)+'…' : t);
+    }
+    else if (d.type === 'settings_confirmed') {
+      clog('ws', 'Settings confirmed; OpenRouter key length ' + (d.keyLength || 0));
+      if ((S.aiProvider || 'ollama') !== 'ollama' && !(d.keyLength || 0)) setAiStatus('fail');
+      else setAiStatus('warn');
     }
     else if (d.type === 'user_telegram') {
       addMessage(d.content, 'user', 'telegram');
@@ -2899,7 +2980,7 @@ function connectWS(){
 };
 ws.onclose = ()=>{
     if (seq !== wsConnectSeq) return;
-    updateConnectionPill('RECONNECTING'); pill.style.color='#f43f5e';
+    updateConnectionPill('RECONNECTING');
     document.getElementById('offline-banner').classList.add('show');
     clog('err','WebSocket closed — reconnecting in 3s');
     wsReconnectTimer = setTimeout(connectWS,3000);
@@ -2932,6 +3013,7 @@ if (!localStorage.getItem('caroline_configured')) {
 
 document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
 updateAiConfigIndicator();
+renderQuickActions();
 
 // ── SEND ──────────────────────────────────────
 const input=document.getElementById('msg-input');
@@ -2957,7 +3039,8 @@ function sendMessage(){
   }
   if ((S.aiProvider || 'openrouter') !== 'ollama' && !(S.openrouterKey || '').trim()) {
     addMessage(t,'user','display');
-    addMessage('I need an OpenRouter API key to respond. Add it in Settings -> AI Model.', 'caroline', 'display');
+    setAiStatus('fail');
+    addMessage('⚠ No OpenRouter key found. Please add your API key in Settings -> AI Model, then Save & Apply.', 'caroline', 'display');
     updateAiConfigIndicator();
     return;
   }
@@ -3094,9 +3177,9 @@ async function fetchNews(){ const nl=document.getElementById('news-list'); try{ 
 fetchNews(); setInterval(fetchNews,15*60*1000);
 
 // ── HOLIDAYS ──────────────────────────────────
-const HOL={ '1/1':['🎉',"New Year's Day"],'2/14':['💝',"Valentine's Day"],'3/17':['🍀',"St. Patrick's Day"],'7/4':['🎆','Independence Day'],'10/31':['🎃','Halloween'],'12/25':['🎄','Christmas'],'12/31':['🥂',"New Year's Eve"] };
+const HOL={ '1/1':['🎉',"New Year's Day"],'2/14':['💝',"Valentine's Day"],'3/17':['🍀',"St. Patrick's Day"],'4/25':['🧬','National DNA Day'],'7/4':['🎆','Independence Day'],'10/31':['🎃','Halloween'],'12/25':['🎄','Christmas'],'12/31':['🥂',"New Year's Eve"] };
 const DOW=['☀️ Sunday Funday','🎵 Music Monday','💻 Tech Tuesday','🧘 Wellness Wednesday','💭 Thoughtful Thursday','🎯 Focus Friday','🎨 Studio Saturday'];
-function updateDate(){ const n=new Date(); document.getElementById('date-text').textContent=n.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}); const k=(n.getMonth()+1)+'/'+n.getDate(); const [ic,tx]=HOL[k]||['✨',DOW[n.getDay()]]; document.getElementById('holiday-icon').innerHTML=ic; document.getElementById('holiday-text').textContent=tx; }
+function updateDate(){ const n=new Date(); const dateEl=document.getElementById('today-date-text'); if(dateEl) dateEl.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); const k=(n.getMonth()+1)+'/'+n.getDate(); const [ic,tx]=HOL[k]||['✨',DOW[n.getDay()]]; document.getElementById('holiday-icon').innerHTML=ic; document.getElementById('holiday-text').textContent=tx; }
 updateDate(); setInterval(updateDate,60*60*1000);
 
 // ── UPTIME + RESTART ──────────────────────────
