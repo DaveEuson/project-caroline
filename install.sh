@@ -107,6 +107,7 @@ echo ""
 read -p "  Your name: " USER_NAME </dev/tty
 read -p "  Your timezone (e.g. America/Los_Angeles): " TIMEZONE </dev/tty
 read -p "  Your location (e.g. Portland, OR): " LOCATION </dev/tty
+read -p "  ZIP code for weather (optional): " ZIP_CODE </dev/tty
 echo ""
 
 echo -e "${MAGENTA}  // NEURAL CORE SELECTION${RESET}"
@@ -248,10 +249,18 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   fi
   echo -e "${GREEN}  ✓ Ollama installed${RESET}"
 
+  echo -e "${YELLOW}  ► Configuring Ollama network access...${RESET}"
+  sudo mkdir -p /etc/systemd/system/ollama.service.d/
+  sudo tee /etc/systemd/system/ollama.service.d/env.conf > /dev/null << 'OLLAMA_ENV_EOF'
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0"
+Environment="OLLAMA_ORIGINS=*"
+OLLAMA_ENV_EOF
+
   echo -e "${YELLOW}  ► Starting Ollama service...${RESET}"
   sudo systemctl enable ollama 2>/dev/null || true
   sudo systemctl daemon-reload
-  sudo systemctl start ollama 2>/dev/null || true
+  sudo systemctl restart ollama 2>/dev/null || sudo systemctl start ollama 2>/dev/null || true
   sleep 3
 
   echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"
@@ -453,6 +462,7 @@ jq -n \
   --arg name         "$USER_NAME" \
   --arg tz           "${TIMEZONE:-America/New_York}" \
   --arg loc          "$LOCATION" \
+  --arg zip          "$ZIP_CODE" \
   --arg model        "$AI_MODEL" \
   --arg provider     "$AI_PROVIDER" \
   --arg ollamaModel  "$OLLAMA_MODEL" \
@@ -462,8 +472,8 @@ jq -n \
     userName:        $name,
     timezone:        $tz,
     location:        $loc,
-    zipcode:         "",
-    zipCode:         "",
+    zipcode:         $zip,
+    zipCode:         $zip,
     nodeRedUrl:      $nrUrl,
     aiModel:         $model,
     aiProvider:      $provider,
@@ -488,7 +498,9 @@ echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 sudo tee /etc/systemd/system/caroline.service > /dev/null << EOF
 [Unit]
 Description=Project: Caroline — Node-RED
-After=network.target ollama.service
+After=network-online.target ollama.service
+Wants=network-online.target
+Requires=ollama.service
 
 [Service]
 Type=simple

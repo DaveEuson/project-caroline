@@ -542,8 +542,12 @@
   #osk-close:hover { color:rgba(226,232,240,0.8); border-color:rgba(var(--t-rgb1),0.4); }
 
   /* ── OFFLINE BANNER ─────────────────────────── */
-  #offline-banner { position:absolute; top:40px; left:0; right:0; z-index:999; background:rgba(244,63,94,0.10); border-bottom:1px solid rgba(244,63,94,0.22); padding:5px 14px; font-size:11px; color:#fb7185; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transform:translateY(calc(-100% - 40px)); transition:transform 0.3s ease; pointer-events:none; }
+  #offline-banner { position:absolute; top:40px; left:0; right:0; z-index:999; background:rgba(244,63,94,0.10); border-bottom:1px solid rgba(244,63,94,0.22); padding:5px 14px; font-size:11px; color:#fb7185; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transform:translateY(calc(-100% - 40px)); transition:transform 0.3s ease; pointer-events:auto; }
   #offline-banner.show { transform:translateY(0); }
+  #offline-reconnect-btn { margin-left:auto; background:rgba(244,63,94,0.12); border:1px solid rgba(244,63,94,0.35); border-radius:8px; padding:3px 9px; color:#fecdd3; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer; }
+  .nodered-status { font-size:14px; width:18px; text-align:center; color:rgba(226,232,240,0.35); font-family:'JetBrains Mono',monospace; }
+  .nodered-status.ok { color:#34d399; }
+  .nodered-status.err { color:#fb7185; }
 
   /* ── SETTINGS LOG & USAGE ───────────────────── */
   #settings-log { font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(226,232,240,0.55); max-height:130px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; background:rgba(0,0,0,0.25); border-radius:8px; padding:8px 10px; }
@@ -852,13 +856,10 @@
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
           <select class="settings-select" id="set-channel">
-            <option value="0">NHK World</option>
-            <option value="1">Al Jazeera</option>
-            <option value="2">NASA Live</option>
-            <option value="3">Lofi Girl</option>
-            <option value="4">Chill Beats</option>
-            <option value="5">Jazz Cafe</option>
-            <option value="6">Lofi Study</option>
+            <option value="0">NASA Live</option>
+            <option value="1">Lofi Girl</option>
+            <option value="2">Lofi Study</option>
+            <option value="3">Lofi Sleep</option>
           </select>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -873,6 +874,7 @@
           <div class="input-detect-row">
             <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
             <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
+            <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
           </div>
         </div>
         <div id="openrouter-key-row">
@@ -1112,7 +1114,7 @@
   <span id="restart-btn"><i class="ti ti-refresh"></i> RESTART</span>
 </div>
 
-<div id="offline-banner">⚡ NODE-RED UNREACHABLE — chat unavailable until reconnected</div>
+<div id="offline-banner">⚡ NODE-RED UNREACHABLE — chat unavailable until reconnected <button id="offline-reconnect-btn" type="button" onclick="retryNodeRedConnection()">Reconnect</button></div>
 
 <div id="main">
   <div id="left">
@@ -1359,7 +1361,7 @@ async function syncSettingsFromServer() {
   try {
     const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
     console.log('[Caroline] GET settings from', settingsUrl);
-    const r = await fetch(settingsUrl, { signal: AbortSignal.timeout(4000) });
+    const r = await fetchJsonWithTimeout(settingsUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'GET settings');
     if (!r.ok) {
       // Server returned error — likely fresh install with no settings file yet
       localStorage.removeItem('caro_onboarded');
@@ -1382,6 +1384,7 @@ async function syncSettingsFromServer() {
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
+    fetchWeather();
   } catch(e) {
     console.warn('[Caroline] /admin/get-settings failed:', e);
   }
@@ -1484,6 +1487,7 @@ function getPiHost() {
   catch(e) { return (S && S.piIp) || window.location.hostname || 'localhost'; }
 }
 const NODE_RED_PORT = 1880;
+const NODE_RED_TIMEOUT_MS = 10000;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const CADDY_PORT = 8443;
 const RESTART_PORT = 8090;
@@ -1499,6 +1503,21 @@ function httpsBase(port) {
 
 function wsBase(path) {
   return getNodeRedUrl().replace(/^http/, 'ws') + (path || '');
+}
+
+async function fetchJsonWithTimeout(url, options = {}, label = 'fetch') {
+  const timeoutMs = options.timeoutMs || NODE_RED_TIMEOUT_MS;
+  const finalOptions = Object.assign({}, options);
+  delete finalOptions.timeoutMs;
+  finalOptions.signal = finalOptions.signal || AbortSignal.timeout(timeoutMs);
+  console.log('[Caroline]', label, '→', url);
+  try {
+    const resp = await fetch(url, finalOptions);
+    return resp;
+  } catch(e) {
+    console.error('[Caroline]', label, 'failed:', url, e);
+    throw e;
+  }
 }
 
 function requestPiRestart() {
@@ -1566,6 +1585,28 @@ function updateFeatWarnings() {
   if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Node-RED URL set to receive events');
 }
 
+async function testNodeRedUrl() {
+  const status = document.getElementById('nodered-url-status');
+  const field = document.getElementById('set-nodered-url');
+  if (status) { status.textContent = '…'; status.className = 'nodered-status'; }
+  if (field && field.value.trim()) {
+    let raw = field.value.trim();
+    if (!raw.startsWith('http')) raw = 'http://' + raw;
+    S.nodeRedUrl = raw.replace(/\/+$/, '');
+    try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
+  }
+  const base = getNodeRedUrl();
+  try {
+    const r = await fetchJsonWithTimeout(base + '/admin/get-settings', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Node-RED status');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (status) { status.textContent = '✓'; status.className = 'nodered-status ok'; status.title = 'Node-RED reachable'; }
+    return true;
+  } catch(e) {
+    if (status) { status.textContent = '✕'; status.className = 'nodered-status err'; status.title = 'Node-RED unreachable: ' + e.message; }
+    return false;
+  }
+}
+
 function toggleSettings() {
   const ov = document.getElementById('settings-overlay');
   const isOpen = ov.classList.toggle('show');
@@ -1573,11 +1614,13 @@ function toggleSettings() {
     document.getElementById('set-avatar').value = S.avatar;
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
+    if (S.defaultChannel >= videoChannels.length) S.defaultChannel = 0;
     document.getElementById('set-channel').value = S.defaultChannel;
     document.getElementById('set-auto-theme').checked = S.autoTheme;
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
     document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
     document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
+    setTimeout(testNodeRedUrl, 80);
     document.getElementById('set-orkey').value = S.openrouterKey || '';
     document.getElementById('set-hueip').value = S.hueIp || '';
     document.getElementById('set-huekey').value = S.hueKey || '';
@@ -1661,6 +1704,14 @@ function onProviderChange(provider) {
 const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
 let _cachedOllamaModels = null;
 
+async function fetchDirectOllamaTags() {
+  const host = getPiHost();
+  const directUrl = 'http://' + host + ':11434/api/tags';
+  const r = await fetchJsonWithTimeout(directUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Direct Ollama tags');
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' from ' + directUrl);
+  return r.json();
+}
+
 function _renderOllamaCards(models) {
   const cards = document.getElementById('ollama-model-cards');
   if (!cards) return;
@@ -1698,7 +1749,7 @@ async function fetchOllamaStatus() {
   const ram  = document.getElementById('ollama-ram-text');
   if (!dot || !text) return;
   try {
-    const r = await fetch(httpBase() + '/admin/ollama-ps', { signal: AbortSignal.timeout(5000) });
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-ps', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama ps');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     const running = d.models || [];
@@ -1731,7 +1782,7 @@ async function fetchOllamaModels() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   fetchOllamaStatus();
   try {
-    const r = await fetch(httpBase() + '/admin/ollama-status', { signal: AbortSignal.timeout(6000) });
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama tags');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     const models = d.models || [];
@@ -1739,6 +1790,18 @@ async function fetchOllamaModels() {
     _renderOllamaCards(models);
     clog('info', 'Ollama models: ' + models.map(m => m.name).join(', '));
   } catch(e) {
+    try {
+      const direct = await fetchDirectOllamaTags();
+      const models = direct.models || [];
+      if (models.length) {
+        _cachedOllamaModels = models;
+        _renderOllamaCards(models);
+        clog('info', 'Ollama direct fallback: ' + models.map(m => m.name).join(', '));
+        return;
+      }
+    } catch(fallbackErr) {
+      console.error('[Caroline] Direct Ollama fallback failed:', fallbackErr);
+    }
     if (!_cachedOllamaModels && cards) {
       cards.innerHTML = '<span style="font-size:11px;color:#f87171;font-family:\'JetBrains Mono\',monospace;">Ollama unreachable — is it running?</span>';
     }
@@ -1750,7 +1813,7 @@ async function fetchOllamaModels() {
 
 async function _bootOllamaScan() {
   try {
-    const r = await fetch(httpBase() + '/admin/ollama-status', { signal: AbortSignal.timeout(6000) });
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Boot Ollama scan');
     if (!r.ok) return;
     const d = await r.json();
     if (d.models && d.models.length) {
@@ -1777,12 +1840,12 @@ async function startPull(model) {
   if (statusEl) { statusEl.style.display = ''; statusEl.textContent = '⏳ Requesting pull for ' + model + '…'; }
   if (btn) { btn.disabled = true; }
   try {
-    const r = await fetch(httpBase() + '/admin/ollama-pull', {
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-pull', {
       method: 'POST',
-      signal: AbortSignal.timeout(6000),
+      timeoutMs: NODE_RED_TIMEOUT_MS,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model })
-    });
+    }, 'Ollama pull');
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.ok) {
       if (statusEl) statusEl.textContent = '✓ Pull started in background — refresh models in a minute';
@@ -1866,7 +1929,7 @@ async function testAiConnection(btn) {
     if (provider === 'ollama') {
       const endpoint = httpBase() + '/admin/ollama-status';
       console.log('[Caroline] Testing Ollama via', endpoint);
-      const r = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+      const r = await fetchJsonWithTimeout(endpoint, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Test Ollama via Node-RED');
       const d = await r.json().catch(() => ({}));
       console.log('[Caroline] Ollama status response', r.status, d);
       if (!r.ok) throw new Error('HTTP ' + r.status + ' from ' + endpoint + ': ' + (d.error || 'no JSON error'));
@@ -1900,6 +1963,20 @@ async function testAiConnection(btn) {
     }
   } catch(e) {
     console.error('[Caroline] Test connection failed:', e);
+    if (provider === 'ollama') {
+      try {
+        const direct = await fetchDirectOllamaTags();
+        const models = direct.models || [];
+        const ms = Date.now() - start;
+        if (models.length) {
+          result.textContent = '✓ Ollama direct online — Node-RED proxy timed out — ' + models.length + ' model' + (models.length !== 1 ? 's' : '') + ' — ' + ms + 'ms';
+          result.style.color = 'rgba(251,191,36,0.9)';
+          return;
+        }
+      } catch(fallbackErr) {
+        console.error('[Caroline] Direct Ollama test failed:', fallbackErr);
+      }
+    }
     result.textContent = '✗ ' + (provider === 'ollama' ? 'Ollama' : 'OpenRouter') + ' unreachable — ' + e.message;
     result.style.color = '#f87171';
   } finally {
@@ -1912,7 +1989,7 @@ async function detectHueBridge(btn) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   if (statusEl) { statusEl.style.display = 'none'; }
   try {
-    const r = await fetch(httpBase() + '/admin/hue-discover', { signal: AbortSignal.timeout(8000) });
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-discover', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Hue discover');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     if (d.ip) {
@@ -1938,12 +2015,12 @@ async function pairHueBridge(btn) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   if (statusEl) { statusEl.textContent = 'Waiting for bridge… press the link button now'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
   try {
-    const r = await fetch(httpBase() + '/admin/hue-pair', {
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-pair', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ip }),
-      signal: AbortSignal.timeout(12000)
-    });
+      timeoutMs: 12000
+    }, 'Hue pair');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     if (d.username) {
@@ -1994,11 +2071,12 @@ async function handleServiceAccountUpload(event) {
   const reader = new FileReader();
   reader.onload = async function(e) {
     try {
-      const resp = await fetch(httpBase() + '/admin/upload-service-account', {
+      const resp = await fetchJsonWithTimeout(httpBase() + '/admin/upload-service-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: e.target.result
-      });
+        body: e.target.result,
+        timeoutMs: NODE_RED_TIMEOUT_MS
+      }, 'Upload service account');
       statusEl.textContent = resp.ok ? ('✓ ' + file.name) : ('✗ HTTP ' + resp.status);
     } catch(err) {
       statusEl.textContent = '✗ Upload failed — check Pi connection';
@@ -2007,7 +2085,7 @@ async function handleServiceAccountUpload(event) {
   reader.readAsText(file);
 }
 
-async function postSettingsToNodeRed(extra = {}, timeoutMs = 5000) {
+async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
   const endpoint = httpBase() + '/admin/save-settings';
   const payload = Object.assign({}, S, extra, {
     zipCode: S.zipcode || S.zipCode || '',
@@ -2110,7 +2188,7 @@ async function saveSettings() {
 
   if (newZip.length === 5 && newZip !== S.zipcode) {
     try {
-      const r = await fetch('https://api.zippopotam.us/us/' + newZip, { signal: AbortSignal.timeout(4000) });
+      const r = await fetch('https://api.zippopotam.us/us/' + newZip, { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
       if (r.ok) {
         const d = await r.json();
         S.zipcode = newZip;
@@ -2224,18 +2302,16 @@ function changeAvatar(dir) {
 
 // ── VIDEO CHANNELS ────────────────────────────
 const DEFAULT_CHANNELS = [
-  { name:'NHK World',   icon:'🔴', type:'youtube', ytId:'coYw-eVU0Ks' },
-  { name:'Al Jazeera',  icon:'🌍', type:'youtube', ytId:'gCNeDWCI0vo' },
-  { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'H999s0P1Er0' },
+  { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'21X5lGlDOfg' },
   { name:'Lofi Girl',   icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
-  { name:'Chill Beats', icon:'🌊', type:'youtube', ytId:'7NOSDKb0HlU' },
-  { name:'Jazz Cafe',   icon:'🎷', type:'youtube', ytId:'HuFYqnbVbzY' },
-  { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'lTRiuFIWV54' }
+  { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
+  { name:'Lofi Sleep',  icon:'🌙', type:'youtube', ytId:'DWcJFNfaw9c' }
 ];
-const CHANNEL_VERSION = 8;
+const CHANNEL_VERSION = 9;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
 let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
 let currentChannel = S.defaultChannel || 0;
+if (currentChannel >= videoChannels.length) currentChannel = 0;
 let hlsInstance = null;
 let videoMuted = true;
 
@@ -2486,11 +2562,11 @@ function exitKiosk(){
   // and post to Node-RED so it can kill the process at the OS level if needed
   if(!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement){
     window.close();
-    fetch(httpBase()+'/admin/exit-kiosk',{method:'POST'}).catch(()=>{});
+    fetchJsonWithTimeout(httpBase()+'/admin/exit-kiosk',{method:'POST', timeoutMs: NODE_RED_TIMEOUT_MS}, 'Exit kiosk').catch(()=>{});
   }
 }
 function openTerminal(){
-  fetch(httpBase()+'/admin/open-terminal',{method:'POST'})
+  fetchJsonWithTimeout(httpBase()+'/admin/open-terminal',{method:'POST', timeoutMs: NODE_RED_TIMEOUT_MS}, 'Open terminal')
     .then(r=>{ if(!r.ok) console.warn('[Caroline] open-terminal HTTP',r.status); })
     .catch(e=>console.warn('[Caroline] open-terminal failed:',e));
 }
@@ -2706,6 +2782,19 @@ ws.onclose = ()=>{
 }
 connectWS();
 
+function retryNodeRedConnection() {
+  clog('ws', 'Manual reconnect requested');
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.remove('show');
+  if (ws) { try { ws.close(); } catch(e) {} }
+  if (wsReconnectTimer) {
+    clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = null;
+  }
+  setTimeout(connectWS, 50);
+  testNodeRedUrl();
+}
+
 // First-run: open settings automatically if never saved
 if (!localStorage.getItem('caroline_configured')) {
   setTimeout(toggleSettings, 900);
@@ -2790,9 +2879,47 @@ getMoonPhase();
 const WMO={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌂',61:'🅟',63:'🅟',65:'🅟',71:'🅠',75:'❄️',80:'🌂',95:'⛈️'};
 const WMO_D={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Light drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Showers',95:'Thunderstorm'};
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-async function fetchWeather(){ if(!S.lat||!S.lng){ document.getElementById('weather-desc').textContent='Set location in settings'; return; } const lat=S.lat,lng=S.lng; try{ const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&forecast_days=6&timezone=auto'); const d=await r.json(); const code=d.current.weathercode; document.getElementById('weather-icon').innerHTML=WMO[code]||'🌤️'; document.getElementById('weather-temp').textContent=Math.round(d.current.temperature_2m)+'°F'; document.getElementById('weather-desc').textContent=WMO_D[code]||'Clear'; document.getElementById('weather-city-label').textContent=S.cityName||'';
-  if(d.daily.sunrise && d.daily.sunrise[0]){ const rise=new Date(d.daily.sunrise[0]); const set=new Date(d.daily.sunset[0]); document.getElementById('sunrise-time').textContent=rise.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('sunset-time').textContent=set.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
-  const fc=document.getElementById('forecast'); fc.innerHTML=''; for(let i=1;i<6;i++){ const dt=new Date(d.daily.time[i]+'T12:00:00'); const el=document.createElement('div'); el.className='fc-day'; el.innerHTML='<div class="fc-name">'+DAYS[dt.getDay()]+'</div><div class="fc-icon">'+(WMO[d.daily.weathercode[i]]||'🌤️')+'</div><div class="fc-hi">'+Math.round(d.daily.temperature_2m_max[i])+'°</div><div class="fc-lo">'+Math.round(d.daily.temperature_2m_min[i])+'°</div>'; fc.appendChild(el); } }catch(e){ document.getElementById('weather-desc').textContent='Unavailable'; clog('err','Weather: '+e.message); } }
+async function hydrateLocationFromZip() {
+  const zip = (S.zipcode || S.zipCode || '').trim();
+  console.log('[Caroline] Weather ZIP:', zip || '(none)', 'lat/lng:', S.lat, S.lng);
+  if ((S.lat && S.lng) || !/^\d{5}$/.test(zip)) return !!(S.lat && S.lng);
+  const r = await fetch('https://api.zippopotam.us/us/' + zip, { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
+  if (!r.ok) throw new Error('ZIP lookup HTTP ' + r.status);
+  const d = await r.json();
+  S.zipcode = zip;
+  S.zipCode = zip;
+  S.lat = parseFloat(d.places[0].latitude);
+  S.lng = parseFloat(d.places[0].longitude);
+  S.cityName = d.places[0]['place name'] + ', ' + d.places[0]['state abbreviation'];
+  if (!S.location) S.location = S.cityName;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  return true;
+}
+async function fetchWeather(){
+  try{
+    const hasLocation = await hydrateLocationFromZip();
+    if(!hasLocation){
+      document.getElementById('weather-desc').textContent='Set location in settings';
+      return;
+    }
+    const lat=S.lat,lng=S.lng;
+    console.log('[Caroline] Fetching weather for', { zip:S.zipcode||S.zipCode||'', lat, lng, city:S.cityName||S.location||'' });
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&forecast_days=6&timezone=auto', { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
+    if(!r.ok) throw new Error('Open-Meteo HTTP '+r.status);
+    const d=await r.json();
+    const code=d.current.weathercode;
+    document.getElementById('weather-icon').innerHTML=WMO[code]||'🌤️';
+    document.getElementById('weather-temp').textContent=Math.round(d.current.temperature_2m)+'°F';
+    document.getElementById('weather-desc').textContent=WMO_D[code]||'Clear';
+    document.getElementById('weather-city-label').textContent=S.cityName||S.location||'';
+    if(d.daily.sunrise && d.daily.sunrise[0]){ const rise=new Date(d.daily.sunrise[0]); const set=new Date(d.daily.sunset[0]); document.getElementById('sunrise-time').textContent=rise.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('sunset-time').textContent=set.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
+    const fc=document.getElementById('forecast'); fc.innerHTML=''; for(let i=1;i<6;i++){ const dt=new Date(d.daily.time[i]+'T12:00:00'); const el=document.createElement('div'); el.className='fc-day'; el.innerHTML='<div class="fc-name">'+DAYS[dt.getDay()]+'</div><div class="fc-icon">'+(WMO[d.daily.weathercode[i]]||'🌤️')+'</div><div class="fc-hi">'+Math.round(d.daily.temperature_2m_max[i])+'°</div><div class="fc-lo">'+Math.round(d.daily.temperature_2m_min[i])+'°</div>'; fc.appendChild(el); }
+  }catch(e){
+    console.error('[Caroline] Weather failed:', e);
+    document.getElementById('weather-desc').textContent='Unavailable';
+    clog('err','Weather: '+e.message);
+  }
+}
 
 // ── TIDES ─────────────────────────────────────
 async function fetchTides(){
@@ -2974,7 +3101,7 @@ function updateBottomChat() {
 
 async function refreshSpotifyToken() {
   try {
-    const r = await fetch(httpBase() + '/spotify/refresh');
+    const r = await fetchJsonWithTimeout(httpBase() + '/spotify/refresh', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Spotify refresh');
     const d = await r.json();
 
     if (!d || !d.ok || !d.access_token) throw new Error('Refresh failed');
@@ -3275,7 +3402,7 @@ async function saveToMemory(fact) {
 // ── WIFI SIGNAL ──────────────────────────────
 async function updateWifi() {
   try {
-    const r = await fetch(httpBase() + '/wifi-signal', {signal: AbortSignal.timeout(3000)});
+    const r = await fetchJsonWithTimeout(httpBase() + '/wifi-signal', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Wi-Fi signal');
     if (!r.ok) throw new Error('no response');
     const d = await r.json();
     const icon = document.getElementById('wifi-icon');
@@ -3289,7 +3416,7 @@ async function updateWifi() {
     strength.textContent = pct + '%';
   } catch(e) { 
     try {
-      const r2 = await fetch(httpBase() + '/wifi-signal', {signal: AbortSignal.timeout(3000)});
+      const r2 = await fetchJsonWithTimeout(httpBase() + '/wifi-signal', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Wi-Fi signal retry');
       const d2 = await r2.json();
       document.getElementById('wifi-strength').textContent = (d2.percent || 0) + '%';
     } catch(e2) {
@@ -3531,6 +3658,10 @@ function restartWizard(){
   startBootSequence();
 }
 function _onbTitleCase(v){ return String(v||'').replace(/\b\w/g,m=>m.toUpperCase()); }
+function _onbShouldSkipStep(q){ return q && q.id === 'identity-user' && !!(onbState.config.userName || S.userName); }
+function _onbAdvancePastSkips(){
+  while(_onbShouldSkipStep(ONB_QUESTIONS[onbState.index]) && onbState.index < ONB_QUESTIONS.length-1) onbState.index++;
+}
 function _onbCurrent(){ return ONB_QUESTIONS[onbState.index]; }
 function _onbSetDeep(path,val){ const p=path.split('.'); let o=onbState; while(p.length>1){ o=o[p.shift()]; } o[p[0]]=val; }
 function _onbGetDeep(path){ const p=path.split('.'); let o=onbState; for(const k of p){ o=o?.[k]; } return o; }
@@ -3622,6 +3753,7 @@ function _onbTranscript(){
   ];
   for(let i=0;i<onbState.index;i++){
     const q=ONB_QUESTIONS[i];
+    if(_onbShouldSkipStep(q)) continue;
     if(q.type==='text'){
       msgs.push({role:'ai', text:q.prompt});
       const val=_onbGetDeep(q.save);
@@ -3649,6 +3781,7 @@ function _onbTranscript(){
 
 function renderChatStep(){
   _onbClearTimers();
+  _onbAdvancePastSkips();
   const q = _onbCurrent();
   const body     = document.getElementById('caro-chat-body');
   const response = document.getElementById('caro-chat-response');
@@ -3855,7 +3988,7 @@ async function finalizeOnboarding(){
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
   try {
-    await postSettingsToNodeRed({ onboardingModules: S.onboardingModules }, 6000);
+    await postSettingsToNodeRed({ onboardingModules: S.onboardingModules }, NODE_RED_TIMEOUT_MS);
     localStorage.setItem('caroline_configured', 'true');
   } catch(err) {
     console.warn('[Caroline] onboarding settings sync failed:', err);
@@ -3863,11 +3996,12 @@ async function finalizeOnboarding(){
 
   if(onbState.serviceAccountPending){
     try {
-      const resp = await fetch(httpBase()+'/admin/upload-service-account', {
+      const resp = await fetchJsonWithTimeout(httpBase()+'/admin/upload-service-account', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: onbState.serviceAccountPending
-      });
+        body: onbState.serviceAccountPending,
+        timeoutMs: NODE_RED_TIMEOUT_MS
+      }, 'Onboarding upload service account');
       if(!resp.ok) throw new Error('HTTP '+resp.status);
       console.log('[Caroline] Service account uploaded successfully');
     } catch(err){
@@ -3876,6 +4010,7 @@ async function finalizeOnboarding(){
   }
 
   applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
+  fetchWeather();
   const tn = document.getElementById('topbar-name');
   if(tn) tn.textContent = S.aiName;
   updateSettingsStatus();
@@ -3926,6 +4061,8 @@ function maybeReturningGreeting(){
 updateSettingsStatus();
 // Sync from server first so fresh-install detection clears caro_onboarded before we check it
 syncSettingsFromServer().then(() => {
+  testNodeRedUrl();
+  fetchWeather();
   if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
 });
 
