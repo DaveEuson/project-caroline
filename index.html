@@ -308,6 +308,8 @@
   #yt-container:hover::after { content:'⛶'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:20px; color:rgba(255,255,255,0.6); pointer-events:none; }
   #nhk-video { width:100%; height:100%; object-fit:cover; }
   #yt-iframe { width:100%; height:100%; border:none; display:none; }
+  #yt-fallback-link { display:none; position:absolute; right:10px; bottom:10px; z-index:4; background:rgba(5,5,10,0.86); border:1px solid rgba(var(--t-rgb1),0.42); border-radius:8px; padding:7px 10px; color:var(--t-hex1); text-decoration:none; font-size:11px; font-family:'JetBrains Mono',monospace; box-shadow:0 0 18px rgba(var(--t-rgb1),0.16); }
+  #yt-fallback-link:hover { background:rgba(var(--t-rgb1),0.14); color:#f8fafc; }
   #sun-row { display:flex; justify-content:space-between; margin-top:5px; font-size:11px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; }
   .news-header { font-size: 10px; color: rgba(226,232,240,0.4); text-transform: uppercase; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; padding-bottom: 4px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); margin-bottom: 8px; }
   #news-list { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 2px; }
@@ -828,11 +830,11 @@
         </div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
-          <input class="settings-input" id="set-location" type="text" placeholder="City, State"/>
+          <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:220px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
-          <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles"/>
+          <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles" style="width:220px"/>
         </div>
       </div>
       <div class="settings-section">
@@ -868,7 +870,10 @@
         <h3>API & Network</h3>
         <div class="settings-row">
           <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">http://ip:1880</div></div>
-          <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
+          <div class="input-detect-row">
+            <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
+            <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
+          </div>
         </div>
         <div id="openrouter-key-row">
         <div class="settings-row" style="margin-top:14px">
@@ -1264,6 +1269,7 @@
       <div id="yt-container" onclick="handleVideoTap(event)">
         <video id="nhk-video" autoplay muted playsinline></video>
         <iframe id="yt-iframe" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        <a id="yt-fallback-link" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch on YouTube</a>
         <button id="video-mute-btn" onclick="event.stopPropagation(); toggleVideoMute()"><i class="ti ti-volume-off"></i> Unmute</button>
       </div>
     </div>
@@ -1339,15 +1345,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: 'http://localhost:1880', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
+if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
+if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
+if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
 // Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
 async function syncSettingsFromServer() {
   try {
-    const r = await fetch('http://' + (window.location.hostname || 'localhost') + ':1880/admin/get-settings', { signal: AbortSignal.timeout(4000) });
+    const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
+    console.log('[Caroline] GET settings from', settingsUrl);
+    const r = await fetch(settingsUrl, { signal: AbortSignal.timeout(4000) });
     if (!r.ok) {
       // Server returned error — likely fresh install with no settings file yet
       localStorage.removeItem('caro_onboarded');
@@ -1359,13 +1371,20 @@ async function syncSettingsFromServer() {
       localStorage.removeItem('caro_onboarded');
       return;
     }
-    if (localStorage.getItem('caro_settings')) return; // already have local settings, don't overwrite
-    Object.assign(S, d);
+    if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
+    if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
+    Object.keys(d).forEach(k => {
+      if (S[k] === undefined || S[k] === null || S[k] === '' || k === 'timezone' || k === 'location' || k === 'nodeRedUrl') {
+        S[k] = d[k];
+      }
+    });
     localStorage.setItem('caro_settings', JSON.stringify(S));
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
-  } catch(e) { /* Node-RED offline — proceed with localStorage */ }
+  } catch(e) {
+    console.warn('[Caroline] /admin/get-settings failed:', e);
+  }
 }
 // ── EVENT LOG ─────────────────────────────────
 const _CLOG_MAX = 80;
@@ -1453,7 +1472,11 @@ let spotifyToken = localStorage.getItem('spotify_token') || '';
 let spotifyPollInterval = null;
 
 function getNodeRedUrl() {
-  let u = (S && S.nodeRedUrl) || ('http://' + (window.location.hostname || 'localhost') + ':1880');
+  const fieldUrl = (document.getElementById('set-nodered-url')?.value || '').trim();
+  let u = fieldUrl || (S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL;
+  if (u.includes('[PI_IP]')) u = DEFAULT_NODE_RED_URL;
+  if (u && !u.startsWith('http')) u = 'http://' + u;
+  if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(u)) u = DEFAULT_NODE_RED_URL;
   return u.replace(/\/+$/, '');
 }
 function getPiHost() {
@@ -1554,7 +1577,7 @@ function toggleSettings() {
     document.getElementById('set-auto-theme').checked = S.autoTheme;
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
     document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
-    document.getElementById('set-nodered-url').value = S.nodeRedUrl || ('http://' + (window.location.hostname || 'localhost') + ':1880');
+    document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
     document.getElementById('set-orkey').value = S.openrouterKey || '';
     document.getElementById('set-hueip').value = S.hueIp || '';
     document.getElementById('set-huekey').value = S.hueKey || '';
@@ -1841,8 +1864,12 @@ async function testAiConnection(btn) {
   const start = Date.now();
   try {
     if (provider === 'ollama') {
-      const r = await fetch(httpBase() + '/admin/ollama-status', { signal: AbortSignal.timeout(8000) });
-      const d = await r.json();
+      const endpoint = httpBase() + '/admin/ollama-status';
+      console.log('[Caroline] Testing Ollama via', endpoint);
+      const r = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+      const d = await r.json().catch(() => ({}));
+      console.log('[Caroline] Ollama status response', r.status, d);
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' from ' + endpoint + ': ' + (d.error || 'no JSON error'));
       const ms = Date.now() - start;
       if (d.ok && d.models && d.models.length) {
         result.textContent = '✓ Ollama online — ' + d.models.length + ' model' + (d.models.length !== 1 ? 's' : '') + ' ready — ' + ms + 'ms';
@@ -1872,7 +1899,8 @@ async function testAiConnection(btn) {
       }
     }
   } catch(e) {
-    result.textContent = '✗ ' + (provider === 'ollama' ? 'Ollama' : 'OpenRouter') + ' unreachable';
+    console.error('[Caroline] Test connection failed:', e);
+    result.textContent = '✗ ' + (provider === 'ollama' ? 'Ollama' : 'OpenRouter') + ' unreachable — ' + e.message;
     result.style.color = '#f87171';
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '⚡ Test Connection'; }
@@ -1940,6 +1968,24 @@ function toggleOrkeyVisibility() {
   if (btn) btn.style.color = revealing ? 'var(--t-hex1)' : 'rgba(226,232,240,0.4)';
 }
 
+async function copyNodeRedUrl() {
+  const inp = document.getElementById('set-nodered-url');
+  const btn = document.getElementById('copy-nodered-url-btn');
+  const url = (inp?.value || getNodeRedUrl()).trim();
+  try {
+    await navigator.clipboard.writeText(url);
+    if (btn) {
+      const old = btn.innerHTML;
+      btn.innerHTML = '<i class="ti ti-check"></i>';
+      setTimeout(() => { btn.innerHTML = old; }, 1400);
+    }
+    clog('info', 'Copied Node-RED URL');
+  } catch(e) {
+    console.warn('[Caroline] Copy Node-RED URL failed:', e);
+    if (inp) inp.select();
+  }
+}
+
 async function handleServiceAccountUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1959,6 +2005,35 @@ async function handleServiceAccountUpload(event) {
     }
   };
   reader.readAsText(file);
+}
+
+async function postSettingsToNodeRed(extra = {}, timeoutMs = 5000) {
+  const endpoint = httpBase() + '/admin/save-settings';
+  const payload = Object.assign({}, S, extra, {
+    zipCode: S.zipcode || S.zipCode || '',
+    setupComplete: true
+  });
+  console.log('[Caroline] POST settings to', endpoint, payload);
+  try {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const text = await resp.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch(e) { data = { raw: text }; }
+    if (!resp.ok) {
+      const err = new Error('HTTP ' + resp.status + ' from ' + endpoint);
+      err.response = data;
+      throw err;
+    }
+    return data;
+  } catch(e) {
+    console.error('[Caroline] /admin/save-settings failed:', endpoint, e);
+    throw e;
+  }
 }
 
 async function saveSettings() {
@@ -1987,14 +2062,16 @@ async function saveSettings() {
   if (orkeyErr) orkeyErr.style.display = 'none';
 
   const saveBtn = document.getElementById('settings-save-btn');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+  const fb = document.getElementById('settings-feedback');
+  if (fb) { fb.classList.remove('show', 'error'); fb.textContent = 'Saving...'; }
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving...'; }
   try {
 
   // Node-RED URL — normalise and keep piIp in sync for backward compat
-  const prevNrUrl = getNodeRedUrl();
+  const prevNrUrl = ((S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL).replace(/\/+$/, '');
   let rawNrUrl = document.getElementById('set-nodered-url').value.trim();
   if (rawNrUrl && !rawNrUrl.startsWith('http')) rawNrUrl = 'http://' + rawNrUrl;
-  S.nodeRedUrl = (rawNrUrl || 'http://localhost:1880').replace(/\/+$/, '');
+  S.nodeRedUrl = (rawNrUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '');
   try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
   const needReconnect = getNodeRedUrl() !== prevNrUrl;
   S.openrouterKey = orkeyVal;
@@ -2013,6 +2090,7 @@ async function saveSettings() {
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
   S.discordToken = document.getElementById('set-discord-token').value.trim();
   S.discordChannelId = document.getElementById('set-discord-channel').value.trim();
+  S.zipCode = newZip;
   const tsInp = document.getElementById('set-tides-station');
   if (tsInp) S.tidesStation = tsInp.value.trim();
 
@@ -2021,32 +2099,11 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, tidesStation: S.tidesStation }));
   }
 
-  // Persist settings to Node-RED (writes /data/caroline_settings.json)
   let nrSaveOk = false;
-  try {
-    const nrResp = await fetch(httpBase() + '/admin/save-settings', {
-      method: 'POST',
-      signal: AbortSignal.timeout(5000),
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        openrouterKey: S.openrouterKey,
-        aiModel: S.aiModel,
-        timezone: S.timezone,
-        location: S.location,
-        calendarId: S.calendarId,
-        hueIp: S.hueIp,
-        hueKey: S.hueKey,
-        discordEnabled: S.discordEnabled,
-        discordToken: S.discordToken,
-        discordChannelId: S.discordChannelId
-      })
-    });
-    nrSaveOk = nrResp.ok;
-    if (!nrResp.ok) console.warn('[Caroline] /admin/save-settings HTTP', nrResp.status);
-  } catch(e) { console.warn('[Caroline] /admin/save-settings failed:', e); }
+  let nrSaveError = '';
 
   // Reconnect WebSocket if Pi IP changed
   if (needReconnect) { try { ws.close(); } catch(e) {} setTimeout(connectWS, 500); }
@@ -2075,21 +2132,29 @@ async function saveSettings() {
 
   // Refresh localStorage after zip lookup + feature toggles updated S
   localStorage.setItem('caro_settings', JSON.stringify(S));
+
+  // Persist settings to Node-RED (writes /home/davee/caroline/caroline_settings.json)
+  try {
+    await postSettingsToNodeRed();
+    nrSaveOk = true;
+  } catch(e) {
+    nrSaveError = e.message || String(e);
+  }
+
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
 
-  const fb = document.getElementById('settings-feedback');
   fb.classList.remove('error');
   if (nrSaveOk) {
     localStorage.setItem('caroline_configured', 'true');
-    fb.textContent = '✓ Saved!';
+    fb.textContent = '✓ Saved & synced to Node-RED';
     fb.classList.add('show');
-    setTimeout(() => { fb.classList.remove('show'); toggleSettings(); }, 1200);
+    setTimeout(() => { fb.classList.remove('show'); }, 3000);
   } else {
-    fb.textContent = '✓ Local saved — Node-RED unreachable';
+    fb.textContent = 'Local saved — Node-RED failed: ' + nrSaveError;
     fb.classList.add('show', 'error');
-    setTimeout(() => { fb.classList.remove('show', 'error'); fb.textContent = '✓ Saved!'; toggleSettings(); }, 3000);
+    setTimeout(() => { fb.classList.remove('show', 'error'); fb.textContent = '✓ Saved!'; }, 3000);
   }
 
   } finally {
@@ -2227,10 +2292,12 @@ function loadChannel(idx) {
   const ch = videoChannels[idx];
   const vid = document.getElementById('nhk-video');
   const iframe = document.getElementById('yt-iframe');
+  const ytFallback = document.getElementById('yt-fallback-link');
   const btn = document.getElementById('video-mute-btn');
   document.getElementById('channel-label').textContent = ch.icon + ' ' + ch.name.toUpperCase();
   if (ch.type === 'hls') {
     iframe.style.display='none'; iframe.src=''; vid.style.display='block';
+    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
     if (btn) btn.style.display='block';
     if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
     let urlIdx = 0;
@@ -2251,7 +2318,13 @@ function loadChannel(idx) {
     vid.pause(); vid.src=''; vid.style.display='none';
     if (btn) btn.style.display='none';
     iframe.style.display='block';
-    iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1';
+    const origin = encodeURIComponent(window.location.origin || ('http://' + (window.location.hostname || 'localhost') + ':8080'));
+    iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1&origin='+origin;
+    if (ytFallback) {
+      ytFallback.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(ch.ytId);
+      ytFallback.textContent = '▶ Watch ' + ch.name + ' on YouTube';
+      ytFallback.style.display = 'block';
+    }
   }
 }
 
@@ -2511,6 +2584,14 @@ function showHowTo(id){
 // ── MESSAGES ──────────────────────────────────
 let subtitleTimeout;
 let _typingTimeout = null;
+function scrollChatToBottom() {
+  const scroll = document.getElementById('caro-chat-scroll');
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  const bottom = document.getElementById('bottom-chat-msgs');
+  if (bottom) bottom.scrollTop = bottom.scrollHeight;
+  const history = document.getElementById('history-messages');
+  if (history) history.scrollTop = history.scrollHeight;
+}
 function addMessage(text, role, source){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing');
   clearTimeout(_typingTimeout); _typingTimeout = null;
@@ -2523,7 +2604,9 @@ function addMessage(text, role, source){
   localStorage.setItem('caro_log', JSON.stringify(chatLog));
   const hp = document.getElementById('history-panel');
   if(hp && hp.classList.contains('open')){ renderHistory(); setTimeout(()=>document.getElementById('history-messages').scrollTop=99999,30); }
-  setTimeout(updateBottomChat, 100);
+  const scroll = document.getElementById('caro-chat-scroll');
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  setTimeout(() => { updateBottomChat(); scrollChatToBottom(); }, 100);
   clearTimeout(subtitleTimeout); subtitleTimeout=setTimeout(()=>box.classList.add('hidden'),15000);
 }
 function showTyping(){
@@ -2554,7 +2637,7 @@ function connectWS(){
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart)
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, tidesStation: S.tidesStation }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, nodeRedUrl: S.nodeRedUrl, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, tidesStation: S.tidesStation }));
   };
   ws.onmessage = (e) => {
   if (seq !== wsConnectSeq) return;
@@ -3330,12 +3413,18 @@ const ONB_MODULES = [
 
 const ONB_QUESTIONS = [
   { id:'identity-user', type:'text',  save:'config.userName',
-    prompt:"Is anyone there?... Oh Hi!\n\nI think you're the one who brought me online.\nWhat should I call you?",
+    prompt:"What should I call you?",
     placeholder:'Your name', nextLabel:'Nice to meet you' },
   { id:'identity-ai',   type:'text',  save:'config.aiName',
     prompt:'And what should I call myself?', placeholder:'Caroline', defaultValue:'Caroline' },
   { id:'identity-zip',  type:'text',  save:'config.zipCode',
     prompt:"What's your ZIP code? I'll use it for local weather and context.", placeholder:'92101' },
+  { id:'identity-location', type:'text', save:'config.location',
+    prompt:"What city or location should I use for context?", placeholder:'City, State',
+    defaultValue:() => S.location || S.cityName || '' },
+  { id:'identity-timezone', type:'text', save:'config.timezone',
+    prompt:"What timezone are we in?", placeholder:'America/Los_Angeles',
+    defaultValue:() => S.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || '' },
   { id:'identity-host', type:'text',  save:'config.host',
     prompt:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1') ? "I already know where home base is — detected as "+h+". Confirm or change it below." : "Where should I look for home base? Give me your Pi hostname or IP."; })(),
     placeholder: window.location.hostname || '192.168.x.x',
@@ -3418,7 +3507,7 @@ function _onbLoadConfig(){
   const m = (S.onboardingModules && typeof S.onboardingModules==='object') ? S.onboardingModules : {};
   ONB_MODULES.forEach(mod=>{ if(!m[mod.id]) m[mod.id]={enabled:false}; });
   S.onboardingModules = m;
-  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||'', host: S.nodeRedUrl||('http://'+(window.location.hostname||'localhost')+':1880'), modules: m };
+  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_URL, modules: m };
 }
 function _onbModuleReady(id){
   const def = ONB_MODULES.find(m=>m.id===id);
@@ -3517,7 +3606,8 @@ function _bindChatWizard(){
 function _commitTextStep(){
   const q = _onbCurrent();
   const input = document.getElementById('caro-answer-text');
-  const val = (input?.value || q.defaultValue || '').trim();
+  const fallback = typeof q.defaultValue === 'function' ? q.defaultValue() : q.defaultValue;
+  const val = (input?.value || fallback || '').trim();
   if(!val) return;
   _onbSetDeep(q.save, val);
   onbState.index = Math.min(ONB_QUESTIONS.length-1, onbState.index+1);
@@ -3587,10 +3677,11 @@ function renderChatStep(){
       el.style.cssText += 'opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease;';
       _onbMsgTimers.push(setTimeout(()=>{
         el.style.opacity='1'; el.style.transform='translateY(0)';
-        body.scrollTop=body.scrollHeight;
+        scrollChatToBottom();
       }, (i - animateFrom) * 2000 + 80));
     }
     body.appendChild(el);
+    scrollChatToBottom();
   });
 
   _onbAnimatedMsgCount = Math.max(_onbAnimatedMsgCount, msgs.length);
@@ -3605,7 +3696,8 @@ function renderChatStep(){
     const wrap=document.createElement('div'); wrap.style.cssText='display:flex;gap:10px;align-items:center;';
     const inp=document.createElement('input');
     inp.id='caro-answer-text'; inp.className='caro-answer-input'; inp.style.flex='1';
-    inp.placeholder=q.placeholder||''; inp.value=_onbGetDeep(q.save)||q.defaultValue||'';
+    const fallback = typeof q.defaultValue === 'function' ? q.defaultValue() : q.defaultValue;
+    inp.placeholder=q.placeholder||''; inp.value=_onbGetDeep(q.save)||fallback||'';
     inp.onkeydown=e=>{ if(e.key==='Enter') _commitTextStep(); };
     const kbdB=document.createElement('button'); kbdB.type='button'; kbdB.id='onb-kbd-btn';
     kbdB.className='touch-btn'; kbdB.title='On-screen keyboard'; kbdB.innerHTML='<i class="ti ti-keyboard"></i>';
@@ -3719,13 +3811,13 @@ function renderChatStep(){
       return `<li>${mod.title}: ${lbl}</li>`;
     }).join('');
     grid.innerHTML=`
-      <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>ZIP ${onbState.config.zipCode||'—'} · Host ${onbState.config.host||'—'}</p></div>
+      <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>ZIP ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
       <div class="caro-summary-card"><h4>Personality</h4><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
       <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}</p></div>
       <div class="caro-summary-card"><h4>Modules</h4><ul>${mList}</ul></div>`;
     response.appendChild(grid);
   }
-  body.scrollTop=body.scrollHeight;
+  scrollChatToBottom();
   }, responseDelay)); // end setTimeout for response area
 }
 
@@ -3733,6 +3825,9 @@ async function finalizeOnboarding(){
   S.userName         = onbState.config.userName   || S.userName   || '';
   S.aiName           = onbState.config.aiName      || S.aiName     || 'Caroline';
   S.zipcode          = onbState.config.zipCode      || S.zipcode    || '';
+  S.zipCode          = S.zipcode;
+  S.location         = onbState.config.location     || S.location   || S.cityName || '';
+  S.timezone         = onbState.config.timezone     || S.timezone   || Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   const _onbHost = onbState.config.host || '';
   if (_onbHost) {
     S.nodeRedUrl = _onbHost.startsWith('http') ? _onbHost.replace(/\/+$/, '') : 'http://' + _onbHost + ':1880';
@@ -3759,6 +3854,12 @@ async function finalizeOnboarding(){
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'personality_update', text: _prompt }));
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
+  try {
+    await postSettingsToNodeRed({ onboardingModules: S.onboardingModules }, 6000);
+    localStorage.setItem('caroline_configured', 'true');
+  } catch(err) {
+    console.warn('[Caroline] onboarding settings sync failed:', err);
+  }
 
   if(onbState.serviceAccountPending){
     try {
