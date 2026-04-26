@@ -49,7 +49,6 @@ CAROLINE_VERSION="0.2.0-dev"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 AI_MODEL="anthropic/claude-haiku-4.5"
-SETTINGS_PATH="/data/caroline_settings.json"
 
 # Node-RED palette nodes required by Caroline
 PALETTE_NODES=(
@@ -63,6 +62,7 @@ PALETTE_NODES=(
 REAL_USER=${SUDO_USER:-$USER}
 REAL_HOME=$(eval echo "~$REAL_USER")
 CAROLINE_DIR="$REAL_HOME/caroline"
+SETTINGS_PATH="$CAROLINE_DIR/caroline_settings.json"
 
 clear
 
@@ -220,7 +220,7 @@ module.exports = {
     uiPort: process.env.PORT || 1880,
     uiHost: "0.0.0.0",
     flowFile: 'flows.json',
-    httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE" },
+    httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE,OPTIONS" },
     functionGlobalContext: {
         fs:     require('fs'),
         crypto: require('crypto'),
@@ -250,6 +250,7 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
 
   echo -e "${YELLOW}  ► Starting Ollama service...${RESET}"
   sudo systemctl enable ollama 2>/dev/null || true
+  sudo systemctl daemon-reload
   sudo systemctl start ollama 2>/dev/null || true
   sleep 3
 
@@ -282,10 +283,10 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
 fi
 
 # ── DATA DIRECTORY ───────────────────────────────────────────
-echo -e "${YELLOW}  ► Initializing memory banks at /data/...${RESET}"
+echo -e "${YELLOW}  ► Initializing memory banks at ${CAROLINE_DIR}...${RESET}"
 
-sudo mkdir -p /data
-sudo chown "$REAL_USER":"$REAL_USER" /data
+mkdir -p "$CAROLINE_DIR"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR"
 
 echo -e "${GREEN}  ✓ Memory banks online${RESET}"
 
@@ -461,6 +462,7 @@ jq -n \
     userName:        $name,
     timezone:        $tz,
     location:        $loc,
+    zipcode:         "",
     zipCode:         "",
     nodeRedUrl:      $nrUrl,
     aiModel:         $model,
@@ -486,7 +488,7 @@ echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 sudo tee /etc/systemd/system/caroline.service > /dev/null << EOF
 [Unit]
 Description=Project: Caroline — Node-RED
-After=network.target
+After=network.target ollama.service
 
 [Service]
 Type=simple

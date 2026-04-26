@@ -3035,7 +3035,7 @@
         "type": "function",
         "z": "1497b6d50e1369f5",
         "name": "Read /home/davee/caroline/caroline_settings.json â†’ flow vars",
-        "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\n\nconst MIGRATION_DEFAULTS = {\n  userName: '',\n  openrouterKey: '',\n  aiModel: 'anthropic/claude-haiku-4.5',\n  aiProvider: 'openrouter',\n  ollamaUrl: 'http://localhost:11434',\n  ollamaModel: 'llama3.2',\n  ttsEnabled: false,\n  timezone: 'America/New_York',\n  location: '',\n  cityName: '',\n  lat: 0,\n  lng: 0,\n  piIp: '',\n  calendarId: '',\n  hueIp: '',\n  hueKey: '',\n  hueGroup: '4',\n  hueGroupName: '',\n  tidesStation: '',\n  discordEnabled: false,\n  discordToken: '',\n  discordChannelId: ''\n};\n\nconst existing = {};\nObject.keys(MIGRATION_DEFAULTS).forEach(k => {\n  const v = flow.get(k);\n  if (v !== undefined && v !== null && v !== '') existing[k] = v;\n});\n\ntry {\n  let cfg = Object.assign({}, MIGRATION_DEFAULTS, existing);\n  if (fs.existsSync(SETTINGS_PATH)) {\n    const raw = fs.readFileSync(SETTINGS_PATH, 'utf8');\n    Object.assign(cfg, JSON.parse(raw));\n    node.log('[Caroline] Settings loaded from ' + SETTINGS_PATH);\n  } else {\n    node.warn('[Caroline] No settings file at ' + SETTINGS_PATH + ' - using flow vars / defaults');\n  }\n  Object.keys(cfg).forEach(k => flow.set(k, cfg[k]));\n} catch(e) {\n  node.error('[Caroline] Failed to load settings: ' + e.message);\n}\nreturn msg;",
+        "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\n\nconst MIGRATION_DEFAULTS = {\n  userName: '',\n  openrouterKey: '',\n  aiModel: 'anthropic/claude-haiku-4.5',\n  aiProvider: 'openrouter',\n  ollamaUrl: 'http://localhost:11434',\n  ollamaModel: 'llama3.2',\n  ttsEnabled: false,\n  timezone: 'America/New_York',\n  location: '',\n  cityName: '',\n  lat: 0,\n  lng: 0,\n  piIp: '',\n  nodeRedUrl: '',\n  zipcode: '',\n  zipCode: '',\n  calendarId: '',\n  hueIp: '',\n  hueKey: '',\n  hueGroup: '4',\n  hueGroupName: '',\n  tidesStation: '',\n  spotifyClientId: '',\n  discordEnabled: false,\n  discordToken: '',\n  discordChannelId: ''\n};\n\nconst existing = {};\nObject.keys(MIGRATION_DEFAULTS).forEach(k => {\n  const v = flow.get(k);\n  if (v !== undefined && v !== null && v !== '') existing[k] = v;\n});\n\ntry {\n  let cfg = Object.assign({}, MIGRATION_DEFAULTS, existing);\n  if (fs.existsSync(SETTINGS_PATH)) {\n    const raw = fs.readFileSync(SETTINGS_PATH, 'utf8');\n    Object.assign(cfg, JSON.parse(raw));\n    node.log('[Caroline] Settings loaded from ' + SETTINGS_PATH);\n  } else {\n    node.warn('[Caroline] No settings file at ' + SETTINGS_PATH + ' - using flow vars / defaults');\n  }\n  if (cfg.zipCode && !cfg.zipcode) cfg.zipcode = cfg.zipCode;\n  if (cfg.zipcode && !cfg.zipCode) cfg.zipCode = cfg.zipcode;\n  if (!cfg.nodeRedUrl && cfg.piIp) cfg.nodeRedUrl = 'http://' + cfg.piIp + ':1880';\n  Object.keys(cfg).forEach(k => flow.set(k, cfg[k]));\n} catch(e) {\n  node.error('[Caroline] Failed to load settings: ' + e.message);\n}\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -3077,7 +3077,7 @@
         "type": "function",
         "z": "1497b6d50e1369f5",
         "name": "Save settings â†’ flow vars + /home/davee/caroline/caroline_settings.json",
-        "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nconst ALLOWED_KEYS = [\n  'userName', 'openrouterKey', 'aiModel', 'aiProvider', 'ollamaUrl', 'ollamaModel', 'ttsEnabled',\n  'timezone', 'location', 'cityName', 'lat', 'lng', 'piIp', 'calendarId',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation',\n  'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\n\nconst body = msg.payload || {};\nconst saved = {};\nALLOWED_KEYS.forEach(k => {\n  if (body[k] !== undefined) {\n    flow.set(k, body[k]);\n    saved[k] = body[k];\n  }\n});\n\ntry {\n  let existing = {};\n  if (fs.existsSync(SETTINGS_PATH)) {\n    try { existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n  }\n  const merged = Object.assign({}, existing, saved);\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), 'utf8');\n  node.log('[Caroline] Settings saved: ' + Object.keys(saved).join(', '));\n} catch(e) {\n  node.error('[Caroline] Failed to write settings: ' + e.message);\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Headers': 'Content-Type'\n};\nmsg.payload = { ok: true, saved: Object.keys(saved) };\nreturn msg;",
+        "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nconst ALLOWED_KEYS = [\n  'userName', 'openrouterKey', 'aiModel', 'aiProvider', 'ollamaUrl', 'ollamaModel', 'ttsEnabled',\n  'timezone', 'location', 'cityName', 'lat', 'lng', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',\n  'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\n\nconst body = msg.payload || {};\nconst saved = {};\nALLOWED_KEYS.forEach(k => {\n  if (body[k] !== undefined) {\n    flow.set(k, body[k]);\n    saved[k] = body[k];\n  }\n});\nif (saved.zipCode && !saved.zipcode) {\n  saved.zipcode = saved.zipCode;\n  flow.set('zipcode', saved.zipcode);\n}\nif (saved.zipcode && !saved.zipCode) {\n  saved.zipCode = saved.zipcode;\n  flow.set('zipCode', saved.zipCode);\n}\n\ntry {\n  let existing = {};\n  if (fs.existsSync(SETTINGS_PATH)) {\n    try { existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n  }\n  const merged = Object.assign({}, existing, saved);\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), 'utf8');\n  node.log('[Caroline] Settings saved: ' + Object.keys(saved).join(', '));\n} catch(e) {\n  node.error('[Caroline] Failed to write settings: ' + e.message);\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Methods': 'POST, OPTIONS',\n  'Access-Control-Allow-Headers': 'Content-Type'\n};\nmsg.payload = { ok: true, saved: Object.keys(saved) };\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -3106,6 +3106,53 @@
         "headers": {},
         "x": 850,
         "y": 200,
+        "wires": []
+    },
+    {
+        "id": "caro-save-settings-options-in",
+        "type": "http in",
+        "z": "1497b6d50e1369f5",
+        "name": "OPTIONS /admin/save-settings",
+        "url": "/admin/save-settings",
+        "method": "options",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 170,
+        "y": 260,
+        "wires": [
+            [
+                "caro-save-settings-options-fn"
+            ]
+        ]
+    },
+    {
+        "id": "caro-save-settings-options-fn",
+        "type": "function",
+        "z": "1497b6d50e1369f5",
+        "name": "CORS preflight",
+        "func": "msg.statusCode = 204;\nmsg.headers = {\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Methods': 'POST, OPTIONS',\n  'Access-Control-Allow-Headers': 'Content-Type',\n  'Access-Control-Max-Age': '86400'\n};\nmsg.payload = '';\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 260,
+        "wires": [
+            [
+                "caro-save-settings-options-res"
+            ]
+        ]
+    },
+    {
+        "id": "caro-save-settings-options-res",
+        "type": "http response",
+        "z": "1497b6d50e1369f5",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 650,
+        "y": 260,
         "wires": []
     },
     {
@@ -3448,7 +3495,7 @@
         "type": "function",
         "z": "161d0c4cebe17cda",
         "name": "Return settings JSON",
-        "func": "const keys = [\n  'userName', 'aiProvider', 'aiModel', 'ollamaUrl', 'ollamaModel', 'openrouterKey',\n  'location', 'cityName', 'lat', 'lng', 'timezone', 'piIp',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation',\n  'calendarId', 'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\nconst out = {};\nkeys.forEach(k => {\n  const v = flow.get(k);\n  if (v !== undefined && v !== null && v !== '') out[k] = v;\n});\nmsg.payload = out;\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nreturn msg;",
+        "func": "const keys = [\n  'userName', 'aiProvider', 'aiModel', 'ollamaUrl', 'ollamaModel', 'openrouterKey',\n  'location', 'cityName', 'lat', 'lng', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',\n  'calendarId', 'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\nconst out = {};\nkeys.forEach(k => {\n  const v = flow.get(k);\n  if (v !== undefined && v !== null && v !== '') out[k] = v;\n});\nif (out.zipCode && !out.zipcode) out.zipcode = out.zipCode;\nif (out.zipcode && !out.zipCode) out.zipCode = out.zipcode;\nif (!out.nodeRedUrl && out.piIp) out.nodeRedUrl = 'http://' + out.piIp + ':1880';\nmsg.payload = out;\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
