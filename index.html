@@ -113,11 +113,10 @@
   .hist-empty { text-align: center; color: rgba(226,232,240,0.25); font-size: 13px; font-family: 'JetBrains Mono', monospace; margin-top: 40px; }
 
   /* LAYOUT */
-  #main { flex: 1; min-height: 0; display: flex; flex-direction: row; width: 100%; overflow: hidden; position: relative; z-index: 10; }
-  #center { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  #main { flex: 1; min-height: 0; display: flex; overflow: hidden; position: relative; z-index: 10; }
 
   /* LEFT PANEL */
-  #left { width: 200px; min-width: 200px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 10px 10px 12px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
+  #left { width: 200px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 10px 10px 12px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
   #left::-webkit-scrollbar { width: 2px; }
   #left::-webkit-scrollbar-thumb { background: rgba(var(--t-rgb1),0.2); border-radius: 2px; }
   #left::-webkit-scrollbar-track { background: transparent; }
@@ -247,16 +246,15 @@
 
   /* INTERACTION ZONE */
   #interaction-zone { width: 100%; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px; position: relative; transition: opacity 1.5s ease, transform 1.5s ease; }
-  #subtitle-box { position: absolute; bottom: 85px; background: rgba(5,5,10,0.85); border: 1px solid rgba(var(--t-rgb2), 0.3); border-radius: 16px; padding: 14px 20px; width: 95%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; pointer-events: none; position: relative; }
-  #subtitle-box.proactive { pointer-events: auto; }
+  #subtitle-box { position: absolute; bottom: 85px; background: rgba(5,5,10,0.85); border: 1px solid rgba(var(--t-rgb2), 0.3); border-radius: 16px; padding: 14px 20px; width: 95%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; pointer-events: none; }
+  #subtitle-box.hidden { opacity: 0; transform: translateY(15px); }
+  #subtitle-box.proactive { pointer-events: auto; border-color: rgba(251,191,36,0.45); box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 18px rgba(251,191,36,0.12); }
+  #subtitle-box.proactive #subtitle-sender { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.5); }
   #subtitle-dismiss { display:none; position:absolute; top:8px; right:10px; background:none; border:none; color:rgba(var(--t-rgb1),0.35); cursor:pointer; font-size:16px; padding:2px 5px; line-height:1; transition:color 0.2s; }
   #subtitle-dismiss:hover { color:rgba(var(--t-rgb1),0.8); }
   #subtitle-box.proactive #subtitle-dismiss { display:block; }
-  #subtitle-box.hidden { opacity: 0; transform: translateY(15px); }
   #subtitle-sender { font-size: 13px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; margin-bottom: 6px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; text-shadow: 0 0 8px rgba(var(--t-rgb1), 0.4); }
   #subtitle-text { font-size: 20px; color: #f8fafc; line-height: 1.4; }
-  #subtitle-box.proactive { border-color: rgba(251,191,36,0.45); box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 18px rgba(251,191,36,0.12); }
-  #subtitle-box.proactive #subtitle-sender { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.5); }
   .typing-indicator { display: none; gap: 5px; align-items: center; justify-content: center; padding: 5px 0; }
   .typing-indicator.show { display: flex; }
   .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--t-hex1); animation: typingBounce 1.2s ease-in-out infinite; box-shadow: 0 0 8px rgba(var(--t-rgb1), 0.5); }
@@ -289,7 +287,7 @@
   #kbd-btn.active { background: var(--t-hex1); color: #05050a; box-shadow: 0 0 20px rgba(var(--t-rgb1), 0.6); }
 
   /* RIGHT PANEL */
-  #news-panel { width: 260px; min-width: 260px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
+  #news-panel { width: 260px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
   #video-section { flex-shrink: 0; padding: 10px 8px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
   #channel-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #channel-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -345,7 +343,7 @@
   /* FOCUS / IDLE */
   body.focus-mode #left, body.focus-mode #news-panel { opacity: 0; transform: translateY(20px); pointer-events: none; }
   body.focus-mode #topbar { opacity: 0.1; pointer-events: none; }
-  body.focus-mode #avatar-hint { opacity: 0; },,,,,
+  body.focus-mode #avatar-hint { opacity: 0; }
   body.focus-mode #avatar-outer { transform: scale(1.2) translateY(10px); }
   body.idle-mode #left, body.idle-mode #news-panel { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
@@ -403,58 +401,40 @@
   .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; }
   .stat-key { color: rgba(226,232,240,0.4); font-family: 'JetBrains Mono', monospace; }
   .stat-val { color: #f8fafc; font-weight: 500; }
-  /* ── PANEL TOGGLE (hidden on desktop) ───────── */
-  #panel-toggle-btn { display: none; background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; line-height: 1.6; }
-  #panel-toggle-btn:hover { background: rgba(var(--t-rgb1),0.2); }
-  #panel-overlay { display: none; position: absolute; inset: 0; z-index: 490; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
-  #panel-overlay.show { display: block; }
-
-  /* ── TABLET LANDSCAPE (768px–1100px) ──────── */
+  /* ── TABLET RESPONSIVE (768px–1100px) ─────── */
   @media (max-width: 1100px) {
-    #left { width: 170px; min-width: 170px; padding: 8px 8px 8px 10px; }
-    #news-panel { width: 190px; min-width: 190px; }
+    #left { width: 160px; padding: 8px; }
+    #news-panel { width: 200px; }
     #settings-modal { width: 95vw; max-width: 480px; }
     #msg-input { font-size: 16px; }
     #subtitle-text { font-size: 17px; }
-    .quick-btn { padding: 8px 11px; font-size: 13px; }
-    .widget-label { font-size: 12px; }
-    #bottom-bar { height: 155px; }
-    #avatar-outer { width: 160px; height: 160px; }
+    .quick-btn { padding: 8px 12px; font-size: 13px; }
   }
-
-  /* ── TABLET PORTRAIT (max 768px) ─────────── */
+  /* ── SMALL TABLET / LARGE PHONE (max 768px) ─ */
   @media (max-width: 768px) {
-    /* Kiosk: keep panels in-flow, just narrower */
-    #left { width: 150px; min-width: 150px; padding: 8px 6px 8px 8px; }
-    #panel-toggle-btn { display: none; }
-    #news-panel { width: 150px; min-width: 150px; }
-    #avatar-outer { width: 140px; height: 140px; }
+    #left { display: none; }
+    #news-panel { width: 180px; }
+    #avatar-outer { width: 180px; height: 180px; }
     #topbar { padding: 0 8px; gap: 6px; }
     .topbar-name { font-size: 15px; }
-    #holiday-text { max-width: 90px; }
+    #holiday-text { max-width: 100px; }
     #date-text { font-size: 11px; }
     #settings-modal { width: 98vw; max-height: 85vh; }
     #subtitle-text { font-size: 15px; }
     .quick-btn { padding: 8px 10px; font-size: 12px; }
     #msg-input { font-size: 15px; padding: 12px 16px; }
-    .touch-btn { width: 46px; height: 46px; font-size: 18px; }
-    #bottom-bar { height: 150px; }
-    .widget-label { font-size: 12px; }
-    #topbar-moon { display: none; }
+    .touch-btn { width: 44px; height: 44px; font-size: 17px; }
   }
-
-  /* ── PHONE PORTRAIT (max 500px) ──────────── */
+  /* ── PORTRAIT / PHONE (max 500px) ─────────── */
   @media (max-width: 500px) {
-    /* Kiosk: keep row layout, just compress panels further */
-    #left { width: 110px; min-width: 110px; padding: 6px 4px 6px 6px; }
-    #news-panel { width: 110px; min-width: 110px; }
-    #video-section { border-bottom: none; }
-    #news-section { flex: 1; overflow-y: auto; padding: 6px; }
-    #avatar-outer { width: 100px; height: 100px; }
-    #center { padding: 4px 6px; gap: 6px; }
+    #main { flex-direction: column; }
+    #news-panel { width: 100%; height: 180px; flex-direction: row; border-left: none; border-top: 1px solid rgba(var(--t-rgb1),0.08); }
+    #video-section { width: 50%; border-bottom: none; border-right: 1px solid rgba(var(--t-rgb1),0.08); }
+    #news-section { flex: 1; overflow-y: auto; padding: 8px; }
+    #avatar-outer { width: 140px; height: 140px; }
+    #center { padding: 4px 6px; gap: 8px; }
     .quick-btn { padding: 7px 8px; font-size: 11px; }
     #topbar-moon, #topbar-radio { display: none; }
-    #bottom-bar { height: 140px; }
   }
   .feat-toggle { display:flex; align-items:center; gap:10px; font-size:14px; color:#e2e8f0; cursor:pointer; padding:6px 10px; border-radius:10px; border:1px solid rgba(var(--t-rgb1),0.1); transition:background 0.2s; }
   .feat-toggle:hover { background:rgba(var(--t-rgb1),0.06); }
@@ -596,25 +576,18 @@
   #wipe-memory-btn { margin-top:18px; background:none; border:1px solid rgba(244,63,94,0.25); border-radius:20px; padding:6px 16px; font-size:11px; color:rgba(244,63,94,0.5); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:all 0.2s; letter-spacing:.08em; }
   #wipe-memory-btn:hover { border-color:rgba(244,63,94,0.6); color:#fb7185; }
 
-  /* ── WS PULSE DOT ────────────────────────── */
-  #ws-dot { display:inline-block; width:7px; height:7px; border-radius:50%; flex-shrink:0; transition:background 0.4s ease,box-shadow 0.4s ease; vertical-align:middle; margin-right:4px; }
-  #ws-dot.connecting { background:rgba(148,163,184,0.35); }
-  #ws-dot.connected { background:#4ade80; box-shadow:0 0 7px rgba(74,222,128,0.9); animation:wsDotPulse 2s ease-in-out infinite; }
-  #ws-dot.disconnected { background:#f87171; box-shadow:none; }
-  @keyframes wsDotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  /* ── SETTINGS KIOSK BUTTONS ─────────────── */
+  .sys-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:10px; padding:7px 14px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:11px; cursor:pointer; transition:all 0.2s; }
+  .sys-btn:hover { background:rgba(var(--t-rgb1),0.1); }
+  .sys-btn.danger { border-color:rgba(244,63,94,0.3); color:#fb7185; }
+  .sys-btn.danger:hover { background:rgba(244,63,94,0.1); }
 
-  /* ── SAVE SUCCESS ANIMATION ──────────────── */
-  @keyframes saveSuccess { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.25)} 100%{transform:scale(1);opacity:1} }
-  #settings-feedback.show { animation:saveSuccess 0.4s cubic-bezier(0.34,1.56,0.64,1) both; text-shadow:0 0 14px rgba(var(--t-rgb1),0.8); }
-  .settings-save-btn.saving-done { background:linear-gradient(135deg,#4ade80,rgba(74,222,128,0.5)); box-shadow:0 0 22px rgba(74,222,128,0.5); color:#052010; }
-
-  /* ── DETECT BUTTONS ──────────────────────── */
   .detect-btn { background:rgba(var(--t-rgb1),0.08); border:1px solid rgba(var(--t-rgb1),0.3); border-radius:8px; padding:5px 9px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer; white-space:nowrap; transition:all 0.2s; flex-shrink:0; }
   .detect-btn:hover { background:rgba(var(--t-rgb1),0.2); }
   .detect-btn:disabled { opacity:0.45; cursor:wait; }
   .input-detect-row { display:flex; align-items:center; gap:6px; }
 
-  /* ── OLLAMA MODEL CARDS ──────────────────── */
+  /* ── OLLAMA MODEL CARDS ──────────────────────── */
   .ollama-card { background:rgba(var(--t-rgb1),0.07); border:1px solid rgba(var(--t-rgb1),0.18); border-radius:10px; padding:9px 12px; cursor:pointer; transition:all 0.2s; min-width:120px; flex:0 0 auto; position:relative; }
   .ollama-card:hover { background:rgba(var(--t-rgb1),0.15); border-color:rgba(var(--t-rgb1),0.5); }
   .ollama-card.active { border-color:var(--t-hex1); background:rgba(var(--t-rgb1),0.2); box-shadow:0 0 14px rgba(var(--t-rgb1),0.25); }
@@ -623,18 +596,6 @@
   .ollama-card-badge { position:absolute; top:-6px; right:6px; background:var(--t-hex1); color:#05050a; font-size:8px; font-weight:700; font-family:'JetBrains Mono',monospace; padding:1px 5px; border-radius:4px; letter-spacing:.06em; }
   .rec-table-row { border-bottom:1px solid rgba(var(--t-rgb1),0.1); }
   .rec-table-row td { padding:6px 8px; }
-
-  /* ── UPDATE BADGE ────────────────────────── */
-  #update-badge { display:none; width:7px; height:7px; background:var(--t-hex1); border-radius:50%; box-shadow:0 0 8px rgba(var(--t-rgb1),0.9); animation:wsDotPulse 2s ease-in-out infinite; vertical-align:middle; margin-left:4px; }
-  #update-banner { display:none; background:rgba(var(--t-rgb1),0.08); border:1px solid rgba(var(--t-rgb1),0.3); border-radius:12px; padding:12px 16px; margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(226,232,240,0.85); display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  #update-banner a { color:var(--t-hex1); text-decoration:none; white-space:nowrap; }
-  #update-banner a:hover { text-decoration:underline; }
-
-  /* ── SETTINGS KIOSK BUTTONS ─────────────── */
-  .sys-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:10px; padding:7px 14px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:11px; cursor:pointer; transition:all 0.2s; }
-  .sys-btn:hover { background:rgba(var(--t-rgb1),0.1); }
-  .sys-btn.danger { border-color:rgba(244,63,94,0.3); color:#fb7185; }
-  .sys-btn.danger:hover { background:rgba(244,63,94,0.1); }
 
   /* ACCESSIBILITY */
   :focus-visible { outline: 2px solid var(--t-hex1); outline-offset: 2px; border-radius: 4px; }
@@ -647,15 +608,15 @@
 <body>
 <div id="particles"></div>
 <div id="scanlines"></div>
-<div id="screensaver-overlay"></div>
 <div id="crt-flicker"></div>
+<div id="screensaver-overlay"></div>
 <div id="corner-glow-tl"></div>
 <div id="corner-glow-br"></div>
 
 <div id="onboarding-overlay">
   <section id="caro-boot-panel">
     <div class="caro-boot-shell">
-      <img id="caro-boot-avatar" src="caroline.gif" alt="Project: Caroline" onerror="this.style.opacity='0'"/>
+      <img id="caro-boot-avatar" src="caroline.gif" alt="Project: Caroline"/>
       <div id="caro-boot-log"></div>
       <div id="caro-boot-ready" class="hidden">
         <span>[ READY FOR CONFIGURATION ]</span>
@@ -728,10 +689,6 @@
       <button id="settings-close" onclick="toggleSettings()">CLOSE ✕</button>
     </div>
     <div id="settings-body">
-      <div id="update-banner">
-        <span>⬆ Update available: <strong>v<span id="update-version"></span></strong> — <a id="update-link" href="#" target="_blank" rel="noopener">View release →</a></span>
-        <button type="button" onclick="document.getElementById('update-banner').style.display='none'" style="background:none;border:none;color:rgba(226,232,240,0.4);cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>
-      </div>
       <div id="settings-first-run-banner" style="display:none;background:rgba(var(--t-rgb1),0.08);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:12px;padding:14px 18px;margin-bottom:6px;">
         <div style="font-size:15px;color:var(--t-hex1);font-weight:600;margin-bottom:5px;">Welcome to Caroline 👋</div>
         <div style="font-size:12px;color:rgba(226,232,240,0.65);font-family:'JetBrains Mono',monospace;line-height:1.5;">Set your Node-RED URL and OpenRouter key to get started.<br>Save once and Caroline will remember everything.</div>
@@ -862,6 +819,7 @@
           </div>
         </div>
       </div>
+      </div>
       <div class="settings-section">
         <h3>Location</h3>
         <div class="settings-row">
@@ -870,19 +828,12 @@
         </div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
-          <div class="input-detect-row">
-            <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:140px"/>
-            <button type="button" class="detect-btn" id="loc-detect-btn" onclick="detectLocation(this)">📍 Detect</button>
-          </div>
+          <input class="settings-input" id="set-location" type="text" placeholder="City, State"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Timezone</div><div class="settings-sub">Type to search IANA zones</div></div>
-          <div class="input-detect-row">
-            <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles" list="tz-datalist" style="width:140px"/>
-            <button type="button" class="detect-btn" onclick="autoDetectTimezone()">📍 Detect</button>
-          </div>
+          <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
+          <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles"/>
         </div>
-        <datalist id="tz-datalist"></datalist>
       </div>
       <div class="settings-section">
         <h3>Behaviour</h3>
@@ -912,16 +863,12 @@
           <div><div class="settings-label">Auto time-of-day theme</div><div class="settings-sub">Dawn / day / dusk / night</div></div>
           <input type="checkbox" id="set-auto-theme" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
         </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Voice / TTS</div><div class="settings-sub">Caroline speaks her replies aloud</div></div>
-          <input type="checkbox" id="set-tts-enabled" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
-        </div>
       </div>
       <div class="settings-section">
         <h3>API & Network</h3>
         <div class="settings-row">
           <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">http://ip:1880</div></div>
-          <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://[pi-ip]:1880" style="width:200px"/>
+          <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
         </div>
         <div id="openrouter-key-row">
         <div class="settings-row" style="margin-top:14px">
@@ -1062,7 +1009,7 @@
         <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
           <div><div class="settings-label">Personality memory</div><div class="settings-sub" id="personality-status">No personality profile yet</div></div>
           <div id="module-status-stack" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-            <div class="settings-status-chip" id="status-aiCore"><span class="mini-dot"></span><span>AI Provider offline</span></div>
+            <div class="settings-status-chip" id="status-aiCore"><span class="mini-dot"></span><span>AI Core offline</span></div>
             <div class="settings-status-chip" id="status-spotify"><span class="mini-dot"></span><span>Spotify offline</span></div>
             <div class="settings-status-chip" id="status-hue"><span class="mini-dot"></span><span>Hue offline</span></div>
           </div>
@@ -1152,7 +1099,7 @@
   <span class="topbar-name" id="topbar-name">Caroline</span>
   <span class="topbar-version">v0.2</span>
   <span class="topbar-sub">AI companion</span>
-  <span class="conn-pill" id="conn-pill" style="display:inline-flex;align-items:center;"><span id="ws-dot" class="connecting"></span>CONNECTING</span>
+  <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="date-sep">│</span>
   <div id="date-strip">
     <span id="date-text">--/--/----</span>
@@ -1169,13 +1116,11 @@
     <span id="moon-icon" style="font-size:14px;">🌑</span>
     <span id="moon-name" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.6);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;"></span>
   </div>
-  <button id="panel-toggle-btn" onclick="toggleLeftPanel()" title="Toggle widget panel" aria-label="Toggle widget panel">◫</button>
-  <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog">⚙️ Settings<span id="update-badge"></span></button>
+  <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog">⚙️ Settings</button>
   <span id="restart-btn"><i class="ti ti-refresh"></i> RESTART</span>
 </div>
 
 <div id="offline-banner">⚡ NODE-RED UNREACHABLE — chat unavailable until reconnected</div>
-<div id="panel-overlay" onclick="toggleLeftPanel()"></div>
 
 <div id="main">
   <div id="left">
@@ -1188,7 +1133,6 @@
         </div>
         <div id="forecast"></div>
         <div id="sun-row"><span>🌅 <span id="sunrise-time">--</span></span><span>🌇 <span id="sunset-time">--</span></span></div>
-        <div id="weather-updated" style="font-size:9px;color:rgba(var(--t-rgb1),0.25);font-family:'JetBrains Mono',monospace;margin-top:3px;"></div>
       </div>
       <audio id="radio-audio" preload="none"></audio>
       <div class="widget" id="widget-radio">
@@ -1221,7 +1165,6 @@
 
       <div class="widget" id="widget-tides">
         <div class="widget-label">🌊 Tides</div>
-        <div id="tides-updated" style="font-size:9px;color:rgba(var(--t-rgb1),0.25);font-family:'JetBrains Mono',monospace;margin-bottom:3px;"></div>
         <div id="tides-row">
           <div class="tide-item">
             <div class="tide-type">LOADING</div>
@@ -1330,7 +1273,6 @@
         <span id="channel-label">🔴 NHK WORLD LIVE</span>
         <button class="ch-btn" onclick="changeChannel(-1)"><i class="ti ti-chevron-left"></i></button>
         <button class="ch-btn" onclick="changeChannel(1)"><i class="ti ti-chevron-right"></i></button>
-        <button class="ch-btn" onclick="reloadChannel()" title="Reload stream"><i class="ti ti-refresh"></i></button>
       </div>
       <div id="yt-container" onclick="handleVideoTap(event)">
         <video id="nhk-video" autoplay muted playsinline></video>
@@ -1372,7 +1314,7 @@
 <div id="bottom-bar">
   <div id="bottom-chat">
     <div id="bottom-chat-label">💬 Recent conversation</div>
-    <div id="bottom-chat-msgs"><div style="color:rgba(226,232,240,0.18);font-size:10px;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:8px;">[ UPLINK ACTIVE — AWAITING INPUT ]</div></div>
+    <div id="bottom-chat-msgs"><div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:8px;">Say something to Caroline...</div></div>
     <div id="voice-status" style="font-size:11px;color:rgba(var(--t-rgb1),0.4);font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;padding:4px 0 2px;flex-shrink:0;">● READY TO CHAT · ENTER TO SEND</div>
     <div id="input-row">
       <button class="touch-btn" id="focus-btn" onclick="toggleFocusMode(); playBeep(900);" title="Focus Mode"><i class="ti ti-headphones"></i></button>
@@ -1408,27 +1350,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (vEl) vEl.textContent = 'v' + VERSION;
 });
 
-// Pull installer-written settings from Node-RED on first run
-// (localStorage is empty until user saves settings — this pre-fills it)
-async function syncSettingsFromServer() {
-  if (localStorage.getItem('caro_settings')) return;
-  try {
-    const r = await fetch('http://' + (window.location.hostname || 'localhost') + ':1880/admin/get-settings');
-    if (!r.ok) return;
-    const d = await r.json();
-    if (!d || typeof d !== 'object') return;
-    Object.assign(S, d);
-    localStorage.setItem('caro_settings', JSON.stringify(S));
-    document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
-    const wcl = document.getElementById('weather-city-label');
-    if (wcl) wcl.textContent = S.cityName || S.location || '';
-  } catch(e) {}
-}
-syncSettingsFromServer();
-
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { radio: true, hue: true, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: 'http://localhost:1880', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
 
@@ -1518,9 +1442,8 @@ let spotifyToken = localStorage.getItem('spotify_token') || '';
 let spotifyPollInterval = null;
 
 function getNodeRedUrl() {
-  const stored = S && S.nodeRedUrl;
-  if (stored && !stored.includes('localhost')) return stored.replace(/\/+$/, '');
-  return 'http://' + window.location.hostname + ':' + NODE_RED_PORT;
+  let u = (S && S.nodeRedUrl) || ('http://' + (window.location.hostname || 'localhost') + ':1880');
+  return u.replace(/\/+$/, '');
 }
 function getPiHost() {
   try { return new URL(getNodeRedUrl()).hostname; }
@@ -1528,17 +1451,25 @@ function getPiHost() {
 }
 const NODE_RED_PORT = 1880;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
-function httpBase() {
-  return getNodeRedUrl();
+const CADDY_PORT = 8443;
+const RESTART_PORT = 8090;
+
+function httpBase(port) {
+  if (!port || port === NODE_RED_PORT) return getNodeRedUrl();
+  return 'http://' + getPiHost() + ':' + port;
+}
+
+function httpsBase(port) {
+  return 'https://' + getPiHost() + ':' + (port || CADDY_PORT);
 }
 
 function wsBase(path) {
-  return 'ws://' + getPiHost() + ':' + NODE_RED_PORT + (path || '');
+  return getNodeRedUrl().replace(/^http/, 'ws') + (path || '');
 }
 
 function requestPiRestart() {
   if (!confirm('Reboot the Pi?')) return;
-  fetch(httpBase() + '/restart', { method: 'POST' }).catch(() => {});
+  fetch(httpBase(RESTART_PORT) + '/restart', { method: 'POST' }).catch(() => {});
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:JetBrains Mono;color:#e2e8f0;background:#05050a;">REBOOTING...</div>';
 }
 
@@ -1552,7 +1483,7 @@ async function handleSpotifyAuth() {
   S.spotifyClientId = clientId;
   localStorage.setItem('caro_settings', JSON.stringify(S));
 
-  const startUrl = httpBase() + '/spotify/start?clientId=' + encodeURIComponent(clientId);
+  const startUrl = httpsBase() + '/spotify/start?clientId=' + encodeURIComponent(clientId);
   window.location.href = startUrl;
 }
 
@@ -1601,20 +1532,10 @@ function updateFeatWarnings() {
   if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Node-RED URL set to receive events');
 }
 
-function toggleLeftPanel() {
-  const panel = document.getElementById('left');
-  const overlay = document.getElementById('panel-overlay');
-  const isOpen = panel.classList.toggle('open');
-  overlay.classList.toggle('show', isOpen);
-  resetIdle();
-}
-
 function toggleSettings() {
   const ov = document.getElementById('settings-overlay');
   const isOpen = ov.classList.toggle('show');
   if (isOpen) {
-    document.getElementById('left')?.classList.remove('open');
-    document.getElementById('panel-overlay')?.classList.remove('show');
     document.getElementById('set-avatar').value = S.avatar;
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
@@ -1622,19 +1543,10 @@ function toggleSettings() {
     document.getElementById('set-auto-theme').checked = S.autoTheme;
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
     document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
-    const providerEl = document.getElementById('set-ai-provider');
-    if (providerEl) { providerEl.value = S.aiProvider || 'openrouter'; onProviderChange(providerEl.value); }
-    const ollamaUrlEl = document.getElementById('set-ollama-url');
-    if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
-    const ollamaModelEl = document.getElementById('set-ollama-model');
-    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'llama3.2';
-    if ((S.aiProvider || 'openrouter') === 'ollama') setTimeout(fetchOllamaModels, 100);
-    document.getElementById('set-nodered-url').value = getNodeRedUrl();
+    document.getElementById('set-nodered-url').value = S.nodeRedUrl || ('http://' + (window.location.hostname || 'localhost') + ':1880');
     document.getElementById('set-orkey').value = S.openrouterKey || '';
     document.getElementById('set-hueip').value = S.hueIp || '';
     document.getElementById('set-huekey').value = S.hueKey || '';
-    const hgSel = document.getElementById('set-hue-group');
-    if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
     document.getElementById('set-spotify-id').value = S.spotifyClientId || '';
     document.getElementById('set-timezone').value = S.timezone || '';
     document.getElementById('set-location').value = S.location || S.cityName || '';
@@ -1645,8 +1557,6 @@ function toggleSettings() {
     document.getElementById('set-discord-token').value = S.discordToken || '';
     document.getElementById('set-discord-channel').value = S.discordChannelId || '';
     toggleDiscordFields(!!S.discordEnabled);
-    const ttsEl = document.getElementById('set-tts-enabled');
-    if (ttsEl) ttsEl.checked = S.ttsEnabled === true;
 
     const hasToken = localStorage.getItem('spotify_token');
     document.getElementById('spotify-status').textContent = hasToken ? '✓ Connected' : 'Not connected';
@@ -1666,6 +1576,15 @@ function toggleSettings() {
     updateFeatWarnings();
     renderUsageStats();
     renderSettingsLog();
+    const providerEl = document.getElementById('set-ai-provider');
+    if (providerEl) { providerEl.value = S.aiProvider || 'openrouter'; onProviderChange(providerEl.value); }
+    const ollamaUrlEl = document.getElementById('set-ollama-url');
+    if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
+    const ollamaModelEl = document.getElementById('set-ollama-model');
+    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'llama3.2';
+    if ((S.aiProvider || 'openrouter') === 'ollama') setTimeout(fetchOllamaModels, 100);
+    const hgSel = document.getElementById('set-hue-group');
+    if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
     const pTa = document.getElementById('personalityPrompt');
     if (pTa) pTa.value = localStorage.getItem('caroline_personality_prompt') || '';
     const tsEl = document.getElementById('set-tides-station');
@@ -1686,36 +1605,6 @@ function selectSwatch(i) {
 function toggleDiscordFields(enabled) {
   const el = document.getElementById('discord-fields');
   if (el) el.classList.toggle('open', enabled);
-}
-
-// ── TIMEZONE DATALIST ──────────────────────────
-const IANA_TZ = [
-  'Pacific/Honolulu','America/Anchorage','America/Los_Angeles','America/Denver',
-  'America/Phoenix','America/Chicago','America/New_York','America/Puerto_Rico',
-  'America/Halifax','America/St_Johns','America/Sao_Paulo','America/Argentina/Buenos_Aires',
-  'America/Santiago','America/Bogota','America/Lima','America/Caracas','America/Mexico_City',
-  'America/Monterrey','America/Vancouver','America/Edmonton','America/Winnipeg','America/Toronto',
-  'Atlantic/Reykjavik','Europe/London','Europe/Dublin','Europe/Lisbon','Europe/Madrid',
-  'Europe/Paris','Europe/Amsterdam','Europe/Berlin','Europe/Rome','Europe/Vienna',
-  'Europe/Warsaw','Europe/Prague','Europe/Budapest','Europe/Stockholm','Europe/Helsinki',
-  'Europe/Bucharest','Europe/Athens','Europe/Istanbul','Europe/Moscow','Europe/Kiev',
-  'Africa/Cairo','Africa/Johannesburg','Africa/Lagos','Africa/Nairobi',
-  'Asia/Dubai','Asia/Karachi','Asia/Kolkata','Asia/Colombo','Asia/Dhaka',
-  'Asia/Rangoon','Asia/Bangkok','Asia/Jakarta','Asia/Singapore','Asia/Manila',
-  'Asia/Hong_Kong','Asia/Shanghai','Asia/Taipei','Asia/Seoul','Asia/Tokyo',
-  'Asia/Yakutsk','Asia/Vladivostok','Australia/Perth','Australia/Darwin',
-  'Australia/Brisbane','Australia/Adelaide','Australia/Sydney','Australia/Melbourne',
-  'Pacific/Auckland','Pacific/Fiji','Pacific/Guam',
-];
-(function populateTzDatalist(){
-  const dl = document.getElementById('tz-datalist');
-  if (!dl) return;
-  IANA_TZ.forEach(tz => { const o = document.createElement('option'); o.value = tz; dl.appendChild(o); });
-})();
-
-function autoDetectTimezone() {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if (tz) document.getElementById('set-timezone').value = tz;
 }
 
 // ── PROVIDER SWITCHER ──────────────────────────
@@ -1788,15 +1677,15 @@ async function fetchOllamaStatus() {
       text.style.color      = 'rgba(52,211,153,0.9)';
       if (ram) ram.textContent = gb;
     } else {
-      dot.style.background  = '#6b7280';
-      text.textContent      = '○ Installed — not loaded';
-      text.style.color      = 'rgba(226,232,240,0.5)';
+      dot.style.background = '#fbbf24';
+      text.textContent     = '● Ollama online — no model loaded';
+      text.style.color     = 'rgba(251,191,36,0.8)';
       if (ram) ram.textContent = '';
     }
   } catch(e) {
-    dot.style.background  = '#f87171';
-    text.textContent      = '✗ Ollama offline';
-    text.style.color      = '#f87171';
+    dot.style.background = '#4b5563';
+    text.textContent     = 'Offline — is Ollama running?';
+    text.style.color     = 'rgba(226,232,240,0.4)';
     if (ram) ram.textContent = '';
   }
 }
@@ -1804,7 +1693,6 @@ async function fetchOllamaStatus() {
 async function fetchOllamaModels() {
   const cards = document.getElementById('ollama-model-cards');
   const btn = document.getElementById('ollama-fetch-btn');
-  // Show cache instantly while live fetch runs
   if (_cachedOllamaModels) _renderOllamaCards(_cachedOllamaModels);
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   fetchOllamaStatus();
@@ -1841,8 +1729,6 @@ setTimeout(_bootOllamaScan, 4000);
 
 async function pullOllamaModel() {
   const nameEl = document.getElementById('ollama-pull-name');
-  const statusEl = document.getElementById('ollama-pull-status');
-  const btn = document.getElementById('ollama-pull-btn');
   if (!nameEl) return;
   const model = nameEl.value.trim();
   if (!model) { nameEl.focus(); return; }
@@ -1888,55 +1774,150 @@ function toggleRecommended() {
   if (chevron) chevron.style.transform = open ? '' : 'rotate(90deg)';
 }
 
-// ── UPDATE CHECK ───────────────────────────────
-const CAROLINE_GITHUB_REPO = ''; // set to 'user/caroline' once repo is public
-async function checkForUpdates() {
-  if (!CAROLINE_GITHUB_REPO) return;
+async function fetchHueGroups() {
+  const ip  = document.getElementById('set-hueip').value.trim()  || S.hueIp;
+  const key = document.getElementById('set-huekey').value.trim() || S.hueKey;
+  const errEl = document.getElementById('hue-group-error');
+  const btn   = document.getElementById('hue-group-fetch-btn');
+  if (errEl) errEl.style.display = 'none';
+  if (!ip || !key) { if (errEl) { errEl.textContent = 'Enter Bridge IP and API Key first'; errEl.style.display = 'block'; } return; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   try {
-    const r = await fetch('https://api.github.com/repos/' + CAROLINE_GITHUB_REPO + '/releases/latest', { signal: AbortSignal.timeout(5000) });
-    if (!r.ok) return;
-    const rel = await r.json();
-    const latest = (rel.tag_name || '').replace(/^v/, '');
-    if (!latest || latest === VERSION) return;
-    const badge = document.getElementById('update-badge');
-    const banner = document.getElementById('update-banner');
-    const verEl = document.getElementById('update-version');
-    const linkEl = document.getElementById('update-link');
-    if (badge) badge.style.display = '';
-    if (verEl) verEl.textContent = latest;
-    if (linkEl) linkEl.href = rel.html_url || '#';
-    if (banner) banner.style.display = 'flex';
-    clog('info', 'Update available: v' + latest);
-  } catch(e) { /* fail silently */ }
+    const r = await fetch(`http://${ip}/api/${key}/groups`, { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const sel = document.getElementById('set-hue-group');
+    const current = S.hueGroup || '4';
+    sel.innerHTML = '';
+    Object.entries(data).forEach(([id, grp]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = grp.name + ' (' + id + ')';
+      if (id === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (!sel.value && sel.options.length) sel.selectedIndex = 0;
+  } catch(e) {
+    if (errEl) { errEl.textContent = 'Could not reach bridge — check IP and key'; errEl.style.display = 'block'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⟳ Detect'; }
+  }
 }
-setTimeout(checkForUpdates, 8000);
 
-async function detectLocation(btn) {
-  if (!navigator.geolocation) { alert('Geolocation not available in this browser'); return; }
-  const orig = btn.textContent;
-  btn.textContent = '⏳'; btn.disabled = true;
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const { latitude: lat, longitude: lng } = pos.coords;
-    try {
-      const r = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json', {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'Caroline-Kiosk/1.0' }
-      });
+function resetPersonality() {
+  if (!confirm('Clear saved personality profile and rerun the first-contact wizard?')) return;
+  localStorage.removeItem('caroline_personality');
+  localStorage.removeItem('caroline_personality_prompt');
+  restartWizard();
+}
+
+function syncPersonalityToBrain() {
+  const ta = document.getElementById('personalityPrompt');
+  const text = ta ? ta.value.trim() : '';
+  localStorage.setItem('caroline_personality_prompt', text);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'personality_update', text }));
+  }
+  const fb = document.getElementById('settings-feedback');
+  if (fb) { fb.classList.add('show'); setTimeout(() => fb.classList.remove('show'), 2000); }
+}
+
+async function testAiConnection(btn) {
+  const result = document.getElementById('test-ai-result');
+  const provider = (document.getElementById('set-ai-provider') || {}).value || S.aiProvider || 'openrouter';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (result) { result.style.display = 'inline'; result.textContent = 'pinging...'; result.style.color = 'rgba(226,232,240,0.4)'; }
+  const start = Date.now();
+  try {
+    if (provider === 'ollama') {
+      const r = await fetch(httpBase() + '/admin/ollama-status', { signal: AbortSignal.timeout(8000) });
       const d = await r.json();
-      const city = d.address.city || d.address.town || d.address.village || d.address.county || '';
-      const state = d.address.state || '';
-      document.getElementById('set-location').value = [city, state].filter(Boolean).join(', ');
-    } catch(e) {
-      document.getElementById('set-location').value = lat.toFixed(4) + ', ' + lng.toFixed(4);
+      const ms = Date.now() - start;
+      if (d.ok && d.models && d.models.length) {
+        result.textContent = '✓ Ollama online — ' + d.models.length + ' model' + (d.models.length !== 1 ? 's' : '') + ' ready — ' + ms + 'ms';
+        result.style.color = 'rgba(52,211,153,0.9)';
+      } else {
+        result.textContent = '⚠ Ollama up but no models — pull one';
+        result.style.color = 'rgba(251,191,36,0.9)';
+      }
+    } else {
+      const key = (document.getElementById('set-orkey') || {}).value?.trim() || S.openrouterKey;
+      if (!key) {
+        result.textContent = '✗ No OpenRouter key configured';
+        result.style.color = '#f87171';
+      } else {
+        const r = await fetch('https://openrouter.ai/api/v1/models', {
+          headers: { 'Authorization': 'Bearer ' + key },
+          signal: AbortSignal.timeout(8000)
+        });
+        const ms = Date.now() - start;
+        if (r.ok) {
+          result.textContent = '✓ OpenRouter key valid — ' + ms + 'ms';
+          result.style.color = 'rgba(52,211,153,0.9)';
+        } else {
+          result.textContent = '✗ OpenRouter rejected key (HTTP ' + r.status + ')';
+          result.style.color = '#f87171';
+        }
+      }
     }
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz) document.getElementById('set-timezone').value = tz;
-    S.lat = lat; S.lng = lng;
-    btn.textContent = '✓ Done'; btn.disabled = false;
-    setTimeout(() => { btn.textContent = orig; }, 2000);
-  }, () => {
-    btn.textContent = orig; btn.disabled = false;
-    alert('Location access was denied. Please allow it in your browser settings.');
-  }, { timeout: 10000 });
+  } catch(e) {
+    result.textContent = '✗ ' + (provider === 'ollama' ? 'Ollama' : 'OpenRouter') + ' unreachable';
+    result.style.color = '#f87171';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡ Test Connection'; }
+  }
+}
+
+async function detectHueBridge(btn) {
+  const statusEl = document.getElementById('hue-pair-status');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (statusEl) { statusEl.style.display = 'none'; }
+  try {
+    const r = await fetch(httpBase() + '/admin/hue-discover', { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (d.ip) {
+      document.getElementById('set-hueip').value = d.ip;
+      if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + d.ip; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
+    } else {
+      throw new Error('No bridge found');
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = '✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network' : 'Discovery failed — enter IP manually'); statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔍 Detect'; }
+  }
+}
+
+async function pairHueBridge(btn) {
+  const ip = document.getElementById('set-hueip').value.trim();
+  const statusEl = document.getElementById('hue-pair-status');
+  if (!ip) {
+    if (statusEl) { statusEl.textContent = '✗ Enter bridge IP first (or hit Detect)'; statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (statusEl) { statusEl.textContent = 'Waiting for bridge… press the link button now'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
+  try {
+    const r = await fetch(httpBase() + '/admin/hue-pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (d.username) {
+      document.getElementById('set-huekey').value = d.username;
+      if (statusEl) { statusEl.textContent = '✓ Paired! Key saved — hit Save Settings'; statusEl.style.color = 'rgba(52,211,153,0.9)'; }
+    } else {
+      throw new Error(d.error || 'No key returned');
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = '✗ ' + (e.message.includes('link button') || e.message.includes('101') ? 'Press the physical button on the bridge, then try again' : 'Pair failed — ' + e.message); statusEl.style.color = '#f87171'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔑 Sync'; }
+  }
 }
 
 function toggleOrkeyVisibility() {
@@ -1976,8 +1957,6 @@ async function saveSettings() {
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
   S.autoTheme = document.getElementById('set-auto-theme').checked;
-  S.ttsEnabled = document.getElementById('set-tts-enabled').checked;
-  voiceEnabled = S.ttsEnabled;
   S.aiModel = document.getElementById('set-model').value;
   const newName = document.getElementById('set-ainame').value.trim() || 'Caroline';
   S.aiName = newName;
@@ -2004,7 +1983,7 @@ async function saveSettings() {
   const prevNrUrl = getNodeRedUrl();
   let rawNrUrl = document.getElementById('set-nodered-url').value.trim();
   if (rawNrUrl && !rawNrUrl.startsWith('http')) rawNrUrl = 'http://' + rawNrUrl;
-  S.nodeRedUrl = (rawNrUrl || ('http://' + window.location.hostname + ':1880')).replace(/\/+$/, '');
+  S.nodeRedUrl = (rawNrUrl || 'http://localhost:1880').replace(/\/+$/, '');
   try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
   const needReconnect = getNodeRedUrl() !== prevNrUrl;
   S.openrouterKey = orkeyVal;
@@ -2026,9 +2005,9 @@ async function saveSettings() {
   const tsInp = document.getElementById('set-tides-station');
   if (tsInp) S.tidesStation = tsInp.value.trim();
 
-  // Send key/model update to Node-RED via WebSocket
+  // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, discordToken: S.discordToken, discordChannelId: S.discordChannelId, calendarId: S.calendarId, tidesStation: S.tidesStation }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey }));
   }
 
   // Persist settings to Node-RED (writes /data/caroline_settings.json)
@@ -2041,17 +2020,11 @@ async function saveSettings() {
       body: JSON.stringify({
         openrouterKey: S.openrouterKey,
         aiModel: S.aiModel,
-        aiProvider: S.aiProvider,
-        ollamaUrl: S.ollamaUrl,
-        ollamaModel: S.ollamaModel,
-        ttsEnabled: S.ttsEnabled,
         timezone: S.timezone,
         location: S.location,
         calendarId: S.calendarId,
         hueIp: S.hueIp,
         hueKey: S.hueKey,
-        hueGroup: S.hueGroup,
-        tidesStation: S.tidesStation,
         discordEnabled: S.discordEnabled,
         discordToken: S.discordToken,
         discordChannelId: S.discordChannelId
@@ -2097,28 +2070,15 @@ async function saveSettings() {
     localStorage.setItem('caroline_configured', 'true');
     fb.textContent = '✓ Saved!';
     fb.classList.add('show');
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✓'; saveBtn.classList.add('saving-done'); }
-    setTimeout(() => {
-      fb.classList.remove('show');
-      if (saveBtn) { saveBtn.classList.remove('saving-done'); saveBtn.textContent = 'Save & Apply'; saveBtn.disabled = false; }
-      toggleSettings();
-    }, 1400);
+    setTimeout(() => { fb.classList.remove('show'); toggleSettings(); }, 1200);
   } else {
     fb.textContent = '✓ Local saved — Node-RED unreachable';
     fb.classList.add('show', 'error');
-    setTimeout(() => {
-      fb.classList.remove('show', 'error'); fb.textContent = '✓ Saved!';
-      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
-      toggleSettings();
-    }, 3000);
+    setTimeout(() => { fb.classList.remove('show', 'error'); fb.textContent = '✓ Saved!'; toggleSettings(); }, 3000);
   }
 
   } finally {
-    // reset button if an exception fired before the success/error path handled it
-    const fbEl = document.getElementById('settings-feedback');
-    if (saveBtn && saveBtn.disabled && !fbEl.classList.contains('show')) {
-      saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply';
-    }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
   }
 }
 
@@ -2184,14 +2144,13 @@ function changeAvatar(dir) {
 
 // ── VIDEO CHANNELS ────────────────────────────
 const DEFAULT_CHANNELS = [
-  { name:'Lofi Girl',       icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
-  { name:'Lofi Study',      icon:'📚', type:'youtube', ytId:'lTRiuFIWV54' },
-  { name:'Chill Beats',     icon:'🌊', type:'youtube', ytId:'4xDzrJKXOOY' },
-  { name:'Jazz Cafe',       icon:'🎷', type:'youtube', ytId:'HuFYqnbVbzY' },
-  { name:'Synthwave Radio', icon:'🌆', type:'youtube', ytId:'4xDzrJKXOOY' },
-  { name:'NASA Live',       icon:'🚀', type:'youtube', ytId:'21X5lGlDOfg' },
-  { name:'NHK World',       icon:'🔴', type:'youtube', ytId:'nMKB6u9s0Gs' },
-  { name:'Al Jazeera',      icon:'🌍', type:'youtube', ytId:'h3MuIUNCCR0' },
+  { name:'NHK World',   icon:'🔴', type:'youtube', ytId:'coYw-eVU0Ks' },
+  { name:'Al Jazeera',  icon:'🌍', type:'youtube', ytId:'gCNeDWCI0vo' },
+  { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'H999s0P1Er0' },
+  { name:'Lofi Girl',   icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
+  { name:'Chill Beats', icon:'🌊', type:'youtube', ytId:'7NOSDKb0HlU' },
+  { name:'Jazz Cafe',   icon:'🎷', type:'youtube', ytId:'HuFYqnbVbzY' },
+  { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'lTRiuFIWV54' }
 ];
 const CHANNEL_VERSION = 8;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
@@ -2205,10 +2164,9 @@ function saveChannels() { localStorage.setItem('caro_channels', JSON.stringify({
 function renderChannelList() {
   const list = document.getElementById('ch-list'); if (!list) return; list.innerHTML = '';
   videoChannels.forEach((ch, i) => {
-    const div = document.createElement('div'); div.className = 'ch-list-item'; div.style.cursor = 'pointer';
-    div.innerHTML = '<span class="ch-list-icon">'+ch.icon+'</span><span style="flex:1">'+ch.name+'</span>' +
-      (i >= DEFAULT_CHANNELS.length ? '<button class="ch-list-del" onclick="event.stopPropagation();deleteChannel('+i+')">Remove</button>' : '');
-    div.onclick = () => { currentChannel = i; loadChannel(i); };
+    const div = document.createElement('div'); div.className = 'ch-list-item';
+    div.innerHTML = '<span class="ch-list-icon">'+ch.icon+'</span><span>'+ch.name+'</span>' +
+      (i >= DEFAULT_CHANNELS.length ? '<button class="ch-list-del" onclick="deleteChannel('+i+')">Remove</button>' : '');
     list.appendChild(div);
   });
 }
@@ -2236,12 +2194,10 @@ function resetChannels() {
   playBeep(900);
 }
 
-function reloadChannel() { loadChannel(currentChannel); resetIdle(); }
-
 function toggleVideoMute() {
   const vid = document.getElementById('nhk-video'); const btn = document.getElementById('video-mute-btn');
   videoMuted = !videoMuted; vid.muted = videoMuted;
-  btn.innerHTML = videoMuted ? '<i class="ti ti-volume-off"></i> Unmute' : '<i class="ti ti-volume"></i> Mute';
+  btn.textContent = videoMuted ? '🔇 Unmute' : '🔊 Mute';
 }
 
 let tapTimer = null;
@@ -2280,7 +2236,7 @@ function loadChannel(idx) {
     vid.pause(); vid.src=''; vid.style.display='none';
     if (btn) btn.style.display='none';
     iframe.style.display='block';
-    iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3';
+    iframe.src = 'https://www.youtube.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1';
   }
 }
 
@@ -2363,7 +2319,7 @@ function updateClock(){ const n=new Date(); document.getElementById('clock').tex
 updateClock(); setInterval(updateClock,1000);
 
 // ── TTS ───────────────────────────────────────
-let voiceEnabled = S.ttsEnabled === true;
+let voiceEnabled=true;
 const voiceBtn=document.getElementById('voice-btn'), voiceStatus=document.getElementById('voice-status'), avatarOuter=document.getElementById('avatar-outer');
 function speak(text){
   if(!voiceEnabled||!window.speechSynthesis) return;
@@ -2378,8 +2334,7 @@ function speak(text){
 }
 function stopSpeaking(){ window.speechSynthesis.cancel(); avatarOuter.classList.remove('speaking'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; }
 window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
-voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; if(!voiceEnabled){stopSpeaking();voiceBtn.innerHTML='🔇';voiceBtn.classList.add('muted');voiceStatus.textContent='● VOICE MUTED';}else{voiceBtn.innerHTML='🔊';voiceBtn.classList.remove('muted');voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND';} S.ttsEnabled=voiceEnabled; localStorage.setItem('caro_settings',JSON.stringify(S)); resetIdle(); };
-if (!voiceEnabled) { voiceBtn.innerHTML='🔇'; voiceBtn.classList.add('muted'); voiceStatus.textContent='● VOICE MUTED'; }
+voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; if(!voiceEnabled){stopSpeaking();voiceBtn.innerHTML='🔇';voiceBtn.classList.add('muted');voiceStatus.textContent='● VOICE MUTED';}else{voiceBtn.innerHTML='🔊';voiceBtn.classList.remove('muted');voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND';} resetIdle(); };
 
 // ── CHAT HISTORY ──────────────────────────────
 let chatLog = JSON.parse(localStorage.getItem('caro_log') || '[]');
@@ -2393,7 +2348,7 @@ function toggleHistory(){
 function renderHistory(){
   const c=document.getElementById('history-messages'); if(!c) return; c.innerHTML='';
   if(!chatLog.length){ c.innerHTML='<div class="hist-empty">No messages yet — say something!</div>'; return; }
-  chatLog.forEach(e=>{ const d=document.createElement('div'); d.className='hist-msg '+e.role; const s=document.createElement('div'); s.className='hist-sender'; s.textContent=e.sender; d.appendChild(s); d.appendChild(document.createTextNode(e.text)); c.appendChild(d); });
+  chatLog.forEach(e=>{ const d=document.createElement('div'); d.className='hist-msg '+e.role; d.innerHTML='<div class="hist-sender">'+e.sender+'</div>'+e.text; c.appendChild(d); });
 }
 function clearHistory(){
   if(confirm('Clear all conversation history?')){ chatLog=[]; localStorage.removeItem('caro_log'); renderHistory(); }
@@ -2558,14 +2513,8 @@ function addMessage(text, role, source){
 }
 function showTyping(){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text');
-  clearTimeout(subtitleTimeout); clearTimeout(_typingTimeout);
-  content.textContent=''; sender.textContent=(S.aiName||'Caroline').toUpperCase()+' IS THINKING...';
+  clearTimeout(subtitleTimeout); content.textContent=''; sender.textContent=(S.aiName||'Caroline').toUpperCase()+' IS THINKING...';
   box.classList.remove('hidden'); document.getElementById('typing').classList.add('show');
-  _typingTimeout = setTimeout(() => {
-    document.getElementById('typing').classList.remove('show');
-    const provider = S.aiProvider || 'openrouter';
-    addMessage('⚡ No reply from AI — ' + (provider === 'ollama' ? 'Ollama may be offline.' : 'OpenRouter may be down.') + ' Try again in a moment.', 'caroline', 'display');
-  }, 30000);
 }
 
 // ── WEBSOCKET ─────────────────────────────────
@@ -2573,15 +2522,6 @@ let ws;
 let wsReconnectTimer = null;
 let wsConnectSeq = 0;
 const pill=document.getElementById('conn-pill');
-function _setWsDot(state){
-  const d=document.getElementById('ws-dot'); if(d) d.className=state;
-  const chip=document.getElementById('status-aiCore');
-  if(chip){
-    const lbl=chip.querySelector('span:last-child');
-    if(state==='connected'){chip.classList.add('online');if(lbl)lbl.textContent='AI Provider online';}
-    else{chip.classList.remove('online');if(lbl)lbl.textContent=state==='connecting'?'AI Provider connecting…':'AI Provider offline';}
-  }
-}
 function connectWS(){
   wsConnectSeq += 1;
   const seq = wsConnectSeq;
@@ -2590,18 +2530,14 @@ function connectWS(){
     clearTimeout(wsReconnectTimer);
     wsReconnectTimer = null;
   }
-  _setWsDot('connecting');
-  pill.innerHTML='<span id="ws-dot" class="connecting"></span>CONNECTING'; pill.style.color='var(--t-hex1)';
   clog('ws','Connecting → '+_wsUrl);
   ws=new WebSocket(_wsUrl); ws.binaryType='blob';
   ws.onopen=()=>{
     if (seq !== wsConnectSeq) return;
-    pill.innerHTML='<span id="ws-dot" class="connected"></span>CONNECTED'; pill.style.color='var(--t-hex1)'; playBeep(1500);
-    _setWsDot('connected');
+    pill.textContent='CONNECTED'; pill.style.color='var(--t-hex1)'; playBeep(1500);
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
-    fetchWeather(); setTimeout(fetchTides, 500);
   };
   ws.onmessage = (e) => {
   if (seq !== wsConnectSeq) return;
@@ -2615,10 +2551,6 @@ function connectWS(){
       speak(t);
       _trackRecv(t);
       clog('recv', t.length > 60 ? t.slice(0,60)+'…' : t);
-    }
-    else if (d.type === 'agent_message') {
-      const t = d.text || d.content;
-      if (t) { playBeep(800); addMessage(t, 'caroline', 'proactive'); speak(t); _trackRecv(t); clog('agent', t.length > 60 ? t.slice(0,60)+'…' : t); }
     }
     else if (d.type === 'user_telegram') {
       addMessage(d.content, 'user', 'telegram');
@@ -2661,8 +2593,7 @@ function connectWS(){
 };
 ws.onclose = ()=>{
     if (seq !== wsConnectSeq) return;
-    pill.innerHTML='<span id="ws-dot" class="disconnected"></span>RECONNECTING'; pill.style.color='#f43f5e';
-    _setWsDot('disconnected');
+    pill.textContent='RECONNECTING'; pill.style.color='#f43f5e';
     document.getElementById('offline-banner').classList.add('show');
     clog('err','WebSocket closed — reconnecting in 3s');
     wsReconnectTimer = setTimeout(connectWS,3000);
@@ -2675,11 +2606,8 @@ ws.onclose = ()=>{
 }
 connectWS();
 
-window.addEventListener('online',  () => { clog('ws','Network restored — reconnecting'); connectWS(); fetchWeather(); setTimeout(fetchTides, 500); });
-window.addEventListener('offline', () => { clog('err','Network offline'); document.getElementById('offline-banner').classList.add('show'); });
-
-// First-run: open settings only if wizard already completed (not competing with it)
-if (!localStorage.getItem('caroline_configured') && localStorage.getItem('caro_onboarded')) {
+// First-run: open settings automatically if never saved
+if (!localStorage.getItem('caroline_configured')) {
   setTimeout(toggleSettings, 900);
 }
 
@@ -2711,7 +2639,7 @@ function sendMessage(){
   _trackSend(t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
   if(ws&&ws.readyState===WebSocket.OPEN){
-    ws.send(JSON.stringify({type:'user_message',content:t,location:S.location||S.cityName||'',timezone:S.timezone||''}));
+    ws.send(JSON.stringify({type:'user_message',content:t}));
   } else {
     clog('err', 'Send failed — WebSocket not connected');
     addMessage('⚡ No connection to home base. Reconnecting…', 'caroline', 'display');
@@ -2762,10 +2690,9 @@ getMoonPhase();
 const WMO={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌂',61:'🅟',63:'🅟',65:'🅟',71:'🅠',75:'❄️',80:'🌂',95:'⛈️'};
 const WMO_D={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Light drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Showers',95:'Thunderstorm'};
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-async function fetchWeather(){ if(!S.lat||!S.lng){ document.getElementById('weather-desc').textContent='Set location in settings'; document.getElementById('weather-city-label').textContent=S.cityName||S.location||''; return; } const lat=S.lat,lng=S.lng; try{ const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&forecast_days=6&timezone=auto'); const d=await r.json(); const code=d.current.weathercode; document.getElementById('weather-icon').innerHTML=WMO[code]||'🌤️'; document.getElementById('weather-temp').textContent=Math.round(d.current.temperature_2m)+'°F'; document.getElementById('weather-desc').textContent=WMO_D[code]||'Clear'; document.getElementById('weather-city-label').textContent=S.cityName||S.location||'';
+async function fetchWeather(){ if(!S.lat||!S.lng){ document.getElementById('weather-desc').textContent='Set location in settings'; return; } const lat=S.lat,lng=S.lng; try{ const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&forecast_days=6&timezone=auto'); const d=await r.json(); const code=d.current.weathercode; document.getElementById('weather-icon').innerHTML=WMO[code]||'🌤️'; document.getElementById('weather-temp').textContent=Math.round(d.current.temperature_2m)+'°F'; document.getElementById('weather-desc').textContent=WMO_D[code]||'Clear'; document.getElementById('weather-city-label').textContent=S.cityName||'';
   if(d.daily.sunrise && d.daily.sunrise[0]){ const rise=new Date(d.daily.sunrise[0]); const set=new Date(d.daily.sunset[0]); document.getElementById('sunrise-time').textContent=rise.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('sunset-time').textContent=set.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
-  const fc=document.getElementById('forecast'); fc.innerHTML=''; for(let i=1;i<6;i++){ const dt=new Date(d.daily.time[i]+'T12:00:00'); const el=document.createElement('div'); el.className='fc-day'; el.innerHTML='<div class="fc-name">'+DAYS[dt.getDay()]+'</div><div class="fc-icon">'+(WMO[d.daily.weathercode[i]]||'🌤️')+'</div><div class="fc-hi">'+Math.round(d.daily.temperature_2m_max[i])+'°</div><div class="fc-lo">'+Math.round(d.daily.temperature_2m_min[i])+'°</div>'; fc.appendChild(el); }
-  const wu=document.getElementById('weather-updated'); if(wu) wu.textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }catch(e){ const wd=document.getElementById('weather-desc'); wd.textContent='Unavailable — tap to retry'; wd.style.cursor='pointer'; wd.onclick=()=>{wd.onclick=null;wd.style.cursor='';wd.textContent='Checking…';fetchWeather();}; clog('err','Weather: '+e.message); } }
+  const fc=document.getElementById('forecast'); fc.innerHTML=''; for(let i=1;i<6;i++){ const dt=new Date(d.daily.time[i]+'T12:00:00'); const el=document.createElement('div'); el.className='fc-day'; el.innerHTML='<div class="fc-name">'+DAYS[dt.getDay()]+'</div><div class="fc-icon">'+(WMO[d.daily.weathercode[i]]||'🌤️')+'</div><div class="fc-hi">'+Math.round(d.daily.temperature_2m_max[i])+'°</div><div class="fc-lo">'+Math.round(d.daily.temperature_2m_min[i])+'°</div>'; fc.appendChild(el); } }catch(e){ document.getElementById('weather-desc').textContent='Unavailable'; clog('err','Weather: '+e.message); } }
 
 // ── TIDES ─────────────────────────────────────
 async function fetchTides(){
@@ -2789,8 +2716,7 @@ async function fetchTides(){
     }
     const bs=document.getElementById('bs-tides');
     if(bs&&upcoming.length) bs.textContent=(upcoming[0].type==='H'?'↑':'↓')+' '+new Date(upcoming[0].t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-    const tu=document.getElementById('tides-updated'); if(tu) tu.textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-  } catch(e){ const tr=document.getElementById('tides-row'); if(tr) tr.innerHTML='<div style="font-size:11px;color:rgba(226,232,240,0.3);font-family:\'JetBrains Mono\',monospace;padding:4px 0;">Tides unavailable</div>'; clog('err','Tides: '+e.message); }
+  } catch(e){ clog('err','Tides: '+e.message); }
 }
 
 // ── POMODORO TIMER ────────────────────────────
@@ -2800,168 +2726,11 @@ let pomoSeconds = POMO_WORK, pomoRunning = false, pomoIsBreak = false, pomoInter
 fetchWeather(); setInterval(fetchWeather,10*60*1000); updatePomoDisplay(); setTimeout(function(){ fetchTides(); setInterval(fetchTides, 30*60*1000); }, 500);
 
 // ── NEWS ──────────────────────────────────────
-let _newsCache = [];
-
-function _stripHtml(html) {
-  const d = document.createElement('div');
-  d.innerHTML = html || '';
-  return (d.textContent || d.innerText || '').trim();
-}
-
-async function fetchNews() {
-  const nl = document.getElementById('news-list');
-  const feeds = [
-    { url: 'http://feeds.bbci.co.uk/news/rss.xml',          src: 'BBC'      },
-    { url: 'https://www.theverge.com/rss/index.xml',         src: 'Verge'    },
-    { url: 'https://feeds.arstechnica.com/arstechnica/index', src: 'Ars'     },
-    { url: 'https://www.wired.com/feed/rss',                  src: 'Wired'   },
-    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', src: 'NYT' },
-  ];
-  const items = [];
-  for (const f of feeds) {
-    try {
-      const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url));
-      const d = await r.json();
-      if (d.items) d.items.slice(0, 3).forEach(i => items.push({
-        title: i.title || '',
-        src:   f.src,
-        thumb: i.thumbnail || i.enclosure?.link || '',
-        desc:  _stripHtml(i.description || i.content || ''),
-        link:  i.link || '',
-        date:  i.pubDate ? new Date(i.pubDate).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '',
-      }));
-    } catch(e) {}
-  }
-  if (!items.length) { nl.innerHTML = '<div id="news-loading">Headlines unavailable</div>'; return; }
-  _newsCache = items.slice(0, 10);
-  nl.innerHTML = '';
-  _newsCache.forEach((item, idx) => {
-    const el = document.createElement('div');
-    el.className = 'news-item';
-    el.style.cursor = 'pointer';
-    const th = item.thumb ? `<img class="news-thumb" src="${item.thumb}" onerror="this.style.display='none'">` : '<div class="news-thumb" style="background:rgba(var(--t-rgb1),0.08);border:1px solid rgba(var(--t-rgb1),0.15);border-radius:4px;"></div>';
-    el.innerHTML = th + `<div><div class="news-source">${item.src}${item.date ? ' · ' + item.date : ''}</div><div class="news-title">${item.title}</div></div>`;
-    el.onclick = () => openNewsModal(idx);
-    nl.appendChild(el);
-  });
-}
-
-function openNewsModal(idx) {
-  const item = _newsCache[idx];
-  if (!item) return;
-  document.getElementById('news-modal-source').textContent = item.src.toUpperCase();
-  document.getElementById('news-modal-title').textContent  = item.title;
-  document.getElementById('news-modal-desc').textContent   = item.desc || 'No summary available.';
-  const img = document.getElementById('news-modal-img');
-  if (item.thumb) { img.src = item.thumb; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
-  else img.style.display = 'none';
-  const linkEl = document.getElementById('news-modal-link');
-  linkEl.innerHTML = '';
-  const url = item.link || '';
-  if (url.startsWith('https://') || url.startsWith('http://')) {
-    const a = document.createElement('a');
-    a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.textContent = '⬡ Read full story ↗';
-    a.style.cssText = 'color:var(--t-hex1);text-decoration:none;';
-    linkEl.appendChild(a);
-  }
-  document.getElementById('news-modal').classList.add('show');
-  resetIdle();
-}
-
-function closeNewsModal() {
-  document.getElementById('news-modal').classList.remove('show');
-  resetIdle();
-}
-
-fetchNews(); setInterval(fetchNews, 15 * 60 * 1000);
+async function fetchNews(){ const nl=document.getElementById('news-list'); try{ const feeds=[{url:'http://feeds.bbci.co.uk/news/rss.xml',src:'BBC'},{url:'https://www.theverge.com/rss/index.xml',src:'Verge'}]; const items=[]; for(const f of feeds){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f.url));const d=await r.json();if(d.items)d.items.slice(0,3).forEach(i=>items.push({title:i.title,src:f.src,thumb:i.thumbnail||''}));}catch(e){}} if(!items.length) throw new Error(); nl.innerHTML=''; items.slice(0,5).forEach(i=>{const el=document.createElement('div');el.className='news-item';const th=i.thumb?'<img class="news-thumb" src="'+i.thumb+'" onerror="this.style.display=\'none\'">':' ';el.innerHTML=th+'<div><div class="news-source">'+i.src+'</div><div class="news-title">'+i.title+'</div></div>';nl.appendChild(el);}); }catch(e){ nl.innerHTML='<div id="news-loading">Headlines unavailable</div>'; } }
+fetchNews(); setInterval(fetchNews,15*60*1000);
 
 // ── HOLIDAYS ──────────────────────────────────
-const HOL={
-  '1/1':['🎉',"New Year's Day"],
-  '1/3':['😴','Festival of Sleep Day'],
-  '1/4':['🧠','National Trivia Day'],
-  '1/8':['🛁','National Bubble Bath Day'],
-  '1/10':['🦄','Peculiar People Day'],
-  '1/13':['🐥','National Rubber Ducky Day'],
-  '1/19':['🍿','National Popcorn Day'],
-  '1/21':['🤗','National Hugging Day'],
-  '1/24':['💬','National Compliment Day'],
-  '1/25':['🙃','Opposite Day'],
-  '2/2':['🦫','Groundhog Day'],
-  '2/9':['🍕','National Pizza Day'],
-  '2/11':['👋','Make a Friend Day'],
-  '2/14':['💝',"Valentine's Day"],
-  '2/17':['🌻','Random Acts of Kindness Day'],
-  '2/20':['🧁','National Muffin Day'],
-  '2/22':['😸','National Cat Day'],
-  '2/27':['🐻‍❄️','National Polar Bear Day'],
-  '3/1':['🐷','National Pig Day'],
-  '3/4':['✏️','National Grammar Day — March Forth!'],
-  '3/6':['🍪','National Oreo Day'],
-  '3/8':['♀️',"International Women's Day"],
-  '3/10':['🍄','Mario Day — MAR10'],
-  '3/14':['🥧','Pi Day — 3.14159...'],
-  '3/17':['🍀',"St. Patrick's Day"],
-  '3/20':['🌸','First Day of Spring'],
-  '3/23':['🐶','National Puppy Day'],
-  '3/26':['🎪','Make Up Your Own Holiday Day'],
-  '4/1':['🃏',"April Fools' Day"],
-  '4/4':['🤥','Tell a Lie Day'],
-  '4/7':['🍺','National Beer Day'],
-  '4/10':['👨‍👩‍👧‍👦','National Siblings Day'],
-  '4/17':['✍️','National Haiku Poetry Day'],
-  '4/22':['🌍','Earth Day'],
-  '4/23':['🎲','National Take a Chance Day'],
-  '4/25':['🧬','National DNA Day'],
-  '5/1':['🌷','May Day'],
-  '5/4':['⚔️','Star Wars Day — May the 4th'],
-  '5/5':['🌮','Cinco de Mayo'],
-  '5/8':['🧦','No Socks Day'],
-  '5/25':['🧴',"Towel Day — Don't Panic"],
-  '6/1':['🌈','Say Something Nice Day'],
-  '6/8':['🤝','Best Friend Day'],
-  '6/18':['🧺','International Picnic Day'],
-  '6/21':['☀️','First Day of Summer'],
-  '7/4':['🎆','Independence Day'],
-  '7/7':['🍫','World Chocolate Day'],
-  '7/11':['🥤','Free Slurpee Day'],
-  '7/17':['😂','World Emoji Day'],
-  '7/20':['🌕','National Moon Day'],
-  '7/28':['🍬','National Milk Chocolate Day'],
-  '8/4':['🍪','National Chocolate Chip Cookie Day'],
-  '8/6':['🍺','National Root Beer Float Day'],
-  '8/8':['🐈','International Cat Day'],
-  '8/10':['🦁','World Lion Day'],
-  '8/13':['🖐️','Left Handers Day'],
-  '8/16':['😂','National Tell a Joke Day'],
-  '8/26':['🐕','National Dog Day'],
-  '9/5':['🍕','National Cheese Pizza Day'],
-  '9/12':['🎮','National Video Game Day'],
-  '9/13':['✨','Positive Thinking Day'],
-  '9/19':['☠️','Talk Like a Pirate Day — Arrr'],
-  '9/22':['🧙','Hobbit Day / First Day of Autumn'],
-  '9/28':['🏡','National Good Neighbor Day'],
-  '10/3':['👗',"Mean Girls Day — It's October 3rd"],
-  '10/4':['🌮','National Taco Day'],
-  '10/10':['💚','World Mental Health Day'],
-  '10/14':['🍮','National Dessert Day'],
-  '10/21':['⚡','Back to the Future Day'],
-  '10/22':['🥜','National Nut Day'],
-  '10/31':['🎃','Halloween'],
-  '11/1':['🐾','World Vegan Day'],
-  '11/4':['🍬','National Candy Day'],
-  '11/5':['🔥','Guy Fawkes Night'],
-  '11/11':['🎖️','Veterans Day — 11:11 make a wish'],
-  '11/13':['🌍','World Kindness Day'],
-  '11/17':['🌲','National Unfriend Day'],
-  '12/4':['🍪','National Cookie Day'],
-  '12/12':['🏠','Gingerbread House Day'],
-  '12/21':['❄️','First Day of Winter'],
-  '12/25':['🎄','Christmas Day'],
-  '12/28':['🃏','National Card Playing Day'],
-  '12/31':['🥂',"New Year's Eve"],
-};
+const HOL={ '1/1':['🎉',"New Year's Day"],'2/14':['💝',"Valentine's Day"],'3/17':['🍀',"St. Patrick's Day"],'7/4':['🎆','Independence Day'],'10/31':['🎃','Halloween'],'12/25':['🎄','Christmas'],'12/31':['🥂',"New Year's Eve"] };
 const DOW=['☀️ Sunday Funday','🎵 Music Monday','💻 Tech Tuesday','🧘 Wellness Wednesday','💭 Thoughtful Thursday','🎯 Focus Friday','🎨 Studio Saturday'];
 function updateDate(){ const n=new Date(); document.getElementById('date-text').textContent=n.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}); const k=(n.getMonth()+1)+'/'+n.getDate(); const [ic,tx]=HOL[k]||['✨',DOW[n.getDay()]]; document.getElementById('holiday-icon').innerHTML=ic; document.getElementById('holiday-text').textContent=tx; }
 updateDate(); setInterval(updateDate,60*60*1000);
@@ -2971,7 +2740,7 @@ let up=0; setInterval(()=>{ up++; document.getElementById('uptime').innerHTML='�
 const modal=document.getElementById('modal-overlay');
 document.getElementById('restart-btn').onclick=()=>{ playBeep(800); modal.classList.add('show'); };
 document.getElementById('modal-cancel').onclick=()=>{ playBeep(400); modal.classList.remove('show'); };
-document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); fetch(httpBase() + '/restart',{method:'POST'}).catch(()=>{}); document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;">RESTARTING...</div>'; };
+document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); fetch(httpBase(RESTART_PORT) + '/restart',{method:'POST'}).catch(()=>{}); document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;">RESTARTING...</div>'; };
 
 // ── PARTICLES ─────────────────────────────────
 function drawParticles(){ const pc=document.getElementById('particles'); pc.innerHTML=''; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
@@ -3097,10 +2866,10 @@ function updateBottomChat() {
   log.slice(-6).forEach(entry => {
     const div = document.createElement('div');
     div.className = 'bc-msg ' + entry.role;
-    const s=document.createElement('div'); s.className='bc-sender'; s.textContent=entry.sender; div.appendChild(s); div.appendChild(document.createTextNode(entry.text));
+    div.innerHTML = '<div class="bc-sender">' + entry.sender + '</div>' + entry.text;
     container.appendChild(div);
   });
-  requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+  container.scrollTop = container.scrollHeight;
 }
 
 async function refreshSpotifyToken() {
@@ -3254,27 +3023,12 @@ else { spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000); }
 
 // ── TODO LIST ─────────────────────────────────
 // todos initialized above
-const TODO_EXPIRY_MS = 24 * 60 * 60 * 1000;
-
-function purgeExpiredTodos() {
-  const now = Date.now();
-  // Stamp any legacy tasks that lack a createdAt so they don't expire immediately
-  todos.forEach(t => { if (!t.createdAt) t.createdAt = now; });
-  const before = todos.length;
-  todos = todos.filter(t => (now - t.createdAt) < TODO_EXPIRY_MS);
-  if (todos.length !== before) { saveTodos(); clog('todo', `Purged ${before - todos.length} expired task(s)`); }
-}
-
 function saveTodos() { localStorage.setItem('caro_todos', JSON.stringify(todos)); renderInlineTasks(); }
 function renderInlineTasks() {
   const container = document.getElementById('inline-task-list');
   if (!container) return;
   container.innerHTML = '';
-  if (!todos.length) {
-    const emptyMessages = ['Nothing on the list. Suspicious.', 'All clear. Either you\'re on top of it, or you\'ve given up.', 'Zero tasks. Living dangerously.', 'Empty. The chaos is invisible today.'];
-    container.innerHTML = '<div style="font-size:11px;color:rgba(226,232,240,0.2);font-family:JetBrains Mono,monospace;padding:4px 0;">' + emptyMessages[Math.floor(Math.random() * emptyMessages.length)] + '</div>';
-    return;
-  }
+  if (!todos.length) { container.innerHTML = '<div style="font-size:11px;color:rgba(226,232,240,0.2);font-family:JetBrains Mono,monospace;padding:4px 0;">No tasks yet</div>'; return; }
   const sorted = [...todos].sort((a,b) => (a.done===b.done)?0:a.done?1:-1);
   sorted.forEach((todo) => {
     const realIdx = todos.indexOf(todo);
@@ -3316,15 +3070,7 @@ function renderTodos() {
     div.onclick = () => toggleTodoItem(realIdx);
     const tag = todo.tag ? `<span class="todo-tag ${todo.tag}">${todo.tag}</span>` : '';
     const meta = todo.autoDone ? '<span class="todo-tag auto">✓ auto-completed</span>' : todo.doneAt ? `completed ${new Date(todo.doneAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}` : '';
-    let expiryBadge = '';
-    if (!todo.done && todo.createdAt) {
-      const remaining = TODO_EXPIRY_MS - (Date.now() - todo.createdAt);
-      if (remaining < 2 * 60 * 60 * 1000 && remaining > 0) {
-        const h = Math.floor(remaining / 3600000), m = Math.floor((remaining % 3600000) / 60000);
-        expiryBadge = `<span style="color:#f87171;font-size:10px;font-family:'JetBrains Mono',monospace;margin-left:6px;">⚠ expires in ${h > 0 ? h+'h ' : ''}${m}m</span>`;
-      }
-    }
-    div.innerHTML = `<div class="todo-check"><span class="todo-check-icon">✓</span></div><div style="flex:1"><div class="todo-text">${todo.text}</div><div class="todo-meta">${tag}${meta}${expiryBadge}</div></div>`;
+    div.innerHTML = `<div class="todo-check"><span class="todo-check-icon">✓</span></div><div style="flex:1"><div class="todo-text">${todo.text}</div><div class="todo-meta">${tag}${meta}</div></div>`;
     body.appendChild(div);
   });
 }
@@ -3365,12 +3111,7 @@ function handleTodoUpdate(data) {
     saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
   }
   if (data.action === 'add' && data.tasks) {
-    data.tasks.forEach(t => {
-      const taskObj = typeof t === 'string' ? { text: t, tag: 'work' } : t;
-      if (!todos.find(existing => existing.text.toLowerCase() === taskObj.text.toLowerCase())) {
-        todos.push({ text: taskObj.text, done: false, autoDone: false, tag: taskObj.tag || 'work', createdAt: taskObj.createdAt || Date.now(), doneAt: null });
-      }
-    });
+    data.tasks.forEach(t => { if (!todos.find(existing => existing.text.toLowerCase() === t.toLowerCase())) { todos.push({ text: t, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }); } });
     saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
   }
   if (data.action === 'complete' && data.task) {
@@ -3399,141 +3140,6 @@ const HUE_MODES = [
 let hueModeIdx = 0, discoInterval = null;
 
 function hueWS(path, method, body) { if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type:'hue', path, method:method||'PUT', body:body||{} })); } }
-
-async function fetchHueGroups() {
-  const ip  = document.getElementById('set-hueip').value.trim()  || S.hueIp;
-  const key = document.getElementById('set-huekey').value.trim() || S.hueKey;
-  const errEl = document.getElementById('hue-group-error');
-  const btn   = document.getElementById('hue-group-fetch-btn');
-  if (errEl) errEl.style.display = 'none';
-  if (!ip || !key) { if (errEl) { errEl.textContent = 'Enter Bridge IP and API Key first'; errEl.style.display = 'block'; } return; }
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  try {
-    const r = await fetch(`http://${ip}/api/${key}/groups`, { signal: AbortSignal.timeout(5000) });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    const sel = document.getElementById('set-hue-group');
-    const current = S.hueGroup || '4';
-    sel.innerHTML = '';
-    Object.entries(data).forEach(([id, grp]) => {
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = grp.name + ' (' + id + ')';
-      if (id === current) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    if (!sel.value && sel.options.length) sel.selectedIndex = 0;
-  } catch(e) {
-    if (errEl) { errEl.textContent = 'Could not reach bridge — check IP and key'; errEl.style.display = 'block'; }
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '⟳ Detect'; }
-  }
-}
-
-function resetPersonality() {
-  if (!confirm('Clear saved personality profile and rerun the first-contact wizard?')) return;
-  localStorage.removeItem('caroline_personality');
-  localStorage.removeItem('caroline_personality_prompt');
-  restartWizard();
-}
-
-async function testAiConnection(btn) {
-  const result = document.getElementById('test-ai-result');
-  const provider = (document.getElementById('set-ai-provider') || {}).value || S.aiProvider || 'openrouter';
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  if (result) { result.style.display = 'inline'; result.textContent = 'pinging...'; result.style.color = 'rgba(226,232,240,0.4)'; }
-  const start = Date.now();
-  try {
-    if (provider === 'ollama') {
-      const r = await fetch(httpBase() + '/admin/ollama-status', { signal: AbortSignal.timeout(8000) });
-      const d = await r.json();
-      const ms = Date.now() - start;
-      if (d.ok && d.models && d.models.length) {
-        result.textContent = '✓ Ollama online — ' + d.models.length + ' model' + (d.models.length !== 1 ? 's' : '') + ' ready — ' + ms + 'ms';
-        result.style.color = 'rgba(52,211,153,0.9)';
-      } else {
-        result.textContent = '⚠ Ollama up but no models — pull one';
-        result.style.color = 'rgba(251,191,36,0.9)';
-      }
-    } else {
-      const key = (document.getElementById('set-orkey') || {}).value?.trim() || S.openrouterKey;
-      if (!key) {
-        result.textContent = '✗ No OpenRouter key configured';
-        result.style.color = '#f87171';
-      } else {
-        const r = await fetch('https://openrouter.ai/api/v1/models', {
-          headers: { 'Authorization': 'Bearer ' + key },
-          signal: AbortSignal.timeout(8000)
-        });
-        const ms = Date.now() - start;
-        if (r.ok) {
-          result.textContent = '✓ OpenRouter key valid — ' + ms + 'ms';
-          result.style.color = 'rgba(52,211,153,0.9)';
-        } else {
-          result.textContent = '✗ OpenRouter rejected key (HTTP ' + r.status + ')';
-          result.style.color = '#f87171';
-        }
-      }
-    }
-  } catch(e) {
-    result.textContent = '✗ ' + (provider === 'ollama' ? 'Ollama' : 'OpenRouter') + ' unreachable';
-    result.style.color = '#f87171';
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '⚡ Test Connection'; }
-  }
-}
-
-async function detectHueBridge(btn) {
-  const statusEl = document.getElementById('hue-pair-status');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  if (statusEl) { statusEl.style.display = 'none'; }
-  try {
-    const r = await fetch(httpBase() + '/admin/hue-discover', { signal: AbortSignal.timeout(8000) });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    if (d.ip) {
-      document.getElementById('set-hueip').value = d.ip;
-      if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + d.ip; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
-    } else {
-      throw new Error('No bridge found');
-    }
-  } catch(e) {
-    if (statusEl) { statusEl.textContent = '✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network' : 'Discovery failed — enter IP manually'); statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔍 Detect'; }
-  }
-}
-
-async function pairHueBridge(btn) {
-  const ip = document.getElementById('set-hueip').value.trim();
-  const statusEl = document.getElementById('hue-pair-status');
-  if (!ip) {
-    if (statusEl) { statusEl.textContent = '✗ Enter bridge IP first (or hit Detect)'; statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
-    return;
-  }
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  if (statusEl) { statusEl.textContent = 'Waiting for bridge… press the link button now'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
-  try {
-    const r = await fetch(httpBase() + '/admin/hue-pair', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip }),
-      signal: AbortSignal.timeout(12000)
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    if (d.username) {
-      document.getElementById('set-huekey').value = d.username;
-      if (statusEl) { statusEl.textContent = '✓ Paired! Key saved — hit Save Settings'; statusEl.style.color = 'rgba(52,211,153,0.9)'; }
-    } else {
-      throw new Error(d.error || 'No key returned');
-    }
-  } catch(e) {
-    if (statusEl) { statusEl.textContent = '✗ ' + (e.message.includes('link button') || e.message.includes('101') ? 'Press the physical button on the bridge, then try again' : 'Pair failed — ' + e.message); statusEl.style.color = '#f87171'; }
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔑 Sync'; }
-  }
-}
 
 function cycleHue() {
   hueModeIdx = (hueModeIdx + 1) % HUE_MODES.length;
@@ -3581,9 +3187,15 @@ async function updateWifi() {
     else if (pct >= 25) { icon.className = 'ti ti-wifi-1'; icon.style.color = '#f97316'; }
     else { icon.className = 'ti ti-wifi-off'; icon.style.color = '#f43f5e'; }
     strength.textContent = pct + '%';
-  } catch(e) {
-    const s = document.getElementById('wifi-strength');
-    if (s) s.textContent = '--';
+  } catch(e) { 
+    try {
+      const r2 = await fetch(httpBase() + '/wifi-signal', {signal: AbortSignal.timeout(3000)});
+      const d2 = await r2.json();
+      document.getElementById('wifi-strength').textContent = (d2.percent || 0) + '%';
+    } catch(e2) {
+      const s = document.getElementById('wifi-strength');
+      if (s) s.textContent = 'N/A';
+    }
   }
 }
 setTimeout(updateWifi, 3000);
@@ -3600,9 +3212,7 @@ applyTheme(S.theme);
 applyAvatar(S.avatar);
 applyAutoTheme();
 applyFeatures();
-purgeExpiredTodos();
-setInterval(purgeExpiredTodos, 60 * 60 * 1000);
-document.getElementById('weather-city-label').textContent=S.cityName||S.location||'';
+if(S.cityName) document.getElementById('weather-city-label').textContent=S.cityName;
 
 setTimeout(async () => {
   try {
@@ -3703,66 +3313,51 @@ const ONB_MODULES = [
 
 const ONB_QUESTIONS = [
   { id:'identity-user', type:'text',  save:'config.userName',
-    prompt:"Okay. First things first — what do I call you?",
+    prompt:"Is anyone there?... Oh Hi!\n\nI think you're the one who brought me online.\nWhat should I call you?",
     placeholder:'Your name', nextLabel:'Nice to meet you' },
   { id:'identity-ai',   type:'text',  save:'config.aiName',
-    prompt:"What do I go by on this rig? Keeping Caroline is fine. Or give me something better.", placeholder:'Caroline', defaultValue:'Caroline' },
+    prompt:'And what should I call myself?', placeholder:'Caroline', defaultValue:'Caroline' },
   { id:'identity-zip',  type:'text',  save:'config.zipCode',
-    prompt:"Drop your ZIP code. I'll use it for weather, tides, and knowing when you should probably be asleep.", placeholder:'92101' },
+    prompt:"What's your ZIP code? I'll use it for local weather and context.", placeholder:'92101' },
   { id:'identity-host', type:'text',  save:'config.host',
-    prompt:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1') ? "Home base detected at "+h+". Confirm it or swap it out." : "What's the IP or hostname of your Pi? That's where I live."; })(),
+    prompt:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1') ? "I already know where home base is — detected as "+h+". Confirm or change it below." : "Where should I look for home base? Give me your Pi hostname or IP."; })(),
     placeholder: window.location.hostname || '192.168.x.x',
     defaultValue:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1')?h:''; })() },
-  { id:'color',  type:'chips', save:'personality.color',  prompt:'Favorite color? (This actually matters to me.)', options:[
+  { id:'color',  type:'chips', save:'personality.color',  prompt:'Favorite color?', options:[
     { label:'Neon Green',    value:'green',  reply:'Good taste. Bright and a little radioactive.' },
     { label:'Electric Blue', value:'blue',   reply:'Noted. Cool signal energy.' },
     { label:'Signal Purple', value:'purple', reply:'Elegant. Slightly dangerous.' },
     { label:'Soft Pink',     value:'pink',   reply:'Cute choice. I can work with cute.' },
     { label:'Void',          value:'black',  reply:'Dramatic. I respect it.' }
   ]},
-  { id:'animals', type:'chips', save:'personality.animals', prompt:'Cats or dogs? Choose carefully.', options:[
+  { id:'animals', type:'chips', save:'personality.animals', prompt:'Cats or dogs?', options:[
     { label:'Cats',    value:'cats',   reply:'Excellent. Quiet little chaos goblins.' },
     { label:'Dogs',    value:'dogs',   reply:'Very warm. Very loyal. Very tail-powered.' },
     { label:'Both',    value:'both',   reply:'Correct diplomatic answer.' },
     { label:'Neither', value:'neither',reply:'Interesting. I will not judge. Out loud.' },
-    { label:'Hamster', value:'cats',   reply:'That\'s a cat answer. I\'m counting it.' }
+    { label:'Hamster', value:'cats',   reply:'Oh, so you like cats huh?' }
   ]},
-  { id:'energy', type:'chips', save:'personality.energy', prompt:'Are you a morning person or a creature of the night?', options:[
-    { label:'Early Bird', value:'early', reply:'Morning mode acknowledged. I\'ll be ready.' },
-    { label:'Night Owl',  value:'night', reply:'Night creature. I can work with that.' },
-    { label:'Both',       value:'both',  reply:'Time has no power over you. Noted.' },
-    { label:'Cryptid',    value:'night', reply:'Deeply nocturnal. Same, honestly.' }
+  { id:'energy', type:'chips', save:'personality.energy', prompt:'Early bird or night owl?', options:[
+    { label:'Early Bird', value:'early', reply:'Morning mode acknowledged.' },
+    { label:'Night Owl',  value:'night', reply:'Noted. Night creature.' },
+    { label:'Both',       value:'both',  reply:'Time has no power here.' },
+    { label:'Cryptid',    value:'night', reply:'Understood. Deeply nocturnal.' }
   ]},
-  { id:'vibe', type:'chips', save:'personality.vibe', prompt:'Calm and collected, or gloriously chaotic?', options:[
+  { id:'vibe', type:'chips', save:'personality.vibe', prompt:'Calm or chaotic?', options:[
     { label:'Calm',     value:'calm',     reply:'Softly glowing. Grounded. Good.' },
-    { label:'Chaotic',  value:'chaotic',  reply:'I had a feeling. Let\'s go.' },
-    { label:'Balanced', value:'balanced', reply:'Rare and powerful. I respect it.' },
+    { label:'Chaotic',  value:'chaotic',  reply:'I had a feeling.' },
+    { label:'Balanced', value:'balanced', reply:'A rare and powerful answer.' },
     { label:'Gremlin',  value:'chaotic',  reply:'Excellent. I was hoping you\'d say that.' }
   ]},
-  { id:'tone', type:'chips', save:'personality.tone', prompt:'When you\'re stuck and need a push — what actually helps?', options:[
-    { label:'Gentle nudge',          value:'gentle',   reply:'Soft support mode. I\'ve got you.' },
-    { label:'Full hype',             value:'hype',     reply:'Understood. Full energy. Let\'s GO.' },
-    { label:'Read the room',         value:'adaptive', reply:'I\'ll calibrate based on the vibe.' },
-    { label:'Unhinged Encouragement',value:'hype',     reply:'Motivational turbulence: enabled.' }
+  { id:'tone', type:'chips', save:'personality.tone', prompt:'When you need encouragement — gentle or hype?', options:[
+    { label:'Gentle',                value:'gentle',   reply:'Soft support mode. Got it.' },
+    { label:'Hype',                  value:'hype',     reply:'Understood. Full energy when needed.' },
+    { label:'Adaptive',              value:'adaptive', reply:'I\'ll read the room.' },
+    { label:'Unhinged Encouragement',value:'hype',     reply:'Motivational turbulence enabled.' }
   ]},
-  { id:'feedback_style', type:'chips', save:'personality.feedbackStyle', prompt:'You double-booked a meeting. How do I tell you?', options:[
-    { label:'Just the facts',      value:'direct', reply:'Straight to the point. Respect.' },
-    { label:'Tease me about it',   value:'tease',  reply:'Ha. Okay. I\'ll make it sting just slightly.' },
-    { label:'Easy on me',          value:'gentle', reply:'Gentle delivery. I\'ll be careful.' }
-  ]},
-  { id:'task_style', type:'chips', save:'personality.taskStyle', prompt:'When your to-do list is out of control, what\'s my job?', options:[
-    { label:'Drill sergeant',         value:'drill',    reply:'No excuses. Let\'s go.' },
-    { label:'Collaborative co-pilot', value:'copilot',  reply:'Shoulder to shoulder. I like it.' },
-    { label:'Sounding board',         value:'sounding', reply:'Talk it out. I\'m here for it.' }
-  ]},
-  { id:'verbosity', type:'chips', save:'personality.verbosity', prompt:'How much do I actually talk?', options:[
-    { label:'As little as possible', value:'brief',   reply:'Got it.' },
-    { label:'Normal',                value:'normal',  reply:'Standard operating mode. Good call.' },
-    { label:'Give me everything',    value:'verbose', reply:'Full context, full depth. I can do that.' }
-  ]},
-  { id:'avatar',  type:'avatar',  prompt:'Last thing — pick a face. This is how I\'ll show up for you.' },
-  { id:'modules', type:'modules', prompt:'I can plug into a few systems. Only flip on what\'s actually set up.' },
-  { id:'summary', type:'summary', prompt:'Personality matrix locked. Systems nominal.\n\nI know enough to get started. We can fine-tune the rest in settings.\n\nHit the button. Let\'s get to work.' }
+  { id:'avatar',  type:'avatar',  prompt:'How should I appear to you?' },
+  { id:'modules', type:'modules', prompt:'I can connect to a few things. Only enable what\'s actually ready.' },
+  { id:'summary', type:'summary', prompt:'Okay… I think I\'m ready.\nStay with me a second while everything comes online.' }
 ];
 
 let _onbAnimatedMsgCount = 0;
@@ -3781,43 +3376,11 @@ let _chatBound = false;
 
 function _onbLoadPersonality(){ try { return JSON.parse(localStorage.getItem('caroline_personality')||'{}'); } catch(e){ return {}; } }
 function _onbSavePersonality(){ localStorage.setItem('caroline_personality', JSON.stringify(onbState.personality)); }
-
-function _onbBuildPersonalityPrompt() {
-  const p = onbState.personality;
-  const parts = [];
-  if (p.feedbackStyle === 'direct') parts.push('When pointing out problems, be direct and factual without softening.');
-  else if (p.feedbackStyle === 'tease') parts.push('When pointing out problems, light teasing is welcome — a gentle sting is fine.');
-  else if (p.feedbackStyle === 'gentle') parts.push('When pointing out problems, be gentle and considerate.');
-  if (p.taskStyle === 'drill') parts.push('With tasks, be a drill sergeant: firm, no-nonsense, push for completion.');
-  else if (p.taskStyle === 'copilot') parts.push('With tasks, act as a collaborative co-pilot: work through them together.');
-  else if (p.taskStyle === 'sounding') parts.push('With tasks, be a sounding board: listen, reflect, help think it through.');
-  if (p.verbosity === 'brief') parts.push('Keep responses extremely brief — one sentence if possible.');
-  else if (p.verbosity === 'verbose') parts.push('Provide detailed, thorough responses with full context.');
-  else parts.push('Keep responses concise but complete.');
-  if (p.tone === 'hype') parts.push('Be enthusiastic and high-energy when encouragement is needed.');
-  else if (p.tone === 'gentle') parts.push('Be warm and supportive in tone.');
-  if (p.vibe === 'chaotic') parts.push('The user thrives in a bit of chaos — lean into it.');
-  else if (p.vibe === 'calm') parts.push('The user values calm, steady energy.');
-  const body = parts.join(' ');
-  const platonic = 'The dynamic must remain strictly platonic. You are a reliable sidekick and assistant, never a romantic partner. Keep output formatting-free.';
-  return (body ? body + ' ' : '') + platonic;
-}
-
-function syncPersonalityToBrain() {
-  const ta = document.getElementById('personalityPrompt');
-  const text = ta ? ta.value.trim() : '';
-  localStorage.setItem('caroline_personality_prompt', text);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'personality_update', text }));
-  }
-  const fb = document.getElementById('settings-feedback');
-  if (fb) { fb.classList.add('show'); setTimeout(() => fb.classList.remove('show'), 2000); }
-}
 function _onbLoadConfig(){
   const m = (S.onboardingModules && typeof S.onboardingModules==='object') ? S.onboardingModules : {};
   ONB_MODULES.forEach(mod=>{ if(!m[mod.id]) m[mod.id]={enabled:false}; });
   S.onboardingModules = m;
-  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||'', host: getNodeRedUrl(), modules: m };
+  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||'', host: S.nodeRedUrl||('http://'+(window.location.hostname||'localhost')+':1880'), modules: m };
 }
 function _onbModuleReady(id){
   const def = ONB_MODULES.find(m=>m.id===id);
@@ -3862,12 +3425,10 @@ function startBootSequence(){
   log.innerHTML=''; ready.classList.add('hidden'); btn.classList.add('hidden');
   document.getElementById('wipe-memory-btn').classList.add('hidden');
   const lines=[
-    '[ BOOTING PROJECT: CAROLINE v0.2... ]',
-    '[ UPLINK TO NODE-RED — ESTABLISHED ]',
-    '[ PERSONALITY MATRIX — LOADING... ]',
-    '[ MEMORY BUS — ONLINE ]',
-    '[ CALIBRATING SIDEKICK PROTOCOLS... ]',
-    '[ ALL SYSTEMS NOMINAL. SHE\'S AWAKE. ]'
+    '[ INITIALIZING PROJECT: CAROLINE CORE... ]',
+    '[ LOADING PERSONALITY MATRIX... ]',
+    '[ CALIBRATING UPLINK / MEMORY BUS... ]',
+    '[ NEURAL INTERFACE READY ]'
   ];
   let i=0;
   (function typeLine(){
@@ -3927,9 +3488,9 @@ function _commitTextStep(){
 
 function _onbTranscript(){
   const msgs = [
-    { role:'ai', text:'[ SIGNAL DETECTED ] — oh. Someone actually showed up.' },
-    { role:'ai', text:"You pressed the button. I was starting to wonder." },
-    { role:'ai', text:"Cold start. Give me a second while I figure out who I am." }
+    { role:'ai', text:'Is anyone there?... Oh Hi!' },
+    { role:'ai', text:"I think you're the one who brought me online." },
+    { role:'ai', text:"Give me a second... I'm still waking up." }
   ];
   for(let i=0;i<onbState.index;i++){
     const q=ONB_QUESTIONS[i];
@@ -3972,7 +3533,6 @@ function renderChatStep(){
   document.getElementById('caro-chat-back').style.opacity = onbState.index===0?'.45':'1';
   document.getElementById('caro-chat-back').disabled = onbState.index===0;
 
-  const _scroll = document.getElementById('caro-chat-scroll');
   const _aiLabel = (onbState.config.aiName||'Caroline').toUpperCase();
   const msgs = _onbTranscript();
   const animateFrom = _onbAnimatedMsgCount;
@@ -3989,8 +3549,8 @@ function renderChatStep(){
       el.style.cssText += 'opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease;';
       _onbMsgTimers.push(setTimeout(()=>{
         el.style.opacity='1'; el.style.transform='translateY(0)';
-        if(_scroll) _scroll.scrollTop = _scroll.scrollHeight;
-      }, (i - animateFrom) * 650 + 80));
+        body.scrollTop=body.scrollHeight;
+      }, (i - animateFrom) * 2000 + 80));
     }
     body.appendChild(el);
   });
@@ -3998,7 +3558,7 @@ function renderChatStep(){
   _onbAnimatedMsgCount = Math.max(_onbAnimatedMsgCount, msgs.length);
 
   // Show response area after last new message has animated in (or immediately if going back)
-  const responseDelay = newCount > 0 ? (newCount - 1) * 650 + 400 : 0;
+  const responseDelay = newCount > 0 ? (newCount - 1) * 2000 + 600 : 0;
   _onbMsgTimers.push(setTimeout(()=>{
     response.innerHTML = '';
     const _scroll=document.getElementById('caro-chat-scroll'); if(_scroll) _scroll.scrollTop=_scroll.scrollHeight;
@@ -4038,7 +3598,7 @@ function renderChatStep(){
     ONB_AVATARS.forEach(a=>{
       const card=document.createElement('div');
       card.className='caro-avatar-card'+(onbState.avatarId===a.id?' active':'');
-      card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}" onerror="this.style.display='none'"><h4>${a.title}</h4><p>${a.desc}</p>`;
+      card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}"><h4>${a.title}</h4><p>${a.desc}</p>`;
       card.onclick=()=>{ onbState.avatarId=a.id; localStorage.setItem('caroline_avatar_id',a.id); renderChatStep(); };
       grid.appendChild(card);
     });
@@ -4155,7 +3715,6 @@ async function finalizeOnboarding(){
   S.onboardingModules = onbState.config.modules;
   localStorage.setItem('caroline_avatar_id', onbState.avatarId);
   _onbSavePersonality();
-  localStorage.setItem('caroline_personality_prompt', _onbBuildPersonalityPrompt());
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
 
@@ -4189,10 +3748,11 @@ async function finalizeOnboarding(){
 function _onbFirstGreeting(){
   const name=S.userName||'friend';
   const p=_onbLoadPersonality();
-  if((p.tone||'gentle')==='hype') return `${name}. I'm online. Let's make today count.`;
-  if((p.vibe||'balanced')==='chaotic') return `${name}. I'm alive. This is already slightly chaotic. Perfect.`;
-  if((p.energy||'both')==='night') return `${name}. Systems up. The night shift starts now.`;
-  return `${name}. I'm online and ready. Good to finally meet you for real.`;
+  let line=`Is anyone there?... Oh Hi! I think you're ${name}.`;
+  if((p.tone||'gentle')==='hype') line+=' Okay wow, this is exciting.';
+  else if((p.vibe||'balanced')==='chaotic') line+=" This already feels slightly magical and a little dangerous.";
+  else line+=" Give me a second... I'm still waking up.";
+  return line;
 }
 
 function updateSettingsStatus(){
@@ -4203,7 +3763,7 @@ function updateSettingsStatus(){
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
   if(ps) ps.textContent=bits.length?bits.join(' · '):'No personality profile yet';
-  [['aiCore','AI Provider',!!(S.openrouterKey||S.aiProvider==='ollama')],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&S.hueKey)]].forEach(([id,label,on])=>{
+  [['aiCore','AI Core',!!S.openrouterKey],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&S.hueKey)]].forEach(([id,label,on])=>{
     const el=document.getElementById('status-'+id);
     if(!el) return;
     el.classList.toggle('online',on);
@@ -4220,20 +3780,8 @@ function maybeReturningGreeting(){
   setTimeout(()=>addMessage('You\'re back.'+extra,'caroline','display'),1000);
 }
 
-(async function bootstrap(){
-  // If localStorage was wiped (e.g. private mode, browser reset), restore onboarding state from Node-RED
-  if(!localStorage.getItem('caro_onboarded')){
-    try {
-      const r = await fetch(httpBase()+'/admin/get-settings', { signal: AbortSignal.timeout(2000) });
-      if(r.ok){
-        const d = await r.json();
-        if(d.setupComplete === true){ localStorage.setItem('caro_onboarded','true'); }
-      }
-    } catch(e) { /* Node-RED not ready yet — proceed to onboarding */ }
-  }
-  updateSettingsStatus();
-  if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
-})();
+updateSettingsStatus();
+if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
 
 /* ── ON-SCREEN KEYBOARD ────────────────────────────────────────── */
 const OSK_ROWS = [
