@@ -616,7 +616,7 @@
 <div id="onboarding-overlay">
   <section id="caro-boot-panel">
     <div class="caro-boot-shell">
-      <img id="caro-boot-avatar" src="caroline.gif" alt="Project: Caroline"/>
+      <img id="caro-boot-avatar" src="assets/caroline.gif" alt="Project: Caroline"/>
       <div id="caro-boot-log"></div>
       <div id="caro-boot-ready" class="hidden">
         <span>[ READY FOR CONFIGURATION ]</span>
@@ -715,7 +715,7 @@
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             <input type="file" id="avatar-upload" accept="image/*,.gif" style="display:none" onchange="handleAvatarUpload(event)"/>
             <button onclick="document.getElementById('avatar-upload').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Browse</button>
-            <span id="upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No custom avatar</span>
+            <span id="avatar-upload-name" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No custom avatar</span>
           </div>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -975,19 +975,6 @@
         </div>
       </div>
       <div class="settings-section">
-        <h3>Avatar Upload</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Custom avatar</div><div class="settings-sub">PNG, JPG or GIF</div></div>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-            <label style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:7px 14px;color:var(--t-hex1);font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;">
-              📁 Choose file
-              <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(this)"/>
-            </label>
-            <span id="avatar-upload-name" style="font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file chosen</span>
-          </div>
-        </div>
-      </div>
-      <div class="settings-section">
         <h3>Video channels</h3>
         <div id="ch-list"></div>
         <div id="add-channel-row">
@@ -1200,7 +1187,7 @@
         <div class="pulse-ring"></div>
         <div class="listen-ring"></div>
         <div id="avatar-wrap">
-          <img id="av-gif" src="caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
+          <img id="av-gif" src="assets/caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-crt" viewBox="0 0 100 100">
             <g class="bot-body"><path d="M 45 65 L 45 75 L 35 80 L 65 80 L 55 75 L 55 65 Z"/></g>
             <g class="bot-head">
@@ -1223,7 +1210,7 @@
             <path d="M 54 74 Q 60 78 66 74" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <path d="M 50 88 L 58 93 L 50 98 Z" fill="var(--t-hex2)"/><path d="M 70 88 L 62 93 L 70 98 Z" fill="var(--t-hex2)"/>
           </svg>
-          <img id="av-cat" src="cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
+          <img id="av-cat" src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-ghost" viewBox="0 0 100 100">
             <defs><radialGradient id="ghostGlow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="var(--t-hex1)" stop-opacity="0.3"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
             <ellipse cx="50" cy="42" rx="28" ry="30" fill="rgba(200,220,255,0.12)" stroke="var(--t-hex1)" stroke-width="1.5"/>
@@ -1355,6 +1342,31 @@ const FEATURE_DEFAULTS = { radio: true, hue: true, spotify: false, calendar: tru
 const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: 'http://localhost:1880', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
+
+// Pull installer-written settings from Node-RED on first run, and detect fresh installs.
+async function syncSettingsFromServer() {
+  try {
+    const r = await fetch('http://' + (window.location.hostname || 'localhost') + ':1880/admin/get-settings', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) {
+      // Server returned error — likely fresh install with no settings file yet
+      localStorage.removeItem('caro_onboarded');
+      return;
+    }
+    const d = await r.json();
+    // Empty response means fresh Node-RED install — force onboarding regardless of localStorage
+    if (!d || !Object.keys(d).length) {
+      localStorage.removeItem('caro_onboarded');
+      return;
+    }
+    if (localStorage.getItem('caro_settings')) return; // already have local settings, don't overwrite
+    Object.assign(S, d);
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+    const wcl = document.getElementById('weather-city-label');
+    if (wcl) wcl.textContent = S.cityName || S.location || '';
+  } catch(e) { /* Node-RED offline — proceed with localStorage */ }
+}
+syncSettingsFromServer();
 
 // ── EVENT LOG ─────────────────────────────────
 const _CLOG_MAX = 80;
@@ -2236,7 +2248,7 @@ function loadChannel(idx) {
     vid.pause(); vid.src=''; vid.style.display='none';
     if (btn) btn.style.display='none';
     iframe.style.display='block';
-    iframe.src = 'https://www.youtube.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1';
+    iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1';
   }
 }
 
@@ -2538,6 +2550,8 @@ function connectWS(){
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
+    // Bootstrap Node-RED flow context with current settings (handles fresh NR restart)
+    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, tidesStation: S.tidesStation }));
   };
   ws.onmessage = (e) => {
   if (seq !== wsConnectSeq) return;
@@ -3286,10 +3300,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
-  { id:'pilot', title:'Red Pilot Girl', desc:'Curious, grounded, warm. The default energy.', src:'caroline.gif' },
-  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with soft neon energy.', src:'robot.gif' },
-  { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'cat.gif' },
-  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, softly haunted.', src:'ghost.gif' }
+  { id:'pilot', title:'Red Pilot Girl', desc:'Curious, grounded, warm. The default energy.', src:'assets/caroline.gif' },
+  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with soft neon energy.', src:'assets/robot.gif' },
+  { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'assets/cat.gif' },
+  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, softly haunted.', src:'assets/ghost.gif' }
 ];
 
 const ONB_MODULES = [
@@ -3323,19 +3337,17 @@ const ONB_QUESTIONS = [
     prompt:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1') ? "I already know where home base is — detected as "+h+". Confirm or change it below." : "Where should I look for home base? Give me your Pi hostname or IP."; })(),
     placeholder: window.location.hostname || '192.168.x.x',
     defaultValue:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1')?h:''; })() },
-  { id:'color',  type:'chips', save:'personality.color',  prompt:'Favorite color?', options:[
-    { label:'Neon Green',    value:'green',  reply:'Good taste. Bright and a little radioactive.' },
-    { label:'Electric Blue', value:'blue',   reply:'Noted. Cool signal energy.' },
-    { label:'Signal Purple', value:'purple', reply:'Elegant. Slightly dangerous.' },
-    { label:'Soft Pink',     value:'pink',   reply:'Cute choice. I can work with cute.' },
-    { label:'Void',          value:'black',  reply:'Dramatic. I respect it.' }
+  { id:'workstyle', type:'chips', save:'personality.workstyle', prompt:'How do you work best?', options:[
+    { label:'Deep focus — one thing at a time', value:'deep',     reply:'Got it. I\'ll respect the tunnel.' },
+    { label:'Juggling many things at once',      value:'juggler',  reply:'Multitasking mode noted. I\'ll keep up.' },
+    { label:'Sprints — bursts then breaks',      value:'sprints',  reply:'Sprint and breathe. Healthy rhythm.' },
+    { label:'Follows curiosity wherever it goes',value:'curious',  reply:'Chaotic productive. My favourite kind.' }
   ]},
-  { id:'animals', type:'chips', save:'personality.animals', prompt:'Cats or dogs?', options:[
-    { label:'Cats',    value:'cats',   reply:'Excellent. Quiet little chaos goblins.' },
-    { label:'Dogs',    value:'dogs',   reply:'Very warm. Very loyal. Very tail-powered.' },
-    { label:'Both',    value:'both',   reply:'Correct diplomatic answer.' },
-    { label:'Neither', value:'neither',reply:'Interesting. I will not judge. Out loud.' },
-    { label:'Hamster', value:'cats',   reply:'Oh, so you like cats huh?' }
+  { id:'comms', type:'chips', save:'personality.comms', prompt:'How should I talk to you?', options:[
+    { label:'Short and direct',       value:'direct',       reply:'Concise mode locked in.' },
+    { label:'Conversational',         value:'conversational',reply:'Chatty it is. I like that.' },
+    { label:'Detailed and thorough',  value:'detailed',     reply:'Full context always. Noted.' },
+    { label:'Depends on my mood',     value:'adaptive',     reply:'I\'ll read the room.' }
   ]},
   { id:'energy', type:'chips', save:'personality.energy', prompt:'Early bird or night owl?', options:[
     { label:'Early Bird', value:'early', reply:'Morning mode acknowledged.' },
@@ -3376,6 +3388,29 @@ let _chatBound = false;
 
 function _onbLoadPersonality(){ try { return JSON.parse(localStorage.getItem('caroline_personality')||'{}'); } catch(e){ return {}; } }
 function _onbSavePersonality(){ localStorage.setItem('caroline_personality', JSON.stringify(onbState.personality)); }
+
+function _onbBuildPrompt() {
+  const p = onbState.personality;
+  const parts = [];
+  const name = S.userName || 'the user';
+  parts.push(`You are ${S.aiName||'Caroline'}, a personal AI companion for ${name}.`);
+  if (p.workstyle === 'deep')     parts.push('They work best in deep focus — avoid interrupting trains of thought.');
+  else if (p.workstyle === 'juggler')  parts.push('They juggle many things at once — concise context switches are helpful.');
+  else if (p.workstyle === 'sprints') parts.push('They work in sprints with breaks — respect their rhythm.');
+  else if (p.workstyle === 'curious') parts.push('They follow curiosity freely — be ready to pivot topics.');
+  if (p.comms === 'direct')       parts.push('Keep responses short and direct — no padding.');
+  else if (p.comms === 'conversational') parts.push('Be warm and conversational in tone.');
+  else if (p.comms === 'detailed') parts.push('Provide thorough, detailed responses with full context.');
+  else if (p.comms === 'adaptive') parts.push('Adapt communication style to their mood and the topic.');
+  if (p.energy === 'early')  parts.push('They are a morning person.');
+  else if (p.energy === 'night') parts.push('They are a night owl — expect late sessions.');
+  if (p.vibe === 'chaotic')  parts.push('They thrive in a bit of chaos — lean into it.');
+  else if (p.vibe === 'calm') parts.push('They value calm, steady energy.');
+  if (p.tone === 'hype')    parts.push('Use high energy and enthusiasm when encouraging them.');
+  else if (p.tone === 'gentle') parts.push('Be warm and gentle when giving encouragement.');
+  parts.push('The dynamic must remain strictly platonic. You are a reliable sidekick and assistant. Keep responses free of markdown formatting.');
+  return parts.join(' ');
+}
 function _onbLoadConfig(){
   const m = (S.onboardingModules && typeof S.onboardingModules==='object') ? S.onboardingModules : {};
   ONB_MODULES.forEach(mod=>{ if(!m[mod.id]) m[mod.id]={enabled:false}; });
@@ -3421,7 +3456,7 @@ function startBootSequence(){
   const btn   = document.getElementById('caro-begin-btn');
   const avatar= document.getElementById('caro-boot-avatar');
   const a = ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
-  avatar.src = a.src || 'caroline.gif';
+  avatar.src = a.src || 'assets/caroline.gif';
   log.innerHTML=''; ready.classList.add('hidden'); btn.classList.add('hidden');
   document.getElementById('wipe-memory-btn').classList.add('hidden');
   const lines=[
@@ -3715,6 +3750,10 @@ async function finalizeOnboarding(){
   S.onboardingModules = onbState.config.modules;
   localStorage.setItem('caroline_avatar_id', onbState.avatarId);
   _onbSavePersonality();
+  // Auto-generate personality prompt from chips selections
+  const _prompt = _onbBuildPrompt();
+  localStorage.setItem('caroline_personality_prompt', _prompt);
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'personality_update', text: _prompt }));
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
 
@@ -3758,8 +3797,8 @@ function _onbFirstGreeting(){
 function updateSettingsStatus(){
   const p=_onbLoadPersonality();
   const bits=[];
-  if(p.color) bits.push(_onbTitleCase(p.color)+' energy');
-  if(p.animals) bits.push(p.animals);
+  if(p.workstyle) bits.push(p.workstyle);
+  if(p.comms) bits.push(p.comms+' comms');
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
   if(ps) ps.textContent=bits.length?bits.join(' · '):'No personality profile yet';
