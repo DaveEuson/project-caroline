@@ -288,8 +288,13 @@ fi
 
 echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
 cp -r "$CLONE_DIR/." "$CAROLINE_DIR/"
-# Flatten avatar GIFs to root so index.html can reference them as ./caroline.gif etc.
-cp -f "$CAROLINE_DIR/assets/"*.gif "$CAROLINE_DIR/" 2>/dev/null || true
+# Flatten avatar GIFs to root — skip any placeholder stub (43 bytes); only copy files > 1 KB
+for _gif in "$CAROLINE_DIR/assets/"*.gif; do
+  [ -f "$_gif" ] || continue
+  [ "$(stat -c%s "$_gif" 2>/dev/null || echo 0)" -gt 1024 ] && cp -f "$_gif" "$CAROLINE_DIR/" || \
+    echo -e "${YELLOW}    ⚠ Skipped placeholder GIF: $(basename "$_gif")${RESET}"
+done
+unset _gif
 # Ensure nginx (www-data) can read all files
 sudo chmod -R 755 "$CAROLINE_DIR"
 sudo chown -R www-data:www-data "$CAROLINE_DIR/assets" 2>/dev/null || true
