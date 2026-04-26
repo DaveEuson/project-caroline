@@ -1338,12 +1338,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
-const FEATURE_DEFAULTS = { radio: true, hue: true, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: 'http://localhost:1880', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: 'http://localhost:1880', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
 
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
+// Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
 async function syncSettingsFromServer() {
   try {
     const r = await fetch('http://' + (window.location.hostname || 'localhost') + ':1880/admin/get-settings', { signal: AbortSignal.timeout(4000) });
@@ -1366,8 +1367,6 @@ async function syncSettingsFromServer() {
     if (wcl) wcl.textContent = S.cityName || S.location || '';
   } catch(e) { /* Node-RED offline — proceed with localStorage */ }
 }
-syncSettingsFromServer();
-
 // ── EVENT LOG ─────────────────────────────────
 const _CLOG_MAX = 80;
 let _clog = [];
@@ -2017,6 +2016,9 @@ async function saveSettings() {
   const tsInp = document.getElementById('set-tides-station');
   if (tsInp) S.tidesStation = tsInp.value.trim();
 
+  // Persist to localStorage immediately — never block the save on Node-RED being reachable
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, openrouterKey: S.openrouterKey, hueIp: S.hueIp, hueKey: S.hueKey }));
@@ -2071,6 +2073,7 @@ async function saveSettings() {
     if (el) S.features[k] = el.checked;
   });
 
+  // Refresh localStorage after zip lookup + feature toggles updated S
   localStorage.setItem('caro_settings', JSON.stringify(S));
   applyTheme(S.theme);
   applyAvatar(S.avatar);
@@ -3820,7 +3823,10 @@ function maybeReturningGreeting(){
 }
 
 updateSettingsStatus();
-if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
+// Sync from server first so fresh-install detection clears caro_onboarded before we check it
+syncSettingsFromServer().then(() => {
+  if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
+});
 
 /* ── ON-SCREEN KEYBOARD ────────────────────────────────────────── */
 const OSK_ROWS = [
