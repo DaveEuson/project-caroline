@@ -143,6 +143,15 @@ else
 fi
 echo ""
 
+echo -e "${MAGENTA}  // GOOGLE CALENDAR (optional)${RESET}"
+echo ""
+echo -e "${DIM}  Google Calendar needs a Service Account JSON file.${RESET}"
+echo -e "${DIM}  See README.md for how to create one. Press Enter to skip — you can add it later.${RESET}"
+echo ""
+read -p "  Path to Google service account JSON (or Enter to skip): " GOOG_SA_PATH </dev/tty
+GOOG_SA_PATH="${GOOG_SA_PATH/#\~/$HOME}"
+echo ""
+
 echo -e "${MAGENTA}  // DISPLAY MODE${RESET}"
 echo ""
 echo -e "${DIM}  Kiosk mode locks Firefox ESR fullscreen on boot — ideal for a dedicated Pi display.${RESET}"
@@ -244,6 +253,21 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   sudo systemctl start ollama 2>/dev/null || true
   sleep 3
 
+  echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"
+  OLLAMA_READY=false
+  for i in $(seq 1 15); do
+    if curl -sf "http://localhost:11434/api/tags" > /dev/null 2>&1; then
+      OLLAMA_READY=true
+      break
+    fi
+    sleep 2
+  done
+  if [ "$OLLAMA_READY" = "true" ]; then
+    echo -e "${GREEN}  ✓ Ollama responding at localhost:11434${RESET}"
+  else
+    echo -e "${YELLOW}  ⚠ Ollama not yet responding — run 'ollama serve' manually if needed${RESET}"
+  fi
+
   echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL} — this is her brain. Worth the wait.${RESET}"
   ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
   PULL_PID=$!
@@ -306,6 +330,15 @@ if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; t
 fi
 
 echo -e "${GREEN}  ✓ Caroline payload ready${RESET}"
+
+# ── GOOGLE SERVICE ACCOUNT ───────────────────────────────────
+if [ -n "$GOOG_SA_PATH" ] && [ -f "$GOOG_SA_PATH" ]; then
+  cp -f "$GOOG_SA_PATH" "$CAROLINE_DIR/caroline-calendar.json"
+  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline-calendar.json"
+  echo -e "${GREEN}  ✓ Google service account installed${RESET}"
+else
+  echo -e "${DIM}  ℹ Google Calendar: no service account configured — enable in Caroline settings later${RESET}"
+fi
 
 # ── IMPORT NODE-RED FLOWS ────────────────────────────────────
 echo -e "${YELLOW}  ► Importing Node-RED flows...${RESET}"
@@ -414,6 +447,7 @@ echo -e "${YELLOW}  ► Writing settings...${RESET}"
 
 # jq writes valid JSON regardless of special characters in user input.
 # API key fields are written empty — configure them in Caroline's GUI.
+PI_IP=$(hostname -I | awk '{print $1}')
 jq -n \
   --arg name         "$USER_NAME" \
   --arg tz           "${TIMEZONE:-America/New_York}" \
@@ -421,11 +455,14 @@ jq -n \
   --arg model        "$AI_MODEL" \
   --arg provider     "$AI_PROVIDER" \
   --arg ollamaModel  "$OLLAMA_MODEL" \
+  --arg nrUrl        "http://${PI_IP}:${NODE_RED_PORT}" \
   --argjson kiosk    "$([ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ] && echo true || echo false)" \
   '{
     userName:        $name,
     timezone:        $tz,
     location:        $loc,
+    zipCode:         "",
+    nodeRedUrl:      $nrUrl,
     aiModel:         $model,
     aiProvider:      $provider,
     ollamaUrl:       "http://localhost:11434",
@@ -565,6 +602,27 @@ EOF
   fi
 fi
 
+# ── SERVICE VERIFICATION ─────────────────────────────────────
+echo -e "${YELLOW}  ► Verifying services...${RESET}"
+_svc_ok=true
+for _svc in caroline nginx; do
+  if systemctl is-active --quiet "$_svc" 2>/dev/null; then
+    echo -e "${GREEN}  ✓ ${_svc} running${RESET}"
+  else
+    echo -e "${YELLOW}  ⚠ ${_svc} not running — check: sudo systemctl status ${_svc}${RESET}"
+    _svc_ok=false
+  fi
+done
+if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
+  if systemctl is-active --quiet ollama 2>/dev/null; then
+    echo -e "${GREEN}  ✓ ollama running${RESET}"
+  else
+    echo -e "${YELLOW}  ⚠ ollama not running — check: sudo systemctl status ollama${RESET}"
+    _svc_ok=false
+  fi
+fi
+unset _svc _svc_ok
+
 # ── DONE ─────────────────────────────────────────────────────
 phase "SHE'S ONLINE"
 PI_IP_FINAL=$(hostname -I | awk '{print $1}')
@@ -588,10 +646,19 @@ echo ""
 echo -e "${DIM}  To check her status anytime:${RESET}"
 echo -e "${BOLD}    sudo systemctl status caroline${RESET}"
 echo ""
+echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
+echo -e "${CYAN}  │  CONFIGURE MANUALLY AFTER REBOOT                        │${RESET}"
+echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 if [ "$AI_PROVIDER" = "openrouter" ]; then
-echo -e "${YELLOW}  ⚡ Add your OpenRouter API key in Caroline's settings panel to enable AI.${RESET}"
-echo ""
+echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add in Caroline Settings > AI"
 fi
+echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Integrations (optional)"
+echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Integrations (optional)"
+echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > API & Network (v0.3)"
+if [ -z "$GOOG_SA_PATH" ] || [ ! -f "$GOOG_SA_PATH" ]; then
+echo -e "${CYAN}  │${RESET}  ${DIM}Google Calendar JSON${RESET} — see README.md (optional)"
+fi
+echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
 echo -e "${MAGENTA}  Reboot to bring her fully online.${RESET}"
 echo ""
