@@ -52,7 +52,7 @@
   .topbar-name { font-size: 18px; font-weight: 600; letter-spacing: 0.05em; color: #f8fafc; }
   .topbar-version { font-size: 9px; color: rgba(var(--t-rgb1),0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; margin-left: 2px; align-self: flex-end; margin-bottom: 3px; }
   .topbar-sub { font-size: 14px; color: rgba(148,163,184,0.6); font-family: 'JetBrains Mono', monospace; }
-  .conn-pill { background: rgba(var(--t-rgb1), 0.1); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; padding: 2px 8px; font-size: 13px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; transition: all 0.5s ease; }
+  .conn-pill { background: rgba(var(--t-rgb1), 0.1); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; transition: all 0.5s ease; white-space: nowrap; }
   .ai-config-pill { display:none; background:rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.35); border-radius:20px; padding:2px 8px; font-size:11px; color:#fbbf24; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; white-space:nowrap; }
   .ai-config-pill.show { display:inline-flex; align-items:center; }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
@@ -345,11 +345,11 @@
   #corner-glow-br { bottom: -60px; right: -60px; width: 250px; height: 250px; background: var(--t-hex1); }
 
   /* FOCUS / IDLE */
-  body.focus-mode #left, body.focus-mode #news-panel { opacity: 0; transform: translateY(20px); pointer-events: none; }
+  body.focus-mode #news-panel { opacity: 0; transform: translateY(20px); pointer-events: none; }
   body.focus-mode #topbar { opacity: 0.1; pointer-events: none; }
   body.focus-mode #avatar-hint { opacity: 0; }
   body.focus-mode #avatar-outer { transform: scale(1.2) translateY(10px); }
-  body.idle-mode #left, body.idle-mode #news-panel { opacity: 0; transform: translateY(10px); pointer-events: none; }
+  body.idle-mode #news-panel { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
@@ -416,7 +416,7 @@
   }
   /* ── SMALL TABLET / LARGE PHONE (max 768px) ─ */
   @media (max-width: 768px) {
-    #left { display: none; }
+    #left { display: flex; width: 140px; padding: 7px; }
     #news-panel { width: 180px; }
     #avatar-outer { width: 180px; height: 180px; }
     #topbar { padding: 0 8px; gap: 6px; }
@@ -432,6 +432,7 @@
   /* ── PORTRAIT / PHONE (max 500px) ─────────── */
   @media (max-width: 500px) {
     #main { flex-direction: column; }
+    #left { width: 100%; height: 118px; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid rgba(var(--t-rgb1),0.08); }
     #news-panel { width: 100%; height: 180px; flex-direction: row; border-left: none; border-top: 1px solid rgba(var(--t-rgb1),0.08); }
     #video-section { width: 50%; border-bottom: none; border-right: 1px solid rgba(var(--t-rgb1),0.08); }
     #news-section { flex: 1; overflow-y: auto; padding: 8px; }
@@ -865,7 +866,7 @@
             <option value="2">Lofi Study</option>
             <option value="3">ChillHop</option>
             <option value="4">Jazz BGM</option>
-            <option value="5">NHK World</option>
+            <option value="5">ChillHop Music</option>
           </select>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -1724,6 +1725,53 @@ function updateAiConfigIndicator(provider) {
   pill.classList.toggle('show', needsKey);
 }
 
+function shortAiModelName(model) {
+  const raw = String(model || '').trim();
+  if (!raw) return 'default';
+  const lower = raw.toLowerCase();
+  if (lower.includes('haiku')) return 'haiku';
+  if (lower.includes('sonnet')) return 'sonnet';
+  if (lower.includes('gpt-4o-mini')) return 'gpt-4o-mini';
+  if (lower.includes('gpt-4o')) return 'gpt-4o';
+  if (lower.includes('gemini')) return 'gemini';
+  return raw.split('/').pop();
+}
+
+function aiModelLabel() {
+  const provider = S.aiProvider || 'ollama';
+  const model = provider === 'ollama' ? (S.ollamaModel || 'llama3.2') : (S.aiModel || 'anthropic/claude-haiku-4.5');
+  return provider + ':' + shortAiModelName(model);
+}
+
+function updateConnectionPill(status) {
+  if (!pill) return;
+  pill.textContent = status + ' | ' + aiModelLabel();
+}
+
+function currentSettingsPayload(extra = {}) {
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem('caro_settings') || '{}') || {}; } catch(e) {}
+  Object.assign(S, stored, extra);
+  return Object.assign({}, S, {
+    type: 'settings_update',
+    zipCode: S.zipcode || S.zipCode || '',
+    setupComplete: true
+  });
+}
+
+async function syncAiModelFromHealth() {
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/health', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'health');
+    if (!r.ok) return;
+    const h = await r.json();
+    if (h.aiProvider) S.aiProvider = h.aiProvider;
+    if (h.aiModel) S.aiModel = h.aiModel;
+    if (h.ollamaModel) S.ollamaModel = h.ollamaModel;
+    updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
+    updateAiConfigIndicator();
+  } catch(e) { /* health is best-effort */ }
+}
+
 const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
 let _cachedOllamaModels = null;
 
@@ -2228,7 +2276,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
+    ws.send(JSON.stringify(currentSettingsPayload()));
   }
 
   let nrSaveOk = false;
@@ -2273,6 +2321,7 @@ async function saveSettings() {
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
+  updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
   updateAiConfigIndicator();
 
   fb.classList.remove('error');
@@ -2359,9 +2408,9 @@ const DEFAULT_CHANNELS = [
   { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
   { name:'ChillHop',    icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
   { name:'Jazz BGM',    icon:'🎷', type:'youtube', ytId:'Dx5qFachd3A' },
-  { name:'NHK World',   icon:'🌏', type:'iframe', url:'https://www3.nhk.or.jp/nhkworld/en/live/' }
+  { name:'ChillHop Music', icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' }
 ];
-const CHANNEL_VERSION = 10;
+const CHANNEL_VERSION = 11;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
 let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
 let currentChannel = S.defaultChannel || 0;
@@ -2430,6 +2479,7 @@ function loadChannel(idx) {
     vid.pause(); vid.src=''; vid.style.display='none';
     if (btn) btn.style.display='none';
     iframe.style.display='block';
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
     iframe.src = ch.url;
     if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
   } else if (ch.type === 'hls') {
@@ -2455,6 +2505,7 @@ function loadChannel(idx) {
     vid.pause(); vid.src=''; vid.style.display='none';
     if (btn) btn.style.display='none';
     iframe.style.display='block';
+    iframe.removeAttribute('sandbox');
     const origin = window.location.origin || ('http://' + (window.location.hostname || 'localhost') + ':8080');
     iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1&origin='+origin;
     if (ytFallback) {
@@ -2721,6 +2772,13 @@ function showHowTo(id){
 // ── MESSAGES ──────────────────────────────────
 let subtitleTimeout;
 let _typingTimeout = null;
+let _ollamaWarmupTimer = null;
+let _ollamaLongTimer = null;
+function clearThinkingTimers() {
+  clearTimeout(_typingTimeout); _typingTimeout = null;
+  clearTimeout(_ollamaWarmupTimer); _ollamaWarmupTimer = null;
+  clearTimeout(_ollamaLongTimer); _ollamaLongTimer = null;
+}
 function scrollChatToBottom() {
   const scroll = document.getElementById('caro-chat-scroll');
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
@@ -2731,7 +2789,7 @@ function scrollChatToBottom() {
 }
 function addMessage(text, role, source){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing');
-  clearTimeout(_typingTimeout); _typingTimeout = null;
+  clearThinkingTimers();
   typing.classList.remove('show'); box.classList.remove('hidden'); resetIdle();
   const label = role==='user' ? (S.userName||'You').toUpperCase() : (source==='discord'?(S.userName||'You').toUpperCase()+' (DISCORD)':source==='telegram'?'TELEGRAM':source==='proactive'?(S.aiName||'Caroline').toUpperCase()+' // AMBIENT':(S.aiName||'Caroline').toUpperCase());
   box.classList.toggle('proactive', source==='proactive');
@@ -2748,8 +2806,17 @@ function addMessage(text, role, source){
 }
 function showTyping(){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text');
-  clearTimeout(subtitleTimeout); content.textContent=''; sender.textContent=(S.aiName||'Caroline').toUpperCase()+' IS THINKING...';
+  clearTimeout(subtitleTimeout); clearThinkingTimers();
+  content.textContent=''; sender.textContent=(S.aiName||'Caroline').toUpperCase()+' IS THINKING...';
   box.classList.remove('hidden'); document.getElementById('typing').classList.add('show');
+  if ((S.aiProvider || 'ollama') === 'ollama') {
+    _ollamaWarmupTimer = setTimeout(() => {
+      content.textContent = 'Local AI is warming up — this may take a moment';
+    }, 15000);
+    _ollamaLongTimer = setTimeout(() => {
+      content.textContent = 'Taking longer than expected. Switch to OpenRouter in settings for faster replies.';
+    }, 45000);
+  }
 }
 
 // ── WEBSOCKET ─────────────────────────────────
@@ -2757,6 +2824,7 @@ let ws;
 let wsReconnectTimer = null;
 let wsConnectSeq = 0;
 const pill=document.getElementById('conn-pill');
+updateConnectionPill('CONNECTING');
 function connectWS(){
   wsConnectSeq += 1;
   const seq = wsConnectSeq;
@@ -2769,12 +2837,13 @@ function connectWS(){
   ws=new WebSocket(_wsUrl); ws.binaryType='blob';
   ws.onopen=()=>{
     if (seq !== wsConnectSeq) return;
-    pill.textContent='CONNECTED'; pill.style.color='var(--t-hex1)'; playBeep(1500);
+    updateConnectionPill('CONNECTED'); pill.style.color='var(--t-hex1)'; playBeep(1500);
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart)
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
+    ws.send(JSON.stringify(currentSettingsPayload()));
+    setTimeout(syncAiModelFromHealth, 500);
   };
   ws.onmessage = (e) => {
   if (seq !== wsConnectSeq) return;
@@ -2830,7 +2899,7 @@ function connectWS(){
 };
 ws.onclose = ()=>{
     if (seq !== wsConnectSeq) return;
-    pill.textContent='RECONNECTING'; pill.style.color='#f43f5e';
+    updateConnectionPill('RECONNECTING'); pill.style.color='#f43f5e';
     document.getElementById('offline-banner').classList.add('show');
     clog('err','WebSocket closed — reconnecting in 3s');
     wsReconnectTimer = setTimeout(connectWS,3000);
