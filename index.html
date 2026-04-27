@@ -902,7 +902,7 @@
             <option value="2">Al Jazeera English</option>
             <option value="3">DW English</option>
             <option value="4">France 24 English</option>
-            <option value="5">NASA TV</option>
+            <option value="5">Pluto TV Anime</option>
           </select>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -1300,7 +1300,7 @@
               <div id="media-fallback-icon">📺</div>
               <div id="media-fallback-title">Channel</div>
               <div id="media-fallback-genre">Unavailable</div>
-              <button id="media-retry-btn" class="media-nav-btn" onclick="retryMediaChannel()" title="Retry">↻</button>
+              <button id="media-retry-btn" class="media-nav-btn" onclick="retryMediaChannel()" title="Retry" aria-label="Retry stream">↻</button>
             </div>
             <button id="media-mute-btn" onclick="toggleMediaMute()">🔇 Unmute</button>
           </div>
@@ -1460,6 +1460,12 @@ function clog(type, msg) {
   _clog.push({ ts, type, msg });
   if (_clog.length > _CLOG_MAX) _clog.shift();
 }
+window.addEventListener('unhandledrejection', e => {
+  clog('err', 'Unhandled promise: ' + ((e.reason && e.reason.message) || e.reason || 'unknown'));
+});
+window.addEventListener('error', e => {
+  clog('err', 'UI error: ' + (e.message || 'unknown'));
+});
 function renderSettingsLog() {
   const el = document.getElementById('settings-log');
   const ct = document.getElementById('log-count');
@@ -1717,7 +1723,7 @@ function toggleSettings() {
       const el = document.getElementById('quick-action-' + i);
       if (el) el.value = label;
     });
-    if (S.defaultChannel >= MEDIA_CHANNELS.length) S.defaultChannel = 0;
+    S.defaultChannel = normalizeMediaIndex(S.defaultChannel);
     document.getElementById('set-channel').value = S.defaultChannel;
     document.getElementById('set-auto-theme').checked = S.autoTheme;
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
@@ -2589,7 +2595,7 @@ async function saveSettings() {
   S.avatar = parseInt(document.getElementById('set-avatar').value);
   S.theme = pendingSwatch;
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
-  S.defaultChannel = parseInt(document.getElementById('set-channel').value);
+  S.defaultChannel = normalizeMediaIndex(document.getElementById('set-channel').value);
   S.autoTheme = document.getElementById('set-auto-theme').checked;
   S.aiModel = document.getElementById('set-model').value;
   const newName = document.getElementById('set-ainame').value.trim() || 'Caroline';
@@ -2787,7 +2793,7 @@ const MEDIA_CHANNELS = [
   { icon:'🌍', name:'Al Jazeera English', genre:'News / Live',  type:'hls', src:'https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8' },
   { icon:'📰', name:'DW English',     genre:'News / Live',      type:'hls', src:'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
   { icon:'🇫🇷', name:'France 24 English', genre:'News / Live',  type:'hls', src:'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_900.m3u8' },
-  { icon:'🚀', name:'NASA TV',        genre:'Science / Space',  type:'hls', src:'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8' }
+  { icon:'🎌', name:'Pluto TV Anime', genre:'Anime / Live',     type:'hls', src:'https://stitcher-ipv4.pluto.tv/v1/stitch/embed/hls/channel/612375086abc84000738fc03/master.m3u8?advertisingId=caroline&appVersion=unknown&deviceDNT=0&deviceId=caroline&deviceLat=0&deviceLon=0&deviceMake=samsung&deviceModel=samsung&deviceType=samsung-tvplus&deviceVersion=unknown&embedPartner=samsung-tvplus&profileFloor=&profileLimit=&samsung_app_domain=caroline&samsung_app_name=caroline&us_privacy=1YNY' }
 ];
 let mediaChannelIndex = 0;
 let mediaMuted = true;
@@ -2796,6 +2802,12 @@ let mediaHls = null;
 function mediaEmbedUrl(ch) {
   if (ch.type === 'youtube') return 'https://www.youtube-nocookie.com/embed/' + ch.id + '?autoplay=1&mute=' + (mediaMuted ? '1' : '0') + '&rel=0&modestbranding=1&playsinline=1';
   return ch.src || '';
+}
+
+function normalizeMediaIndex(idx) {
+  const parsed = parseInt(idx, 10);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed >= MEDIA_CHANNELS.length) return 0;
+  return parsed;
 }
 
 function stopMediaStream() {
@@ -2819,7 +2831,8 @@ function retryMediaChannel() {
 }
 
 function loadMediaChannel(idx) {
-  mediaChannelIndex = (idx + MEDIA_CHANNELS.length) % MEDIA_CHANNELS.length;
+  const parsed = parseInt(idx, 10);
+  mediaChannelIndex = Number.isFinite(parsed) ? (parsed + MEDIA_CHANNELS.length) % MEDIA_CHANNELS.length : 0;
   const ch = MEDIA_CHANNELS[mediaChannelIndex];
   const label = document.getElementById('media-channel-label');
   const iframe = document.getElementById('media-iframe');
@@ -3494,7 +3507,7 @@ fetchNews(); setInterval(fetchNews,15*60*1000);
 // ── HOLIDAYS ──────────────────────────────────
 const HOL={ '1/1':['🎉',"New Year's Day"],'2/14':['💝',"Valentine's Day"],'3/17':['🍀',"St. Patrick's Day"],'4/25':['🧬','National DNA Day'],'7/4':['🎆','Independence Day'],'10/31':['🎃','Halloween'],'12/25':['🎄','Christmas'],'12/31':['🥂',"New Year's Eve"] };
 const DOW=['☀️ Sunday Funday','🎵 Music Monday','💻 Tech Tuesday','🧘 Wellness Wednesday','💭 Thoughtful Thursday','🎯 Focus Friday','🎨 Studio Saturday'];
-function updateDate(){ const n=new Date(); const dateEl=document.getElementById('today-date-text'); if(dateEl) dateEl.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); const k=(n.getMonth()+1)+'/'+n.getDate(); const [ic,tx]=HOL[k]||['✨',DOW[n.getDay()]]; document.getElementById('holiday-icon').innerHTML=ic; document.getElementById('holiday-text').textContent=tx; }
+function updateDate(){ const n=new Date(); const dateEl=document.getElementById('today-date-text'); if(dateEl) dateEl.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); const k=(n.getMonth()+1)+'/'+n.getDate(); const [ic,tx]=HOL[k]||['✨',DOW[n.getDay()]]; const hi=document.getElementById('holiday-icon'); const ht=document.getElementById('holiday-text'); if(hi) hi.innerHTML=ic; if(ht) ht.textContent=tx; }
 updateDate(); setInterval(updateDate,60*60*1000);
 
 // ── UPTIME + RESTART ──────────────────────────
