@@ -307,14 +307,20 @@
   .media-radio-row { display:flex; align-items:center; gap:8px; }
   .media-radio-title { font-size:13px; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .media-radio-genre { font-size:10px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .video-link-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-  .video-link-card { min-height:62px; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:7px; padding:7px; background:linear-gradient(135deg, rgba(var(--t-rgb1),0.08), rgba(var(--t-rgb2),0.06)); box-shadow:inset 0 0 14px rgba(0,0,0,0.24); display:flex; flex-direction:column; gap:4px; }
-  .video-link-top { display:flex; align-items:center; gap:6px; min-width:0; }
-  .video-link-icon { font-size:17px; flex-shrink:0; }
-  .video-link-name { color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .video-link-genre { color:rgba(226,232,240,0.45); font-size:8px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .video-link-open { margin-top:auto; align-self:flex-start; color:var(--t-hex1); text-decoration:none; font-size:9px; font-family:'JetBrains Mono',monospace; border:1px solid rgba(var(--t-rgb1),0.38); border-radius:6px; padding:3px 7px; background:rgba(0,0,0,0.22); }
-  .video-link-open:hover { background:rgba(var(--t-rgb1),0.18); color:#fff; }
+  .media-player-head { display:flex; align-items:center; gap:5px; margin-bottom:6px; min-width:0; }
+  #media-channel-label { flex:1; min-width:0; color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .media-nav-btn { width:24px; height:22px; display:grid; place-items:center; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:6px; background:rgba(0,0,0,0.18); color:var(--t-hex1); cursor:pointer; }
+  .media-frame-wrap { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.24); background:#000; }
+  #media-iframe, #media-video { width:100%; height:100%; border:0; display:none; background:#000; }
+  #media-video { object-fit:cover; }
+  #media-fallback-card { display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column; gap:8px; padding:12px; text-align:center; background:radial-gradient(circle at 30% 10%, rgba(var(--t-rgb1),0.16), transparent 44%), linear-gradient(135deg, rgba(5,5,10,0.98), rgba(16,8,30,0.94)); }
+  #media-fallback-icon { font-size:28px; }
+  #media-fallback-title { color:#f8fafc; font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
+  #media-fallback-genre { color:rgba(226,232,240,0.45); font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.1em; }
+  #media-open-link { color:var(--t-hex1); text-decoration:none; font-size:10px; font-family:'JetBrains Mono',monospace; border:1px solid rgba(var(--t-rgb1),0.42); border-radius:6px; padding:5px 9px; background:rgba(0,0,0,0.24); }
+  #media-open-link:hover { background:rgba(var(--t-rgb1),0.18); color:#fff; }
+  #media-mute-btn { position:absolute; right:5px; bottom:5px; z-index:5; border:1px solid rgba(255,255,255,0.2); border-radius:6px; background:rgba(0,0,0,0.64); color:#fff; font-size:10px; padding:3px 7px; cursor:pointer; }
+  #media-external-link { position:absolute; left:5px; bottom:5px; z-index:5; border:1px solid rgba(var(--t-rgb1),0.35); border-radius:6px; background:rgba(0,0,0,0.64); color:var(--t-hex1); font-size:9px; padding:3px 7px; text-decoration:none; font-family:'JetBrains Mono',monospace; }
   .ch-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:6px; color:var(--t-hex1); font-size:12px; padding:1px 6px; cursor:pointer; transition:all 0.2s; line-height:1.6; }
   .ch-btn:hover { background:rgba(var(--t-rgb1),0.15); }
   .ch-list-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; color:#e2e8f0; }
@@ -449,7 +455,6 @@
     #news-panel { width: 100%; height: 180px; flex-direction: row; border-left: none; border-top: 1px solid rgba(var(--t-rgb1),0.08); }
     #video-section { width: 50%; border-bottom: none; border-right: 1px solid rgba(var(--t-rgb1),0.08); }
     #media-panel { min-height: 138px; max-height: 138px; overflow-y: auto; }
-    .video-link-grid { grid-template-columns: 1fr; }
     #news-section { flex: 1; overflow-y: auto; padding: 8px; }
     #avatar-outer { width: 140px; height: 140px; }
     #center { padding: 4px 6px; gap: 8px; }
@@ -1305,7 +1310,23 @@
           </div>
         </div>
         <div id="media-video-mode" class="media-mode">
-          <div id="video-link-grid" class="video-link-grid"></div>
+          <div class="media-player-head">
+            <button class="media-nav-btn" onclick="changeMediaChannel(-1)" title="Previous"><i class="ti ti-chevron-left"></i></button>
+            <div id="media-channel-label">LOFI GIRL</div>
+            <button class="media-nav-btn" onclick="changeMediaChannel(1)" title="Next"><i class="ti ti-chevron-right"></i></button>
+          </div>
+          <div class="media-frame-wrap">
+            <iframe id="media-iframe" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <video id="media-video" autoplay muted playsinline controls></video>
+            <div id="media-fallback-card">
+              <div id="media-fallback-icon">📺</div>
+              <div id="media-fallback-title">Channel</div>
+              <div id="media-fallback-genre">External</div>
+              <a id="media-open-link" href="#" target="_blank" rel="noopener">▶ Open</a>
+            </div>
+            <a id="media-external-link" href="#" target="_blank" rel="noopener">Open</a>
+            <button id="media-mute-btn" onclick="toggleMediaMute()">🔇 Unmute</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1543,6 +1564,16 @@ function importBackup(input) {
 let pendingSwatch = S.theme;
 let spotifyToken = localStorage.getItem('spotify_token') || '';
 let spotifyPollInterval = null;
+const PLATONIC_RULE_TEXT = 'The dynamic must remain strictly platonic. You are a reliable sidekick and assistant, never a romantic partner. Keep output formatting-free.';
+const LEGACY_PLATONIC_RULE_TEXT = 'The dynamic must remain strictly platonic. You are a reliable sidekick and assistant. Keep responses free of markdown formatting.';
+
+function sanitizePersonalityPrompt(text) {
+  return String(text || '')
+    .replace(PLATONIC_RULE_TEXT, '')
+    .replace(LEGACY_PLATONIC_RULE_TEXT, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 
 function getNodeRedUrl() {
   const fieldUrl = (document.getElementById('set-nodered-url')?.value || '').trim();
@@ -1763,7 +1794,11 @@ function toggleSettings() {
     const hgSel = document.getElementById('set-hue-group');
     if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
     const pTa = document.getElementById('personalityPrompt');
-    if (pTa) pTa.value = localStorage.getItem('caroline_personality_prompt') || '';
+    if (pTa) {
+      const cleanPrompt = sanitizePersonalityPrompt(localStorage.getItem('caroline_personality_prompt') || '');
+      pTa.value = cleanPrompt;
+      localStorage.setItem('caroline_personality_prompt', cleanPrompt);
+    }
     const tsEl = document.getElementById('set-tides-station');
     if (tsEl) tsEl.value = S.tidesStation || '';
     setTimeout(() => { const first = document.querySelector('#settings-modal button, #settings-modal input, #settings-modal select'); if (first) first.focus(); }, 50);
@@ -2124,7 +2159,8 @@ function resetPersonality() {
 
 function syncPersonalityToBrain() {
   const ta = document.getElementById('personalityPrompt');
-  const text = ta ? ta.value.trim() : '';
+  const text = sanitizePersonalityPrompt(ta ? ta.value : '');
+  if (ta) ta.value = text;
   localStorage.setItem('caroline_personality_prompt', text);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'personality_update', text }));
@@ -2715,29 +2751,97 @@ function changeAvatar(dir) {
   resetIdle();
 }
 
-// ── MEDIA LINKS ───────────────────────────────
-const VIDEO_LINKS = [
-  { icon:'🌸', name:'Lofi Girl',   genre:'Music / Study', url:'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
-  { icon:'🎵', name:'ChillHop',    genre:'Music / Chill', url:'https://www.youtube.com/watch?v=7NOSDKb0HlU' },
-  { icon:'🌍', name:'NHK World',   genre:'News / English', url:'https://nhkworldtv.nhk.or.jp/nhkworld/en/live/' },
-  { icon:'🚀', name:'NASA Live',   genre:'Science / Space', url:'https://www.youtube.com/watch?v=21X5lGlDOfg' },
-  { icon:'🎌', name:'Crunchyroll', genre:'Anime', url:'https://www.crunchyroll.com/' },
-  { icon:'📺', name:'Adult Swim',  genre:'Toonami', url:'https://www.adultswim.com/streams' }
+// ── MEDIA PLAYER ──────────────────────────────
+const MEDIA_CHANNELS = [
+  { icon:'🌸', name:'Lofi Girl',   genre:'Music / Study', type:'youtube', id:'jfKfPfyJRdk', url:'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
+  { icon:'🎵', name:'ChillHop',    genre:'Music / Chill', type:'youtube', id:'7NOSDKb0HlU', url:'https://www.youtube.com/watch?v=7NOSDKb0HlU' },
+  { icon:'🌍', name:'NHK World',   genre:'News / English', type:'iframe', src:'https://www3.nhk.or.jp/nhkworld/en/live/embed/', url:'https://nhkworldtv.nhk.or.jp/nhkworld/en/live/' },
+  { icon:'🚀', name:'NASA Live',   genre:'Science / Space', type:'youtube', id:'21X5lGlDOfg', url:'https://www.youtube.com/watch?v=21X5lGlDOfg' },
+  { icon:'🎌', name:'Crunchyroll', genre:'Anime', type:'link', url:'https://www.crunchyroll.com/' },
+  { icon:'📺', name:'Adult Swim',  genre:'Toonami', type:'link', url:'https://www.adultswim.com/streams' }
 ];
+let mediaChannelIndex = 0;
+let mediaMuted = true;
+let mediaHls = null;
 
-function renderVideoLinks() {
-  const grid = document.getElementById('video-link-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  VIDEO_LINKS.forEach(ch => {
-    const card = document.createElement('div');
-    card.className = 'video-link-card';
-    card.innerHTML =
-      '<div class="video-link-top"><span class="video-link-icon">' + ch.icon + '</span><span class="video-link-name">' + ch.name + '</span></div>' +
-      '<div class="video-link-genre">' + ch.genre + '</div>' +
-      '<a class="video-link-open" href="' + ch.url + '" target="_blank" rel="noopener">▶ Open</a>';
-    grid.appendChild(card);
-  });
+function mediaEmbedUrl(ch) {
+  if (ch.type === 'youtube') return 'https://www.youtube-nocookie.com/embed/' + ch.id + '?autoplay=1&mute=' + (mediaMuted ? '1' : '0') + '&rel=0&modestbranding=1&playsinline=1';
+  return ch.src || '';
+}
+
+function stopMediaStream() {
+  if (mediaHls) { mediaHls.destroy(); mediaHls = null; }
+  const video = document.getElementById('media-video');
+  if (video) { video.pause(); video.removeAttribute('src'); video.load(); }
+}
+
+function showMediaFallback(ch) {
+  const fallback = document.getElementById('media-fallback-card');
+  if (!fallback) return;
+  fallback.style.display = 'flex';
+  document.getElementById('media-fallback-icon').textContent = ch.icon || '📺';
+  document.getElementById('media-fallback-title').textContent = ch.name;
+  document.getElementById('media-fallback-genre').textContent = ch.genre || 'External';
+  document.getElementById('media-open-link').href = ch.url || '#';
+}
+
+function loadMediaChannel(idx) {
+  mediaChannelIndex = (idx + MEDIA_CHANNELS.length) % MEDIA_CHANNELS.length;
+  const ch = MEDIA_CHANNELS[mediaChannelIndex];
+  const label = document.getElementById('media-channel-label');
+  const iframe = document.getElementById('media-iframe');
+  const video = document.getElementById('media-video');
+  const fallback = document.getElementById('media-fallback-card');
+  const muteBtn = document.getElementById('media-mute-btn');
+  const external = document.getElementById('media-external-link');
+  if (label) label.textContent = ch.icon + ' ' + ch.name + ' — ' + ch.genre;
+  if (fallback) fallback.style.display = 'none';
+  if (external) { external.href = ch.url || '#'; external.style.display = ch.type === 'link' ? 'block' : 'none'; }
+  if (iframe) { iframe.style.display = 'none'; iframe.src = 'about:blank'; }
+  if (video) video.style.display = 'none';
+  if (muteBtn) { muteBtn.style.display = ch.type === 'link' ? 'none' : 'block'; muteBtn.textContent = mediaMuted ? '🔇 Unmute' : '🔊 Mute'; }
+  stopMediaStream();
+
+  if (ch.type === 'youtube' || ch.type === 'iframe') {
+    if (!iframe) return;
+    iframe.style.display = 'block';
+    iframe.onerror = () => showMediaFallback(ch);
+    iframe.src = mediaEmbedUrl(ch);
+  } else if (ch.type === 'hls') {
+    if (!video) return showMediaFallback(ch);
+    video.style.display = 'block';
+    video.muted = mediaMuted;
+    if (window.Hls && Hls.isSupported()) {
+      mediaHls = new Hls({ enableWorker:false });
+      mediaHls.loadSource(ch.src);
+      mediaHls.attachMedia(video);
+      mediaHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
+      mediaHls.on(Hls.Events.ERROR, (e, data) => { if (data && data.fatal) showMediaFallback(ch); });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = ch.src;
+      video.play().catch(()=>{ showMediaFallback(ch); });
+    } else {
+      showMediaFallback(ch);
+    }
+  } else {
+    showMediaFallback(ch);
+  }
+}
+
+function changeMediaChannel(dir) {
+  loadMediaChannel(mediaChannelIndex + dir);
+  resetIdle();
+}
+
+function toggleMediaMute() {
+  mediaMuted = !mediaMuted;
+  const video = document.getElementById('media-video');
+  if (video) video.muted = mediaMuted;
+  const ch = MEDIA_CHANNELS[mediaChannelIndex];
+  const btn = document.getElementById('media-mute-btn');
+  if (btn) btn.textContent = mediaMuted ? '🔇 Unmute' : '🔊 Mute';
+  if (ch && ch.type === 'youtube') loadMediaChannel(mediaChannelIndex);
+  resetIdle();
 }
 
 function setMediaMode(mode) {
@@ -2746,6 +2850,12 @@ function setMediaMode(mode) {
   document.getElementById('media-video-mode')?.classList.toggle('active', !radio);
   document.getElementById('media-tab-radio')?.classList.toggle('active', radio);
   document.getElementById('media-tab-video')?.classList.toggle('active', !radio);
+  if (!radio) loadMediaChannel(mediaChannelIndex);
+  else {
+    stopMediaStream();
+    const iframe = document.getElementById('media-iframe');
+    if (iframe) iframe.src = 'about:blank';
+  }
   resetIdle();
 }
 
@@ -2753,7 +2863,7 @@ function renderChannelList() {
   const list = document.getElementById('ch-list');
   if (!list) return;
   list.innerHTML = '';
-  VIDEO_LINKS.forEach(ch => {
+  MEDIA_CHANNELS.forEach(ch => {
     const div = document.createElement('div');
     div.className = 'ch-list-item';
     div.innerHTML = '<span class="ch-list-icon">' + ch.icon + '</span><span>' + ch.name + '</span><span style="margin-left:auto;color:rgba(226,232,240,0.35);font-size:10px;">' + ch.genre + '</span>';
@@ -2762,17 +2872,17 @@ function renderChannelList() {
 }
 
 function addCustomChannel() {
-  alert('Video links are curated in the Media panel now.');
+  alert('Media channels are curated in the in-app player now.');
 }
 
 function resetChannels() {
   localStorage.removeItem('caro_channels');
   renderChannelList();
-  renderVideoLinks();
+  loadMediaChannel(0);
   playBeep(900);
 }
 
-document.addEventListener('DOMContentLoaded', () => { renderVideoLinks(); renderChannelList(); setMediaMode(S.defaultChannel === 1 ? 'video' : 'radio'); });
+document.addEventListener('DOMContentLoaded', () => { renderChannelList(); loadMediaChannel(0); setMediaMode(S.defaultChannel === 1 ? 'video' : 'radio'); });
 
 // ── RETRO BEEPS ───────────────────────────────
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -4051,7 +4161,6 @@ function _onbBuildPrompt() {
   else if (p.vibe === 'calm') parts.push('They value calm, steady energy.');
   if (p.tone === 'hype')    parts.push('Use high energy and enthusiasm when encouraging them.');
   else if (p.tone === 'gentle') parts.push('Be warm and gentle when giving encouragement.');
-  parts.push('The dynamic must remain strictly platonic. You are a reliable sidekick and assistant. Keep responses free of markdown formatting.');
   return parts.join(' ');
 }
 function _onbLoadConfig(){
@@ -4406,7 +4515,7 @@ async function finalizeOnboarding(){
   localStorage.setItem('caroline_avatar_id', onbState.avatarId);
   _onbSavePersonality();
   // Auto-generate personality prompt from chips selections
-  const _prompt = _onbBuildPrompt();
+  const _prompt = sanitizePersonalityPrompt(_onbBuildPrompt());
   localStorage.setItem('caroline_personality_prompt', _prompt);
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'personality_update', text: _prompt }));
   localStorage.setItem('caro_settings', JSON.stringify(S));
