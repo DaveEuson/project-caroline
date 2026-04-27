@@ -1419,22 +1419,17 @@ function renderQuickActions() {
   });
 }
 
-// Pull installer-written settings from Node-RED on first run, and detect fresh installs.
-// Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
+// Pull installer-written settings from Node-RED without touching onboarding state.
 async function syncSettingsFromServer() {
   try {
     const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
     console.log('[Caroline] GET settings from', settingsUrl);
     const r = await fetchJsonWithTimeout(settingsUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'GET settings');
     if (!r.ok) {
-      // Server returned error — likely fresh install with no settings file yet
-      localStorage.removeItem('caro_onboarded');
       return;
     }
     const d = await r.json();
-    // Empty response means fresh Node-RED install — force onboarding regardless of localStorage
     if (!d || !Object.keys(d).length) {
-      localStorage.removeItem('caro_onboarded');
       return;
     }
     if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
@@ -1943,29 +1938,42 @@ function _renderOllamaCards(models) {
   if (!current && models.length) document.getElementById('set-ollama-model').value = models[0].name;
 }
 
+function ollamaModelName(model) {
+  return typeof model === 'string' ? model : (model?.name || '');
+}
+
+function ollamaModelMatches(model, requested) {
+  const name = ollamaModelName(model);
+  const req = String(requested || '').trim();
+  if (!name || !req) return false;
+  return name === req || name === req + ':latest' || name.startsWith(req + ':') || req.startsWith(name + ':');
+}
+
 async function fetchOllamaStatus() {
   const dot  = document.getElementById('ollama-status-dot');
   const text = document.getElementById('ollama-status-text');
   const ram  = document.getElementById('ollama-ram-text');
   if (!dot || !text) return;
   try {
-    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-ps', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama ps');
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama tags');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    const running = d.models || [];
-    if (running.length) {
-      const m = running[0];
-      const bytes = m.size_vram || m.size || 0;
-      const gb = bytes > 0 ? (bytes / 1073741824).toFixed(1) + ' GB VRAM' : '';
+    const models = d.models || [];
+    _cachedOllamaModels = models;
+    _renderOllamaCards(models);
+    const selectedModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+    const installed = models.find(m => ollamaModelMatches(m, selectedModel));
+    const available = installed || models[0];
+    if (available) {
+      const bytes = available.size || 0;
+      const gb = bytes > 0 ? (bytes / 1073741824).toFixed(1) + ' GB installed' : '';
       dot.style.background  = '#34d399';
-      text.textContent      = '● Running — ' + m.name;
+      text.textContent      = '● Running — ' + (installed ? selectedModel : available.name);
       text.style.color      = 'rgba(52,211,153,0.9)';
       if (ram) ram.textContent = gb;
     } else {
-      const selectedModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || '';
-      const installed = (_cachedOllamaModels || []).some(m => m.name === selectedModel);
       dot.style.background = '#fbbf24';
-      text.textContent     = installed ? '⚠ Model installed but not loaded — click to warm up' : '● Ollama online — no model loaded';
+      text.textContent     = '● Ollama online — no installed models';
       text.style.color     = 'rgba(251,191,36,0.8)';
       if (ram) ram.textContent = '';
     }
@@ -1994,7 +2002,7 @@ async function maybeAutoLoadOllamaModel() {
       return;
     }
   }
-  const installed = (_cachedOllamaModels || []).some(m => m.name === model);
+  const installed = (_cachedOllamaModels || []).some(m => ollamaModelMatches(m, model));
   if (!installed) return;
   try {
     const ps = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-ps', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama ps autoload');
@@ -4181,7 +4189,6 @@ function shouldRunOnboarding(){
 function restartWizard(){
   _onbClearTimers();
   _onbAnimatedMsgCount = 0;
-  localStorage.removeItem('caro_onboarded');
   _chatBound = false;
   onbState.index = 0;
   if(document.getElementById('settings-overlay')) document.getElementById('settings-overlay').classList.remove('show');
@@ -4589,7 +4596,7 @@ function maybeReturningGreeting(){
 }
 
 updateSettingsStatus();
-// Sync from server first so fresh-install detection clears caro_onboarded before we check it
+// Sync settings first, then decide onboarding from local onboarding state.
 syncSettingsFromServer().then(() => {
   testNodeRedUrl();
   fetchWeather();
