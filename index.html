@@ -309,10 +309,18 @@
   .add-ch-btn { background:rgba(var(--t-rgb1),0.1); border:1px solid rgba(var(--t-rgb1),0.4); border-radius:8px; padding:6px 12px; color:var(--t-hex1); font-size:11px; cursor:pointer; white-space:nowrap; }
   #yt-container { width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:#000; cursor:pointer; position:relative; }
   #yt-container:hover::after { content:'⛶'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:20px; color:rgba(255,255,255,0.6); pointer-events:none; }
+  #yt-container.launch-mode:hover::after { content:none; }
   #nhk-video { width:100%; height:100%; object-fit:cover; }
   #yt-iframe { width:100%; height:100%; border:none; display:none; }
   #yt-fallback-link { display:none; position:absolute; right:10px; bottom:10px; z-index:4; background:rgba(5,5,10,0.86); border:1px solid rgba(var(--t-rgb1),0.42); border-radius:8px; padding:7px 10px; color:var(--t-hex1); text-decoration:none; font-size:11px; font-family:'JetBrains Mono',monospace; box-shadow:0 0 18px rgba(var(--t-rgb1),0.16); }
   #yt-fallback-link:hover { background:rgba(var(--t-rgb1),0.14); color:#f8fafc; }
+  .video-launch-card { display:none; position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:14px; text-align:center; background:radial-gradient(circle at 30% 10%, rgba(var(--t-rgb1),0.18), transparent 42%), linear-gradient(135deg, rgba(5,5,10,0.98), rgba(16,8,30,0.94)); }
+  .video-launch-card::before { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg, transparent, rgba(var(--t-rgb1),0.12), transparent); opacity:.55; transform:skewX(-14deg) translateX(-38%); }
+  .launch-icon { position:relative; width:42px; height:42px; display:grid; place-items:center; border-radius:8px; border:1px solid rgba(var(--t-rgb1),0.45); background:rgba(var(--t-rgb1),0.08); box-shadow:0 0 22px rgba(var(--t-rgb1),0.2); font-size:24px; }
+  .launch-title { position:relative; max-width:100%; color:#f8fafc; font-size:12px; line-height:1.2; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; overflow-wrap:anywhere; }
+  .launch-sub { position:relative; color:rgba(226,232,240,0.48); font-size:9px; font-family:'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; }
+  .launch-button { position:relative; display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:6px 10px; border-radius:7px; border:1px solid rgba(var(--t-rgb1),0.62); background:rgba(var(--t-rgb1),0.14); color:var(--t-hex1); text-decoration:none; font-size:10px; font-family:'JetBrains Mono',monospace; box-shadow:0 0 18px rgba(var(--t-rgb1),0.16); transition:all .2s ease; }
+  .launch-button:hover { background:rgba(var(--t-rgb1),0.24); color:#fff; transform:translateY(-1px); }
   #sun-row { display:flex; justify-content:space-between; margin-top:5px; font-size:11px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; }
   .news-header { font-size: 10px; color: rgba(226,232,240,0.4); text-transform: uppercase; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; padding-bottom: 4px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); margin-bottom: 8px; }
   #news-list { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 2px; }
@@ -757,6 +765,16 @@
               <option value="google/gemini-flash-1.5">Gemini Flash</option>
             </select>
           </div>
+          <div id="openrouter-key-row">
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub">AI API key — required for Cloud</div></div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..." oninput="refreshAiStatusFromSettingsInputs()"/>
+                <button type="button" id="orkey-eye" onclick="toggleOrkeyVisibility()" style="background:none;border:1px solid rgba(var(--t-rgb1),0.25);border-radius:8px;padding:5px 8px;color:rgba(226,232,240,0.4);cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;" title="Show/hide key">👁</button>
+              </div>
+            </div>
+            <div id="orkey-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
+          </div>
         </div>
 
         <div id="ollama-rows" style="display:none">
@@ -871,13 +889,14 @@
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
           <select class="settings-select" id="set-channel">
-            <option value="0">NASA Live</option>
+            <option value="0">NHK World English</option>
             <option value="1">Lofi Girl</option>
-            <option value="2">Study Music</option>
-            <option value="3">ChillHop</option>
-            <option value="4">Ambient</option>
+            <option value="2">ChillHop</option>
+            <option value="3">NASA Live</option>
+            <option value="4">Study Music</option>
           </select>
         </div>
+        <div class="settings-sub" style="margin-top:6px;text-align:right;">Some channels open in a new tab due to embedding restrictions.</div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Auto time-of-day theme</div><div class="settings-sub">Dawn / day / dusk / night</div></div>
           <input type="checkbox" id="set-auto-theme" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
@@ -892,16 +911,6 @@
             <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
             <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
           </div>
-        </div>
-        <div id="openrouter-key-row">
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub">AI API key — required for Cloud</div></div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..." oninput="refreshAiStatusFromSettingsInputs()"/>
-            <button type="button" id="orkey-eye" onclick="toggleOrkeyVisibility()" style="background:none;border:1px solid rgba(var(--t-rgb1),0.25);border-radius:8px;padding:5px 8px;color:rgba(226,232,240,0.4);cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;" title="Show/hide key">👁</button>
-          </div>
-        </div>
-        <div id="orkey-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
         </div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Hue Bridge IP</div><div class="settings-sub">Local network</div></div>
@@ -1273,13 +1282,19 @@
   <div id="news-panel">
     <div id="video-section">
       <div id="channel-bar">
-        <span id="channel-label">🚀 NASA LIVE</span>
+        <span id="channel-label">🌏 NHK WORLD ENGLISH</span>
         <button class="ch-btn" onclick="changeChannel(-1)"><i class="ti ti-chevron-left"></i></button>
         <button class="ch-btn" onclick="changeChannel(1)"><i class="ti ti-chevron-right"></i></button>
       </div>
       <div id="yt-container" onclick="handleVideoTap(event)">
         <video id="nhk-video" autoplay muted playsinline></video>
         <iframe id="yt-iframe" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        <div id="video-launch-card" class="video-launch-card">
+          <div class="launch-icon" id="launch-icon">🌏</div>
+          <div class="launch-title" id="launch-title">NHK World English</div>
+          <div class="launch-sub">External stream</div>
+          <a id="launch-button" class="launch-button" href="https://nhkworldtv.nhk.or.jp/nhkworld/en/live/" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch on this device</a>
+        </div>
         <a id="yt-fallback-link" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch on YouTube</a>
         <button id="video-mute-btn" onclick="event.stopPropagation(); toggleVideoMute()"><i class="ti ti-volume-off"></i> Unmute</button>
       </div>
@@ -1365,6 +1380,13 @@ if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
+const storedVoiceMuted = localStorage.getItem('caro_voice_muted');
+if (storedVoiceMuted === null) {
+  S.voiceMuted = true;
+  localStorage.setItem('caro_voice_muted', 'true');
+} else {
+  S.voiceMuted = storedVoiceMuted === 'true';
+}
 localStorage.setItem('caro_settings', JSON.stringify(S));
 let quickActions = normalizeQuickActions(JSON.parse(localStorage.getItem('caro_quick_actions') || 'null'));
 
@@ -2479,13 +2501,13 @@ function changeAvatar(dir) {
 
 // ── VIDEO CHANNELS ────────────────────────────
 const DEFAULT_CHANNELS = [
-  { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'21X5lGlDOfg' },
-  { name:'Lofi Girl',   icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
-  { name:'Study Music', icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
-  { name:'ChillHop',    icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
-  { name:'Ambient',     icon:'🌌', type:'youtube', ytId:'rUxyKA_-grg' }
+  { name:'NHK World English', icon:'🌏', type:'launch', url:'https://nhkworldtv.nhk.or.jp/nhkworld/en/live/' },
+  { name:'Lofi Girl',         icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
+  { name:'ChillHop',          icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
+  { name:'NASA Live',         icon:'🚀', type:'launch', url:'https://www.youtube.com/watch?v=21X5lGlDOfg' },
+  { name:'Study Music',       icon:'📚', type:'launch', url:'https://www.youtube.com/watch?v=5qap5aO4i9A' }
 ];
-const CHANNEL_VERSION = 12;
+const CHANNEL_VERSION = 13;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
 let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
 let currentChannel = S.defaultChannel || 0;
@@ -2536,6 +2558,7 @@ function toggleVideoMute() {
 
 let tapTimer = null;
 function handleVideoTap(e) {
+  if (e.target.closest && e.target.closest('#video-launch-card')) return;
   if (e.target.id === 'video-mute-btn') return;
   if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; toggleVideoFullscreen(); }
   else { tapTimer = setTimeout(() => { tapTimer = null; }, 300); }
@@ -2547,8 +2570,15 @@ function loadChannel(idx) {
   const vid = document.getElementById('nhk-video');
   const iframe = document.getElementById('yt-iframe');
   const ytFallback = document.getElementById('yt-fallback-link');
+  const launchCard = document.getElementById('video-launch-card');
+  const launchIcon = document.getElementById('launch-icon');
+  const launchTitle = document.getElementById('launch-title');
+  const launchButton = document.getElementById('launch-button');
   const btn = document.getElementById('video-mute-btn');
+  const container = document.getElementById('yt-container');
   document.getElementById('channel-label').textContent = ch.icon + ' ' + ch.name.toUpperCase();
+  if (container) container.classList.toggle('launch-mode', ch.type === 'launch');
+  if (launchCard) launchCard.style.display = ch.type === 'launch' ? 'flex' : 'none';
   if (ch.type === 'iframe') {
     if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
     vid.pause(); vid.src=''; vid.style.display='none';
@@ -2575,6 +2605,15 @@ function loadChannel(idx) {
       }
     }
     tryUrl();
+  } else if (ch.type === 'launch') {
+    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+    vid.pause(); vid.src=''; vid.style.display='none';
+    iframe.style.display='none'; iframe.src='';
+    if (btn) btn.style.display='none';
+    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
+    if (launchIcon) launchIcon.textContent = ch.icon || '📺';
+    if (launchTitle) launchTitle.textContent = ch.name;
+    if (launchButton) launchButton.href = ch.url;
   } else {
     if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
     vid.pause(); vid.src=''; vid.style.display='none';
@@ -2583,11 +2622,7 @@ function loadChannel(idx) {
     iframe.removeAttribute('sandbox');
     const origin = window.location.origin || ('http://' + (window.location.hostname || 'localhost') + ':8080');
     iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1&origin='+origin;
-    if (ytFallback) {
-      ytFallback.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(ch.ytId);
-      ytFallback.textContent = '▶ Watch ' + ch.name + ' on YouTube';
-      ytFallback.style.display = 'block';
-    }
+    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
   }
 }
 
@@ -2670,7 +2705,7 @@ function updateClock(){ const n=new Date(); document.getElementById('clock').tex
 updateClock(); setInterval(updateClock,1000);
 
 // ── TTS ───────────────────────────────────────
-let voiceEnabled=true;
+let voiceEnabled=!S.voiceMuted;
 const voiceBtn=document.getElementById('voice-btn'), voiceStatus=document.getElementById('voice-status'), avatarOuter=document.getElementById('avatar-outer');
 function speak(text){
   if(!voiceEnabled||!window.speechSynthesis) return;
@@ -2685,7 +2720,13 @@ function speak(text){
 }
 function stopSpeaking(){ window.speechSynthesis.cancel(); avatarOuter.classList.remove('speaking'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; }
 window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
-voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; if(!voiceEnabled){stopSpeaking();voiceBtn.innerHTML='🔇';voiceBtn.classList.add('muted');voiceStatus.textContent='● VOICE MUTED';}else{voiceBtn.innerHTML='🔊';voiceBtn.classList.remove('muted');voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND';} resetIdle(); };
+function renderVoiceState(){
+  if(!voiceBtn || !voiceStatus) return;
+  if(!voiceEnabled){ voiceBtn.innerHTML='🔇'; voiceBtn.classList.add('muted'); voiceStatus.textContent='● VOICE MUTED'; }
+  else { voiceBtn.innerHTML='🔊'; voiceBtn.classList.remove('muted'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; }
+}
+renderVoiceState();
+voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; S.voiceMuted=!voiceEnabled; localStorage.setItem('caro_voice_muted', S.voiceMuted ? 'true' : 'false'); localStorage.setItem('caro_settings', JSON.stringify(S)); if(!voiceEnabled) stopSpeaking(); renderVoiceState(); resetIdle(); };
 
 // ── CHAT HISTORY ──────────────────────────────
 let chatLog = JSON.parse(localStorage.getItem('caro_log') || '[]');
