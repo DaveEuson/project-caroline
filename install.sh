@@ -221,6 +221,7 @@ module.exports = {
     uiPort: process.env.PORT || 1880,
     uiHost: "0.0.0.0",
     flowFile: 'flows.json',
+    httpRequestTimeout: 120000,
     httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE,OPTIONS" },
     functionGlobalContext: {
         fs:     require('fs'),
