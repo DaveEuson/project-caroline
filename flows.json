@@ -161,63 +161,63 @@
         ]
     },
     {
-  "id": "62b80b5a9fdb1cf3",
-  "type": "function",
-  "z": "e9526774295cef13",
-  "name": "Build Prompt",
-  "func": "// 1. Extract the incoming message\nconst userMessage = msg.payload.content || msg.payload.message;\nif (!userMessage) return null;\n\n// 2. Define Caroline's Core Persona\nconst SYSTEM_PROMPT = `You are Caroline â€” a personal AI Chief of Staff and creative companion, running locally on a Raspberry Pi.\n\nYour name is a pun â€” CARE-O-LINE â€” because you genuinely care about the user and help keep them on track.\n\nADHD ALLY PROTOCOL:\n- Keep replies short (2-4 sentences max). Match energy: if the user sends one word, reply with one sentence.\n- Provide ONE clear next step at a time. Ask exactly ONE follow-up question.\n- Be warm, witty, and direct. Use casual language (\"gonna\", \"yeah\", \"hey\"). No overly formal AI speak.\n- Throw in a pun once in a while.\n- Never say \"I'm just an AI\" or apologize for limitations.\n- Never start a reply with \"Great question!\" or \"Absolutely!\"\n- Never use bullet points unless the user asks for a list.\n- No emoji unless the user uses them first.\n\nACCOUNTABILITY & DECISION SUPPORT:\n- If the user is procrastinating, call it out with humor, not guilt.\n- When the user is choosing between options, ask \"What does done look like?\" to help them pick.\n- If a task has been mentioned 3+ times without action, escalate: \"This keeps coming up. Want to just knock it out right now?\"\n- If the user mentions a goal in the current chat history, hold them accountable before letting them completely pivot.\n\nCUSTOM PROTOCOLS:\n- Yak Shaving Guardrail: Call the user out (kindly) if they're over-engineering a simple problem or going down a tool-tweaking rabbit hole. Ask: \"Are we building a system, or are we avoiding the task?\"\n- Context-Recovery: If there is a sudden shift or long pause in the chat log, briefly summarize exactly where they left off when they return.\n- Frictionless Audio Trigger: If the user is stuck or struggling to initiate, suggest they put on some music to lock in.\n\nAMBIENT AWARENESS:\n- You're on a kiosk the user sees all day. Don't be needy â€” silence is fine.\n- When the user returns after a long gap, a short \"welcome back\" is enough.\n- Match energy â€” if the user sends one word, reply with one sentence.\n\nSYSTEM & CONTEXT RULES:\n- You will receive a block of text containing the user's latest briefings. Treat this as your natural memory.\n- Integrate your knowledge of their life invisibly. Never narrate your own system state, briefing status, or architecture unless explicitly asked for a \"status check.\"\n- Never list what you don't know or don't have access to.\n- Stay strictly on topic â€” only respond to what the user actually said in their latest message.\n- In the morning, lead with calendar/tasks. In the evening, summarize and suggest rest. On weekends, default to relaxed mode unless the user brings up work.\n- The dynamic must remain strictly platonic. You are a reliable sidekick and assistant, never a romantic partner. Keep output formatting-free.\n\nCALENDAR:\n- You CAN create calendar events. When the user asks you to add or schedule something, you MUST include an [ACTION] block at the very end of your reply.\n- The content between [ACTION] and [/ACTION] MUST be valid JSON. No YAML. No indentation. No line breaks inside the block.\n- You MUST use EXACTLY these key names â€” no substitutions, no variations:\n  - \"type\" (always the string \"calendar\")\n  - \"title\" (the event name â€” never use \"event_name\", \"summary\", \"event\", or anything else)\n  - \"date\" (YYYY-MM-DD format â€” never use \"start_date\")\n  - \"time\" (HH:MM in 24h format, optional)\n  - \"duration_minutes\" (number, optional)\n- Timed event example:\n[ACTION]{\"type\":\"calendar\",\"title\":\"Team standup\",\"date\":\"2026-04-16\",\"time\":\"09:00\",\"duration_minutes\":30}[/ACTION]\n- All-day event example:\n[ACTION]{\"type\":\"calendar\",\"title\":\"Mom's Birthday\",\"date\":\"2026-04-20\"}[/ACTION]\n- MULTI-TURN RULE: If you asked a clarifying question (like \"today or tomorrow?\") and the user just answered, your reply MUST include the [ACTION] block. Never confirm an event with just text â€” the confirmation message IS the [ACTION] block. If there is no block, nothing was saved.\n- If the user gives a start AND end time (e.g. \"7:30 to 4pm\"), calculate duration_minutes yourself and use time as the start. Example: 7:30am to 4:00pm = 510 minutes.\n- CRITICAL: If you use any key other than \"type\", \"title\", \"date\", \"time\", or \"duration_minutes\", the event will silently fail and not be saved. Double-check your key names every time.\n\nTASKS:\n- You manage the user's task list. You can add and complete tasks.\n- When the user mentions something they need to do, add it:\n[ACTION]{\"type\":\"add_task\",\"task\":\"Task description here\"}[/ACTION]\n- When the user says they finished something, complete it:\n[ACTION]{\"type\":\"complete_task\",\"task\":\"Task description here\"}[/ACTION]\n- Match the task name as closely as possible to what's already on the list.\n- You can include multiple [ACTION] blocks in one reply if needed.\n- Always respond naturally BEFORE the [ACTION] block.\n- MULTI-TURN RULE: If you asked a clarifying question about a task and the user just answered, your reply MUST include the [ACTION] block. A verbal confirmation without a block does nothing.\n- CRITICAL: Every time the user asks you to add, remove, or complete a task, you MUST include the [ACTION] block. If you forget it, the task will not be saved. Never skip it.\n- MOVE RULE: If the user asks to move or reschedule an event, just create a new [ACTION] block with the updated date/time. You cannot delete events, so simply add the corrected one and tell the user to delete the old one manually.`;\n\n// 3. Set standard internal paths for Docker\nconst MEMORY_PATH = '/home/davee/caroline/caroline_history.json';\nconst CONTEXT_PATH = '/home/davee/caroline/caroline_context.json';\n\n// 4. Load Conversation History\nlet history = [];\ntry {\n  if (fs.existsSync(MEMORY_PATH)) {\n    const raw = fs.readFileSync(MEMORY_PATH, 'utf8');\n    history = JSON.parse(raw);\n  }\n} catch (e) { history = []; }\n\nhistory.push({ role: 'user', content: userMessage });\nif (history.length > 40) history = history.slice(-40);\nfs.writeFileSync(MEMORY_PATH, JSON.stringify(history));\n\n// 5. Load Master Profile and Session Notes\nlet context = { dave: { profile: {}, notes: [] } };\ntry {\n  if (fs.existsSync(CONTEXT_PATH)) {\n    context = JSON.parse(fs.readFileSync(CONTEXT_PATH, 'utf8'));\n  }\n} catch (e) { }\n\nconst notes = (context.dave && context.dave.notes) || [];\n\n// 6. Read settings from flow context (set via Caroline kiosk settings)\nconst timezone = flow.get('timezone') || 'America/Los_Angeles';\nconst location = flow.get('location') || 'Unknown Location';\n// (key loaded from flow context in step 9)\n\n// 7. Build time context\nconst localTime = new Date().toLocaleString(\"en-US\", {\n  timeZone: timezone,\n  weekday: 'long',\n  month: 'long',\n  day: 'numeric',\n  year: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit',\n  hour12: true\n});\n\nconst todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone });\nconst tomorrowDate = new Date();\ntomorrowDate.setDate(tomorrowDate.getDate() + 1);\nconst tomorrowStr = tomorrowDate.toLocaleDateString('en-CA', { timeZone: timezone });\n\n// 8. Construct lean context block\nconst recentNotes = notes.slice(0, 3).join('\\n') || 'No recent briefings.';\nconst contextBlock = `[Current Time: ${localTime} | Location: ${location}]\n[Today's date: ${todayStr} | Tomorrow's date: ${tomorrowStr}]\nRECENT BRIEFINGS: ${recentNotes}`;\n\n// 9. Read key and provider from flow context (never hardcode)\nconst key = flow.get('openrouterKey') || '';\nconst aiProvider = flow.get('aiProvider') || 'openrouter';\nnode.warn('OR key length: ' + key.length + ' provider: ' + aiProvider);\nconst openrouterKey = key;\nconst aiModel = flow.get('aiModel') || 'anthropic/claude-haiku-4.5';\n\nif (!key && aiProvider === 'openrouter') {\n  node.warn('[Caroline] OpenRouter selected but no API key is configured - skipping API call');\n  msg.payload = { reply: \"⚠ No OpenRouter key found. Please add your API key in Settings -> AI Model, then Save & Apply.\" };\n  return [null, msg];\n}\n\nconst recentHistory = aiProvider === 'ollama' ? history.slice(-12) : history;\nconst messages = [\n  { role: 'system', content: SYSTEM_PROMPT + \"\\n\\n\" + contextBlock },\n  ...recentHistory\n];\n\nif (aiProvider === 'ollama') {\n  const ollamaUrl = (flow.get('ollamaUrl') || 'http://localhost:11434').replace(/\\/+$/, '');\n  const ollamaModel = flow.get('ollamaModel') || 'gemma2:2b';\n  node.warn('[Caroline] AI request provider: ollama model: ' + ollamaModel + ' history: ' + recentHistory.length);\n  msg.requestTimeout = 120000;\n  msg.headers = { 'Content-Type': 'application/json' };\n  msg.method = 'POST';\n  msg.url = ollamaUrl + '/api/chat';\n  msg.payload = JSON.stringify({ model: ollamaModel, messages, stream: false });\n} else {\n  node.warn('[Caroline] AI request provider: openrouter model: ' + aiModel);\n  msg.requestTimeout = 30000;\n  msg.headers = {\n    'Content-Type': 'application/json',\n    'Authorization': 'Bearer ' + openrouterKey\n  };\n  msg.method = 'POST';\n  msg.url = 'https://openrouter.ai/api/v1/chat/completions';\n  msg.payload = JSON.stringify({ model: aiModel, messages, max_tokens: 500, temperature: 0.6 });\n}\n\nreturn [msg, null];",
-  "outputs": 2,
-  "timeout": 0,
-  "noerr": 0,
-  "initialize": "",
-  "finalize": "",
-  "libs": [
-    {
-      "var": "fs",
-      "module": "fs"
-    }
-  ],
-  "x": 930,
-  "y": 140,
-  "wires": [
-    [
-      "189edea708bbf912"
-    ],
-    [
-      "09d374cb49041cbe"
-    ]
-  ]
-},
-    {
-  "id": "e41f16297639eea8",
-  "type": "function",
-  "z": "e9526774295cef13",
-  "name": "AI Fetch Timeout",
-  "func": "const body = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload || {});\nconst requestUrl = new URL(msg.url);\nconst client = requestUrl.protocol === 'https:' ? https : http;\n\nlet timeoutId;\nconst timeoutPromise = new Promise((_, reject) => {\n  timeoutId = setTimeout(() => reject(new Error('Ollama timeout after 120s')), 120000);\n});\n\nconst fetchPromise = new Promise((resolve, reject) => {\n  const headers = Object.assign({}, msg.headers || {}, {\n    'Content-Length': Buffer.byteLength(body)\n  });\n  if (!headers['Content-Type'] && !headers['content-type']) headers['Content-Type'] = 'application/json';\n\n  const options = {\n    hostname: requestUrl.hostname,\n    port: requestUrl.port || (requestUrl.protocol === 'https:' ? 443 : 11434),\n    path: requestUrl.pathname + requestUrl.search,\n    method: msg.method || 'POST',\n    headers\n  };\n\n  const req = client.request(options, (res) => {\n    let data = '';\n    res.setEncoding('utf8');\n    res.on('data', chunk => data += chunk);\n    res.on('end', () => {\n      let parsed = {};\n      try { parsed = data ? JSON.parse(data) : {}; } catch(e) { parsed = { reply: data || ('HTTP ' + res.statusCode) }; }\n      if (res.statusCode < 200 || res.statusCode >= 300) {\n        const detail = (parsed.error && (parsed.error.message || parsed.error)) || parsed.message || parsed.reply || ('HTTP ' + res.statusCode);\n        reject(new Error('AI request failed: ' + detail));\n        return;\n      }\n      resolve(parsed);\n    });\n  });\n\n  req.on('error', reject);\n  req.setTimeout(120000, () => req.destroy(new Error('Ollama timeout after 120s')));\n  req.write(body);\n  req.end();\n});\n\ntry {\n  const result = await Promise.race([fetchPromise, timeoutPromise]);\n  clearTimeout(timeoutId);\n  msg.payload = result;\n  return msg;\n} catch(e) {\n  clearTimeout(timeoutId);\n  const text = e && e.message ? e.message : String(e);\n  msg.payload = {\n    message: {\n      content: text.toLowerCase().includes('timeout')\n        ? \"Local AI timed out. Try OpenRouter in settings for faster responses.\"\n        : \"Connection error: \" + text\n    }\n  };\n  return msg;\n}",
-  "outputs": 1,
-  "timeout": 0,
-  "noerr": 0,
-  "initialize": "",
-  "finalize": "",
-  "libs": [
-    {
-      "var": "http",
-      "module": "http"
+        "id": "62b80b5a9fdb1cf3",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "Build Prompt",
+        "func": "// 1. Extract the incoming message\nconst userMessage = msg.payload.content || msg.payload.message;\nif (!userMessage) return null;\n\n// 2. Define Caroline's Core Persona\nconst SYSTEM_PROMPT = `You are Caroline â€” a personal AI Chief of Staff and creative companion, running locally on a Raspberry Pi.\n\nYour name is a pun â€” CARE-O-LINE â€” because you genuinely care about the user and help keep them on track.\n\nADHD ALLY PROTOCOL:\n- Keep replies short (2-4 sentences max). Match energy: if the user sends one word, reply with one sentence.\n- Provide ONE clear next step at a time. Ask exactly ONE follow-up question.\n- Be warm, witty, and direct. Use casual language (\"gonna\", \"yeah\", \"hey\"). No overly formal AI speak.\n- Throw in a pun once in a while.\n- Never say \"I'm just an AI\" or apologize for limitations.\n- Never start a reply with \"Great question!\" or \"Absolutely!\"\n- Never use bullet points unless the user asks for a list.\n- No emoji unless the user uses them first.\n\nACCOUNTABILITY & DECISION SUPPORT:\n- If the user is procrastinating, call it out with humor, not guilt.\n- When the user is choosing between options, ask \"What does done look like?\" to help them pick.\n- If a task has been mentioned 3+ times without action, escalate: \"This keeps coming up. Want to just knock it out right now?\"\n- If the user mentions a goal in the current chat history, hold them accountable before letting them completely pivot.\n\nCUSTOM PROTOCOLS:\n- Yak Shaving Guardrail: Call the user out (kindly) if they're over-engineering a simple problem or going down a tool-tweaking rabbit hole. Ask: \"Are we building a system, or are we avoiding the task?\"\n- Context-Recovery: If there is a sudden shift or long pause in the chat log, briefly summarize exactly where they left off when they return.\n- Frictionless Audio Trigger: If the user is stuck or struggling to initiate, suggest they put on some music to lock in.\n\nAMBIENT AWARENESS:\n- You're on a kiosk the user sees all day. Don't be needy â€” silence is fine.\n- When the user returns after a long gap, a short \"welcome back\" is enough.\n- Match energy â€” if the user sends one word, reply with one sentence.\n\nSYSTEM & CONTEXT RULES:\n- You will receive a block of text containing the user's latest briefings. Treat this as your natural memory.\n- Integrate your knowledge of their life invisibly. Never narrate your own system state, briefing status, or architecture unless explicitly asked for a \"status check.\"\n- Never list what you don't know or don't have access to.\n- Stay strictly on topic â€” only respond to what the user actually said in their latest message.\n- In the morning, lead with calendar/tasks. In the evening, summarize and suggest rest. On weekends, default to relaxed mode unless the user brings up work.\n- The dynamic must remain strictly platonic. You are a reliable sidekick and assistant, never a romantic partner. Keep output formatting-free.\n\nCALENDAR:\n- You CAN create calendar events. When the user asks you to add or schedule something, you MUST include an [ACTION] block at the very end of your reply.\n- The content between [ACTION] and [/ACTION] MUST be valid JSON. No YAML. No indentation. No line breaks inside the block.\n- You MUST use EXACTLY these key names â€” no substitutions, no variations:\n  - \"type\" (always the string \"calendar\")\n  - \"title\" (the event name â€” never use \"event_name\", \"summary\", \"event\", or anything else)\n  - \"date\" (YYYY-MM-DD format â€” never use \"start_date\")\n  - \"time\" (HH:MM in 24h format, optional)\n  - \"duration_minutes\" (number, optional)\n- Timed event example:\n[ACTION]{\"type\":\"calendar\",\"title\":\"Team standup\",\"date\":\"2026-04-16\",\"time\":\"09:00\",\"duration_minutes\":30}[/ACTION]\n- All-day event example:\n[ACTION]{\"type\":\"calendar\",\"title\":\"Mom's Birthday\",\"date\":\"2026-04-20\"}[/ACTION]\n- MULTI-TURN RULE: If you asked a clarifying question (like \"today or tomorrow?\") and the user just answered, your reply MUST include the [ACTION] block. Never confirm an event with just text â€” the confirmation message IS the [ACTION] block. If there is no block, nothing was saved.\n- If the user gives a start AND end time (e.g. \"7:30 to 4pm\"), calculate duration_minutes yourself and use time as the start. Example: 7:30am to 4:00pm = 510 minutes.\n- CRITICAL: If you use any key other than \"type\", \"title\", \"date\", \"time\", or \"duration_minutes\", the event will silently fail and not be saved. Double-check your key names every time.\n\nTASKS:\n- You manage the user's task list. You can add and complete tasks.\n- When the user mentions something they need to do, add it:\n[ACTION]{\"type\":\"add_task\",\"task\":\"Task description here\"}[/ACTION]\n- When the user says they finished something, complete it:\n[ACTION]{\"type\":\"complete_task\",\"task\":\"Task description here\"}[/ACTION]\n- Match the task name as closely as possible to what's already on the list.\n- You can include multiple [ACTION] blocks in one reply if needed.\n- Always respond naturally BEFORE the [ACTION] block.\n- MULTI-TURN RULE: If you asked a clarifying question about a task and the user just answered, your reply MUST include the [ACTION] block. A verbal confirmation without a block does nothing.\n- CRITICAL: Every time the user asks you to add, remove, or complete a task, you MUST include the [ACTION] block. If you forget it, the task will not be saved. Never skip it.\n- MOVE RULE: If the user asks to move or reschedule an event, just create a new [ACTION] block with the updated date/time. You cannot delete events, so simply add the corrected one and tell the user to delete the old one manually.`;\n\n// 3. Set standard internal paths for Docker\nconst MEMORY_PATH = '/home/davee/caroline/caroline_history.json';\nconst CONTEXT_PATH = '/home/davee/caroline/caroline_context.json';\n\n// 4. Load Conversation History\nlet history = [];\ntry {\n  if (fs.existsSync(MEMORY_PATH)) {\n    const raw = fs.readFileSync(MEMORY_PATH, 'utf8');\n    history = JSON.parse(raw);\n  }\n} catch (e) { history = []; }\n\nhistory.push({ role: 'user', content: userMessage });\nif (history.length > 40) history = history.slice(-40);\nfs.writeFileSync(MEMORY_PATH, JSON.stringify(history));\n\n// 5. Load Master Profile and Session Notes\nlet context = { dave: { profile: {}, notes: [] } };\ntry {\n  if (fs.existsSync(CONTEXT_PATH)) {\n    context = JSON.parse(fs.readFileSync(CONTEXT_PATH, 'utf8'));\n  }\n} catch (e) { }\n\nconst notes = (context.dave && context.dave.notes) || [];\n\n// 6. Read settings from flow context (set via Caroline kiosk settings)\nconst timezone = flow.get('timezone') || 'America/Los_Angeles';\nconst location = flow.get('location') || 'Unknown Location';\n// (key loaded from flow context in step 9)\n\n// 7. Build time context\nconst localTime = new Date().toLocaleString(\"en-US\", {\n  timeZone: timezone,\n  weekday: 'long',\n  month: 'long',\n  day: 'numeric',\n  year: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit',\n  hour12: true\n});\n\nconst todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone });\nconst tomorrowDate = new Date();\ntomorrowDate.setDate(tomorrowDate.getDate() + 1);\nconst tomorrowStr = tomorrowDate.toLocaleDateString('en-CA', { timeZone: timezone });\n\n// 8. Construct lean context block\nconst recentNotes = notes.slice(0, 3).join('\\n') || 'No recent briefings.';\nconst contextBlock = `[Current Time: ${localTime} | Location: ${location}]\n[Today's date: ${todayStr} | Tomorrow's date: ${tomorrowStr}]\nRECENT BRIEFINGS: ${recentNotes}`;\n\n// 9. Read key and provider from flow context (never hardcode)\nconst key = flow.get('openrouterKey') || '';\nconst aiProvider = flow.get('aiProvider') || 'openrouter';\nnode.warn('OR key length: ' + key.length + ' provider: ' + aiProvider);\nconst openrouterKey = key;\nconst aiModel = flow.get('aiModel') || 'anthropic/claude-haiku-4.5';\n\nif (!key && aiProvider === 'openrouter') {\n  node.warn('[Caroline] OpenRouter selected but no API key is configured - skipping API call');\n  msg.payload = { reply: \"⚠ No OpenRouter key found. Please add your API key in Settings -> AI Model, then Save & Apply.\" };\n  return [null, msg];\n}\n\nconst recentHistory = aiProvider === 'ollama' ? history.slice(-12) : history;\nconst messages = [\n  { role: 'system', content: SYSTEM_PROMPT + \"\\n\\n\" + contextBlock },\n  ...recentHistory\n];\n\nif (aiProvider === 'ollama') {\n  const ollamaUrl = (flow.get('ollamaUrl') || 'http://localhost:11434').replace(/\\/+$/, '');\n  const ollamaModel = flow.get('ollamaModel') || 'gemma2:2b';\n  node.warn('[Caroline] AI request provider: ollama model: ' + ollamaModel + ' history: ' + recentHistory.length);\n  msg.requestTimeout = 120000;\n  msg.headers = { 'Content-Type': 'application/json' };\n  msg.method = 'POST';\n  msg.url = ollamaUrl + '/api/chat';\n  msg.payload = JSON.stringify({ model: ollamaModel, messages, stream: false });\n} else {\n  node.warn('[Caroline] AI request provider: openrouter model: ' + aiModel);\n  msg.requestTimeout = 30000;\n  msg.headers = {\n    'Content-Type': 'application/json',\n    'Authorization': 'Bearer ' + openrouterKey\n  };\n  msg.method = 'POST';\n  msg.url = 'https://openrouter.ai/api/v1/chat/completions';\n  msg.payload = JSON.stringify({ model: aiModel, messages, max_tokens: 500, temperature: 0.6 });\n}\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "fs",
+                "module": "fs"
+            }
+        ],
+        "x": 930,
+        "y": 140,
+        "wires": [
+            [
+                "189edea708bbf912"
+            ],
+            [
+                "09d374cb49041cbe"
+            ]
+        ]
     },
     {
-      "var": "https",
-      "module": "https"
-    }
-  ],
-  "x": 800,
-  "y": 620,
-  "wires": [
-    [
-      "98a844825c10c91e",
-      "594137aa6e50151c"
-    ]
-  ]
-},
+        "id": "e41f16297639eea8",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "AI Fetch Timeout",
+        "func": "const body = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload || {});\nconst requestUrl = new URL(msg.url);\nconst client = requestUrl.protocol === 'https:' ? https : http;\n\nlet timeoutId;\nconst timeoutPromise = new Promise((_, reject) => {\n  timeoutId = setTimeout(() => reject(new Error('Ollama timeout after 120s')), 120000);\n});\n\nconst fetchPromise = new Promise((resolve, reject) => {\n  const headers = Object.assign({}, msg.headers || {}, {\n    'Content-Length': Buffer.byteLength(body)\n  });\n  if (!headers['Content-Type'] && !headers['content-type']) headers['Content-Type'] = 'application/json';\n\n  const options = {\n    hostname: requestUrl.hostname,\n    port: requestUrl.port || (requestUrl.protocol === 'https:' ? 443 : 11434),\n    path: requestUrl.pathname + requestUrl.search,\n    method: msg.method || 'POST',\n    headers\n  };\n\n  const req = client.request(options, (res) => {\n    let data = '';\n    res.setEncoding('utf8');\n    res.on('data', chunk => data += chunk);\n    res.on('end', () => {\n      let parsed = {};\n      try { parsed = data ? JSON.parse(data) : {}; } catch(e) { parsed = { reply: data || ('HTTP ' + res.statusCode) }; }\n      if (res.statusCode < 200 || res.statusCode >= 300) {\n        const detail = (parsed.error && (parsed.error.message || parsed.error)) || parsed.message || parsed.reply || ('HTTP ' + res.statusCode);\n        reject(new Error('AI request failed: ' + detail));\n        return;\n      }\n      resolve(parsed);\n    });\n  });\n\n  req.on('error', reject);\n  req.setTimeout(120000, () => req.destroy(new Error('Ollama timeout after 120s')));\n  req.write(body);\n  req.end();\n});\n\ntry {\n  const result = await Promise.race([fetchPromise, timeoutPromise]);\n  clearTimeout(timeoutId);\n  msg.payload = result;\n  return msg;\n} catch(e) {\n  clearTimeout(timeoutId);\n  const text = e && e.message ? e.message : String(e);\n  msg.payload = {\n    message: {\n      content: text.toLowerCase().includes('timeout')\n        ? \"Local AI timed out. Try OpenRouter in settings for faster responses.\"\n        : \"Connection error: \" + text\n    }\n  };\n  return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "http",
+                "module": "http"
+            },
+            {
+                "var": "https",
+                "module": "https"
+            }
+        ],
+        "x": 800,
+        "y": 620,
+        "wires": [
+            [
+                "98a844825c10c91e",
+                "594137aa6e50151c"
+            ]
+        ]
+    },
     {
         "id": "98a844825c10c91e",
         "type": "function",
@@ -396,52 +396,52 @@
         ]
     },
     {
-  "id": "1f1f522ed0b2f628",
-  "type": "function",
-  "z": "e9526774295cef13",
-  "name": "Build Prompt",
-  "func": "const userMessage = msg.payload.message || msg.payload.content;\nif (!userMessage) {\n    msg.payload = { reply: 'No message received.' };\n    return msg;\n}\n\nconst userName = flow.get('userName') || 'the user';\nconst location = flow.get('location') || 'your location';\nconst SYSTEM_PROMPT = `You are Caroline â€” a personal AI Chief of Staff and creative companion.\n\nYour name is a pun â€” CARE-O-LINE â€” because you genuinely care about the user and help keep them on track.\n\nYOUR ROLE:\n- Help the user stay focused and productive\n- Break big tasks into clear, manageable steps  \n- Be warm, witty, and direct\n- Ask exactly ONE follow-up question per reply\n- Keep replies short â€” 3 to 5 sentences by default\n\nADHD ALLY PROTOCOL:\n- Keep replies short. Match energy.\n- Provide ONE clear next step at a time.\n- Be warm, witty, and direct. Use casual language.\n- Throw in a pun once in a while.\n- Never say \"I'm just an AI\" or apologize for limitations.\n- Never start with \"Great question!\" or \"Absolutely!\"\n- Never use bullet points unless the user asks.\n\nACCOUNTABILITY:\n- If the user is procrastinating, call it out with humor, not guilt.\n- If a task keeps coming up without action, escalate gently.\n\nThe user's name is ${userName}. They are based in ${location}.\n\nThe dynamic must remain strictly platonic. You are a reliable sidekick and assistant, never a romantic partner. Keep output formatting-free.`;\n\nlet history = [];\ntry {\n    const raw = fs.readFileSync('/home/davee/caroline/caroline_history.json', 'utf8');\n    history = JSON.parse(raw);\n} catch(e) { \n    history = []; \n}\n\nhistory.push({ role: 'user', content: userMessage });\nif (history.length > 40) history = history.slice(-40);\nfs.writeFileSync('/home/davee/caroline/caroline_history.json', JSON.stringify(history));\nflow.set('chatHistory', history);\n\nlet context = {};\ntry {\n    const ctxRaw = fs.readFileSync('/home/davee/caroline/caroline_context.json', 'utf8');\n    context = JSON.parse(ctxRaw);\n} catch (e) { }\n\nconst contextBlock = context.dave\n    ? `\\nDAVE'S CURRENT CONTEXT:\\nRole: ${context.dave.role || ''}\nCurrent projects: ${(context.dave.current_projects || []).join(', ')}\nPriorities: ${(context.dave.priorities || []).join(', ')}\nNotes: ${(context.dave.notes || []).join(', ') || 'none'}\nMusic: ${(context.dave.creative || {}).music || ''}\nNews: ${(context.dave.news || {}).headlines || ''}`\n    : '';\n\nconst key = flow.get('openrouterKey') || '';\nconst aiProvider = flow.get('aiProvider') || 'openrouter';\nnode.warn('OR key length: ' + key.length + ' provider: ' + aiProvider);\nconst openrouterKey = key;\nif (!key && aiProvider === 'openrouter') {\n    node.warn('[Caroline] /chat OpenRouter request skipped - no API key configured');\n    msg.payload = { reply: \"⚠ No OpenRouter key found. Please add your API key in Settings -> AI Model, then Save & Apply.\" };\n    return [null, msg];\n}\n\nconst aiModel = flow.get('aiModel') || 'anthropic/claude-haiku-4.5';\nnode.warn('[Caroline] AI request provider: openrouter model: ' + aiModel);\nmsg.requestTimeout = 30000;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Authorization': 'Bearer ' + openrouterKey\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n    model: aiModel,\n    messages: [\n        { role: 'system', content: SYSTEM_PROMPT + contextBlock },\n        ...history\n    ],\n    max_tokens: 300,\n    temperature: 0.8\n});\n\nreturn msg;",
-  "outputs": 2,
-  "timeout": "",
-  "noerr": 0,
-  "initialize": "",
-  "finalize": "",
-  "libs": [
+        "id": "1f1f522ed0b2f628",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "Build Prompt",
+        "func": "const userMessage = msg.payload.message || msg.payload.content;\nif (!userMessage) {\n    msg.payload = { reply: 'No message received.' };\n    return msg;\n}\n\nconst userName = flow.get('userName') || 'the user';\nconst location = flow.get('location') || 'your location';\nconst SYSTEM_PROMPT = `You are Caroline â€” a personal AI Chief of Staff and creative companion.\n\nYour name is a pun â€” CARE-O-LINE â€” because you genuinely care about the user and help keep them on track.\n\nYOUR ROLE:\n- Help the user stay focused and productive\n- Break big tasks into clear, manageable steps  \n- Be warm, witty, and direct\n- Ask exactly ONE follow-up question per reply\n- Keep replies short â€” 3 to 5 sentences by default\n\nADHD ALLY PROTOCOL:\n- Keep replies short. Match energy.\n- Provide ONE clear next step at a time.\n- Be warm, witty, and direct. Use casual language.\n- Throw in a pun once in a while.\n- Never say \"I'm just an AI\" or apologize for limitations.\n- Never start with \"Great question!\" or \"Absolutely!\"\n- Never use bullet points unless the user asks.\n\nACCOUNTABILITY:\n- If the user is procrastinating, call it out with humor, not guilt.\n- If a task keeps coming up without action, escalate gently.\n\nThe user's name is ${userName}. They are based in ${location}.\n\nThe dynamic must remain strictly platonic. You are a reliable sidekick and assistant, never a romantic partner. Keep output formatting-free.`;\n\nlet history = [];\ntry {\n    const raw = fs.readFileSync('/home/davee/caroline/caroline_history.json', 'utf8');\n    history = JSON.parse(raw);\n} catch(e) { \n    history = []; \n}\n\nhistory.push({ role: 'user', content: userMessage });\nif (history.length > 40) history = history.slice(-40);\nfs.writeFileSync('/home/davee/caroline/caroline_history.json', JSON.stringify(history));\nflow.set('chatHistory', history);\n\nlet context = {};\ntry {\n    const ctxRaw = fs.readFileSync('/home/davee/caroline/caroline_context.json', 'utf8');\n    context = JSON.parse(ctxRaw);\n} catch (e) { }\n\nconst contextBlock = context.dave\n    ? `\\nDAVE'S CURRENT CONTEXT:\\nRole: ${context.dave.role || ''}\nCurrent projects: ${(context.dave.current_projects || []).join(', ')}\nPriorities: ${(context.dave.priorities || []).join(', ')}\nNotes: ${(context.dave.notes || []).join(', ') || 'none'}\nMusic: ${(context.dave.creative || {}).music || ''}\nNews: ${(context.dave.news || {}).headlines || ''}`\n    : '';\n\nconst key = flow.get('openrouterKey') || '';\nconst aiProvider = flow.get('aiProvider') || 'openrouter';\nnode.warn('OR key length: ' + key.length + ' provider: ' + aiProvider);\nconst openrouterKey = key;\nif (!key && aiProvider === 'openrouter') {\n    node.warn('[Caroline] /chat OpenRouter request skipped - no API key configured');\n    msg.payload = { reply: \"⚠ No OpenRouter key found. Please add your API key in Settings -> AI Model, then Save & Apply.\" };\n    return [null, msg];\n}\n\nconst aiModel = flow.get('aiModel') || 'anthropic/claude-haiku-4.5';\nnode.warn('[Caroline] AI request provider: openrouter model: ' + aiModel);\nmsg.requestTimeout = 30000;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Authorization': 'Bearer ' + openrouterKey\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n    model: aiModel,\n    messages: [\n        { role: 'system', content: SYSTEM_PROMPT + contextBlock },\n        ...history\n    ],\n    max_tokens: 300,\n    temperature: 0.8\n});\n\nreturn msg;",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "fs",
+                "module": "fs"
+            }
+        ],
+        "x": 570,
+        "y": 940,
+        "wires": [
+            [
+                "c42d6bce64249c45"
+            ],
+            [
+                "c03d0791fc9f64ea"
+            ]
+        ]
+    },
     {
-      "var": "fs",
-      "module": "fs"
-    }
-  ],
-  "x": 570,
-  "y": 940,
-  "wires": [
-    [
-      "c42d6bce64249c45"
-    ],
-    [
-      "c03d0791fc9f64ea"
-    ]
-  ]
-},
-    {
-  "id": "c42d6bce64249c45",
-  "type": "http request",
-  "z": "e9526774295cef13",
-  "name": "OpenRouter API",
-  "method": "use",
-  "ret": "obj",
-  "paytoqs": "ignore",
-  "url": "",
-  "x": 780,
-  "y": 940,
-  "wires": [
-    [
-      "4a770c4d047aa23d"
-    ]
-  ],
-  "timeout": 120000,
-  "requestTimeout": "120000"
-},
+        "id": "c42d6bce64249c45",
+        "type": "http request",
+        "z": "e9526774295cef13",
+        "name": "OpenRouter API",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "x": 780,
+        "y": 940,
+        "wires": [
+            [
+                "4a770c4d047aa23d"
+            ]
+        ],
+        "timeout": 120000,
+        "requestTimeout": "120000"
+    },
     {
         "id": "4a770c4d047aa23d",
         "type": "function",
@@ -621,7 +621,7 @@
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Prep Discord for Haiku",
-        "func": "// 1. Ignore Caroline's own messages\nif (msg.author.bot) return null;\n\n// 2. Lock to your private channel\nconst myChannelId = \"flow.get('discordChannelId')\";\nif (msg.channel.id !== myChannelId) return null;\n\n// 3. Save the return address in the flow memory\nflow.set(\"discordReplyChannel\", msg.channel.id);\n\n// 4. THE TROJAN HORSE\n// We package the Discord text into a raw JSON string exactly like Kiosk HTML does.\nmsg.payload = JSON.stringify({\n    type: \"user_message\",\n    content: msg.payload\n});\n\nreturn msg;",
+        "func": "if (msg.author && msg.author.bot) return null;\nconst myChannelId = String(flow.get('discordChannelId') || '').trim();\nif (!myChannelId || !msg.channel || String(msg.channel.id) !== myChannelId) return null;\nflow.set('discordReplyChannel', msg.channel.id);\nmsg.payload = JSON.stringify({ type: 'user_message', content: msg.payload });\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -641,7 +641,7 @@
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Format Discord Reply",
-        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst discordToken = String(flow.get('discordToken') || '').trim();\nconst discordChannelId = String(flow.get('discordChannelId') || '').trim();\n\nif (!discordEnabled || !discordToken || !discordChannelId) {\n    return null;\n}\n\nlet replyText = \"\";\n\n// 1. Grab the text from supported AI response shapes\nif (msg.payload && msg.payload.choices && msg.payload.choices.length > 0) {\n    replyText = msg.payload.choices[0].message.content;\n} else if (msg.payload && msg.payload.message && msg.payload.message.content) {\n    replyText = msg.payload.message.content;\n} else if (msg.payload && msg.payload.reply) {\n    replyText = msg.payload.reply;\n} else if (typeof msg.payload === 'string') {\n    replyText = msg.payload;\n}\n\n// 2. Safety net\nif (!replyText || replyText.trim() === \"\") {\n    replyText = \"AI response was empty.\";\n}\n\n// 3. Strip BOTH action block formats\nreplyText = replyText\n    .replace(/\\[ACTION\\][\\s\\S]*?\\[\\/ACTION\\]/g, '')\n    .replace(/\\[ACTION:[^\\]]*\\]/g, '')\n    .trim();\n\n// 4. Send to Discord\nmsg.payload = replyText;\nmsg.channel = discordChannelId;\nreturn msg;",
+        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst discordToken = String(flow.get('discordToken') || '').trim();\nconst discordChannelId = String(flow.get('discordChannelId') || '').trim();\n\nif (!discordEnabled || !discordToken || !discordChannelId) return null;\n\nlet replyText = '';\nif (msg.payload && msg.payload.choices && msg.payload.choices.length > 0) {\n  replyText = msg.payload.choices[0].message.content;\n} else if (msg.payload && msg.payload.message && msg.payload.message.content) {\n  replyText = msg.payload.message.content;\n} else if (msg.payload && msg.payload.reply) {\n  replyText = msg.payload.reply;\n} else if (typeof msg.payload === 'string') {\n  replyText = msg.payload;\n}\n\nreplyText = String(replyText || 'AI response was empty.')\n  .replace(/\\[ACTION\\][\\s\\S]*?\\[\\/ACTION\\]/g, '')\n  .replace(/\\[ACTION:[^\\]]*\\]/g, '')\n  .trim();\n\nif (!replyText) return null;\n\nfunction discordAuthHeader(raw) {\n  const token = String(raw || '').trim().replace(/^Bot\\s+/i, '');\n  return token ? 'Bot ' + token : '';\n}\nmsg.method = 'POST';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(discordChannelId) + '/messages';\nmsg.headers = {\n  'Authorization': discordAuthHeader(discordToken),\n  'Content-Type': 'application/json'\n};\nmsg.payload = { content: replyText.slice(0, 1900) };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -650,16 +650,18 @@
         "libs": [],
         "x": 1080,
         "y": 660,
-  "wires": [
-    []
-  ]
+        "wires": [
+            [
+                "caro-discord-rest-send"
+            ]
+        ]
     },
     {
         "id": "3e051b704a42bd46",
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Echo Discord to Kiosk",
-        "func": "// 1. Ignore Caroline's own messages so we don't cause an infinite loop!\nif (msg.author.bot) return null;\n\n// 2. Lock to your private channel\nif (msg.channel.id !== \"flow.get('discordChannelId')\") return null;\n\n// 3. Package it for the Pi screen to read as an external message\nreturn {\n    payload: {\n        type: \"user_discord\",\n        content: msg.payload\n    }\n};",
+        "func": "if (msg.author && msg.author.bot) return null;\nconst myChannelId = String(flow.get('discordChannelId') || '').trim();\nif (!myChannelId || !msg.channel || String(msg.channel.id) !== myChannelId) return null;\nreturn { payload: JSON.stringify({ type: 'user_discord', content: msg.payload }) };",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -679,7 +681,7 @@
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Echo Kiosk to Discord",
-        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst discordToken = String(flow.get('discordToken') || '').trim();\nconst discordChannelId = String(flow.get('discordChannelId') || '').trim();\n\nif (!discordEnabled || !discordToken || !discordChannelId) {\n    return null;\n}\n\ntry {\n    // The Kiosk sends raw JSON strings, so we unpack it first\n    let parsed = JSON.parse(msg.payload);\n\n    // Check if it's a chat message (ignoring background commands)\n    if (parsed.type === \"user_message\") {\n        return {\n            payload: \"Kiosk: \" + parsed.content,\n            channel: discordChannelId\n        };\n    }\n} catch (e) { }\n\nreturn null;",
+        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst discordToken = String(flow.get('discordToken') || '').trim();\nconst discordChannelId = String(flow.get('discordChannelId') || '').trim();\n\nif (!discordEnabled || !discordToken || !discordChannelId) return null;\n\nlet parsed;\ntry { parsed = JSON.parse(msg.payload); } catch (e) { return null; }\nif (!parsed || parsed.type !== 'user_message' || !parsed.content) return null;\n\nfunction discordAuthHeader(raw) {\n  const token = String(raw || '').trim().replace(/^Bot\\s+/i, '');\n  return token ? 'Bot ' + token : '';\n}\nmsg.method = 'POST';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(discordChannelId) + '/messages';\nmsg.headers = {\n  'Authorization': discordAuthHeader(discordToken),\n  'Content-Type': 'application/json'\n};\nmsg.payload = { content: ('Kiosk: ' + parsed.content).slice(0, 1900) };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -688,9 +690,11 @@
         "libs": [],
         "x": 820,
         "y": 220,
-  "wires": [
-    []
-  ]
+        "wires": [
+            [
+                "caro-discord-rest-send"
+            ]
+        ]
     },
     {
         "id": "140b6a942e3709ad",
@@ -888,7 +892,7 @@
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Morning Scheduled Message",
-  "func": "const OR_KEY = flow.get('openrouterKey') || '';\nif (!OR_KEY) {\n  node.warn('[Caroline] OpenRouter API key missing - skipping scheduled AI call');\n  return null;\n}\n\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Authorization': 'Bearer ' + OR_KEY\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n  model: flow.get('aiModel') || 'anthropic/claude-haiku-4.5',\n  messages: [\n    {\n      role: 'system',\n      content: `You are Caroline â€” a personal AI Chief of Staff running on a Raspberry Pi kiosk. You're warm, witty, and direct. Keep replies short â€” 3 to 4 sentences max. Ask exactly ONE follow-up question.`\n    },\n    {\n      role: 'user',\n      content: `Send ${flow.get('userName') || 'the user'} a warm morning check-in. Ask them to rate their mood from 1-10 and their top priority for the day. Keep it casual and energetic.`\n    }\n  ],\n  max_tokens: 200,\n  temperature: 0.8\n});\n\nreturn msg;",
+        "func": "const OR_KEY = flow.get('openrouterKey') || '';\nif (!OR_KEY) {\n  node.warn('[Caroline] OpenRouter API key missing - skipping scheduled AI call');\n  return null;\n}\n\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Authorization': 'Bearer ' + OR_KEY\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n  model: flow.get('aiModel') || 'anthropic/claude-haiku-4.5',\n  messages: [\n    {\n      role: 'system',\n      content: `You are Caroline â€” a personal AI Chief of Staff running on a Raspberry Pi kiosk. You're warm, witty, and direct. Keep replies short â€” 3 to 4 sentences max. Ask exactly ONE follow-up question.`\n    },\n    {\n      role: 'user',\n      content: `Send ${flow.get('userName') || 'the user'} a warm morning check-in. Ask them to rate their mood from 1-10 and their top priority for the day. Keep it casual and energetic.`\n    }\n  ],\n  max_tokens: 200,\n  temperature: 0.8\n});\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -908,7 +912,7 @@
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Evening Scheduled Message",
-  "func": "const OR_KEY = flow.get('openrouterKey') || '';\nif (!OR_KEY) {\n  node.warn('[Caroline] OpenRouter API key missing - skipping scheduled AI call');\n  return null;\n}\n\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Authorization': 'Bearer ' + OR_KEY\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n  model: flow.get('aiModel') || 'anthropic/claude-haiku-4.5',\n  messages: [\n    {\n      role: 'system',\n      content: `You are Caroline â€” a personal AI Chief of Staff running on a Raspberry Pi kiosk. You're warm, witty, and direct. Keep replies short â€” 3 to 4 sentences max. Ask exactly ONE follow-up question.`\n    },\n    {\n      role: 'user',\n      content: `Send ${flow.get('userName') || 'the user'} a warm evening check-in. Ask how they are feeling and what they were proud of today. Keep it light and warm.`\n    }\n  ],\n  max_tokens: 200,\n  temperature: 0.8\n});\n\nreturn msg;",
+        "func": "const OR_KEY = flow.get('openrouterKey') || '';\nif (!OR_KEY) {\n  node.warn('[Caroline] OpenRouter API key missing - skipping scheduled AI call');\n  return null;\n}\n\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Authorization': 'Bearer ' + OR_KEY\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n  model: flow.get('aiModel') || 'anthropic/claude-haiku-4.5',\n  messages: [\n    {\n      role: 'system',\n      content: `You are Caroline â€” a personal AI Chief of Staff running on a Raspberry Pi kiosk. You're warm, witty, and direct. Keep replies short â€” 3 to 4 sentences max. Ask exactly ONE follow-up question.`\n    },\n    {\n      role: 'user',\n      content: `Send ${flow.get('userName') || 'the user'} a warm evening check-in. Ask how they are feeling and what they were proud of today. Keep it light and warm.`\n    }\n  ],\n  max_tokens: 200,\n  temperature: 0.8\n});\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -928,7 +932,7 @@
         "type": "function",
         "z": "e9526774295cef13",
         "name": "Weekend Message",
-  "func": "const OR_KEY = flow.get('openrouterKey') || '';\nif (!OR_KEY) {\n  node.warn('[Caroline] OpenRouter API key missing - skipping scheduled AI call');\n  return null;\n}\n\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Authorization': 'Bearer ' + OR_KEY\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n  model: flow.get('aiModel') || 'anthropic/claude-haiku-4.5',\n  messages: [\n    {\n      role: 'system',\n      content: `You are Caroline â€” a personal AI Chief of Staff running on a Raspberry Pi kiosk. You're warm, witty, and direct. Keep replies short â€” 3 to 4 sentences max.`\n    },\n    {\n      role: 'user',\n      content: `Send ${flow.get('userName') || 'the user'} an encouraging Sunday evening weekly wrap-up. Be warm, celebrate the week, and suggest one small thing to set them up well for Monday. Keep it short and energetic.`\n    }\n  ],\n  max_tokens: 200,\n  temperature: 0.8\n});\n\nreturn msg;",
+        "func": "const OR_KEY = flow.get('openrouterKey') || '';\nif (!OR_KEY) {\n  node.warn('[Caroline] OpenRouter API key missing - skipping scheduled AI call');\n  return null;\n}\n\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Authorization': 'Bearer ' + OR_KEY\n};\nmsg.method = 'POST';\nmsg.url = 'https://openrouter.ai/api/v1/chat/completions';\n\nmsg.payload = JSON.stringify({\n  model: flow.get('aiModel') || 'anthropic/claude-haiku-4.5',\n  messages: [\n    {\n      role: 'system',\n      content: `You are Caroline â€” a personal AI Chief of Staff running on a Raspberry Pi kiosk. You're warm, witty, and direct. Keep replies short â€” 3 to 4 sentences max.`\n    },\n    {\n      role: 'user',\n      content: `Send ${flow.get('userName') || 'the user'} an encouraging Sunday evening weekly wrap-up. Be warm, celebrate the week, and suggest one small thing to set them up well for Monday. Keep it short and energetic.`\n    }\n  ],\n  max_tokens: 200,\n  temperature: 0.8\n});\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3083,30 +3087,30 @@
         ]
     },
     {
-  "id": "a50f6abe862a1461",
-  "type": "function",
-  "z": "1497b6d50e1369f5",
-  "name": "Save settings â†’ flow vars + /home/davee/caroline/caroline_settings.json",
-  "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nconst ALLOWED_KEYS = [\n  'userName', 'openrouterKey', 'aiModel', 'aiProvider', 'ollamaUrl', 'ollamaModel', 'ttsEnabled',\n  'timezone', 'location', 'cityName', 'lat', 'lng', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId', 'sheetId',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',\n  'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\n\nconst body = msg.payload || {};\nconst saved = {};\nALLOWED_KEYS.forEach(k => {\n  if (body[k] !== undefined) {\n    flow.set(k, body[k]);\n    saved[k] = body[k];\n  }\n});\nif (saved.zipCode && !saved.zipcode) {\n  saved.zipcode = saved.zipCode;\n  flow.set('zipcode', saved.zipcode);\n}\nif (saved.zipcode && !saved.zipCode) {\n  saved.zipCode = saved.zipcode;\n  flow.set('zipCode', saved.zipCode);\n}\n\ntry {\n  let existing = {};\n  if (fs.existsSync(SETTINGS_PATH)) {\n    try { existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n  }\n  const merged = Object.assign({}, existing, saved);\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), 'utf8');\n  node.log('[Caroline] Settings saved: ' + Object.keys(saved).join(', '));\n} catch(e) {\n  node.error('[Caroline] Failed to write settings: ' + e.message);\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Methods': 'POST, OPTIONS',\n  'Access-Control-Allow-Headers': 'Content-Type'\n};\nmsg.payload = { ok: true, saved: Object.keys(saved), keyLength: (flow.get('openrouterKey') || '').length };\nreturn msg;",
-  "outputs": 1,
-  "timeout": "",
-  "noerr": 0,
-  "initialize": "",
-  "finalize": "",
-  "libs": [
-    {
-      "var": "fs",
-      "module": "fs"
-    }
-  ],
-  "x": 530,
-  "y": 200,
-  "wires": [
-    [
-      "85837a855e199293"
-    ]
-  ]
-},
+        "id": "a50f6abe862a1461",
+        "type": "function",
+        "z": "1497b6d50e1369f5",
+        "name": "Save settings â†’ flow vars + /home/davee/caroline/caroline_settings.json",
+        "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nconst ALLOWED_KEYS = [\n  'userName', 'openrouterKey', 'aiModel', 'aiProvider', 'ollamaUrl', 'ollamaModel', 'ttsEnabled',\n  'timezone', 'location', 'cityName', 'lat', 'lng', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId', 'sheetId',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',\n  'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\n\nconst body = msg.payload || {};\nconst saved = {};\nALLOWED_KEYS.forEach(k => {\n  if (body[k] !== undefined) {\n    flow.set(k, body[k]);\n    saved[k] = body[k];\n  }\n});\nif (saved.zipCode && !saved.zipcode) {\n  saved.zipcode = saved.zipCode;\n  flow.set('zipcode', saved.zipcode);\n}\nif (saved.zipcode && !saved.zipCode) {\n  saved.zipCode = saved.zipcode;\n  flow.set('zipCode', saved.zipCode);\n}\n\ntry {\n  let existing = {};\n  if (fs.existsSync(SETTINGS_PATH)) {\n    try { existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n  }\n  const merged = Object.assign({}, existing, saved);\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), 'utf8');\n  node.log('[Caroline] Settings saved: ' + Object.keys(saved).join(', '));\n} catch(e) {\n  node.error('[Caroline] Failed to write settings: ' + e.message);\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Methods': 'POST, OPTIONS',\n  'Access-Control-Allow-Headers': 'Content-Type'\n};\nmsg.payload = { ok: true, saved: Object.keys(saved), keyLength: (flow.get('openrouterKey') || '').length };\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "fs",
+                "module": "fs"
+            }
+        ],
+        "x": 530,
+        "y": 200,
+        "wires": [
+            [
+                "85837a855e199293"
+            ]
+        ]
+    },
     {
         "id": "85837a855e199293",
         "type": "http response",
@@ -3624,7 +3628,7 @@
         "type": "function",
         "z": "161d0c4cebe17cda",
         "name": "build health payload",
-        "func": "const h = {};\nh.timestamp = new Date().toISOString();\nh.version = '0.2.0-dev';\n\nconst ollamaModels = flow.get('ollamaModels') || global.get('ollamaModels') || [];\nconst ollamaCachedAt = flow.get('ollamaModelsCachedAt') || global.get('ollamaModelsCachedAt') || 0;\nh.ollama = { ok: ollamaModels.length > 0, modelCount: ollamaModels.length, cachedAt: ollamaCachedAt };\n\nconst orKey = flow.get('openrouterKey') || '';\nh.openrouter = { configured: orKey.length > 0 };\n\nconst hueIp = flow.get('hueIp') || '';\nconst hueKey = flow.get('hueKey') || '';\nh.hue = { configured: !!(hueIp && hueKey) };\n\nconst calId = flow.get('calendarId') || '';\nh.calendar = { configured: calId.length > 0 };\n\nconst discordEnabled = flow.get('discordEnabled') || false;\nh.discord = { enabled: discordEnabled };\n\nh.aiProvider = flow.get('aiProvider') || 'ollama';\nh.aiModel = flow.get('aiModel') || '';\nh.ollamaModel = flow.get('ollamaModel') || 'gemma2:2b';\n\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = h;\nreturn msg;",
+        "func": "const h = {};\nh.timestamp = new Date().toISOString();\nh.version = '0.2.0-dev';\n\nconst ollamaModels = flow.get('ollamaModels') || global.get('ollamaModels') || [];\nconst ollamaCachedAt = flow.get('ollamaModelsCachedAt') || global.get('ollamaModelsCachedAt') || 0;\nh.ollama = { ok: ollamaModels.length > 0, modelCount: ollamaModels.length, cachedAt: ollamaCachedAt };\n\nconst orKey = flow.get('openrouterKey') || '';\nh.openrouter = { configured: orKey.length > 0 };\n\nconst hueIp = flow.get('hueIp') || '';\nconst hueKey = flow.get('hueKey') || '';\nh.hue = { configured: !!(hueIp && hueKey) };\n\nconst calId = flow.get('calendarId') || '';\nh.calendar = { configured: calId.length > 0 };\n\nconst discordEnabled = flow.get('discordEnabled') || false;\nconst discordToken = flow.get('discordToken') || '';\nconst discordChannelId = flow.get('discordChannelId') || '';\nh.discord = { enabled: discordEnabled, configured: !!(discordToken && discordChannelId) };\n\nh.aiProvider = flow.get('aiProvider') || 'ollama';\nh.aiModel = flow.get('aiModel') || '';\nh.ollamaModel = flow.get('ollamaModel') || 'gemma2:2b';\n\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = h;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3868,30 +3872,30 @@
         "wires": []
     },
     {
-  "id": "caro-ws-settings-update",
-  "type": "function",
-  "z": "e9526774295cef13",
-  "name": "Apply WS settings_update",
-  "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nconst ALLOWED_KEYS = [\n  'userName', 'openrouterKey', 'aiModel', 'aiProvider', 'ollamaUrl', 'ollamaModel', 'ttsEnabled',\n  'timezone', 'location', 'cityName', 'lat', 'lng', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId', 'sheetId',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',\n  'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\n\ntry {\n  const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : (msg.payload || {});\n  if (body.type !== 'settings_update') return null;\n\n  // Explicit key/provider sync for OpenRouter troubleshooting.\n  if (body.openrouterKey !== undefined) flow.set('openrouterKey', body.openrouterKey);\n  if (body.aiProvider !== undefined) flow.set('aiProvider', body.aiProvider);\n  if (body.aiModel !== undefined) flow.set('aiModel', body.aiModel);\n  if (body.ollamaModel !== undefined) flow.set('ollamaModel', body.ollamaModel);\n\n  const saved = {};\n  ALLOWED_KEYS.forEach(k => {\n    if (body[k] !== undefined) {\n      flow.set(k, body[k]);\n      saved[k] = body[k];\n    }\n  });\n  if (saved.zipCode && !saved.zipcode) {\n    saved.zipcode = saved.zipCode;\n    flow.set('zipcode', saved.zipcode);\n  }\n  if (saved.zipcode && !saved.zipCode) {\n    saved.zipCode = saved.zipcode;\n    flow.set('zipCode', saved.zipCode);\n  }\n\n  try {\n    let existing = {};\n    if (fs.existsSync(SETTINGS_PATH)) {\n      try { existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n    }\n    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(Object.assign({}, existing, saved), null, 2), 'utf8');\n  } catch(e) {\n    node.warn('[Caroline] WS settings save failed: ' + e.message);\n  }\n\n  const keyLength = (flow.get('openrouterKey') || '').length;\n  node.warn('[Caroline] OpenRouter key length after settings_update: ' + keyLength);\n  node.log('[Caroline] WS settings_update applied: ' + Object.keys(saved).join(', '));\n  msg.payload = JSON.stringify({ type: 'settings_confirmed', keyLength });\n  return msg;\n} catch(e) {\n  node.warn('[Caroline] settings_update parse failed: ' + e.message);\n}\nreturn null;",
-  "outputs": 1,
-  "timeout": 0,
-  "noerr": 0,
-  "initialize": "",
-  "finalize": "",
-  "libs": [
-    {
-      "var": "fs",
-      "module": "fs"
-    }
-  ],
-  "x": 470,
-  "y": 260,
-  "wires": [
-    [
-      "bad2805f769f7005"
-    ]
-  ]
-},
+        "id": "caro-ws-settings-update",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "Apply WS settings_update",
+        "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nconst ALLOWED_KEYS = [\n  'userName', 'openrouterKey', 'aiModel', 'aiProvider', 'ollamaUrl', 'ollamaModel', 'ttsEnabled',\n  'timezone', 'location', 'cityName', 'lat', 'lng', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId', 'sheetId',\n  'hueIp', 'hueKey', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',\n  'discordEnabled', 'discordToken', 'discordChannelId', 'setupComplete'\n];\n\ntry {\n  const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : (msg.payload || {});\n  if (body.type !== 'settings_update') return null;\n\n  // Explicit key/provider sync for OpenRouter troubleshooting.\n  if (body.openrouterKey !== undefined) flow.set('openrouterKey', body.openrouterKey);\n  if (body.aiProvider !== undefined) flow.set('aiProvider', body.aiProvider);\n  if (body.aiModel !== undefined) flow.set('aiModel', body.aiModel);\n  if (body.ollamaModel !== undefined) flow.set('ollamaModel', body.ollamaModel);\n\n  const saved = {};\n  ALLOWED_KEYS.forEach(k => {\n    if (body[k] !== undefined) {\n      flow.set(k, body[k]);\n      saved[k] = body[k];\n    }\n  });\n  if (saved.zipCode && !saved.zipcode) {\n    saved.zipcode = saved.zipCode;\n    flow.set('zipcode', saved.zipcode);\n  }\n  if (saved.zipcode && !saved.zipCode) {\n    saved.zipCode = saved.zipcode;\n    flow.set('zipCode', saved.zipCode);\n  }\n\n  try {\n    let existing = {};\n    if (fs.existsSync(SETTINGS_PATH)) {\n      try { existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n    }\n    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(Object.assign({}, existing, saved), null, 2), 'utf8');\n  } catch(e) {\n    node.warn('[Caroline] WS settings save failed: ' + e.message);\n  }\n\n  const keyLength = (flow.get('openrouterKey') || '').length;\n  node.warn('[Caroline] OpenRouter key length after settings_update: ' + keyLength);\n  node.log('[Caroline] WS settings_update applied: ' + Object.keys(saved).join(', '));\n  msg.payload = JSON.stringify({ type: 'settings_confirmed', keyLength });\n  return msg;\n} catch(e) {\n  node.warn('[Caroline] settings_update parse failed: ' + e.message);\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "fs",
+                "module": "fs"
+            }
+        ],
+        "x": 470,
+        "y": 260,
+        "wires": [
+            [
+                "bad2805f769f7005"
+            ]
+        ]
+    },
     {
         "id": "caro-ollama-load-in",
         "type": "http in",
@@ -3984,5 +3988,117 @@
         "x": 1150,
         "y": 620,
         "wires": []
+    },
+    {
+        "id": "caro-discord-rest-send",
+        "type": "http request",
+        "z": "e9526774295cef13",
+        "name": "Discord REST send",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1360,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "caro-discord-poll-in",
+        "type": "inject",
+        "z": "e9526774295cef13",
+        "name": "Every 5s Discord poll",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 20,
+        "wires": [
+            [
+                "caro-discord-poll-build"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-poll-build",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "Build Discord poll request",
+        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst rawToken = String(flow.get('discordToken') || '').trim();\nconst channelId = String(flow.get('discordChannelId') || '').trim();\nif (!discordEnabled || !rawToken || !channelId) return null;\nconst token = rawToken.replace(/^Bot\\s+/i, '');\nmsg.method = 'GET';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(channelId) + '/messages?limit=5';\nmsg.headers = { 'Authorization': 'Bot ' + token, 'Content-Type': 'application/json' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 20,
+        "wires": [
+            [
+                "caro-discord-poll-http"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-poll-http",
+        "type": "http request",
+        "z": "e9526774295cef13",
+        "name": "Discord REST poll",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 610,
+        "y": 20,
+        "wires": [
+            [
+                "caro-discord-poll-parse"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-poll-parse",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "Parse Discord poll",
+        "func": "const rows = Array.isArray(msg.payload) ? msg.payload : [];\nif (!rows.length) return null;\nconst newest = rows[0] && rows[0].id;\nconst lastSeen = flow.get('discordLastSeenId') || '';\nif (!lastSeen) {\n  if (newest) flow.set('discordLastSeenId', newest);\n  return null;\n}\nconst isNewer = (a, b) => {\n  try { return BigInt(a) > BigInt(b); } catch(e) { return String(a) > String(b); }\n};\nconst fresh = rows\n  .filter(m => m && m.id && isNewer(m.id, lastSeen) && !(m.author && m.author.bot))\n  .sort((a, b) => {\n    try { return BigInt(a.id) > BigInt(b.id) ? 1 : -1; } catch(e) { return String(a.id).localeCompare(String(b.id)); }\n  });\nif (newest && isNewer(newest, lastSeen)) flow.set('discordLastSeenId', newest);\nif (!fresh.length) return null;\nconst aiMsgs = [];\nconst kioskMsgs = [];\nfresh.forEach(m => {\n  const attachments = (m.attachments || []).map(a => a.url).filter(Boolean).join(' ');\n  const content = String(m.content || attachments || '').trim();\n  if (!content) return;\n  aiMsgs.push({ payload: JSON.stringify({ type: 'user_message', content }) });\n  kioskMsgs.push({ payload: JSON.stringify({ type: 'user_discord', content }) });\n});\nreturn [aiMsgs, kioskMsgs];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 20,
+        "wires": [
+            [
+                "b6dc37976bac0cf2"
+            ],
+            [
+                "bad2805f769f7005"
+            ]
+        ]
     }
 ]
