@@ -430,7 +430,8 @@
       "4a770c4d047aa23d"
     ]
   ],
-  "requestTimeout": "30000"
+  "timeout": 120000,
+  "requestTimeout": "120000"
 },
     {
         "id": "4a770c4d047aa23d",
@@ -2024,6 +2025,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
+        "timeout": 120000,
+        "requestTimeout": "120000",
         "x": 790,
         "y": 740,
         "wires": [
@@ -2263,6 +2266,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
+        "timeout": 120000,
+        "requestTimeout": "120000",
         "x": 1120,
         "y": 280,
         "wires": [
