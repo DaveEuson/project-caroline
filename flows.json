@@ -193,13 +193,22 @@
   "type": "function",
   "z": "e9526774295cef13",
   "name": "AI Fetch Timeout",
-  "func": "const controller = new AbortController();\nconst timeoutId = setTimeout(() => controller.abort(), 120000);\ntry {\n  const response = await fetch(msg.url, {\n    method: msg.method || 'POST',\n    headers: msg.headers,\n    body: msg.payload,\n    signal: controller.signal\n  });\n  clearTimeout(timeoutId);\n  const text = await response.text();\n  let data = {};\n  try { data = text ? JSON.parse(text) : {}; } catch(parseErr) { data = { reply: text || ('HTTP ' + response.status) }; }\n  if (!response.ok) {\n    const detail = (data.error && (data.error.message || data.error)) || data.message || data.reply || ('HTTP ' + response.status);\n    msg.payload = { reply: \"AI request failed: \" + detail };\n    return msg;\n  }\n  msg.payload = data;\n  return msg;\n} catch(e) {\n  clearTimeout(timeoutId);\n  if (e.name === 'AbortError') {\n    msg.payload = {\n      reply: \"Local AI timed out after 2 minutes. Try phi3:mini for faster responses, or switch to OpenRouter in settings.\"\n    };\n  } else {\n    msg.payload = { reply: \"Connection error: \" + e.message };\n  }\n  return msg;\n}",
+  "func": "const body = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload || {});\nconst requestUrl = new URL(msg.url);\nconst client = requestUrl.protocol === 'https:' ? https : http;\n\nlet timeoutId;\nconst timeoutPromise = new Promise((_, reject) => {\n  timeoutId = setTimeout(() => reject(new Error('Ollama timeout after 120s')), 120000);\n});\n\nconst fetchPromise = new Promise((resolve, reject) => {\n  const headers = Object.assign({}, msg.headers || {}, {\n    'Content-Length': Buffer.byteLength(body)\n  });\n  if (!headers['Content-Type'] && !headers['content-type']) headers['Content-Type'] = 'application/json';\n\n  const options = {\n    hostname: requestUrl.hostname,\n    port: requestUrl.port || (requestUrl.protocol === 'https:' ? 443 : 11434),\n    path: requestUrl.pathname + requestUrl.search,\n    method: msg.method || 'POST',\n    headers\n  };\n\n  const req = client.request(options, (res) => {\n    let data = '';\n    res.setEncoding('utf8');\n    res.on('data', chunk => data += chunk);\n    res.on('end', () => {\n      let parsed = {};\n      try { parsed = data ? JSON.parse(data) : {}; } catch(e) { parsed = { reply: data || ('HTTP ' + res.statusCode) }; }\n      if (res.statusCode < 200 || res.statusCode >= 300) {\n        const detail = (parsed.error && (parsed.error.message || parsed.error)) || parsed.message || parsed.reply || ('HTTP ' + res.statusCode);\n        reject(new Error('AI request failed: ' + detail));\n        return;\n      }\n      resolve(parsed);\n    });\n  });\n\n  req.on('error', reject);\n  req.setTimeout(120000, () => req.destroy(new Error('Ollama timeout after 120s')));\n  req.write(body);\n  req.end();\n});\n\ntry {\n  const result = await Promise.race([fetchPromise, timeoutPromise]);\n  clearTimeout(timeoutId);\n  msg.payload = result;\n  return msg;\n} catch(e) {\n  clearTimeout(timeoutId);\n  const text = e && e.message ? e.message : String(e);\n  msg.payload = {\n    message: {\n      content: text.toLowerCase().includes('timeout')\n        ? \"Local AI timed out. Try OpenRouter in settings for faster responses.\"\n        : \"Connection error: \" + text\n    }\n  };\n  return msg;\n}",
   "outputs": 1,
   "timeout": 0,
   "noerr": 0,
   "initialize": "",
   "finalize": "",
-  "libs": [],
+  "libs": [
+    {
+      "var": "http",
+      "module": "http"
+    },
+    {
+      "var": "https",
+      "module": "https"
+    }
+  ],
   "x": 800,
   "y": 620,
   "wires": [
