@@ -298,15 +298,9 @@
   #video-section { flex-shrink: 0; padding: 10px 8px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
   #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .media-tab { border:1px solid rgba(var(--t-rgb1),0.25); border-radius:6px; background:rgba(0,0,0,0.18); color:rgba(226,232,240,0.55); font-size:9px; padding:2px 6px; font-family:'JetBrains Mono',monospace; cursor:pointer; }
-  .media-tab.active { background:rgba(var(--t-rgb1),0.16); color:var(--t-hex1); box-shadow:0 0 12px rgba(var(--t-rgb1),0.12); }
   #media-panel { width:100%; min-height:232px; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:radial-gradient(circle at 20% 0%, rgba(var(--t-rgb1),0.12), transparent 40%), rgba(0,0,0,0.26); position:relative; }
   .media-mode { display:none; height:100%; padding:9px; }
   .media-mode.active { display:block; }
-  .media-radio-card { height:100%; display:flex; flex-direction:column; justify-content:center; gap:8px; }
-  .media-radio-row { display:flex; align-items:center; gap:8px; }
-  .media-radio-title { font-size:13px; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .media-radio-genre { font-size:10px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .media-player-head { display:flex; align-items:center; gap:5px; margin-bottom:6px; min-width:0; }
   #media-channel-label { flex:1; min-width:0; color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .media-nav-btn { width:24px; height:22px; display:grid; place-items:center; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:6px; background:rgba(0,0,0,0.18); color:var(--t-hex1); cursor:pointer; }
@@ -317,10 +311,7 @@
   #media-fallback-icon { font-size:28px; }
   #media-fallback-title { color:#f8fafc; font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
   #media-fallback-genre { color:rgba(226,232,240,0.45); font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.1em; }
-  #media-open-link { color:var(--t-hex1); text-decoration:none; font-size:10px; font-family:'JetBrains Mono',monospace; border:1px solid rgba(var(--t-rgb1),0.42); border-radius:6px; padding:5px 9px; background:rgba(0,0,0,0.24); }
-  #media-open-link:hover { background:rgba(var(--t-rgb1),0.18); color:#fff; }
   #media-mute-btn { position:absolute; right:5px; bottom:5px; z-index:5; border:1px solid rgba(255,255,255,0.2); border-radius:6px; background:rgba(0,0,0,0.64); color:#fff; font-size:10px; padding:3px 7px; cursor:pointer; }
-  #media-external-link { position:absolute; left:5px; bottom:5px; z-index:5; border:1px solid rgba(var(--t-rgb1),0.35); border-radius:6px; background:rgba(0,0,0,0.64); color:var(--t-hex1); font-size:9px; padding:3px 7px; text-decoration:none; font-family:'JetBrains Mono',monospace; }
   .ch-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:6px; color:var(--t-hex1); font-size:12px; padding:1px 6px; cursor:pointer; transition:all 0.2s; line-height:1.6; }
   .ch-btn:hover { background:rgba(var(--t-rgb1),0.15); }
   .ch-list-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; color:#e2e8f0; }
@@ -903,13 +894,15 @@
           </div>
         </div>
         <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Default media view</div><div class="settings-sub">Media panel startup mode</div></div>
+          <div><div class="settings-label">Default video channel</div><div class="settings-sub">Media panel startup channel</div></div>
           <select class="settings-select" id="set-channel">
-            <option value="0">Radio</option>
-            <option value="1">Video links</option>
+            <option value="0">Lofi Girl</option>
+            <option value="1">ChillHop</option>
+            <option value="2">Ambient Nature</option>
+            <option value="3">Study Beats</option>
+            <option value="4">Jazz</option>
           </select>
         </div>
-        <div class="settings-sub" style="margin-top:6px;text-align:right;">Some channels open in a new tab due to embedding restrictions.</div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Auto time-of-day theme</div><div class="settings-sub">Dawn / day / dusk / night</div></div>
           <input type="checkbox" id="set-auto-theme" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
@@ -1020,7 +1013,7 @@
         </div>
       </div>
       <div class="settings-section">
-        <h3>Video links</h3>
+        <h3>Video channels</h3>
         <div id="ch-list"></div>
       </div>
       <div class="settings-section">
@@ -1289,27 +1282,10 @@
   <div id="news-panel">
     <div id="video-section">
       <div id="media-bar">
-        <span id="media-label">MEDIA</span>
-        <button class="media-tab active" id="media-tab-radio" onclick="setMediaMode('radio')">RADIO</button>
-        <button class="media-tab" id="media-tab-video" onclick="setMediaMode('video')">VIDEO</button>
+        <span id="media-label">VIDEO</span>
       </div>
       <div id="media-panel">
-        <div id="media-radio-mode" class="media-mode active">
-          <div class="media-radio-card">
-            <div class="media-radio-row">
-              <button id="media-radio-play-btn" class="radio-play-btn" title="Play/Pause"><i class="ti ti-player-play"></i></button>
-              <div style="min-width:0;flex:1;">
-                <div class="media-radio-title" id="media-radio-station">Nightwave Plaza</div>
-                <div class="media-radio-genre" id="media-radio-genre">Synthwave / Retrowave</div>
-              </div>
-              <div id="media-eq-bars" class="eq-bars">
-                <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-              </div>
-              <button id="media-radio-next-btn" class="radio-next-btn" title="Next station"><i class="ti ti-player-track-next"></i></button>
-            </div>
-          </div>
-        </div>
-        <div id="media-video-mode" class="media-mode">
+        <div id="media-video-mode" class="media-mode active">
           <div class="media-player-head">
             <button class="media-nav-btn" onclick="changeMediaChannel(-1)" title="Previous"><i class="ti ti-chevron-left"></i></button>
             <div id="media-channel-label">LOFI GIRL</div>
@@ -1321,10 +1297,8 @@
             <div id="media-fallback-card">
               <div id="media-fallback-icon">📺</div>
               <div id="media-fallback-title">Channel</div>
-              <div id="media-fallback-genre">External</div>
-              <a id="media-open-link" href="#" target="_blank" rel="noopener">▶ Open</a>
+              <div id="media-fallback-genre">Unavailable</div>
             </div>
-            <a id="media-external-link" href="#" target="_blank" rel="noopener">Open</a>
             <button id="media-mute-btn" onclick="toggleMediaMute()">🔇 Unmute</button>
           </div>
         </div>
@@ -1745,7 +1719,7 @@ function toggleSettings() {
       const el = document.getElementById('quick-action-' + i);
       if (el) el.value = label;
     });
-    if (S.defaultChannel > 1) S.defaultChannel = 0;
+    if (S.defaultChannel >= MEDIA_CHANNELS.length) S.defaultChannel = 0;
     document.getElementById('set-channel').value = S.defaultChannel;
     document.getElementById('set-auto-theme').checked = S.autoTheme;
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
@@ -1790,7 +1764,11 @@ function toggleSettings() {
     if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
     const ollamaModelEl = document.getElementById('set-ollama-model');
     if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'llama3.2';
-    if ((S.aiProvider || 'openrouter') === 'ollama') setTimeout(fetchOllamaModels, 100);
+    if ((S.aiProvider || 'openrouter') === 'ollama') {
+      _ollamaAutoLoadAttempted = false;
+      setTimeout(fetchOllamaModels, 100);
+      setTimeout(maybeAutoLoadOllamaModel, 900);
+    }
     const hgSel = document.getElementById('set-hue-group');
     if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
     const pTa = document.getElementById('personalityPrompt');
@@ -1923,6 +1901,7 @@ async function syncAiModelFromHealth() {
 
 const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
 let _cachedOllamaModels = null;
+let _ollamaAutoLoadAttempted = false;
 
 async function fetchDirectOllamaTags() {
   const host = getPiHost();
@@ -1996,6 +1975,45 @@ async function fetchOllamaStatus() {
     text.style.color     = 'rgba(226,232,240,0.4)';
     if (ram) ram.textContent = '';
   }
+}
+
+async function maybeAutoLoadOllamaModel() {
+  const provider = (document.getElementById('set-ai-provider') || {}).value || S.aiProvider || 'openrouter';
+  if (provider !== 'ollama' || _ollamaAutoLoadAttempted) return;
+  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+  if (!_cachedOllamaModels) {
+    try {
+      const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama tags autoload');
+      if (r.ok) {
+        const d = await r.json();
+        _cachedOllamaModels = d.models || [];
+        _renderOllamaCards(_cachedOllamaModels);
+      }
+    } catch(e) {
+      clog('err', 'ollama tags autoload: ' + e.message);
+      return;
+    }
+  }
+  const installed = (_cachedOllamaModels || []).some(m => m.name === model);
+  if (!installed) return;
+  try {
+    const ps = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-ps', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama ps autoload');
+    if (ps.ok) {
+      const d = await ps.json();
+      if ((d.models || []).length) return;
+    }
+  } catch(e) {
+    return;
+  }
+  _ollamaAutoLoadAttempted = true;
+  fetchJsonWithTimeout(httpBase() + '/admin/ollama-load', {
+    method: 'POST',
+    timeoutMs: 130000,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model })
+  }, 'Ollama auto-load')
+    .then(() => fetchOllamaStatus())
+    .catch(e => clog('err', 'ollama auto-load: ' + e.message));
 }
 
 async function fetchOllamaModels() {
@@ -2670,7 +2688,7 @@ async function saveSettings() {
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
-  setMediaMode(S.defaultChannel === 1 ? 'video' : 'radio');
+  loadMediaChannel(S.defaultChannel || 0);
   updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
   updateAiConfigIndicator();
 
@@ -2753,12 +2771,11 @@ function changeAvatar(dir) {
 
 // ── MEDIA PLAYER ──────────────────────────────
 const MEDIA_CHANNELS = [
-  { icon:'🌸', name:'Lofi Girl',   genre:'Music / Study', type:'youtube', id:'jfKfPfyJRdk', url:'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
-  { icon:'🎵', name:'ChillHop',    genre:'Music / Chill', type:'youtube', id:'7NOSDKb0HlU', url:'https://www.youtube.com/watch?v=7NOSDKb0HlU' },
-  { icon:'🌍', name:'NHK World',   genre:'News / English', type:'iframe', src:'https://www3.nhk.or.jp/nhkworld/en/live/embed/', url:'https://nhkworldtv.nhk.or.jp/nhkworld/en/live/' },
-  { icon:'🚀', name:'NASA Live',   genre:'Science / Space', type:'youtube', id:'21X5lGlDOfg', url:'https://www.youtube.com/watch?v=21X5lGlDOfg' },
-  { icon:'🎌', name:'Crunchyroll', genre:'Anime', type:'link', url:'https://www.crunchyroll.com/' },
-  { icon:'📺', name:'Adult Swim',  genre:'Toonami', type:'link', url:'https://www.adultswim.com/streams' }
+  { icon:'🌸', name:'Lofi Girl',      genre:'Music / Study',    type:'youtube', id:'jfKfPfyJRdk' },
+  { icon:'🎵', name:'ChillHop',       genre:'Music / Chill',    type:'youtube', id:'7NOSDKb0HlU' },
+  { icon:'🌿', name:'Ambient Nature', genre:'Ambient / Nature', type:'youtube', id:'rUxyKA_-grg' },
+  { icon:'📚', name:'Study Beats',    genre:'Music / Study',    type:'youtube', id:'5qap5aO4i9A' },
+  { icon:'🎷', name:'Jazz',           genre:'Jazz / Live',      type:'youtube', id:'Dx5qFachd3A' }
 ];
 let mediaChannelIndex = 0;
 let mediaMuted = true;
@@ -2781,8 +2798,7 @@ function showMediaFallback(ch) {
   fallback.style.display = 'flex';
   document.getElementById('media-fallback-icon').textContent = ch.icon || '📺';
   document.getElementById('media-fallback-title').textContent = ch.name;
-  document.getElementById('media-fallback-genre').textContent = ch.genre || 'External';
-  document.getElementById('media-open-link').href = ch.url || '#';
+  document.getElementById('media-fallback-genre').textContent = ch.genre || 'Unavailable';
 }
 
 function loadMediaChannel(idx) {
@@ -2793,13 +2809,11 @@ function loadMediaChannel(idx) {
   const video = document.getElementById('media-video');
   const fallback = document.getElementById('media-fallback-card');
   const muteBtn = document.getElementById('media-mute-btn');
-  const external = document.getElementById('media-external-link');
   if (label) label.textContent = ch.icon + ' ' + ch.name + ' — ' + ch.genre;
   if (fallback) fallback.style.display = 'none';
-  if (external) { external.href = ch.url || '#'; external.style.display = ch.type === 'link' ? 'block' : 'none'; }
   if (iframe) { iframe.style.display = 'none'; iframe.src = 'about:blank'; }
   if (video) video.style.display = 'none';
-  if (muteBtn) { muteBtn.style.display = ch.type === 'link' ? 'none' : 'block'; muteBtn.textContent = mediaMuted ? '🔇 Unmute' : '🔊 Mute'; }
+  if (muteBtn) { muteBtn.style.display = 'block'; muteBtn.textContent = mediaMuted ? '🔇 Unmute' : '🔊 Mute'; }
   stopMediaStream();
 
   if (ch.type === 'youtube' || ch.type === 'iframe') {
@@ -2844,21 +2858,6 @@ function toggleMediaMute() {
   resetIdle();
 }
 
-function setMediaMode(mode) {
-  const radio = mode !== 'video';
-  document.getElementById('media-radio-mode')?.classList.toggle('active', radio);
-  document.getElementById('media-video-mode')?.classList.toggle('active', !radio);
-  document.getElementById('media-tab-radio')?.classList.toggle('active', radio);
-  document.getElementById('media-tab-video')?.classList.toggle('active', !radio);
-  if (!radio) loadMediaChannel(mediaChannelIndex);
-  else {
-    stopMediaStream();
-    const iframe = document.getElementById('media-iframe');
-    if (iframe) iframe.src = 'about:blank';
-  }
-  resetIdle();
-}
-
 function renderChannelList() {
   const list = document.getElementById('ch-list');
   if (!list) return;
@@ -2882,7 +2881,7 @@ function resetChannels() {
   playBeep(900);
 }
 
-document.addEventListener('DOMContentLoaded', () => { renderChannelList(); loadMediaChannel(0); setMediaMode(S.defaultChannel === 1 ? 'video' : 'radio'); });
+document.addEventListener('DOMContentLoaded', () => { renderChannelList(); loadMediaChannel(S.defaultChannel || 0); });
 
 // ── RETRO BEEPS ───────────────────────────────
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2906,23 +2905,21 @@ let stIdx=0, isPlaying=false;
 const radioAudio=document.getElementById('radio-audio'), playBtn=document.getElementById('radio-play-btn'), eqBars=document.getElementById('eq-bars');
 function updateRadioUi() {
   const s=stations[stIdx];
-  ['radio-station','media-radio-station'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.name; });
-  ['radio-genre','media-radio-genre'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.genre; });
-  ['radio-play-btn','media-radio-play-btn'].forEach(id=>{
+  ['radio-station'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.name; });
+  ['radio-genre'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.genre; });
+  ['radio-play-btn'].forEach(id=>{
     const btn=document.getElementById(id);
     if(!btn) return;
     btn.innerHTML=isPlaying?'⏸':'<i class="ti ti-player-play"></i>';
     btn.classList.toggle('playing', isPlaying);
   });
-  ['eq-bars','media-eq-bars'].forEach(id=>document.getElementById(id)?.classList.toggle('playing', isPlaying));
+  ['eq-bars'].forEach(id=>document.getElementById(id)?.classList.toggle('playing', isPlaying));
 }
 function loadStation() { const s=stations[stIdx]; radioAudio.src=s.url; if(isPlaying) radioAudio.play(); updateRadioUi(); }
 function toggleRadioPlayback(){ if(isPlaying){radioAudio.pause();isPlaying=false;}else{radioAudio.src=stations[stIdx].url;radioAudio.play();isPlaying=true;} updateRadioUi(); resetIdle(); }
 function nextRadioStation(){ stIdx=(stIdx+1)%stations.length; loadStation(); resetIdle(); }
 playBtn.onclick=toggleRadioPlayback;
-document.getElementById('media-radio-play-btn').onclick=toggleRadioPlayback;
 document.getElementById('radio-next-btn').onclick=nextRadioStation;
-document.getElementById('media-radio-next-btn').onclick=nextRadioStation;
 loadStation();
 
 // ── FOCUS + IDLE ──────────────────────────────

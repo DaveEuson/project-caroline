@@ -261,6 +261,7 @@ OLLAMA_ENV_EOF
   sudo systemctl enable ollama 2>/dev/null || true
   sudo systemctl daemon-reload
   sudo systemctl restart ollama 2>/dev/null || sudo systemctl start ollama 2>/dev/null || true
+  ollama run llama3.2 "ready" > /dev/null 2>&1 &
   sleep 3
 
   echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"
@@ -527,6 +528,7 @@ User=${REAL_USER}
 WorkingDirectory=${CAROLINE_DIR}
 ExecStartPre=/bin/sleep 5
 ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT} --userDir ${CAROLINE_DIR}
+ExecStartPost=/bin/bash -c 'sleep 30 && ollama run llama3.2 "ready" > /dev/null 2>&1 &'
 Restart=on-failure
 RestartSec=5
 
