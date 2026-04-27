@@ -969,6 +969,10 @@
           <input class="settings-input" id="set-calendar-id" type="text" placeholder="you@gmail.com" style="width:200px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
+          <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Google Sheet used for tasks</div></div>
+          <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
+        </div>
+        <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Service account</div><div class="settings-sub">JSON key from Google Cloud</div></div>
           <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
             <input type="file" id="sa-upload-input" accept=".json,application/json" style="display:none" onchange="handleServiceAccountUpload(event)"/>
@@ -1392,7 +1396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 const QUICK_ACTION_DEFAULTS = ['Brief me', 'Schedule', 'Motivate', 'Tasks'];
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
@@ -1819,6 +1823,7 @@ function toggleSettings() {
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
     document.getElementById('set-calendar-id').value = S.calendarId || '';
+    document.getElementById('set-sheet-id').value = S.sheetId || '';
     document.getElementById('set-discord-enabled').checked = !!S.discordEnabled;
     document.getElementById('set-discord-token').value = S.discordToken || '';
     document.getElementById('set-discord-channel').value = S.discordChannelId || '';
@@ -2729,6 +2734,7 @@ async function saveSettings() {
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.location = document.getElementById('set-location').value.trim();
   S.calendarId = document.getElementById('set-calendar-id').value.trim();
+  S.sheetId = document.getElementById('set-sheet-id').value.trim();
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
   S.discordToken = document.getElementById('set-discord-token').value.trim();
   S.discordChannelId = document.getElementById('set-discord-channel').value.trim();

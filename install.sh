@@ -504,6 +504,7 @@ jq -n \
     hueIp:           "",
     hueKey:          "",
     calendarId:      "",
+    sheetId:         "",
     spotifyClientId: "",
     discordToken:    "",
     kioskMode:       $kiosk
@@ -516,12 +517,22 @@ phase "PHASE 6 — WIRING AUTOSTART"
 
 echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 
+if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
+  CAROLINE_AFTER="network-online.target ollama.service"
+  CAROLINE_REQUIRES="Requires=ollama.service"
+  CAROLINE_POST='ExecStartPost=/bin/bash -c '\''sleep 30 && ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &'\'''
+else
+  CAROLINE_AFTER="network-online.target"
+  CAROLINE_REQUIRES=""
+  CAROLINE_POST=""
+fi
+
 sudo tee /etc/systemd/system/caroline.service > /dev/null << EOF
 [Unit]
 Description=Project: Caroline — Node-RED
-After=network-online.target ollama.service
+After=${CAROLINE_AFTER}
 Wants=network-online.target
-Requires=ollama.service
+${CAROLINE_REQUIRES}
 
 [Service]
 Type=simple
@@ -529,7 +540,7 @@ User=${REAL_USER}
 WorkingDirectory=${CAROLINE_DIR}
 ExecStartPre=/bin/sleep 5
 ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT} --userDir ${CAROLINE_DIR}
-ExecStartPost=/bin/bash -c 'sleep 30 && ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &'
+${CAROLINE_POST}
 Restart=on-failure
 RestartSec=5
 
