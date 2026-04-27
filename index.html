@@ -58,6 +58,11 @@
   .conn-pill.ai-fail { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.09); }
   .ai-config-pill { display:none; background:rgba(251,191,36,0.10); border:1px solid rgba(251,191,36,0.35); border-radius:20px; padding:2px 8px; font-size:11px; color:#fbbf24; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; white-space:nowrap; }
   .ai-config-pill.show { display:inline-flex; align-items:center; }
+  .net-pill { display:inline-flex; align-items:center; gap:5px; flex:0 0 auto; border-radius:20px; padding:2px 8px; font-size:11px; font-family:'JetBrains Mono',monospace; letter-spacing:0.03em; white-space:nowrap; border:1px solid rgba(var(--t-rgb1),0.22); background:rgba(var(--t-rgb1),0.07); color:rgba(226,232,240,0.68); }
+  .net-pill.online { color:#34d399; border-color:rgba(52,211,153,0.35); background:rgba(52,211,153,0.08); }
+  .net-pill.offline { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.08); }
+  .net-pill.checking { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.08); }
+  #ip-pill { color:#67e8f9; border-color:rgba(34,211,238,0.35); background:rgba(34,211,238,0.08); }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
   #restart-btn { margin-left: 8px; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
@@ -434,6 +439,10 @@
     #topbar { padding: 0 8px; gap: 6px; }
     .topbar-name { font-size: 15px; }
     .topbar-sub { display:none; }
+    .topbar-version { display:none; }
+    .conn-pill { max-width:230px; overflow:hidden; text-overflow:ellipsis; }
+    .net-pill { font-size:10px; padding:2px 6px; }
+    .topbar-clock { font-size:15px; }
     #settings-modal { width: 98vw; max-height: 85vh; }
     #subtitle-text { font-size: 15px; }
     .quick-btn { padding: 8px 10px; font-size: 12px; }
@@ -805,8 +814,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr class="rec-table-row"><td>phi3:mini</td><td>2.3 GB</td><td>⚡⚡⚡</td><td>Coding / chat</td><td><button type="button" class="detect-btn" onclick="startPull('phi3:mini')">Pull</button></td></tr>
                   <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡⚡⚡</td><td>Simple Q&amp;A</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
+                  <tr class="rec-table-row"><td>phi3:mini</td><td>2.3 GB</td><td>⚡⚡⚡</td><td>Coding / chat</td><td><button type="button" class="detect-btn" onclick="startPull('phi3:mini')">Pull</button></td></tr>
                   <tr class="rec-table-row"><td>llama3.2</td><td>2.0 GB</td><td>⚡⚡</td><td>General use</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2')">Pull</button></td></tr>
                   <tr class="rec-table-row"><td>mistral:7b</td><td>4.1 GB</td><td>⚡</td><td>Complex tasks</td><td><button type="button" class="detect-btn" onclick="startPull('mistral:7b')">Pull</button></td></tr>
                 </tbody>
@@ -1119,10 +1128,10 @@
   <div class="dot"></div>
   <span class="topbar-name" id="topbar-name">Caroline</span>
   <span class="topbar-version">v0.2</span>
-  <span class="topbar-sub">AI companion</span>
+  <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
+  <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI Model">AI KEY NEEDED</span>
-  <span id="time-icon" style="font-size:16px">🌅</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
   <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
@@ -1380,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 const QUICK_ACTION_DEFAULTS = ['Brief me', 'Schedule', 'Motivate', 'Tasks'];
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
@@ -1443,6 +1452,7 @@ async function syncSettingsFromServer() {
       }
     });
     localStorage.setItem('caro_settings', JSON.stringify(S));
+    updateTopbarNetwork(false);
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
     updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
@@ -1586,6 +1596,45 @@ function httpsBase(port) {
 
 function wsBase(path) {
   return getNodeRedUrl().replace(/^http/, 'ws') + (path || '');
+}
+
+function setInternetPill(state) {
+  const pill = document.getElementById('internet-pill');
+  if (!pill) return;
+  pill.classList.remove('online', 'offline', 'checking');
+  pill.classList.add(state);
+  pill.textContent = state === 'online' ? 'Internet: Online' : state === 'offline' ? 'Internet: Offline' : 'Internet: Checking';
+}
+
+async function updateTopbarNetwork(checkInternet = true) {
+  const ipPill = document.getElementById('ip-pill');
+  if (ipPill) {
+    const host = getPiHost();
+    ipPill.textContent = 'IP: ' + host;
+    ipPill.title = 'Node-RED: ' + getNodeRedUrl();
+  }
+
+  if (!checkInternet) {
+    setInternetPill(navigator.onLine ? 'online' : 'offline');
+    return;
+  }
+
+  setInternetPill('checking');
+  if (!navigator.onLine) {
+    setInternetPill('offline');
+    return;
+  }
+
+  try {
+    await fetch('https://www.gstatic.com/generate_204?caroline=' + Date.now(), {
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(3500)
+    });
+    setInternetPill('online');
+  } catch(e) {
+    setInternetPill('offline');
+  }
 }
 
 async function fetchJsonWithTimeout(url, options = {}, label = 'fetch') {
@@ -1767,7 +1816,7 @@ function toggleSettings() {
     const ollamaUrlEl = document.getElementById('set-ollama-url');
     if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
     const ollamaModelEl = document.getElementById('set-ollama-model');
-    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'llama3.2';
+    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'gemma2:2b';
     if ((S.aiProvider || 'openrouter') === 'ollama') {
       _ollamaAutoLoadAttempted = false;
       setTimeout(fetchOllamaModels, 100);
@@ -1857,7 +1906,7 @@ function shortAiModelName(model) {
 function aiModelLabel() {
   const provider = S.aiProvider || 'ollama';
   if (provider !== 'ollama' && !(S.openrouterKey || '').trim()) return '⚠ No AI configured';
-  const model = provider === 'ollama' ? (S.ollamaModel || 'llama3.2') : (S.aiModel || 'anthropic/claude-haiku-4.5');
+  const model = provider === 'ollama' ? (S.ollamaModel || 'gemma2:2b') : (S.aiModel || 'anthropic/claude-haiku-4.5');
   return provider === 'ollama' ? '🏠 Local: ' + shortAiModelName(model) : '☁ Cloud: ' + shortAiModelName(model);
 }
 
@@ -1903,7 +1952,7 @@ async function syncAiModelFromHealth() {
   } catch(e) { /* health is best-effort */ }
 }
 
-const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
+const OLLAMA_RECOMMENDED = new Set(['gemma2:2b','phi3:mini','llama3.2']);
 let _cachedOllamaModels = null;
 let _ollamaAutoLoadAttempted = false;
 
@@ -1970,7 +2019,7 @@ async function fetchOllamaStatus() {
     const models = d.models || [];
     _cachedOllamaModels = models;
     _renderOllamaCards(models);
-    const selectedModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+    const selectedModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'gemma2:2b';
     const installed = models.find(m => ollamaModelMatches(m, selectedModel));
     const available = installed || models[0];
     if (available) {
@@ -1997,7 +2046,7 @@ async function fetchOllamaStatus() {
 async function maybeAutoLoadOllamaModel() {
   const provider = (document.getElementById('set-ai-provider') || {}).value || S.aiProvider || 'openrouter';
   if (provider !== 'ollama' || _ollamaAutoLoadAttempted) return;
-  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'gemma2:2b';
   if (!_cachedOllamaModels) {
     try {
       const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama tags autoload');
@@ -2122,7 +2171,7 @@ async function startPull(model) {
 }
 
 async function loadOllamaModel() {
-  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'gemma2:2b';
   const statusEl = document.getElementById('ollama-load-status');
   const btn = document.getElementById('ollama-load-btn');
   if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'Loading ' + model + '...'; }
@@ -2628,10 +2677,11 @@ async function saveSettings() {
   S.nodeRedUrl = (rawNrUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '');
   try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
   const needReconnect = getNodeRedUrl() !== prevNrUrl;
+  updateTopbarNetwork(false);
   S.openrouterKey = orkeyVal;
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
-  S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'llama3.2').trim();
+  S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'gemma2:2b').trim();
   aiStatus = (S.aiProvider !== 'ollama' && !S.openrouterKey) ? 'fail' : 'warn';
   quickActions = normalizeQuickActions(QUICK_ACTION_DEFAULTS.map((fallback, i) => {
     const el = document.getElementById('quick-action-' + i);
@@ -2988,7 +3038,7 @@ setInterval(()=>{ idleTimer++; if(idleTimer>idleLimit) document.body.classList.a
 
 // ── CLOCK ─────────────────────────────────────
 function getTimeIcon(h){ if(h>=5&&h<8)return'🌅'; if(h>=8&&h<12)return'☀️'; if(h>=12&&h<17)return'🌤️'; if(h>=17&&h<20)return'🌆'; if(h>=20&&h<23)return'🌙'; return'✨'; }
-function updateClock(){ const n=new Date(); document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('time-icon').innerHTML=getTimeIcon(n.getHours()); }
+function updateClock(){ const n=new Date(); document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
 updateClock(); setInterval(updateClock,1000);
 
 // ── TTS ───────────────────────────────────────
@@ -3244,6 +3294,7 @@ function connectWS(){
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
+    updateTopbarNetwork(false);
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart)
     ws.send(JSON.stringify(currentSettingsPayload()));
     setTimeout(syncAiModelFromHealth, 500);
@@ -3342,6 +3393,10 @@ if (!localStorage.getItem('caroline_configured')) {
 document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
 updateAiConfigIndicator();
 renderQuickActions();
+updateTopbarNetwork();
+window.addEventListener('online', () => updateTopbarNetwork());
+window.addEventListener('offline', () => updateTopbarNetwork(false));
+setInterval(() => updateTopbarNetwork(), 60000);
 
 // ── SEND ──────────────────────────────────────
 const input=document.getElementById('msg-input');
