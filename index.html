@@ -150,6 +150,10 @@
   #radio-genre { font-size: 10px; color: rgba(226,232,240,0.5); font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #radio-next-btn { background: none; border: none; color: rgba(226,232,240,0.4); cursor: pointer; padding: 5px; font-size: 10px; transition: color 0.2s; outline: none; }
   #radio-next-btn:hover { color: var(--t-hex1); }
+  .radio-play-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--t-hex1); background: rgba(var(--t-rgb1), 0.1); color: var(--t-hex1); display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; outline: none; }
+  .radio-play-btn.playing { background: var(--t-hex1); color: #05050a; box-shadow: 0 0 10px rgba(var(--t-rgb1), 0.4); }
+  .radio-next-btn { background: none; border: none; color: rgba(226,232,240,0.4); cursor: pointer; padding: 5px; font-size: 10px; transition: color 0.2s; outline: none; }
+  .radio-next-btn:hover { color: var(--t-hex1); }
   .eq-bars { display: none; gap: 2px; height: 10px; align-items: flex-end; margin-left: 4px; }
   .eq-bars.playing { display: flex; }
   .eq-bar { width: 2px; background: var(--t-hex1); border-radius: 1px; animation: eqBounce 0.5s infinite alternate; }
@@ -292,12 +296,27 @@
   /* RIGHT PANEL */
   #news-panel { width: 260px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
   #video-section { flex-shrink: 0; padding: 10px 8px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
-  #channel-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
-  #channel-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
+  #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .media-tab { border:1px solid rgba(var(--t-rgb1),0.25); border-radius:6px; background:rgba(0,0,0,0.18); color:rgba(226,232,240,0.55); font-size:9px; padding:2px 6px; font-family:'JetBrains Mono',monospace; cursor:pointer; }
+  .media-tab.active { background:rgba(var(--t-rgb1),0.16); color:var(--t-hex1); box-shadow:0 0 12px rgba(var(--t-rgb1),0.12); }
+  #media-panel { width:100%; min-height:232px; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:radial-gradient(circle at 20% 0%, rgba(var(--t-rgb1),0.12), transparent 40%), rgba(0,0,0,0.26); position:relative; }
+  .media-mode { display:none; height:100%; padding:9px; }
+  .media-mode.active { display:block; }
+  .media-radio-card { height:100%; display:flex; flex-direction:column; justify-content:center; gap:8px; }
+  .media-radio-row { display:flex; align-items:center; gap:8px; }
+  .media-radio-title { font-size:13px; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .media-radio-genre { font-size:10px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .video-link-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .video-link-card { min-height:62px; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:7px; padding:7px; background:linear-gradient(135deg, rgba(var(--t-rgb1),0.08), rgba(var(--t-rgb2),0.06)); box-shadow:inset 0 0 14px rgba(0,0,0,0.24); display:flex; flex-direction:column; gap:4px; }
+  .video-link-top { display:flex; align-items:center; gap:6px; min-width:0; }
+  .video-link-icon { font-size:17px; flex-shrink:0; }
+  .video-link-name { color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .video-link-genre { color:rgba(226,232,240,0.45); font-size:8px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .video-link-open { margin-top:auto; align-self:flex-start; color:var(--t-hex1); text-decoration:none; font-size:9px; font-family:'JetBrains Mono',monospace; border:1px solid rgba(var(--t-rgb1),0.38); border-radius:6px; padding:3px 7px; background:rgba(0,0,0,0.22); }
+  .video-link-open:hover { background:rgba(var(--t-rgb1),0.18); color:#fff; }
   .ch-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:6px; color:var(--t-hex1); font-size:12px; padding:1px 6px; cursor:pointer; transition:all 0.2s; line-height:1.6; }
   .ch-btn:hover { background:rgba(var(--t-rgb1),0.15); }
-  #video-mute-btn { position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#fff; font-size:10px; padding:2px 6px; cursor:pointer; z-index:10; transition:all 0.2s; }
-  #video-mute-btn:hover { background:rgba(0,0,0,0.85); }
   .ch-list-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; color:#e2e8f0; }
   .ch-list-item:last-child { border-bottom:none; }
   .ch-list-del { background:none; border:1px solid rgba(244,63,94,0.3); border-radius:6px; padding:2px 8px; color:#fb7185; font-size:10px; cursor:pointer; margin-left:auto; }
@@ -307,20 +326,6 @@
   #new-ch-name { flex:1; min-width:80px; }
   #new-ch-url { flex:2; min-width:120px; }
   .add-ch-btn { background:rgba(var(--t-rgb1),0.1); border:1px solid rgba(var(--t-rgb1),0.4); border-radius:8px; padding:6px 12px; color:var(--t-hex1); font-size:11px; cursor:pointer; white-space:nowrap; }
-  #yt-container { width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:#000; cursor:pointer; position:relative; }
-  #yt-container:hover::after { content:'⛶'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:20px; color:rgba(255,255,255,0.6); pointer-events:none; }
-  #yt-container.launch-mode:hover::after { content:none; }
-  #nhk-video { width:100%; height:100%; object-fit:cover; }
-  #yt-iframe { width:100%; height:100%; border:none; display:none; }
-  #yt-fallback-link { display:none; position:absolute; right:10px; bottom:10px; z-index:4; background:rgba(5,5,10,0.86); border:1px solid rgba(var(--t-rgb1),0.42); border-radius:8px; padding:7px 10px; color:var(--t-hex1); text-decoration:none; font-size:11px; font-family:'JetBrains Mono',monospace; box-shadow:0 0 18px rgba(var(--t-rgb1),0.16); }
-  #yt-fallback-link:hover { background:rgba(var(--t-rgb1),0.14); color:#f8fafc; }
-  .video-launch-card { display:none; position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:14px; text-align:center; background:radial-gradient(circle at 30% 10%, rgba(var(--t-rgb1),0.18), transparent 42%), linear-gradient(135deg, rgba(5,5,10,0.98), rgba(16,8,30,0.94)); }
-  .video-launch-card::before { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg, transparent, rgba(var(--t-rgb1),0.12), transparent); opacity:.55; transform:skewX(-14deg) translateX(-38%); }
-  .launch-icon { position:relative; width:42px; height:42px; display:grid; place-items:center; border-radius:8px; border:1px solid rgba(var(--t-rgb1),0.45); background:rgba(var(--t-rgb1),0.08); box-shadow:0 0 22px rgba(var(--t-rgb1),0.2); font-size:24px; }
-  .launch-title { position:relative; max-width:100%; color:#f8fafc; font-size:12px; line-height:1.2; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; overflow-wrap:anywhere; }
-  .launch-sub { position:relative; color:rgba(226,232,240,0.48); font-size:9px; font-family:'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; }
-  .launch-button { position:relative; display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:6px 10px; border-radius:7px; border:1px solid rgba(var(--t-rgb1),0.62); background:rgba(var(--t-rgb1),0.14); color:var(--t-hex1); text-decoration:none; font-size:10px; font-family:'JetBrains Mono',monospace; box-shadow:0 0 18px rgba(var(--t-rgb1),0.16); transition:all .2s ease; }
-  .launch-button:hover { background:rgba(var(--t-rgb1),0.24); color:#fff; transform:translateY(-1px); }
   #sun-row { display:flex; justify-content:space-between; margin-top:5px; font-size:11px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; }
   .news-header { font-size: 10px; color: rgba(226,232,240,0.4); text-transform: uppercase; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; padding-bottom: 4px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); margin-bottom: 8px; }
   #news-list { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 2px; }
@@ -443,6 +448,8 @@
     #left { width: 100%; height: 118px; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid rgba(var(--t-rgb1),0.08); }
     #news-panel { width: 100%; height: 180px; flex-direction: row; border-left: none; border-top: 1px solid rgba(var(--t-rgb1),0.08); }
     #video-section { width: 50%; border-bottom: none; border-right: 1px solid rgba(var(--t-rgb1),0.08); }
+    #media-panel { min-height: 138px; max-height: 138px; overflow-y: auto; }
+    .video-link-grid { grid-template-columns: 1fr; }
     #news-section { flex: 1; overflow-y: auto; padding: 8px; }
     #avatar-outer { width: 140px; height: 140px; }
     #center { padding: 4px 6px; gap: 8px; }
@@ -857,8 +864,12 @@
         </div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
-          <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:220px"/>
+          <div class="input-detect-row">
+            <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:170px"/>
+            <button type="button" class="detect-btn" id="location-autofill-btn" onclick="autoFillLocation(this)">🔍 Auto-fill</button>
+          </div>
         </div>
+        <div id="location-autofill-status" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
         <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
           <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles" style="width:220px"/>
@@ -887,13 +898,10 @@
           </div>
         </div>
         <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
+          <div><div class="settings-label">Default media view</div><div class="settings-sub">Media panel startup mode</div></div>
           <select class="settings-select" id="set-channel">
-            <option value="0">NHK World English</option>
-            <option value="1">Lofi Girl</option>
-            <option value="2">ChillHop</option>
-            <option value="3">NASA Live</option>
-            <option value="4">Study Music</option>
+            <option value="0">Radio</option>
+            <option value="1">Video links</option>
           </select>
         </div>
         <div class="settings-sub" style="margin-top:6px;text-align:right;">Some channels open in a new tab due to embedding restrictions.</div>
@@ -996,7 +1004,7 @@
           <label class="feat-toggle"><input type="checkbox" id="feat-spotify"  onchange="previewFeature('spotify',  this.checked)"/> 🎵 Spotify</label>
           <label class="feat-toggle"><input type="checkbox" id="feat-calendar" onchange="previewFeature('calendar', this.checked)"/> 📅 Calendar</label>
           <label class="feat-toggle"><input type="checkbox" id="feat-news"     onchange="previewFeature('news',     this.checked)"/> 📰 News</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-video"    onchange="previewFeature('video',    this.checked)"/> 📺 Video Player</label>
+          <label class="feat-toggle"><input type="checkbox" id="feat-video"    onchange="previewFeature('video',    this.checked)"/> 📺 Media Panel</label>
           <label class="feat-toggle"><input type="checkbox" id="feat-pomodoro" onchange="previewFeature('pomodoro', this.checked)"/> ⏱ Pomodoro</label>
           <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> 🌊 Tides</label>
         </div>
@@ -1007,14 +1015,8 @@
         </div>
       </div>
       <div class="settings-section">
-        <h3>Video channels</h3>
+        <h3>Video links</h3>
         <div id="ch-list"></div>
-        <div id="add-channel-row">
-          <input class="settings-input" id="new-ch-icon" placeholder="🎬" style="width:44px;text-align:center;"/>
-          <input class="settings-input" id="new-ch-name" placeholder="Channel name"/>
-          <input class="settings-input" id="new-ch-url" placeholder="HLS .m3u8 URL or YouTube video ID"/>
-          <button class="add-ch-btn" onclick="addCustomChannel()">+ Add</button>
-        </div>
       </div>
       <div class="settings-section">
         <h3>Onboarding &amp; Personality</h3>
@@ -1076,7 +1078,7 @@
       </div>
       <div class="settings-footer">
         <button class="clear-history-btn" onclick="clearHistory()">🗑 Clear chat log</button>
-        <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="resetChannels()">↺ Reset channels</button>
+        <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="resetChannels()">↺ Reset media links</button>
         <button class="clear-history-btn" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;" onclick="requestPiRestart()">⟳ Reboot Pi</button>
         <span class="settings-feedback" id="settings-feedback">✓ Saved!</span>
         <button class="settings-save-btn" id="settings-save-btn" onclick="saveSettings()">Save &amp; Apply</button>
@@ -1281,22 +1283,30 @@
 
   <div id="news-panel">
     <div id="video-section">
-      <div id="channel-bar">
-        <span id="channel-label">🌏 NHK WORLD ENGLISH</span>
-        <button class="ch-btn" onclick="changeChannel(-1)"><i class="ti ti-chevron-left"></i></button>
-        <button class="ch-btn" onclick="changeChannel(1)"><i class="ti ti-chevron-right"></i></button>
+      <div id="media-bar">
+        <span id="media-label">MEDIA</span>
+        <button class="media-tab active" id="media-tab-radio" onclick="setMediaMode('radio')">RADIO</button>
+        <button class="media-tab" id="media-tab-video" onclick="setMediaMode('video')">VIDEO</button>
       </div>
-      <div id="yt-container" onclick="handleVideoTap(event)">
-        <video id="nhk-video" autoplay muted playsinline></video>
-        <iframe id="yt-iframe" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
-        <div id="video-launch-card" class="video-launch-card">
-          <div class="launch-icon" id="launch-icon">🌏</div>
-          <div class="launch-title" id="launch-title">NHK World English</div>
-          <div class="launch-sub">External stream</div>
-          <a id="launch-button" class="launch-button" href="https://nhkworldtv.nhk.or.jp/nhkworld/en/live/" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch on this device</a>
+      <div id="media-panel">
+        <div id="media-radio-mode" class="media-mode active">
+          <div class="media-radio-card">
+            <div class="media-radio-row">
+              <button id="media-radio-play-btn" class="radio-play-btn" title="Play/Pause"><i class="ti ti-player-play"></i></button>
+              <div style="min-width:0;flex:1;">
+                <div class="media-radio-title" id="media-radio-station">Nightwave Plaza</div>
+                <div class="media-radio-genre" id="media-radio-genre">Synthwave / Retrowave</div>
+              </div>
+              <div id="media-eq-bars" class="eq-bars">
+                <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+              </div>
+              <button id="media-radio-next-btn" class="radio-next-btn" title="Next station"><i class="ti ti-player-track-next"></i></button>
+            </div>
+          </div>
         </div>
-        <a id="yt-fallback-link" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch on YouTube</a>
-        <button id="video-mute-btn" onclick="event.stopPropagation(); toggleVideoMute()"><i class="ti ti-volume-off"></i> Unmute</button>
+        <div id="media-video-mode" class="media-mode">
+          <div id="video-link-grid" class="video-link-grid"></div>
+        </div>
       </div>
     </div>
     <div id="news-section">
@@ -1584,10 +1594,31 @@ async function fetchJsonWithTimeout(url, options = {}, label = 'fetch') {
   }
 }
 
+function showRestartCountdown() {
+  document.body.innerHTML = '<div id="restart-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;text-align:center;padding:24px;">'
+    + '<div style="color:#fb7185;font-size:13px;letter-spacing:.18em;">// RESTART SIGNAL SENT</div>'
+    + '<div id="restart-countdown" style="font-size:18px;color:#f8fafc;">Restarting in 30 seconds...</div>'
+    + '<div style="font-size:11px;color:rgba(226,232,240,0.45);max-width:360px;line-height:1.6;">Caroline will reload automatically after the Pi has time to come back online.</div>'
+    + '</div>';
+  let seconds = 30;
+  const label = document.getElementById('restart-countdown');
+  const timer = setInterval(() => {
+    seconds--;
+    if (label) label.textContent = seconds > 0 ? 'Restarting in ' + seconds + ' seconds...' : 'Reloading soon...';
+    if (seconds <= 0) clearInterval(timer);
+  }, 1000);
+  setTimeout(() => { window.location.reload(); }, 45000);
+}
+
+function sendRestartSignal() {
+  fetchJsonWithTimeout(httpBase() + '/restart', { method: 'POST', timeoutMs: 1800 }, 'Restart via Node-RED')
+    .catch(() => fetch(httpBase(RESTART_PORT) + '/restart', { method: 'POST', signal: AbortSignal.timeout(1800) }).catch(() => {}));
+}
+
 function requestPiRestart() {
   if (!confirm('Reboot the Pi?')) return;
-  fetch(httpBase(RESTART_PORT) + '/restart', { method: 'POST' }).catch(() => {});
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:JetBrains Mono;color:#e2e8f0;background:#05050a;">REBOOTING...</div>';
+  sendRestartSignal();
+  showRestartCountdown();
 }
 
 async function handleSpotifyAuth() {
@@ -1683,7 +1714,7 @@ function toggleSettings() {
       const el = document.getElementById('quick-action-' + i);
       if (el) el.value = label;
     });
-    if (S.defaultChannel >= videoChannels.length) S.defaultChannel = 0;
+    if (S.defaultChannel > 1) S.defaultChannel = 0;
     document.getElementById('set-channel').value = S.defaultChannel;
     document.getElementById('set-auto-theme').checked = S.autoTheme;
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
@@ -2174,6 +2205,168 @@ async function testAiConnection(btn) {
   }
 }
 
+function distanceMiles(lat1, lng1, lat2, lng2) {
+  const toRad = d => d * Math.PI / 180;
+  const R = 3958.8;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function stationCoords(station) {
+  const lat = parseFloat(station.lat ?? station.latitude);
+  const lng = parseFloat(station.lng ?? station.lon ?? station.long ?? station.longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+}
+
+async function findNearestNoaaStation(lat, lng) {
+  const url = 'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=tidepredictions';
+  const r = await fetchJsonWithTimeout(url, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'NOAA tide stations');
+  if (!r.ok) throw new Error('NOAA HTTP ' + r.status);
+  const d = await r.json();
+  const stations = Array.isArray(d.stations) ? d.stations : [];
+  let nearest = null;
+  stations.forEach(station => {
+    const coords = stationCoords(station);
+    if (!coords) return;
+    const miles = distanceMiles(lat, lng, coords.lat, coords.lng);
+    if (!nearest || miles < nearest.miles) nearest = { station, miles };
+  });
+  return nearest;
+}
+
+async function lookupTimezone(lat, lng) {
+  try {
+    const r = await fetchJsonWithTimeout('https://timezonefinder.michelfe.it/api/0?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng), { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Timezone lookup');
+    if (r.ok) {
+      const d = await r.json();
+      if (typeof d === 'string') return d;
+      if (d.timezone) return d.timezone;
+      if (d.tz) return d.tz;
+    }
+  } catch(e) {}
+  const bdc = await fetchJsonWithTimeout('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lng) + '&localityLanguage=en', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Reverse geocode timezone');
+  if (!bdc.ok) throw new Error('Timezone HTTP ' + bdc.status);
+  const d = await bdc.json();
+  return d.timeZone || d.timezone || '';
+}
+
+async function autoFillLocation(btn) {
+  const statusEl = document.getElementById('location-autofill-status');
+  const locationEl = document.getElementById('set-location');
+  const query = (locationEl?.value || '').trim();
+  if (!query) {
+    if (statusEl) { statusEl.textContent = '✗ Enter a city first'; statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Filling'; }
+  if (statusEl) { statusEl.textContent = 'Looking up location...'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
+  try {
+    const geoUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query) + '&format=json&limit=1&addressdetails=1';
+    const geoResp = await fetchJsonWithTimeout(geoUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'City geocode');
+    if (!geoResp.ok) throw new Error('Geocode HTTP ' + geoResp.status);
+    const results = await geoResp.json();
+    if (!Array.isArray(results) || !results.length) throw new Error('City not found');
+    const place = results[0];
+    const lat = parseFloat(place.lat);
+    const lng = parseFloat(place.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('No coordinates returned');
+    const addr = place.address || {};
+    let zip = (addr.postcode || '').split(';')[0].trim();
+    const cityName = [addr.city || addr.town || addr.village || addr.hamlet || query, addr.state_code || addr.state || addr.country_code?.toUpperCase()].filter(Boolean).join(', ');
+
+    let timezone = '';
+    let reverse = null;
+    try {
+      timezone = await lookupTimezone(lat, lng);
+    } catch(e) {
+      console.warn('[Caroline] Timezone lookup failed:', e);
+    }
+    if (!zip || !timezone) {
+      try {
+        const reverseResp = await fetchJsonWithTimeout('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lng) + '&localityLanguage=en', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Reverse geocode');
+        if (reverseResp.ok) reverse = await reverseResp.json();
+      } catch(e) {}
+      zip = zip || reverse?.postcode || reverse?.postcodeLocalities?.[0] || '';
+      timezone = timezone || reverse?.timeZone || '';
+    }
+
+    let stationId = '';
+    try {
+      const nearest = await findNearestNoaaStation(lat, lng);
+      stationId = nearest?.station?.id || nearest?.station?.stationId || '';
+    } catch(e) {
+      console.warn('[Caroline] NOAA station lookup failed:', e);
+    }
+
+    if (zip) document.getElementById('set-zip').value = zip.slice(0, 5);
+    if (timezone) document.getElementById('set-timezone').value = timezone;
+    if (stationId) document.getElementById('set-tides-station').value = stationId;
+    if (locationEl && cityName) locationEl.value = cityName;
+    S.lat = lat;
+    S.lng = lng;
+    S.cityName = cityName || query;
+    S.location = locationEl?.value || query;
+    if (zip) { S.zipcode = zip.slice(0, 5); S.zipCode = S.zipcode; }
+    if (timezone) S.timezone = timezone;
+    if (stationId) S.tidesStation = stationId;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    if (statusEl) {
+      const bits = [zip ? 'ZIP ' + zip.slice(0, 5) : '', timezone || '', stationId ? 'NOAA ' + stationId : ''].filter(Boolean);
+      statusEl.textContent = '✓ Filled ' + bits.join(' · ');
+      statusEl.style.color = 'rgba(52,211,153,0.9)';
+    }
+    fetchWeather();
+    fetchTides();
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = '✗ Auto-fill failed — ' + e.message; statusEl.style.color = '#f87171'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔍 Auto-fill'; }
+  }
+}
+
+async function discoverHueViaCloud() {
+  const r = await fetchJsonWithTimeout('https://discovery.meethue.com/', { timeoutMs: 6000 }, 'Hue cloud discovery');
+  if (!r.ok) throw new Error('Hue cloud HTTP ' + r.status);
+  const bridges = await r.json();
+  const first = Array.isArray(bridges) ? bridges.find(b => b.internalipaddress) : null;
+  return first ? first.internalipaddress : '';
+}
+
+function localIpPrefixes() {
+  const candidates = [getPiHost(), window.location.hostname, S.hueIp].filter(Boolean);
+  const prefixes = [];
+  candidates.forEach(ip => {
+    const m = String(ip).match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}$/);
+    if (m && !prefixes.includes(m[1])) prefixes.push(m[1]);
+  });
+  if (!prefixes.length) prefixes.push('192.168.1');
+  return prefixes;
+}
+
+async function probeHueIp(ip) {
+  const r = await fetchJsonWithTimeout('http://' + ip + '/api/config', { timeoutMs: 1400 }, 'Hue probe ' + ip);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  return d && (d.bridgeid || d.name || d.modelid) ? ip : '';
+}
+
+async function scanHueBridgeCandidates(statusEl) {
+  const ips = [];
+  localIpPrefixes().forEach(prefix => {
+    for (let i = 1; i <= 10; i++) ips.push(prefix + '.' + i);
+  });
+  for (const ip of ips) {
+    if (statusEl) statusEl.textContent = 'Scanning ' + ip + '...';
+    try {
+      const found = await probeHueIp(ip);
+      if (found) return found;
+    } catch(e) {}
+  }
+  return '';
+}
+
 async function detectHueBridge(btn) {
   const statusEl = document.getElementById('hue-pair-status');
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
@@ -2189,7 +2382,29 @@ async function detectHueBridge(btn) {
       throw new Error('No bridge found');
     }
   } catch(e) {
-    if (statusEl) { statusEl.textContent = '✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network' : 'Discovery failed — enter IP manually'); statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+    try {
+      if (statusEl) { statusEl.textContent = 'Trying Hue cloud discovery...'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
+      const cloudIp = await discoverHueViaCloud();
+      if (cloudIp) {
+        document.getElementById('set-hueip').value = cloudIp;
+        if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + cloudIp; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
+        return;
+      }
+      throw new Error('No cloud bridge');
+    } catch(cloudErr) {
+      try {
+        if (statusEl) { statusEl.textContent = 'Scanning common local IPs...'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
+        const scannedIp = await scanHueBridgeCandidates(statusEl);
+        if (scannedIp) {
+          document.getElementById('set-hueip').value = scannedIp;
+          if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + scannedIp; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
+          return;
+        }
+        throw new Error('No scanned bridge');
+      } catch(scanErr) {
+        if (statusEl) { statusEl.textContent = '✗ No Hue bridge found on network — enter IP manually'; statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+      }
+    }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Detect'; }
   }
@@ -2419,6 +2634,7 @@ async function saveSettings() {
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
+  setMediaMode(S.defaultChannel === 1 ? 'video' : 'radio');
   updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
   updateAiConfigIndicator();
 
@@ -2499,146 +2715,64 @@ function changeAvatar(dir) {
   resetIdle();
 }
 
-// ── VIDEO CHANNELS ────────────────────────────
-const DEFAULT_CHANNELS = [
-  { name:'NHK World English', icon:'🌏', type:'launch', url:'https://nhkworldtv.nhk.or.jp/nhkworld/en/live/' },
-  { name:'Lofi Girl',         icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
-  { name:'ChillHop',          icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
-  { name:'NASA Live',         icon:'🚀', type:'launch', url:'https://www.youtube.com/watch?v=21X5lGlDOfg' },
-  { name:'Study Music',       icon:'📚', type:'launch', url:'https://www.youtube.com/watch?v=5qap5aO4i9A' }
+// ── MEDIA LINKS ───────────────────────────────
+const VIDEO_LINKS = [
+  { icon:'🌸', name:'Lofi Girl',   genre:'Music / Study', url:'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
+  { icon:'🎵', name:'ChillHop',    genre:'Music / Chill', url:'https://www.youtube.com/watch?v=7NOSDKb0HlU' },
+  { icon:'🌍', name:'NHK World',   genre:'News / English', url:'https://nhkworldtv.nhk.or.jp/nhkworld/en/live/' },
+  { icon:'🚀', name:'NASA Live',   genre:'Science / Space', url:'https://www.youtube.com/watch?v=21X5lGlDOfg' },
+  { icon:'🎌', name:'Crunchyroll', genre:'Anime', url:'https://www.crunchyroll.com/' },
+  { icon:'📺', name:'Adult Swim',  genre:'Toonami', url:'https://www.adultswim.com/streams' }
 ];
-const CHANNEL_VERSION = 13;
-const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
-let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
-let currentChannel = S.defaultChannel || 0;
-if (currentChannel >= videoChannels.length) currentChannel = 0;
-let hlsInstance = null;
-let videoMuted = true;
 
-function saveChannels() { localStorage.setItem('caro_channels', JSON.stringify({v:CHANNEL_VERSION, channels:videoChannels})); }
+function renderVideoLinks() {
+  const grid = document.getElementById('video-link-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  VIDEO_LINKS.forEach(ch => {
+    const card = document.createElement('div');
+    card.className = 'video-link-card';
+    card.innerHTML =
+      '<div class="video-link-top"><span class="video-link-icon">' + ch.icon + '</span><span class="video-link-name">' + ch.name + '</span></div>' +
+      '<div class="video-link-genre">' + ch.genre + '</div>' +
+      '<a class="video-link-open" href="' + ch.url + '" target="_blank" rel="noopener">▶ Open</a>';
+    grid.appendChild(card);
+  });
+}
+
+function setMediaMode(mode) {
+  const radio = mode !== 'video';
+  document.getElementById('media-radio-mode')?.classList.toggle('active', radio);
+  document.getElementById('media-video-mode')?.classList.toggle('active', !radio);
+  document.getElementById('media-tab-radio')?.classList.toggle('active', radio);
+  document.getElementById('media-tab-video')?.classList.toggle('active', !radio);
+  resetIdle();
+}
 
 function renderChannelList() {
-  const list = document.getElementById('ch-list'); if (!list) return; list.innerHTML = '';
-  videoChannels.forEach((ch, i) => {
-    const div = document.createElement('div'); div.className = 'ch-list-item';
-    div.innerHTML = '<span class="ch-list-icon">'+ch.icon+'</span><span>'+ch.name+'</span>' +
-      (i >= DEFAULT_CHANNELS.length ? '<button class="ch-list-del" onclick="deleteChannel('+i+')">Remove</button>' : '');
+  const list = document.getElementById('ch-list');
+  if (!list) return;
+  list.innerHTML = '';
+  VIDEO_LINKS.forEach(ch => {
+    const div = document.createElement('div');
+    div.className = 'ch-list-item';
+    div.innerHTML = '<span class="ch-list-icon">' + ch.icon + '</span><span>' + ch.name + '</span><span style="margin-left:auto;color:rgba(226,232,240,0.35);font-size:10px;">' + ch.genre + '</span>';
     list.appendChild(div);
   });
 }
 
 function addCustomChannel() {
-  const icon = document.getElementById('new-ch-icon').value.trim() || '📺';
-  const name = document.getElementById('new-ch-name').value.trim();
-  const url  = document.getElementById('new-ch-url').value.trim();
-  if (!name || !url) return;
-  const isYT = url.length < 30 && !url.startsWith('http');
-  videoChannels.push(isYT ? { name, icon, type:'youtube', ytId:url } : { name, icon, type:'hls', urls:[url] });
-  saveChannels(); renderChannelList();
-  document.getElementById('new-ch-icon').value=''; document.getElementById('new-ch-name').value=''; document.getElementById('new-ch-url').value='';
+  alert('Video links are curated in the Media panel now.');
 }
 
-function deleteChannel(i) { if (i < DEFAULT_CHANNELS.length) return; videoChannels.splice(i,1); saveChannels(); renderChannelList(); }
-
 function resetChannels() {
-  if (!confirm('Reset channels to defaults? Your custom channels will be removed.')) return;
-  videoChannels = JSON.parse(JSON.stringify(DEFAULT_CHANNELS));
   localStorage.removeItem('caro_channels');
   renderChannelList();
-  currentChannel = 0;
-  loadChannel(0);
+  renderVideoLinks();
   playBeep(900);
 }
 
-function toggleVideoMute() {
-  const vid = document.getElementById('nhk-video'); const btn = document.getElementById('video-mute-btn');
-  videoMuted = !videoMuted; vid.muted = videoMuted;
-  btn.textContent = videoMuted ? '🔇 Unmute' : '🔊 Mute';
-}
-
-let tapTimer = null;
-function handleVideoTap(e) {
-  if (e.target.closest && e.target.closest('#video-launch-card')) return;
-  if (e.target.id === 'video-mute-btn') return;
-  if (tapTimer) { clearTimeout(tapTimer); tapTimer = null; toggleVideoFullscreen(); }
-  else { tapTimer = setTimeout(() => { tapTimer = null; }, 300); }
-}
-
-function loadChannel(idx) {
-  if (idx >= videoChannels.length) idx = 0;
-  const ch = videoChannels[idx];
-  const vid = document.getElementById('nhk-video');
-  const iframe = document.getElementById('yt-iframe');
-  const ytFallback = document.getElementById('yt-fallback-link');
-  const launchCard = document.getElementById('video-launch-card');
-  const launchIcon = document.getElementById('launch-icon');
-  const launchTitle = document.getElementById('launch-title');
-  const launchButton = document.getElementById('launch-button');
-  const btn = document.getElementById('video-mute-btn');
-  const container = document.getElementById('yt-container');
-  document.getElementById('channel-label').textContent = ch.icon + ' ' + ch.name.toUpperCase();
-  if (container) container.classList.toggle('launch-mode', ch.type === 'launch');
-  if (launchCard) launchCard.style.display = ch.type === 'launch' ? 'flex' : 'none';
-  if (ch.type === 'iframe') {
-    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-    vid.pause(); vid.src=''; vid.style.display='none';
-    if (btn) btn.style.display='none';
-    iframe.style.display='block';
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
-    iframe.src = ch.url;
-    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
-  } else if (ch.type === 'hls') {
-    iframe.style.display='none'; iframe.src=''; vid.style.display='block';
-    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
-    if (btn) btn.style.display='block';
-    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-    let urlIdx = 0;
-    function tryUrl() {
-      const url = ch.urls[urlIdx];
-      if (Hls.isSupported()) {
-        hlsInstance = new Hls({ enableWorker:false });
-        hlsInstance.loadSource(url); hlsInstance.attachMedia(vid);
-        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { vid.muted=videoMuted; vid.play().catch(()=>{}); });
-        hlsInstance.on(Hls.Events.ERROR, (e, d) => { if (d.fatal && ch.urls && urlIdx<ch.urls.length-1) { urlIdx++; hlsInstance.destroy(); tryUrl(); } });
-      } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
-        vid.src=url; vid.muted=videoMuted; vid.addEventListener('loadedmetadata', ()=>vid.play());
-      }
-    }
-    tryUrl();
-  } else if (ch.type === 'launch') {
-    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-    vid.pause(); vid.src=''; vid.style.display='none';
-    iframe.style.display='none'; iframe.src='';
-    if (btn) btn.style.display='none';
-    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
-    if (launchIcon) launchIcon.textContent = ch.icon || '📺';
-    if (launchTitle) launchTitle.textContent = ch.name;
-    if (launchButton) launchButton.href = ch.url;
-  } else {
-    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-    vid.pause(); vid.src=''; vid.style.display='none';
-    if (btn) btn.style.display='none';
-    iframe.style.display='block';
-    iframe.removeAttribute('sandbox');
-    const origin = window.location.origin || ('http://' + (window.location.hostname || 'localhost') + ':8080');
-    iframe.src = 'https://www.youtube-nocookie.com/embed/'+ch.ytId+'?autoplay=1&mute=1&controls=1&rel=0&playsinline=1&iv_load_policy=3&modestbranding=1&origin='+origin;
-    if (ytFallback) { ytFallback.style.display='none'; ytFallback.href='#'; }
-  }
-}
-
-function changeChannel(dir) {
-  currentChannel = (currentChannel + dir + videoChannels.length) % videoChannels.length;
-  loadChannel(currentChannel); resetIdle();
-}
-
-function toggleVideoFullscreen() {
-  const c = document.getElementById('yt-container');
-  if (document.fullscreenElement) document.exitFullscreen();
-  else (c.requestFullscreen || c.webkitRequestFullscreen).call(c).catch(()=>{});
-  resetIdle();
-}
-
-document.addEventListener('DOMContentLoaded', () => { loadChannel(currentChannel); renderChannelList(); });
+document.addEventListener('DOMContentLoaded', () => { renderVideoLinks(); renderChannelList(); setMediaMode(S.defaultChannel === 1 ? 'video' : 'radio'); });
 
 // ── RETRO BEEPS ───────────────────────────────
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2660,9 +2794,25 @@ const stations = [
 ];
 let stIdx=0, isPlaying=false;
 const radioAudio=document.getElementById('radio-audio'), playBtn=document.getElementById('radio-play-btn'), eqBars=document.getElementById('eq-bars');
-function loadStation() { const s=stations[stIdx]; document.getElementById('radio-station').textContent=s.name; document.getElementById('radio-genre').textContent=s.genre; radioAudio.src=s.url; if(isPlaying) radioAudio.play(); }
-playBtn.onclick=()=>{ if(isPlaying){radioAudio.pause();playBtn.innerHTML='▶';playBtn.classList.remove('playing');eqBars.classList.remove('playing');isPlaying=false;}else{radioAudio.src=stations[stIdx].url;radioAudio.play();playBtn.innerHTML='⏸';playBtn.classList.add('playing');eqBars.classList.add('playing');isPlaying=true;} resetIdle(); };
-document.getElementById('radio-next-btn').onclick=()=>{ stIdx=(stIdx+1)%stations.length; loadStation(); resetIdle(); };
+function updateRadioUi() {
+  const s=stations[stIdx];
+  ['radio-station','media-radio-station'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.name; });
+  ['radio-genre','media-radio-genre'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s.genre; });
+  ['radio-play-btn','media-radio-play-btn'].forEach(id=>{
+    const btn=document.getElementById(id);
+    if(!btn) return;
+    btn.innerHTML=isPlaying?'⏸':'<i class="ti ti-player-play"></i>';
+    btn.classList.toggle('playing', isPlaying);
+  });
+  ['eq-bars','media-eq-bars'].forEach(id=>document.getElementById(id)?.classList.toggle('playing', isPlaying));
+}
+function loadStation() { const s=stations[stIdx]; radioAudio.src=s.url; if(isPlaying) radioAudio.play(); updateRadioUi(); }
+function toggleRadioPlayback(){ if(isPlaying){radioAudio.pause();isPlaying=false;}else{radioAudio.src=stations[stIdx].url;radioAudio.play();isPlaying=true;} updateRadioUi(); resetIdle(); }
+function nextRadioStation(){ stIdx=(stIdx+1)%stations.length; loadStation(); resetIdle(); }
+playBtn.onclick=toggleRadioPlayback;
+document.getElementById('media-radio-play-btn').onclick=toggleRadioPlayback;
+document.getElementById('radio-next-btn').onclick=nextRadioStation;
+document.getElementById('media-radio-next-btn').onclick=nextRadioStation;
 loadStation();
 
 // ── FOCUS + IDLE ──────────────────────────────
@@ -3228,7 +3378,7 @@ let up=0; setInterval(()=>{ up++; document.getElementById('uptime').innerHTML='�
 const modal=document.getElementById('modal-overlay');
 document.getElementById('restart-btn').onclick=()=>{ playBeep(800); modal.classList.add('show'); };
 document.getElementById('modal-cancel').onclick=()=>{ playBeep(400); modal.classList.remove('show'); };
-document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); fetch(httpBase(RESTART_PORT) + '/restart',{method:'POST'}).catch(()=>{}); document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;">RESTARTING...</div>'; };
+document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); sendRestartSignal(); showRestartCountdown(); };
 
 // ── PARTICLES ─────────────────────────────────
 function drawParticles(){ const pc=document.getElementById('particles'); pc.innerHTML=''; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
