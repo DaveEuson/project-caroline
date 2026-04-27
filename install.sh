@@ -120,7 +120,7 @@ echo ""
 TOTAL_RAM_MB=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
 if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo -e "${YELLOW}  ⚠ ${TOTAL_RAM_MB}MB RAM detected. Ollama runs better with 4GB+.${RESET}"
-  echo -e "${DIM}    llama3.2 will work but may be slow on this machine.${RESET}"
+  echo -e "${DIM}    gemma2:2b is the safest local default on smaller Pi installs.${RESET}"
   echo ""
 fi
 
@@ -130,16 +130,16 @@ echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  OLLAMA_MODEL="llama3.2"
-  echo -e "${DIM}  Pulling llama3.2 by default. Choose a different model if you want:${RESET}"
-  echo -e "${DIM}  (Options: llama3.2, phi3:mini, gemma2:2b — Enter to keep llama3.2)${RESET}"
-  read -p "  Model [llama3.2]: " OLLAMA_MODEL_INPUT </dev/tty
-  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-llama3.2}"
+  OLLAMA_MODEL="gemma2:2b"
+  echo -e "${DIM}  Pulling gemma2:2b by default. Choose a different model if you want:${RESET}"
+  echo -e "${DIM}  (Options: gemma2:2b, phi3:mini, llama3.2 — Enter to keep gemma2:2b)${RESET}"
+  read -p "  Model [gemma2:2b]: " OLLAMA_MODEL_INPUT </dev/tty
+  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-gemma2:2b}"
   echo ""
   echo -e "${DIM}  Good. ${OLLAMA_MODEL} is her brain. Worth the wait.${RESET}"
 else
   AI_PROVIDER="openrouter"
-  OLLAMA_MODEL="llama3.2"
+  OLLAMA_MODEL="gemma2:2b"
   echo -e "${DIM}  Cloud mode selected. Add your OpenRouter key in Caroline's settings after install.${RESET}"
 fi
 echo ""
@@ -262,7 +262,7 @@ OLLAMA_ENV_EOF
   sudo systemctl enable ollama 2>/dev/null || true
   sudo systemctl daemon-reload
   sudo systemctl restart ollama 2>/dev/null || sudo systemctl start ollama 2>/dev/null || true
-  ollama run llama3.2 "ready" > /dev/null 2>&1 &
+  ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &
   sleep 3
 
   echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"
@@ -529,7 +529,7 @@ User=${REAL_USER}
 WorkingDirectory=${CAROLINE_DIR}
 ExecStartPre=/bin/sleep 5
 ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT} --userDir ${CAROLINE_DIR}
-ExecStartPost=/bin/bash -c 'sleep 30 && ollama run llama3.2 "ready" > /dev/null 2>&1 &'
+ExecStartPost=/bin/bash -c 'sleep 30 && ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &'
 Restart=on-failure
 RestartSec=5
 
