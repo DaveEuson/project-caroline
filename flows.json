@@ -3650,6 +3650,63 @@
         "wires": []
     },
     {
+        "id": "caro-resources-in",
+        "type": "http in",
+        "z": "161d0c4cebe17cda",
+        "name": "GET /system-resources",
+        "url": "/system-resources",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 900,
+        "wires": [
+            [
+                "caro-resources-fn"
+            ]
+        ]
+    },
+    {
+        "id": "caro-resources-fn",
+        "type": "function",
+        "z": "161d0c4cebe17cda",
+        "name": "build resource payload",
+        "func": "const cpus = os.cpus() || [];\nconst cpuCount = cpus.length || 1;\nconst load1 = (os.loadavg && os.loadavg()[0]) || 0;\nconst totalMem = os.totalmem ? os.totalmem() : 0;\nconst freeMem = os.freemem ? os.freemem() : 0;\nconst usedMem = Math.max(0, totalMem - freeMem);\n\nlet tempC = null;\ntry {\n  const raw = fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8').trim();\n  const n = Number(raw);\n  if (!Number.isNaN(n)) tempC = n / 1000;\n} catch(e) {}\n\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = {\n  ok: true,\n  timestamp: new Date().toISOString(),\n  cpuCount,\n  load1: Number(load1.toFixed(2)),\n  cpuLoadPercent: Math.min(100, Number(((load1 / cpuCount) * 100).toFixed(0))),\n  memoryTotalMb: Math.round(totalMem / 1024 / 1024),\n  memoryUsedMb: Math.round(usedMem / 1024 / 1024),\n  memoryFreeMb: Math.round(freeMem / 1024 / 1024),\n  memoryUsedPercent: totalMem ? Math.round((usedMem / totalMem) * 100) : 0,\n  cpuTempC: tempC === null ? null : Number(tempC.toFixed(1)),\n  cpuTempF: tempC === null ? null : Number(((tempC * 9 / 5) + 32).toFixed(1)),\n  uptimeSeconds: Math.round(os.uptime ? os.uptime() : 0)\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "os",
+                "module": "os"
+            },
+            {
+                "var": "fs",
+                "module": "fs"
+            }
+        ],
+        "x": 420,
+        "y": 900,
+        "wires": [
+            [
+                "caro-resources-res"
+            ]
+        ]
+    },
+    {
+        "id": "caro-resources-res",
+        "type": "http response",
+        "z": "161d0c4cebe17cda",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 650,
+        "y": 900,
+        "wires": []
+    },
+    {
         "id": "caro-hue-disc-in",
         "type": "http in",
         "z": "161d0c4cebe17cda",

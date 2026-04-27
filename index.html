@@ -63,6 +63,8 @@
   .net-pill.offline { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.08); }
   .net-pill.checking { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.08); }
   #ip-pill { color:#67e8f9; border-color:rgba(34,211,238,0.35); background:rgba(34,211,238,0.08); }
+  #resource-pill.warn { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.08); }
+  #resource-pill.danger { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.08); }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
   #restart-btn { margin-left: 8px; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
@@ -1130,6 +1132,7 @@
   <span class="topbar-version">v0.2</span>
   <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
+  <span class="net-pill" id="resource-pill" title="Pi CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI Model">AI KEY NEEDED</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
@@ -1634,6 +1637,34 @@ async function updateTopbarNetwork(checkInternet = true) {
     setInternetPill('online');
   } catch(e) {
     setInternetPill('offline');
+  }
+}
+
+function updateResourcePill(data) {
+  const pill = document.getElementById('resource-pill');
+  if (!pill) return;
+  const cpu = Math.max(0, Math.round(Number(data?.cpuLoadPercent) || 0));
+  const ram = Math.max(0, Math.round(Number(data?.memoryUsedPercent) || 0));
+  pill.classList.remove('warn', 'danger');
+  if (cpu >= 90 || ram >= 90) pill.classList.add('danger');
+  else if (cpu >= 70 || ram >= 75) pill.classList.add('warn');
+  pill.textContent = 'CPU ' + cpu + '% RAM ' + ram + '%';
+  const temp = data?.cpuTempF ? ' Temp ' + Math.round(data.cpuTempF) + 'F' : '';
+  pill.title = 'Pi resources: CPU ' + cpu + '%, RAM ' + ram + '%' + temp;
+}
+
+async function pollSystemResources() {
+  const pill = document.getElementById('resource-pill');
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/system-resources', { timeoutMs: 2500 }, 'system resources');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    updateResourcePill(await r.json());
+  } catch(e) {
+    if (!pill) return;
+    pill.classList.remove('warn');
+    pill.classList.add('danger');
+    pill.textContent = 'CPU -- RAM --';
+    pill.title = 'Pi resources unavailable';
   }
 }
 
@@ -3394,9 +3425,11 @@ document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
 updateAiConfigIndicator();
 renderQuickActions();
 updateTopbarNetwork();
+pollSystemResources();
 window.addEventListener('online', () => updateTopbarNetwork());
 window.addEventListener('offline', () => updateTopbarNetwork(false));
 setInterval(() => updateTopbarNetwork(), 60000);
+setInterval(pollSystemResources, 5000);
 
 // ── SEND ──────────────────────────────────────
 const input=document.getElementById('msg-input');
