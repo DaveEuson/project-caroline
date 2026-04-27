@@ -4007,7 +4007,9 @@
         "x": 1360,
         "y": 660,
         "wires": [
-            []
+            [
+                "caro-discord-send-log"
+            ]
         ]
     },
     {
@@ -4100,5 +4102,115 @@
                 "bad2805f769f7005"
             ]
         ]
+    },
+    {
+        "id": "caro-discord-send-log",
+        "type": "function",
+        "z": "e9526774295cef13",
+        "name": "Log Discord REST result",
+        "func": "const code = Number(msg.statusCode || 0);\nif (code >= 200 && code < 300) {\n  node.log('[Caroline] Discord send ok: ' + code);\n} else {\n  const body = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload || {});\n  node.warn('[Caroline] Discord send failed: HTTP ' + code + ' ' + body.slice(0, 300));\n}\nreturn null;",
+        "outputs": 0,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1580,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "caro-discord-test-in",
+        "type": "http in",
+        "z": "1497b6d50e1369f5",
+        "name": "GET /admin/discord-test",
+        "url": "/admin/discord-test",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 520,
+        "wires": [
+            [
+                "caro-discord-test-build"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-test-build",
+        "type": "function",
+        "z": "1497b6d50e1369f5",
+        "name": "Build Discord test send",
+        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst rawToken = String(flow.get('discordToken') || '').trim();\nconst channelId = String(flow.get('discordChannelId') || '').trim();\nconst CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n\nif (!discordEnabled || !rawToken || !channelId) {\n  msg.statusCode = 400;\n  msg.headers = CORS;\n  msg.payload = { ok: false, enabled: discordEnabled, hasToken: !!rawToken, hasChannel: !!channelId, error: 'Discord is not fully configured in Caroline Settings' };\n  return [msg, null];\n}\n\nconst token = rawToken.replace(/^Bot\\s+/i, '');\nmsg.method = 'POST';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(channelId) + '/messages';\nmsg.headers = {\n  'Authorization': 'Bot ' + token,\n  'Content-Type': 'application/json'\n};\nmsg.payload = { content: 'Caroline Discord test: settings token and channel are working.' };\nreturn [null, msg];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 520,
+        "wires": [
+            [
+                "caro-discord-test-res"
+            ],
+            [
+                "caro-discord-test-http"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-test-http",
+        "type": "http request",
+        "z": "1497b6d50e1369f5",
+        "name": "Discord REST test send",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 650,
+        "y": 540,
+        "wires": [
+            [
+                "caro-discord-test-format"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-test-format",
+        "type": "function",
+        "z": "1497b6d50e1369f5",
+        "name": "Format Discord test result",
+        "func": "const code = Number(msg.statusCode || 0);\nconst ok = code >= 200 && code < 300;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.statusCode = ok ? 200 : 502;\nmsg.payload = {\n  ok,\n  discordStatus: code,\n  discordResponse: msg.payload\n};\nif (!ok) node.warn('[Caroline] Discord test failed: HTTP ' + code + ' ' + JSON.stringify(msg.payload).slice(0, 300));\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 540,
+        "wires": [
+            [
+                "caro-discord-test-res"
+            ]
+        ]
+    },
+    {
+        "id": "caro-discord-test-res",
+        "type": "http response",
+        "z": "1497b6d50e1369f5",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1130,
+        "y": 520,
+        "wires": []
     }
 ]
