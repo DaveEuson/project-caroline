@@ -311,6 +311,7 @@
   #media-fallback-icon { font-size:28px; }
   #media-fallback-title { color:#f8fafc; font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
   #media-fallback-genre { color:rgba(226,232,240,0.45); font-size:9px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.1em; }
+  #media-retry-btn { width:34px; height:28px; margin-top:2px; font-size:14px; }
   #media-mute-btn { position:absolute; right:5px; bottom:5px; z-index:5; border:1px solid rgba(255,255,255,0.2); border-radius:6px; background:rgba(0,0,0,0.64); color:#fff; font-size:10px; padding:3px 7px; cursor:pointer; }
   .ch-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:6px; color:var(--t-hex1); font-size:12px; padding:1px 6px; cursor:pointer; transition:all 0.2s; line-height:1.6; }
   .ch-btn:hover { background:rgba(var(--t-rgb1),0.15); }
@@ -898,14 +899,10 @@
           <select class="settings-select" id="set-channel">
             <option value="0">Lofi Girl</option>
             <option value="1">ChillHop</option>
-            <option value="2">Ambient Nature</option>
-            <option value="3">Study Beats</option>
-            <option value="4">Jazz</option>
-            <option value="5">Al Jazeera English</option>
-            <option value="6">DW News</option>
-            <option value="7">France 24</option>
-            <option value="8">Crunchyroll Anime</option>
-            <option value="9">One Piece Clips</option>
+            <option value="2">Al Jazeera English</option>
+            <option value="3">DW English</option>
+            <option value="4">France 24 English</option>
+            <option value="5">NASA TV</option>
           </select>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -1303,6 +1300,7 @@
               <div id="media-fallback-icon">📺</div>
               <div id="media-fallback-title">Channel</div>
               <div id="media-fallback-genre">Unavailable</div>
+              <button id="media-retry-btn" class="media-nav-btn" onclick="retryMediaChannel()" title="Retry">↻</button>
             </div>
             <button id="media-mute-btn" onclick="toggleMediaMute()">🔇 Unmute</button>
           </div>
@@ -2786,14 +2784,10 @@ function changeAvatar(dir) {
 const MEDIA_CHANNELS = [
   { icon:'🌸', name:'Lofi Girl',      genre:'Music / Study',    type:'youtube', id:'jfKfPfyJRdk' },
   { icon:'🎵', name:'ChillHop',       genre:'Music / Chill',    type:'youtube', id:'7NOSDKb0HlU' },
-  { icon:'🌿', name:'Ambient Nature', genre:'Ambient / Nature', type:'youtube', id:'rUxyKA_-grg' },
-  { icon:'📚', name:'Study Beats',    genre:'Music / Study',    type:'youtube', id:'5qap5aO4i9A' },
-  { icon:'🎷', name:'Jazz',           genre:'Jazz / Live',      type:'youtube', id:'Dx5qFachd3A' },
-  { icon:'🌍', name:'Al Jazeera English', genre:'News / Live',  type:'youtube', id:'F9iGRBFSNB0' },
-  { icon:'📰', name:'DW News',        genre:'News / Live',      type:'youtube', id:'1ScWXNF-e5c' },
-  { icon:'🇫🇷', name:'France 24',     genre:'News / Live',      type:'youtube', id:'h3MuIUNCCLI' },
-  { icon:'🎌', name:'Crunchyroll Anime', genre:'Anime / Clips', type:'youtube', id:'5ZuCrDypaAw' },
-  { icon:'🏴‍☠️', name:'One Piece Clips', genre:'Anime / Clips', type:'youtube', id:'REXhLXvN-bE' }
+  { icon:'🌍', name:'Al Jazeera English', genre:'News / Live',  type:'hls', src:'https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8' },
+  { icon:'📰', name:'DW English',     genre:'News / Live',      type:'hls', src:'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
+  { icon:'🇫🇷', name:'France 24 English', genre:'News / Live',  type:'hls', src:'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_900.m3u8' },
+  { icon:'🚀', name:'NASA TV',        genre:'Science / Space',  type:'hls', src:'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8' }
 ];
 let mediaChannelIndex = 0;
 let mediaMuted = true;
@@ -2816,7 +2810,12 @@ function showMediaFallback(ch) {
   fallback.style.display = 'flex';
   document.getElementById('media-fallback-icon').textContent = ch.icon || '📺';
   document.getElementById('media-fallback-title').textContent = ch.name;
-  document.getElementById('media-fallback-genre').textContent = ch.genre || 'Unavailable';
+  document.getElementById('media-fallback-genre').textContent = 'Stream unavailable — retry';
+}
+
+function retryMediaChannel() {
+  loadMediaChannel(mediaChannelIndex);
+  resetIdle();
 }
 
 function loadMediaChannel(idx) {
@@ -2847,7 +2846,7 @@ function loadMediaChannel(idx) {
       mediaHls = new Hls({ enableWorker:false });
       mediaHls.loadSource(ch.src);
       mediaHls.attachMedia(video);
-      mediaHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
+      mediaHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{ showMediaFallback(ch); }));
       mediaHls.on(Hls.Events.ERROR, (e, data) => { if (data && data.fatal) showMediaFallback(ch); });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = ch.src;
