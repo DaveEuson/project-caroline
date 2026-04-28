@@ -1978,6 +1978,20 @@ function refreshAiStatusFromSettingsInputs() {
   updateAiConfigIndicator(provider);
 }
 
+function applyAiSettingsInputsToState() {
+  const providerEl = document.getElementById('set-ai-provider');
+  const modelEl = document.getElementById('set-model');
+  const keyEl = document.getElementById('set-orkey');
+  const ollamaUrlEl = document.getElementById('set-ollama-url');
+  const ollamaModelEl = document.getElementById('set-ollama-model');
+
+  if (providerEl) S.aiProvider = providerEl.value || S.aiProvider || 'openrouter';
+  if (modelEl) S.aiModel = modelEl.value || S.aiModel || 'anthropic/claude-haiku-4.5';
+  if (keyEl) S.openrouterKey = keyEl.value.trim();
+  if (ollamaUrlEl) S.ollamaUrl = ollamaUrlEl.value.trim() || 'http://localhost:11434';
+  if (ollamaModelEl) S.ollamaModel = ollamaModelEl.value || S.ollamaModel || 'gemma2:2b';
+}
+
 function updateAiConfigIndicator(provider) {
   const pill = document.getElementById('ai-config-pill');
   if (!pill) return;
@@ -2022,7 +2036,9 @@ function setAiStatus(status) {
 function currentSettingsPayload(extra = {}) {
   let stored = {};
   try { stored = JSON.parse(localStorage.getItem('caro_settings') || '{}') || {}; } catch(e) {}
-  Object.assign(S, stored, extra);
+  Object.assign(S, stored);
+  applyAiSettingsInputsToState();
+  Object.assign(S, extra);
   return Object.assign({}, S, {
     type: 'settings_update',
     zipCode: S.zipcode || S.zipCode || '',
@@ -2035,9 +2051,14 @@ async function syncAiModelFromHealth() {
     const r = await fetchJsonWithTimeout(httpBase() + '/health', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'health');
     if (!r.ok) return;
     const h = await r.json();
-    if (h.aiProvider) S.aiProvider = h.aiProvider;
-    if (h.aiModel) S.aiModel = h.aiModel;
-    if (h.ollamaModel) S.ollamaModel = h.ollamaModel;
+    const settingsOpen = document.getElementById('settings-overlay')?.classList.contains('show');
+    if (settingsOpen) {
+      applyAiSettingsInputsToState();
+    } else {
+      if (h.aiProvider) S.aiProvider = h.aiProvider;
+      if (h.aiModel) S.aiModel = h.aiModel;
+      if (h.ollamaModel) S.ollamaModel = h.ollamaModel;
+    }
     if ((S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim()) aiStatus = 'fail';
     else if (aiStatus !== 'ok') aiStatus = 'warn';
     updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
@@ -2348,6 +2369,7 @@ function syncPersonalityToBrain() {
 
 async function testAiConnection(btn) {
   const result = document.getElementById('test-ai-result');
+  applyAiSettingsInputsToState();
   const provider = (document.getElementById('set-ai-provider') || {}).value || S.aiProvider || 'openrouter';
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   if (result) { result.style.display = 'inline'; result.textContent = 'pinging...'; result.style.color = 'rgba(226,232,240,0.4)'; }
@@ -2383,6 +2405,11 @@ async function testAiConnection(btn) {
         });
         const ms = Date.now() - start;
         if (r.ok) {
+          await postSettingsToNodeRed({
+            aiProvider: 'openrouter',
+            aiModel: (document.getElementById('set-model') || {}).value || S.aiModel,
+            openrouterKey: key
+          });
           result.textContent = '✓ OpenRouter key valid — ' + ms + 'ms';
           result.style.color = 'rgba(52,211,153,0.9)';
           setAiStatus('ok');
@@ -2705,6 +2732,7 @@ async function handleServiceAccountUpload(event) {
 
 async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
   const endpoint = httpBase() + '/admin/save-settings';
+  applyAiSettingsInputsToState();
   const payload = Object.assign({}, S, extra, {
     zipCode: S.zipcode || S.zipCode || '',
     setupComplete: true
