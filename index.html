@@ -2781,7 +2781,11 @@ async function handleServiceAccountUpload(event) {
         body: e.target.result,
         timeoutMs: NODE_RED_TIMEOUT_MS
       }, 'Upload service account');
-      statusEl.textContent = resp.ok ? ('✓ ' + file.name) : ('✗ HTTP ' + resp.status);
+      let data = {};
+      try { data = await resp.clone().json(); } catch(e) {}
+      statusEl.textContent = resp.ok
+        ? ('✓ ' + (data.clientEmail || file.name))
+        : ('✗ ' + (data.error || ('HTTP ' + resp.status)));
     } catch(err) {
       statusEl.textContent = '✗ Upload failed — check Pi connection';
     }
