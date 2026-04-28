@@ -108,7 +108,7 @@
   .settings-feedback.show { opacity: 1; }
   .settings-feedback.error { color: #fb7185; }
   #discord-fields { overflow:hidden; max-height:0; opacity:0; transition:max-height 0.35s ease, opacity 0.25s ease; }
-  #discord-fields.open { max-height:160px; opacity:1; }
+  #discord-fields.open { max-height:230px; opacity:1; }
   .clear-history-btn { background: none; border: 1px solid rgba(244,63,94,0.3); border-radius: 10px; padding: 6px 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; }
 
   /* HISTORY PANEL */
@@ -995,6 +995,10 @@
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Channel ID</div><div class="settings-sub">Right-click channel → Copy ID</div></div>
             <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Connection</div><div class="settings-sub" id="discord-test-status">Settings token is used by Node-RED REST nodes</div></div>
+            <button type="button" class="detect-btn" onclick="testDiscordConnection(this)" style="padding:6px 14px;">Test Discord</button>
           </div>
         </div>
       </div>
@@ -1884,6 +1888,59 @@ function selectSwatch(i) {
 function toggleDiscordFields(enabled) {
   const el = document.getElementById('discord-fields');
   if (el) el.classList.toggle('open', enabled);
+}
+
+async function testDiscordConnection(btn) {
+  const status = document.getElementById('discord-test-status');
+  const enabled = document.getElementById('set-discord-enabled').checked;
+  const token = document.getElementById('set-discord-token').value.trim();
+  const channelId = document.getElementById('set-discord-channel').value.trim();
+
+  if (!enabled || !token || !channelId) {
+    if (status) {
+      status.textContent = 'Enable Discord, add token, and add channel ID first';
+      status.style.color = '#f87171';
+    }
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Testing...'; }
+  if (status) {
+    status.textContent = 'Saving settings...';
+    status.style.color = 'rgba(226,232,240,0.55)';
+  }
+
+  try {
+    S.discordEnabled = enabled;
+    S.discordToken = token;
+    S.discordChannelId = channelId;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    await postSettingsToNodeRed({ discordEnabled: enabled, discordToken: token, discordChannelId: channelId });
+
+    if (status) status.textContent = 'Sending test message...';
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/discord-test', {
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Discord test');
+    const data = await resp.json().catch(() => ({}));
+
+    if (resp.ok && data.ok) {
+      if (status) {
+        status.textContent = 'Discord test sent';
+        status.style.color = 'rgba(52,211,153,0.9)';
+      }
+    } else {
+      const detail = data.error || data.discordResponse?.message || ('HTTP ' + resp.status);
+      throw new Error(detail);
+    }
+  } catch(e) {
+    console.error('[Caroline] Discord test failed:', e);
+    if (status) {
+      status.textContent = 'Discord test failed - ' + (e.message || String(e));
+      status.style.color = '#f87171';
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Test Discord'; }
+  }
 }
 
 // ── PROVIDER SWITCHER ──────────────────────────
