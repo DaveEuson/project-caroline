@@ -1987,7 +1987,7 @@ function applyAiSettingsInputsToState() {
 
   if (providerEl) S.aiProvider = providerEl.value || S.aiProvider || 'openrouter';
   if (modelEl) S.aiModel = modelEl.value || S.aiModel || 'anthropic/claude-haiku-4.5';
-  if (keyEl) S.openrouterKey = keyEl.value.trim();
+  if (keyEl && keyEl.value.trim()) S.openrouterKey = keyEl.value.trim();
   if (ollamaUrlEl) S.ollamaUrl = ollamaUrlEl.value.trim() || 'http://localhost:11434';
   if (ollamaModelEl) S.ollamaModel = ollamaModelEl.value || S.ollamaModel || 'gemma2:2b';
 }
@@ -2826,9 +2826,10 @@ async function saveSettings() {
 
   // Validate required fields — key only required when using OpenRouter
   const orkeyVal = document.getElementById('set-orkey').value.trim();
+  const effectiveOrKey = orkeyVal || S.openrouterKey || '';
   const orkeyErr = document.getElementById('orkey-error');
   const selectedProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
-  if (selectedProvider === 'openrouter' && !orkeyVal) {
+  if (selectedProvider === 'openrouter' && !effectiveOrKey) {
     if (orkeyErr) { orkeyErr.textContent = 'OpenRouter key is required when using OpenRouter'; orkeyErr.style.display = 'block'; }
     document.getElementById('set-orkey').focus();
     return;
@@ -2849,7 +2850,7 @@ async function saveSettings() {
   try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
   const needReconnect = getNodeRedUrl() !== prevNrUrl;
   updateTopbarNetwork(false);
-  S.openrouterKey = orkeyVal;
+  if (orkeyVal) S.openrouterKey = orkeyVal;
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
   S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'gemma2:2b').trim();
