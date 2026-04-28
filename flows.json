@@ -1596,7 +1596,7 @@
     "type": "function",
     "z": "3b0c484271dccb1a",
     "name": "Parse Hue",
-    "func": "try {\n  var data = JSON.parse(msg.payload);\n  if (data.type !== 'hue') return null;\n\n  var HUE_BRIDGE = flow.get('hueIp') || '';\n  var HUE_KEY = flow.get('hueKey') || '';\n  if (!HUE_BRIDGE || !HUE_KEY) return null;\n\n  msg.url = 'http://' + HUE_BRIDGE + '/api/' + HUE_KEY + '/groups/4/action';\n  msg.method = 'PUT';\n  msg.headers = { 'Content-Type': 'application/json' };\n  msg.payload = JSON.stringify(data.body);\n  return msg;\n} catch(e) {\n  node.warn('Hue parse error: ' + e.message);\n  return null;\n}",
+    "func": "try {\n  var data = JSON.parse(msg.payload);\n  if (data.type !== 'hue') return null;\n\n  function getShared(k, fallback) {\n    const gv = global.get(k);\n    if (gv !== undefined && gv !== null && gv !== '') return gv;\n    const fv = flow.get(k);\n    return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n  }\n\n  var HUE_BRIDGE = getShared('hueIp', '');\n  var HUE_KEY = getShared('hueKey', '');\n  var HUE_GROUP = String(getShared('hueGroup', '4'));\n  if (!HUE_BRIDGE || !HUE_KEY) return null;\n\n  var path = data.path || ('/groups/' + HUE_GROUP + '/action');\n  if (!/^\\/groups\\/\\d+\\/action$/.test(path)) path = '/groups/' + HUE_GROUP + '/action';\n\n  msg.url = 'http://' + HUE_BRIDGE + '/api/' + HUE_KEY + path;\n  msg.method = data.method || 'PUT';\n  msg.headers = { 'Content-Type': 'application/json' };\n  msg.payload = JSON.stringify(data.body || {});\n  return msg;\n} catch(e) {\n  node.warn('Hue parse error: ' + e.message);\n  return null;\n}",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -4186,6 +4186,112 @@
     "headers": {},
     "x": 1130,
     "y": 520,
+    "wires": []
+  },
+  {
+    "id": "caro-hue-probe-in",
+    "x": 160,
+    "name": "GET /admin/hue-probe",
+    "type": "http in",
+    "url": "/admin/hue-probe",
+    "upload": false,
+    "wires": [
+      [
+        "caro-hue-probe-prep"
+      ]
+    ],
+    "method": "get",
+    "y": 1080,
+    "z": "161d0c4cebe17cda",
+    "swaggerDoc": ""
+  },
+  {
+    "noerr": 0,
+    "libs": [
+      {
+        "module": "http",
+        "var": "http"
+      }
+    ],
+    "type": "function",
+    "id": "caro-hue-probe-prep",
+    "name": "probe Hue bridge",
+    "finalize": "",
+    "timeout": 0,
+    "x": 380,
+    "wires": [
+      [
+        "caro-hue-probe-res"
+      ]
+    ],
+    "y": 1080,
+    "initialize": "",
+    "outputs": 1,
+    "z": "161d0c4cebe17cda",
+    "func": "const ip = String((msg.req && msg.req.query && msg.req.query.ip) || '').trim();\nconst CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n\nfunction respond(payload, statusCode = 200) {\n  msg.statusCode = statusCode;\n  msg.headers = CORS;\n  msg.payload = payload;\n  return msg;\n}\n\nif (!/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(ip)) {\n  return respond({ ok: false, error: 'Invalid IP' }, 400);\n}\nconst parts = ip.split('.').map(Number);\nif (parts.some(n => n < 0 || n > 255)) {\n  return respond({ ok: false, error: 'Invalid IP' }, 400);\n}\n\nconst result = await new Promise(resolve => {\n  const req = http.get({ hostname: ip, port: 80, path: '/api/config', timeout: 1200 }, res => {\n    let raw = '';\n    res.setEncoding('utf8');\n    res.on('data', chunk => raw += chunk);\n    res.on('end', () => {\n      let data = {};\n      try { data = raw ? JSON.parse(raw) : {}; } catch(e) {}\n      const ok = res.statusCode === 200 && !!(data.bridgeid || data.modelid || data.name);\n      resolve({\n        ok,\n        ip,\n        name: data.name || '',\n        bridgeid: data.bridgeid || '',\n        modelid: data.modelid || '',\n        status: res.statusCode || 0\n      });\n    });\n  });\n  req.on('timeout', () => req.destroy(new Error('timeout')));\n  req.on('error', err => resolve({ ok: false, ip, error: err.message || 'probe failed', status: 0 }));\n});\n\nreturn respond(result);"
+  },
+  {
+    "id": "caro-hue-probe-res",
+    "headers": [],
+    "x": 1060,
+    "name": "",
+    "type": "http response",
+    "statusCode": "",
+    "wires": [],
+    "y": 1080,
+    "z": "161d0c4cebe17cda"
+  },
+  {
+    "id": "caro-network-prefixes-in",
+    "type": "http in",
+    "z": "161d0c4cebe17cda",
+    "name": "GET /admin/network-prefixes",
+    "url": "/admin/network-prefixes",
+    "method": "get",
+    "upload": false,
+    "wires": [
+      [
+        "caro-network-prefixes-fn"
+      ]
+    ],
+    "x": 180,
+    "y": 1160,
+    "swaggerDoc": ""
+  },
+  {
+    "id": "caro-network-prefixes-fn",
+    "type": "function",
+    "z": "161d0c4cebe17cda",
+    "name": "read local subnets",
+    "func": "const interfaces = os.networkInterfaces ? os.networkInterfaces() : {};\nconst ips = [];\nconst prefixes = [];\n\nfunction addAddress(addr) {\n  const ip = String(addr.address || '').trim();\n  const family = String(addr.family || '');\n  if (addr.internal || (family !== 'IPv4' && family !== '4')) return;\n  if (!/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(ip)) return;\n  const parts = ip.split('.').map(Number);\n  if (parts.some(n => n < 0 || n > 255) || parts[0] === 127) return;\n  const prefix = parts.slice(0, 3).join('.');\n  if (!ips.includes(ip)) ips.push(ip);\n  if (!prefixes.includes(prefix)) prefixes.push(prefix);\n}\n\nObject.keys(interfaces).forEach(name => {\n  if (/^(docker|br-|veth|lo)/i.test(name)) return;\n  (interfaces[name] || []).forEach(addAddress);\n});\n\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, ips, prefixes };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "var": "os",
+        "module": "os"
+      }
+    ],
+    "x": 430,
+    "y": 1160,
+    "wires": [
+      [
+        "caro-network-prefixes-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-network-prefixes-res",
+    "type": "http response",
+    "z": "161d0c4cebe17cda",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 680,
+    "y": 1160,
     "wires": []
   }
 ]
