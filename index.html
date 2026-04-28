@@ -2605,10 +2605,14 @@ async function nodeRedNetworkPrefixes() {
 }
 
 async function probeHueIp(ip) {
+  const d = await probeHueBridge(ip);
+  return d && d.ok ? ip : '';
+}
+
+async function probeHueBridge(ip) {
   const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-probe?ip=' + encodeURIComponent(ip), { timeoutMs: 2200 }, 'Hue probe ' + ip);
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  const d = await r.json();
-  return d && d.ok ? ip : '';
+  return await r.json();
 }
 
 async function scanHueBridgeCandidates(statusEl) {
@@ -2644,6 +2648,8 @@ async function detectHueBridge(btn) {
         if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + verified; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
         return;
       }
+      const detail = await probeHueBridge(currentIp).catch(err => ({ error: err.message }));
+      console.warn('[Caroline] Hue probe failed', detail);
     }
 
     if (statusEl) { statusEl.textContent = 'Scanning local subnet...'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
