@@ -2622,15 +2622,26 @@ async function scanHueBridgeCandidates(statusEl) {
   localIpPrefixes(prefixes).forEach(prefix => {
     for (let i = 1; i <= 254; i++) ips.push(prefix + '.' + i);
   });
-  const chunkSize = 24;
-  for (let i = 0; i < ips.length; i += chunkSize) {
-    const chunk = ips.slice(i, i + chunkSize);
-    if (statusEl) statusEl.textContent = 'Scanning ' + chunk[0] + ' - ' + chunk[chunk.length - 1] + '...';
-    const results = await Promise.allSettled(chunk.map(ip => probeHueIp(ip)));
-    const hit = results.find(r => r.status === 'fulfilled' && r.value);
-    if (hit) return hit.value;
+  let next = 0;
+  let found = '';
+  const workerCount = Math.min(8, ips.length);
+  async function worker() {
+    while (!found && next < ips.length) {
+      const idx = next++;
+      const ip = ips[idx];
+      if (statusEl && (idx % workerCount === 0)) statusEl.textContent = 'Scanning ' + ip + '...';
+      try {
+        const d = await probeHueBridge(ip);
+        if (d && d.ok) {
+          found = ip;
+          if (statusEl) statusEl.textContent = 'Found bridge at ' + ip + '...';
+          return;
+        }
+      } catch(e) {}
+    }
   }
-  return '';
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  return found;
 }
 
 async function detectHueBridge(btn) {
