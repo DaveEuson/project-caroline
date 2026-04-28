@@ -126,19 +126,13 @@
         "displayName": "Google"
     },
     {
-        "id": "c75b9876443f809c",
-        "type": "discord-token",
-        "name": "Caroline"
-    },
-    {
         "id": "02d7bfd95e917771",
         "type": "global-config",
         "env": [],
         "modules": {
             "node-red-contrib-google-sheets": "1.1.2",
             "node-red-contrib-huemagic": "4.2.2",
-            "node-red-contrib-google-calendar": "0.1.5",
-            "node-red-contrib-discord-advanced": "3.6.0"
+            "node-red-contrib-google-calendar": "0.1.5"
         }
     },
     {
@@ -1295,35 +1289,6 @@
         "wires": []
     },
     {
-        "id": "c9d2036728f2f965",
-        "type": "discordMessage",
-        "z": "e9526774295cef13",
-        "name": "Caroline Bot",
-        "channelIdFilter": "",
-        "token": "c75b9876443f809c",
-        "x": 110,
-        "y": 80,
-        "wires": [
-            [
-                "28b2446e194dd07f",
-                "3e051b704a42bd46"
-            ]
-        ]
-    },
-    {
-        "id": "7e0e420b2f68cb48",
-        "type": "discordMessageManager",
-        "z": "e9526774295cef13",
-        "name": "",
-        "channel": "flow.get('discordChannelId')",
-        "token": "c75b9876443f809c",
-        "x": 1370,
-        "y": 220,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "36a0986a86c20dc6",
         "type": "inject",
         "z": "27131f742768c952",
@@ -1921,7 +1886,7 @@
         "type": "function",
         "z": "8b430ae64565d6dd",
         "name": "Format for Discord",
-        "func": "const text = msg.docText || msg.payload;\nconst now = new Date().toLocaleString('en-US', { timeZone: flow.get('timezone') || 'America/Los_Angeles' });\n\n// Split into chunks if too long (Discord 2000 char limit)\nconst maxLen = 1800;\nlet message = 'ðŸ“‹ **AGENT BRIEFING** â€” ' + now + '\\n\\n' + text;\n\nif (message.length > maxLen) {\n  message = message.substring(0, maxLen) + '...\\n*(continued in doc)*';\n}\n\nmsg.payload = message;\nmsg.channel = '1491813185483706518';\nreturn msg;",
+        "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst rawToken = String(flow.get('discordToken') || '').trim();\nconst channelId = String(flow.get('discordChannelId') || '').trim();\nif (!discordEnabled || !rawToken || !channelId) return null;\n\nconst text = msg.docText || msg.payload;\nconst now = new Date().toLocaleString('en-US', { timeZone: flow.get('timezone') || 'America/Los_Angeles' });\n\n// Split into chunks if too long (Discord 2000 char limit)\nconst maxLen = 1800;\nlet message = 'AGENT BRIEFING - ' + now + '\\n\\n' + text;\n\nif (message.length > maxLen) {\n  message = message.substring(0, maxLen) + '...\\n*(continued in doc)*';\n}\n\nconst token = rawToken.replace(/^Bot\\s+/i, '');\nmsg.method = 'POST';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(channelId) + '/messages';\nmsg.headers = {\n  'Authorization': 'Bot ' + token,\n  'Content-Type': 'application/json'\n};\nmsg.payload = { content: message };\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1932,9 +1897,48 @@
         "y": 300,
         "wires": [
             [
-                "f2267330b77a6514"
+                "caro-agent-discord-rest-send"
             ]
         ]
+    },
+    {
+        "id": "caro-agent-discord-rest-send",
+        "type": "http request",
+        "z": "8b430ae64565d6dd",
+        "name": "Discord REST send",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1930,
+        "y": 300,
+        "wires": [
+            [
+                "caro-agent-discord-send-log"
+            ]
+        ]
+    },
+    {
+        "id": "caro-agent-discord-send-log",
+        "type": "function",
+        "z": "8b430ae64565d6dd",
+        "name": "Log Discord REST result",
+        "func": "const code = Number(msg.statusCode || 0);\nif (code >= 200 && code < 300) {\n  node.log('[Caroline] Agent briefing Discord send ok: ' + code);\n} else {\n  const body = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload || {});\n  node.warn('[Caroline] Agent briefing Discord send failed: HTTP ' + code + ' ' + body.slice(0, 300));\n}\nreturn null;",
+        "outputs": 0,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2180,
+        "y": 300,
+        "wires": []
     },
     {
         "id": "083cc9bdce247815",
@@ -2186,35 +2190,6 @@
         "x": 1980,
         "y": 420,
         "wires": []
-    },
-    {
-        "id": "17f7cd42969dbc86",
-        "type": "discordMessage",
-        "z": "8b430ae64565d6dd",
-        "name": "Listen to #agent-briefing",
-        "channelIdFilter": "1491813185483706518",
-        "token": "",
-        "x": 640,
-        "y": 540,
-        "wires": [
-            [
-                "083cc9bdce247815",
-                "e229729795d3ac0b"
-            ]
-        ]
-    },
-    {
-        "id": "f2267330b77a6514",
-        "type": "discordMessageManager",
-        "z": "8b430ae64565d6dd",
-        "name": "Post to #agent-briefing",
-        "channel": "1491813185483706518",
-        "token": "",
-        "x": 1960,
-        "y": 300,
-        "wires": [
-            []
-        ]
     },
     {
         "id": "47f85be4d10083cc",

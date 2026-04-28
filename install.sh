@@ -52,7 +52,6 @@ AI_MODEL="anthropic/claude-haiku-4.5"
 
 # Node-RED palette nodes required by Caroline
 PALETTE_NODES=(
-  "node-red-contrib-discord-advanced"
   "node-red-contrib-google-calendar"
   "node-red-contrib-google-sheets"
   "node-red-contrib-huemagic"
