@@ -306,14 +306,19 @@
   #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #media-panel { width:100%; min-height:232px; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:radial-gradient(circle at 20% 0%, rgba(var(--t-rgb1),0.12), transparent 40%), rgba(0,0,0,0.26); position:relative; }
-  .media-mode { display:none; height:100%; padding:9px; }
-  .media-mode.active { display:block; }
+  .media-mode { display:none; min-height:230px; padding:9px; }
+  .media-mode.active { display:flex; flex-direction:column; }
   .media-player-head { display:flex; align-items:center; gap:5px; margin-bottom:6px; min-width:0; }
   #media-channel-label { flex:1; min-width:0; color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .media-nav-btn { width:24px; height:22px; display:grid; place-items:center; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:6px; background:rgba(0,0,0,0.18); color:var(--t-hex1); cursor:pointer; }
   .media-frame-wrap { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.24); background:#000; }
   #media-iframe, #media-video { width:100%; height:100%; border:0; display:none; background:#000; }
   #media-video { object-fit:cover; }
+  #media-quick-rail { flex:1; min-height:0; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:5px; padding-top:8px; }
+  .media-quick-btn { min-width:0; height:26px; display:flex; align-items:center; justify-content:center; gap:4px; border:1px solid rgba(var(--t-rgb1),0.16); border-radius:6px; background:rgba(0,0,0,0.22); color:rgba(226,232,240,0.52); font-family:'JetBrains Mono',monospace; font-size:9px; line-height:1; cursor:pointer; overflow:hidden; }
+  .media-quick-btn.active { color:#f8fafc; border-color:rgba(var(--t-rgb1),0.45); background:rgba(var(--t-rgb1),0.12); box-shadow:inset 0 0 12px rgba(var(--t-rgb1),0.08); }
+  .media-quick-icon { flex:0 0 auto; font-size:12px; }
+  .media-quick-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #media-fallback-card { display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column; gap:8px; padding:12px; text-align:center; background:radial-gradient(circle at 30% 10%, rgba(var(--t-rgb1),0.16), transparent 44%), linear-gradient(135deg, rgba(5,5,10,0.98), rgba(16,8,30,0.94)); }
   #media-fallback-icon { font-size:28px; }
   #media-fallback-title { color:#f8fafc; font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
@@ -368,12 +373,13 @@
   body.focus-mode #topbar { opacity: 0.1; pointer-events: none; }
   body.focus-mode #avatar-hint { opacity: 0; }
   body.focus-mode #avatar-outer { transform: scale(1.2) translateY(10px); }
+  body.idle-mode #left { opacity: 0; transform: translateX(-12px); pointer-events: none; }
   body.idle-mode #news-panel { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
   body.idle-mode #avatar-outer { transform: scale(1.4) translateY(15px); }
-  body.idle-mode #bottom-bar { opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
+  body.idle-mode #bottom-bar { opacity: 1; pointer-events: auto; }
   #screensaver-overlay { display:none; position:fixed; inset:0; background:rgba(2,3,5,0); z-index:5; pointer-events:none; transition:background 2s ease; }
   body.idle-mode #screensaver-overlay { display:block; background:rgba(2,3,5,0.65); }
 
@@ -389,7 +395,7 @@
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
-  #bottom-bar { height: 165px; flex-shrink: 0; display: flex; gap: 0; border-top: 1px solid rgba(var(--t-rgb1), 0.12); background: linear-gradient(180deg, rgba(5,5,10,0.95), rgba(12,8,20,0.98)); }
+  #bottom-bar { height: 165px; flex-shrink: 0; display: flex; gap: 0; border-top: 1px solid rgba(var(--t-rgb1), 0.12); background: linear-gradient(180deg, rgba(5,5,10,0.95), rgba(12,8,20,0.98)); position: relative; z-index: 12; transition: opacity 1.5s ease; }
   #bottom-chat { flex: 1; display: flex; flex-direction: column; padding: 10px 14px 8px; min-width: 0; border-right: 1px solid rgba(var(--t-rgb1), 0.08); }
   #bottom-chat #input-row { display:flex; align-items:center; gap:8px; padding:4px 0 0; flex-shrink:0; justify-content:flex-start; max-width:none; width:100%; }
   #bottom-chat #msg-input { flex:1; min-width:0; }
@@ -458,6 +464,8 @@
     #news-panel { width: 100%; height: 180px; flex-direction: row; border-left: none; border-top: 1px solid rgba(var(--t-rgb1),0.08); }
     #video-section { width: 50%; border-bottom: none; border-right: 1px solid rgba(var(--t-rgb1),0.08); }
     #media-panel { min-height: 138px; max-height: 138px; overflow-y: auto; }
+    .media-mode { min-height: 136px; }
+    #media-quick-rail { display:none; }
     #news-section { flex: 1; overflow-y: auto; padding: 8px; }
     #avatar-outer { width: 140px; height: 140px; }
     #center { padding: 4px 6px; gap: 8px; }
@@ -1324,6 +1332,7 @@
             </div>
             <button id="media-mute-btn" onclick="toggleMediaMute()">🔇 Unmute</button>
           </div>
+          <div id="media-quick-rail" aria-label="Media channels"></div>
         </div>
       </div>
     </div>
@@ -3048,6 +3057,25 @@ function showMediaFallback(ch) {
   document.getElementById('media-fallback-genre').textContent = 'Stream unavailable — retry';
 }
 
+function renderMediaQuickRail() {
+  const rail = document.getElementById('media-quick-rail');
+  if (!rail) return;
+  rail.innerHTML = '';
+  MEDIA_CHANNELS.forEach((ch, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'media-quick-btn' + (idx === mediaChannelIndex ? ' active' : '');
+    btn.title = ch.name + ' — ' + ch.genre;
+    btn.setAttribute('aria-label', ch.name);
+    btn.innerHTML = '<span class="media-quick-icon">' + ch.icon + '</span><span class="media-quick-name">' + ch.name + '</span>';
+    btn.onclick = () => {
+      loadMediaChannel(idx);
+      resetIdle();
+    };
+    rail.appendChild(btn);
+  });
+}
+
 function retryMediaChannel() {
   loadMediaChannel(mediaChannelIndex);
   resetIdle();
@@ -3063,6 +3091,7 @@ function loadMediaChannel(idx) {
   const fallback = document.getElementById('media-fallback-card');
   const muteBtn = document.getElementById('media-mute-btn');
   if (label) label.textContent = ch.icon + ' ' + ch.name + ' — ' + ch.genre;
+  renderMediaQuickRail();
   if (fallback) fallback.style.display = 'none';
   if (iframe) { iframe.style.display = 'none'; iframe.src = 'about:blank'; }
   if (video) video.style.display = 'none';
