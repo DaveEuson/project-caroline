@@ -12,7 +12,7 @@ Looking to launch Late April
 ---
 
 ![Project: Caroline avatar](assets/caroline.gif)
-
+![Project: Caroline interface](screenshot_7.png)
 ## The Story
 
 Project: Caroline is your portal to an ambient digital sidekick completely personalized to you. When they wake up, a brief setup wizard establishes their baseline personality. From there, you can dive into the settings to fully customize their core system prompt — creating a smart dashboard that truly understands how you work, think, and communicate.
