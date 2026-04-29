@@ -51,7 +51,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 
 After install, open **Settings** in Caroline:
 
-- **Google:** create a **Desktop app** OAuth client, then import or paste the downloaded OAuth client JSON in Settings. Use **Connect Google** for Calendar and Google Tasks. If Google lands on a localhost/error page in a remote browser, copy the final address-bar URL and paste it into **Finish Google Sign-In**. See [Google OAuth setup](docs/google-oauth.md). The old service-account JSON upload is kept only as an advanced fallback.
+- **Google:** create a **Desktop app** OAuth client, then import or paste the downloaded OAuth client JSON in Settings. Use **Connect Google** for Calendar and Google Tasks, or **Use Phone Code** in kiosk mode when there is no address bar. See [Google OAuth setup](docs/google-oauth.md). The old service-account JSON upload is kept only as an advanced fallback.
 - **Spotify:** add `https://[Pi-IP]:8443/spotify/callback` as the Spotify app redirect URI, open `https://[Pi-IP]:8443` once to accept the self-signed certificate, then use **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 
