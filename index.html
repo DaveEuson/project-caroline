@@ -3894,6 +3894,71 @@ function updateCalendar(event) {
   else { title.textContent = event.title; if (time) time.textContent = event.start + (event.end ? ' – ' + event.end : ''); checkCalendarForTodos(event); }
 }
 
+// ── AMBIENT CHECK-INS ─────────────────────────
+const CHECKIN_SLOTS = [
+  { id:'morning', hour:9,  minute:30 },
+  { id:'midday',  hour:12, minute:30 },
+  { id:'afternoon', hour:16, minute:30 },
+  { id:'evening', hour:20, minute:30 }
+];
+
+function checkinDateKey(date = new Date()) {
+  return date.toLocaleDateString('en-CA');
+}
+
+function currentCalendarSummary() {
+  const title = (document.getElementById('cal-title') || {}).textContent || '';
+  const time = (document.getElementById('cal-time') || {}).textContent || '';
+  if (!title || /no events/i.test(title)) return '';
+  return time ? title + ' at ' + time : title;
+}
+
+function checkinFocusSummary() {
+  const active = todos.filter(t => !t.done);
+  if (pomoRunning) {
+    const mins = Math.max(1, Math.ceil(pomoSeconds / 60));
+    return 'you have a focus timer running with about ' + mins + ' minutes left';
+  }
+  if (active.length) return 'your list is pointing at "' + active[0].text + '"';
+  const cal = currentCalendarSummary();
+  if (cal) return 'your calendar has "' + cal + '" up next';
+  if (isPlaying) return 'you have ' + stations[stIdx].name + ' on in the background';
+  return 'the board is quiet right now';
+}
+
+function checkinLine(slotId) {
+  const focus = checkinFocusSummary();
+  if (slotId === 'morning') return 'Checking in. I see ' + focus + '. What is the one thing that gets the day moving?';
+  if (slotId === 'midday') return 'Midday check-in. I see ' + focus + '. Need to adjust the plan or keep pushing?';
+  if (slotId === 'afternoon') return 'Afternoon check-in. I see ' + focus + '. What deserves the next 25 minutes?';
+  return 'Evening check-in. I see ' + focus + '. Want to close one loop before you downshift?';
+}
+
+function maybeRunScheduledCheckin() {
+  if (document.hidden || (typeof isListening !== 'undefined' && isListening)) return;
+  const inputEl = document.getElementById('msg-input');
+  if (inputEl && inputEl.value.trim()) return;
+
+  const now = new Date();
+  const minutesNow = now.getHours() * 60 + now.getMinutes();
+  const dayKey = checkinDateKey(now);
+  for (const slot of CHECKIN_SLOTS) {
+    const target = slot.hour * 60 + slot.minute;
+    const delta = minutesNow - target;
+    if (delta < 0 || delta > 45) continue;
+
+    const key = 'caro_checkin_' + dayKey + '_' + slot.id;
+    if (localStorage.getItem(key)) continue;
+    localStorage.setItem(key, 'sent');
+    const text = checkinLine(slot.id);
+    addMessage(text, 'caroline', 'proactive');
+    speak(text);
+    break;
+  }
+}
+setTimeout(maybeRunScheduledCheckin, 20000);
+setInterval(maybeRunScheduledCheckin, 60000);
+
 // ── BOTTOM BAR ────────────────────────────────
 function updateBottomChat() {
   const container = document.getElementById('bottom-chat-msgs');
