@@ -1001,7 +1001,9 @@
           <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
           <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
             <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
+            <button id="google-device-btn" type="button" onclick="handleGoogleDeviceAuth()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.32);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Use Phone Code</button>
             <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
+            <span id="google-device-status" style="font-size:9px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;text-align:right;max-width:280px;word-break:break-word;"></span>
           </div>
         </div>
         <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
@@ -2999,6 +3001,82 @@ async function handleGoogleAuth() {
     const data = await refreshGoogleStatus();
     if ((data && data.connected) || tries > 60) clearInterval(timer);
   }, 2000);
+}
+
+let googleDevicePollTimer = null;
+async function handleGoogleDeviceAuth() {
+  const statusEl = document.getElementById('google-auth-status');
+  const deviceEl = document.getElementById('google-device-status');
+  const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
+  const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
+  if (!clientId) {
+    if (statusEl) statusEl.textContent = 'Import OAuth JSON first';
+    return;
+  }
+  if (!isGoogleOAuthClientId(clientId)) {
+    if (statusEl) statusEl.textContent = 'Import a valid OAuth JSON first';
+    return;
+  }
+  S.googleClientId = clientId;
+  S.googleClientSecret = clientSecret;
+  S.googleRedirectUri = GOOGLE_LOOPBACK_REDIRECT_URI;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: S.googleRedirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
+  if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+  if (statusEl) statusEl.textContent = 'Starting phone sign-in...';
+  if (deviceEl) deviceEl.textContent = '';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, clientSecret }),
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Start Google device sign-in');
+    const data = await resp.json();
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    const code = data.user_code || data.userCode || '';
+    const url = data.verification_url || data.verificationUri || 'https://www.google.com/device';
+    if (statusEl) statusEl.textContent = 'Waiting for phone approval...';
+    if (deviceEl) deviceEl.textContent = 'Go to ' + url + ' and enter ' + code;
+    const intervalMs = Math.max(5000, Number(data.interval || 5) * 1000);
+    googleDevicePollTimer = setInterval(() => pollGoogleDeviceAuth(statusEl, deviceEl), intervalMs);
+    pollGoogleDeviceAuth(statusEl, deviceEl);
+  } catch(err) {
+    if (statusEl) statusEl.textContent = 'Phone sign-in unavailable';
+    if (deviceEl) deviceEl.textContent = err.message || 'Try Connect Google instead';
+  }
+}
+
+async function pollGoogleDeviceAuth(statusEl, deviceEl) {
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/poll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Poll Google device sign-in');
+    const data = await resp.json();
+    if (data.connected) {
+      if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+      googleDevicePollTimer = null;
+      if (statusEl) statusEl.textContent = 'Connected';
+      if (deviceEl) deviceEl.textContent = 'Google connected';
+      await refreshGoogleStatus();
+      return;
+    }
+    if (data.pending) {
+      if (statusEl) statusEl.textContent = 'Waiting for phone approval...';
+      return;
+    }
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+  } catch(err) {
+    const msg = err.message || '';
+    if (/authorization_pending/i.test(msg)) return;
+    if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+    googleDevicePollTimer = null;
+    if (statusEl) statusEl.textContent = 'Phone sign-in stopped';
+    if (deviceEl) deviceEl.textContent = msg || 'Start phone sign-in again';
+  }
 }
 
 async function handleGoogleManualCallback() {

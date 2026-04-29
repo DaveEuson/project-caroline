@@ -1054,8 +1054,7 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Sheet Delete JWT",
-    "func": "const taskName = msg.taskToDelete;\n\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;
-    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks complete');\nif (auth) {\n  msg.taskToDelete = taskName;\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks complete');\n}\nmsg.taskToDelete = taskName;\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks complete', 'https://www.googleapis.com/auth/spreadsheets');",
+    "func": "const taskName = msg.taskToDelete;\n\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks complete');\nif (auth) {\n  msg.taskToDelete = taskName;\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks complete');\n}\nmsg.taskToDelete = taskName;\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks complete', 'https://www.googleapis.com/auth/spreadsheets');",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1194,8 +1193,7 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Add Task to Sheet",
-    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;
-    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks add');\nif (auth) {\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks add');\n}\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks add', 'https://www.googleapis.com/auth/spreadsheets');",
+    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks add');\nif (auth) {\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks add');\n}\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks add', 'https://www.googleapis.com/auth/spreadsheets');",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1488,8 +1486,7 @@
     "type": "function",
     "z": "26e3d3bcd90eddc0",
     "name": "Get JWT Token",
-    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;
-    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('calendar fetch');\nif (auth) return oauthRefreshRequest(auth, 'calendar fetch');\nreturn serviceAccountRequest('calendar fetch', 'https://www.googleapis.com/auth/calendar');",
+    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('calendar fetch');\nif (auth) return oauthRefreshRequest(auth, 'calendar fetch');\nreturn serviceAccountRequest('calendar fetch', 'https://www.googleapis.com/auth/calendar');",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -2386,8 +2383,7 @@
     "type": "function",
     "z": "8232baf451bd6288",
     "name": "Tasks JWT",
-    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;
-    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks sync');\nif (auth) {\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks sync');\n}\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks sync', 'https://www.googleapis.com/auth/spreadsheets');",
+    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks sync');\nif (auth) {\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks sync');\n}\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks sync', 'https://www.googleapis.com/auth/spreadsheets');",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -4436,8 +4432,7 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Calendar Token Guard",
-    "func": "if (!msg.calAction) return null;\n\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;
-    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('calendar event');\nif (auth) return oauthRefreshRequest(auth, 'calendar event');\nreturn serviceAccountRequest('calendar event', 'https://www.googleapis.com/auth/calendar');",
+    "func": "if (!msg.calAction) return null;\n\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('calendar event');\nif (auth) return oauthRefreshRequest(auth, 'calendar event');\nreturn serviceAccountRequest('calendar event', 'https://www.googleapis.com/auth/calendar');",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -4665,6 +4660,198 @@
     "wires": []
   },
   {
+    "id": "caro-google-device-start-in",
+    "type": "http in",
+    "z": "e9526774295cef13",
+    "name": "POST /admin/google/device/start",
+    "url": "/admin/google/device/start",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 220,
+    "y": 1500,
+    "wires": [
+      [
+        "caro-google-device-start-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-start-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Start Google Device Auth",
+    "func": "const SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction setShared(k, v) { flow.set(k, v); global.set(k, v); }\nfunction isGoogleOAuthClientId(id) {\n  return /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(id || '').trim());\n}\nconst body = typeof msg.payload === 'object' && msg.payload ? msg.payload : {};\nconst clientId = String(body.clientId || getShared('googleClientId', '') || '').trim();\nconst clientSecret = String(body.clientSecret || getShared('googleClientSecret', '') || '').trim();\nif (!isGoogleOAuthClientId(clientId)) {\n  msg.statusCode = 400;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: 'Import a valid Google OAuth client JSON first.' };\n  return [null, msg];\n}\nsetShared('googleClientId', clientId);\nsetShared('googleClientSecret', clientSecret);\nsetShared('googleRedirectUri', 'http://127.0.0.1:1880/admin/google/callback');\ntry {\n  let existing = {};\n  if (fs.existsSync(SETTINGS_PATH)) existing = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(Object.assign({}, existing, {\n    googleClientId: clientId,\n    googleClientSecret: clientSecret,\n    googleRedirectUri: 'http://127.0.0.1:1880/admin/google/callback',\n    googleConnected: false\n  }), null, 2), 'utf8');\n} catch(e) { node.warn('Could not persist Google device client: ' + e.message); }\nconst scope = [\n  'https://www.googleapis.com/auth/calendar.events',\n  'https://www.googleapis.com/auth/tasks',\n  'https://www.googleapis.com/auth/spreadsheets'\n].join(' ');\nmsg.googleOAuthClientId = clientId;\nmsg.googleOAuthClientSecret = clientSecret;\nmsg.payload = new URLSearchParams({ client_id: clientId, scope }).toString();\nmsg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\nmsg.method = 'POST';\nmsg.url = 'https://oauth2.googleapis.com/device/code';\nreturn [msg, null];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "module": "fs",
+        "var": "fs"
+      }
+    ],
+    "x": 500,
+    "y": 1500,
+    "wires": [
+      [
+        "caro-google-device-code-http"
+      ],
+      [
+        "caro-google-device-start-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-code-http",
+    "type": "http request",
+    "z": "e9526774295cef13",
+    "name": "Get Google Device Code",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 760,
+    "y": 1500,
+    "wires": [
+      [
+        "caro-google-device-code-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-code-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Store Google Device Code",
+    "func": "const payload = msg.payload || {};\nif (!payload.device_code || !payload.user_code) {\n  msg.statusCode = msg.statusCode && msg.statusCode >= 400 ? msg.statusCode : 500;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: payload.error_description || payload.error || 'Google did not return a device code. This OAuth client may need to be type TV and Limited Input.' };\n  return msg;\n}\nflow.set('google_device_code', payload.device_code);\nflow.set('google_device_client_id', msg.googleOAuthClientId || flow.get('googleClientId') || '');\nflow.set('google_device_client_secret', msg.googleOAuthClientSecret || flow.get('googleClientSecret') || '');\nflow.set('google_device_interval', Number(payload.interval || 5));\nflow.set('google_device_expires_at', Date.now() + Number(payload.expires_in || 1800) * 1000);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = Object.assign({ ok: true }, payload, {\n  verificationUri: payload.verification_url || payload.verification_uri || 'https://www.google.com/device',\n  userCode: payload.user_code\n});\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1010,
+    "y": 1500,
+    "wires": [
+      [
+        "caro-google-device-start-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-start-res",
+    "type": "http response",
+    "z": "e9526774295cef13",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 1260,
+    "y": 1500,
+    "wires": []
+  },
+  {
+    "id": "caro-google-device-poll-in",
+    "type": "http in",
+    "z": "e9526774295cef13",
+    "name": "POST /admin/google/device/poll",
+    "url": "/admin/google/device/poll",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 220,
+    "y": 1560,
+    "wires": [
+      [
+        "caro-google-device-poll-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-poll-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Poll Google Device Auth",
+    "func": "const deviceCode = flow.get('google_device_code') || '';\nconst clientId = flow.get('google_device_client_id') || flow.get('googleClientId') || global.get('googleClientId') || '';\nconst clientSecret = flow.get('google_device_client_secret') || flow.get('googleClientSecret') || global.get('googleClientSecret') || '';\nconst expiresAt = Number(flow.get('google_device_expires_at') || 0);\nif (!deviceCode || !clientId) {\n  msg.statusCode = 400;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: 'Start phone sign-in first.' };\n  return [null, msg];\n}\nif (expiresAt && Date.now() > expiresAt) {\n  msg.statusCode = 400;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: 'The Google phone sign-in code expired. Start again.' };\n  return [null, msg];\n}\nconst body = {\n  client_id: clientId,\n  device_code: deviceCode,\n  grant_type: 'urn:ietf:params:oauth:grant-type:device_code'\n};\nif (clientSecret) body.client_secret = clientSecret;\nmsg.googleManualCallback = true;\nmsg.googleOAuthClientId = clientId;\nmsg.googleOAuthClientSecret = clientSecret;\nmsg.googleOAuthRedirectUri = 'urn:ietf:params:oauth:grant-type:device_code';\nmsg.payload = new URLSearchParams(body).toString();\nmsg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\nmsg.method = 'POST';\nmsg.url = 'https://oauth2.googleapis.com/token';\nreturn [msg, null];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 1560,
+    "wires": [
+      [
+        "caro-google-device-token-http"
+      ],
+      [
+        "caro-google-device-poll-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-token-http",
+    "type": "http request",
+    "z": "e9526774295cef13",
+    "name": "Poll Google Device Token",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 760,
+    "y": 1560,
+    "wires": [
+      [
+        "caro-google-device-token-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-token-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Google Device Token Result",
+    "func": "const payload = msg.payload || {};\nif (payload.access_token) {\n  flow.set('google_device_code', '');\n  return [msg, null];\n}\nconst err = payload.error || 'authorization_pending';\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nif (err === 'authorization_pending' || err === 'slow_down') {\n  msg.statusCode = 200;\n  msg.payload = { ok: true, pending: true, error: err };\n} else {\n  msg.statusCode = msg.statusCode && msg.statusCode >= 400 ? msg.statusCode : 400;\n  msg.payload = { ok: false, error: payload.error_description || err };\n}\nreturn [null, msg];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1010,
+    "y": 1560,
+    "wires": [
+      [
+        "caro-google-store-fn"
+      ],
+      [
+        "caro-google-device-poll-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-device-poll-res",
+    "type": "http response",
+    "z": "e9526774295cef13",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 1260,
+    "y": 1580,
+    "wires": []
+  },
+  {
     "id": "caro-google-status-in",
     "type": "http in",
     "z": "e9526774295cef13",
@@ -4686,7 +4873,7 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Google OAuth Status",
-    "func": "const AUTH_PATH = '/home/davee/caroline/google_oauth.json';\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction isGoogleOAuthClientId(id) {\n  return /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(id || '').trim());\n}\nlet auth = {};\ntry { if (fs.existsSync(AUTH_PATH)) auth = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); } catch(e) {}\nconst storedClientId = auth.refresh_token ? (auth.client_id || '') : '';\nconst sharedClientId = getShared('googleClientId', '');\nconst storedValid = isGoogleOAuthClientId(storedClientId);\nconst sharedValid = isGoogleOAuthClientId(sharedClientId);\nconst clientId = storedValid ? storedClientId : sharedClientId;\nconst invalidClient = (!!storedClientId && !storedValid) || (!!sharedClientId && !sharedValid);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = {\n  connected: !!(auth.refresh_token && storedValid),\n  clientConfigured: !!clientId && !invalidClient,\n  invalidClient,\n  clientId: clientId ? clientId.replace(/^(.{8}).+(@|\\.apps)/, '$1...$2') : '',\n  redirectUri: auth.redirect_uri || getShared('googleRedirectUri', ''),\n  hasRefreshToken: !!(auth.refresh_token && storedValid),\n  scopes: storedValid ? (auth.scope || '') : ''\n};\nreturn msg;",
+    "func": "const AUTH_PATH = '/home/davee/caroline/google_oauth.json';\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction isGoogleOAuthClientId(id) {\n  return /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(id || '').trim());\n}\nlet auth = {};\ntry { if (fs.existsSync(AUTH_PATH)) auth = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); } catch(e) {}\nconst storedClientId = auth.refresh_token ? (auth.client_id || '') : '';\nconst sharedClientId = getShared('googleClientId', '');\nconst storedValid = isGoogleOAuthClientId(storedClientId);\nconst sharedValid = isGoogleOAuthClientId(sharedClientId);\nconst connected = !!(auth.refresh_token && storedValid);\nconst clientId = storedValid ? storedClientId : sharedClientId;\nconst invalidClient = !connected && !sharedValid && !!(storedClientId || sharedClientId);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = {\n  connected,\n  clientConfigured: !!clientId && !invalidClient,\n  invalidClient,\n  clientId: clientId ? clientId.replace(/^(.{8}).+(@|\\.apps)/, '$1...$2') : '',\n  redirectUri: auth.redirect_uri || getShared('googleRedirectUri', ''),\n  hasRefreshToken: connected,\n  scopes: connected ? (auth.scope || '') : ''\n};\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
