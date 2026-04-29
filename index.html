@@ -2864,12 +2864,22 @@ async function handleServiceAccountUpload(event) {
 }
 
 function extractGoogleOAuthClientConfig(json) {
+  if (json?.type === 'service_account' || json?.private_key || json?.client_email) {
+    throw new Error('That is a service-account JSON. Use a Desktop app OAuth client JSON here.');
+  }
   const clientType = json?.installed ? 'desktop' : (json?.web ? 'web' : 'oauth');
   const cfg = json && (json.installed || json.web || json);
   const clientId = String(cfg?.client_id || '').trim();
   const clientSecret = String(cfg?.client_secret || '').trim();
   if (!clientId) throw new Error('OAuth client_id was not found');
+  if (!isGoogleOAuthClientId(clientId)) {
+    throw new Error('Use an OAuth client ID ending in .apps.googleusercontent.com');
+  }
   return { clientId, clientSecret, clientType };
+}
+
+function isGoogleOAuthClientId(clientId) {
+  return /^[0-9A-Za-z._-]+\.apps\.googleusercontent\.com$/.test(String(clientId || '').trim());
 }
 
 async function applyGoogleOAuthClientConfig(config, sourceName = 'OAuth client') {
@@ -2941,9 +2951,17 @@ async function refreshGoogleStatus() {
     }, 'Google status');
     const data = await resp.json();
     S.googleConnected = !!data.connected;
-    if (statusEl) statusEl.textContent = data.connected ? 'Connected' : 'Not connected';
+    if (data.invalidClient) {
+      S.googleClientId = '';
+      S.googleClientSecret = '';
+      const idEl = document.getElementById('set-google-client-id');
+      const secretEl = document.getElementById('set-google-client-secret');
+      if (idEl) idEl.value = '';
+      if (secretEl) secretEl.value = '';
+    }
+    if (statusEl) statusEl.textContent = data.connected ? 'Connected' : (data.invalidClient ? 'Import Desktop OAuth JSON' : 'Not connected');
     if (btn) btn.textContent = data.connected ? 'Reconnect Google' : 'Connect Google';
-    if (data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
+    if (!data.invalidClient && data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
     if (data.redirectUri) S.googleRedirectUri = normalizeGoogleRedirectUri(data.redirectUri);
     localStorage.setItem('caro_settings', JSON.stringify(S));
     return data;
@@ -2960,6 +2978,10 @@ async function handleGoogleAuth() {
   const redirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   if (!clientId) {
     if (statusEl) statusEl.textContent = 'Enter OAuth Client ID first';
+    return;
+  }
+  if (!isGoogleOAuthClientId(clientId)) {
+    if (statusEl) statusEl.textContent = 'Import a Desktop app OAuth JSON first';
     return;
   }
   S.googleClientId = clientId;
