@@ -4559,7 +4559,7 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Store Google OAuth",
-    "func": "const AUTH_PATH = '/home/davee/caroline/google_oauth.json';\nconst SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nfunction fail(detail) {\n  msg.statusCode = 500;\n  msg.headers = { 'Content-Type': 'text/html; charset=utf-8' };\n  msg.payload = '<html><body style=\"background:#05050a;color:#f87171;font-family:system-ui,Segoe UI,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;\"><div style=\"max-width:520px;text-align:center;\"><h1>Google connection failed</h1><p>'+detail+'</p></div></body></html>';\n  return msg;\n}\nif (!msg.payload || !msg.payload.access_token) return fail('Google did not return an access token.');\nlet existing = {};\ntry { if (fs.existsSync(AUTH_PATH)) existing = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); } catch(e) {}\nconst auth = Object.assign({}, existing, {\n  access_token: msg.payload.access_token,\n  refresh_token: msg.payload.refresh_token || existing.refresh_token || '',\n  expires_at: Date.now() + ((msg.payload.expires_in || 3600) * 1000) - 60000,\n  scope: msg.payload.scope || existing.scope || '',\n  token_type: msg.payload.token_type || 'Bearer',\n  client_id: msg.googleOAuthClientId || existing.client_id || '',\n  client_secret: msg.googleOAuthClientSecret || existing.client_secret || '',\n  redirect_uri: msg.googleOAuthRedirectUri || existing.redirect_uri || '',\n  connected_at: new Date().toISOString()\n});\ntry {\n  fs.writeFileSync(AUTH_PATH, JSON.stringify(auth, null, 2), 'utf8');\n  flow.set('googleConnected', true);\n  global.set('googleConnected', true);\n  flow.set('googleClientId', auth.client_id);\n  global.set('googleClientId', auth.client_id);\n  flow.set('googleClientSecret', auth.client_secret);\n  global.set('googleClientSecret', auth.client_secret);\n  flow.set('googleRedirectUri', auth.redirect_uri);\n  global.set('googleRedirectUri', auth.redirect_uri);\n  let settings = {};\n  try { if (fs.existsSync(SETTINGS_PATH)) settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(Object.assign({}, settings, {\n    googleClientId: auth.client_id,\n    googleClientSecret: auth.client_secret,\n    googleRedirectUri: auth.redirect_uri,\n    googleConnected: true,\n    calendarId: settings.calendarId || 'primary'\n  }), null, 2), 'utf8');\n} catch(e) { return fail(e.message); }\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'text/html; charset=utf-8' };\nmsg.payload = '<html><body style=\"background:#05050a;color:#e5e7eb;font-family:system-ui,Segoe UI,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;\"><div style=\"max-width:520px;text-align:center;border:1px solid rgba(251,191,36,.35);border-radius:14px;padding:28px;background:rgba(10,10,18,.86);\"><h1 style=\"color:#fbbf24;font-size:24px;letter-spacing:.08em;\">Google connected</h1><p style=\"line-height:1.5;color:#cbd5e1;\">Caroline can now use your Calendar and Google Tasks. You can close this window.</p><script>setTimeout(()=>window.close(),1800)</script></div></body></html>';\nreturn msg;",
+    "func": "const AUTH_PATH = '/home/davee/caroline/google_oauth.json';\nconst SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nfunction fail(detail) {\n  const text = String(detail || 'Google did not return an access token.');\n  msg.statusCode = 500;\n  if (msg.googleManualCallback) {\n    msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n    msg.payload = { ok: false, error: text };\n    return msg;\n  }\n  msg.headers = { 'Content-Type': 'text/html; charset=utf-8' };\n  msg.payload = '<html><body style=\"background:#05050a;color:#f87171;font-family:system-ui,Segoe UI,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;\"><div style=\"max-width:520px;text-align:center;\"><h1>Google connection failed</h1><p>'+text+'</p></div></body></html>';\n  return msg;\n}\nif (!msg.payload || !msg.payload.access_token) {\n  const detail = msg.payload && msg.payload.error_description ? msg.payload.error_description : 'Google did not return an access token.';\n  return fail(detail);\n}\nlet existing = {};\ntry { if (fs.existsSync(AUTH_PATH)) existing = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); } catch(e) {}\nconst auth = Object.assign({}, existing, {\n  access_token: msg.payload.access_token,\n  refresh_token: msg.payload.refresh_token || existing.refresh_token || '',\n  expires_at: Date.now() + ((msg.payload.expires_in || 3600) * 1000) - 60000,\n  scope: msg.payload.scope || existing.scope || '',\n  token_type: msg.payload.token_type || 'Bearer',\n  client_id: msg.googleOAuthClientId || existing.client_id || '',\n  client_secret: msg.googleOAuthClientSecret || existing.client_secret || '',\n  redirect_uri: msg.googleOAuthRedirectUri || existing.redirect_uri || '',\n  connected_at: new Date().toISOString()\n});\ntry {\n  fs.writeFileSync(AUTH_PATH, JSON.stringify(auth, null, 2), 'utf8');\n  flow.set('googleConnected', true);\n  global.set('googleConnected', true);\n  flow.set('googleClientId', auth.client_id);\n  global.set('googleClientId', auth.client_id);\n  flow.set('googleClientSecret', auth.client_secret);\n  global.set('googleClientSecret', auth.client_secret);\n  flow.set('googleRedirectUri', auth.redirect_uri);\n  global.set('googleRedirectUri', auth.redirect_uri);\n  let settings = {};\n  try { if (fs.existsSync(SETTINGS_PATH)) settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\n  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(Object.assign({}, settings, {\n    googleClientId: auth.client_id,\n    googleClientSecret: auth.client_secret,\n    googleRedirectUri: auth.redirect_uri,\n    googleConnected: true,\n    calendarId: settings.calendarId || 'primary'\n  }), null, 2), 'utf8');\n} catch(e) { return fail(e.message); }\nmsg.statusCode = 200;\nif (msg.googleManualCallback) {\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: true, connected: true, redirectUri: auth.redirect_uri };\n  return msg;\n}\nmsg.headers = { 'Content-Type': 'text/html; charset=utf-8' };\nmsg.payload = '<html><body style=\"background:#05050a;color:#e5e7eb;font-family:system-ui,Segoe UI,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;\"><div style=\"max-width:520px;text-align:center;border:1px solid rgba(251,191,36,.35);border-radius:14px;padding:28px;background:rgba(10,10,18,.86);\"><h1 style=\"color:#fbbf24;font-size:24px;letter-spacing:.08em;\">Google connected</h1><p style=\"line-height:1.5;color:#cbd5e1;\">Caroline can now use your Calendar and Google Tasks. You can close this window.</p><script>setTimeout(()=>window.close(),1800)</script></div></body></html>';\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -4587,6 +4587,56 @@
     "headers": {},
     "x": 1170,
     "y": 1320,
+    "wires": []
+  },
+  {
+    "id": "caro-google-manual-in",
+    "type": "http in",
+    "z": "e9526774295cef13",
+    "name": "POST /admin/google/manual-callback",
+    "url": "/admin/google/manual-callback",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 230,
+    "y": 1440,
+    "wires": [
+      [
+        "caro-google-manual-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-manual-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Manual Google OAuth Callback",
+    "func": "function json(status, payload) {\n  msg.statusCode = status;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = payload;\n  return [null, msg];\n}\nfunction parseManualCallback(text, body) {\n  const raw = String(text || '').trim();\n  if (!raw) return {};\n  if (/^https?:\\/\\//i.test(raw)) {\n    const u = new URL(raw);\n    return {\n      code: u.searchParams.get('code') || '',\n      state: u.searchParams.get('state') || '',\n      error: u.searchParams.get('error') || '',\n      errorDescription: u.searchParams.get('error_description') || ''\n    };\n  }\n  if (raw.includes('code=') || raw.includes('state=')) {\n    const qs = raw.startsWith('?') ? raw.slice(1) : raw;\n    const params = new URLSearchParams(qs);\n    return {\n      code: params.get('code') || '',\n      state: params.get('state') || String(body.state || '').trim(),\n      error: params.get('error') || '',\n      errorDescription: params.get('error_description') || ''\n    };\n  }\n  return { code: raw, state: String(body.state || '').trim() };\n}\nconst bodyPayload = msg.payload || {};\nconst body = typeof bodyPayload === 'object' ? bodyPayload : {};\nlet parsed;\ntry {\n  parsed = parseManualCallback(body.callback || body.url || body.code || '', body);\n} catch(e) {\n  return json(400, { ok: false, error: 'That does not look like a valid Google callback URL.' });\n}\nif (parsed.error) return json(400, { ok: false, error: parsed.errorDescription || parsed.error });\nconst expectedState = flow.get('google_oauth_state') || '';\nif (!parsed.code) return json(400, { ok: false, error: 'No Google authorization code found. Click Connect Google first, then paste the final URL.' });\nif (expectedState && parsed.state && parsed.state !== expectedState) return json(400, { ok: false, error: 'The Google sign-in state did not match. Click Connect Google and try again.' });\nif (expectedState && !parsed.state) return json(400, { ok: false, error: 'Paste the full callback URL so Caroline can verify the sign-in state.' });\nconst clientId = flow.get('google_oauth_client_id') || '';\nconst clientSecret = flow.get('google_oauth_client_secret') || '';\nconst redirectUri = flow.get('google_oauth_redirect_uri') || '';\nconst verifier = flow.get('google_oauth_verifier') || '';\nif (!clientId || !redirectUri || !verifier) return json(400, { ok: false, error: 'The OAuth session expired. Click Connect Google again.' });\nconst tokenBody = {\n  client_id: clientId,\n  grant_type: 'authorization_code',\n  code: parsed.code,\n  redirect_uri: redirectUri,\n  code_verifier: verifier\n};\nif (clientSecret) tokenBody.client_secret = clientSecret;\nmsg.googleManualCallback = true;\nmsg.googleOAuthClientId = clientId;\nmsg.googleOAuthClientSecret = clientSecret;\nmsg.googleOAuthRedirectUri = redirectUri;\nmsg.payload = new URLSearchParams(tokenBody).toString();\nmsg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\nmsg.method = 'POST';\nmsg.url = 'https://oauth2.googleapis.com/token';\nreturn [msg, null];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 1440,
+    "wires": [
+      [
+        "caro-google-token-http"
+      ],
+      [
+        "caro-google-manual-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-manual-res",
+    "type": "http response",
+    "z": "e9526774295cef13",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 770,
+    "y": 1460,
     "wires": []
   },
   {

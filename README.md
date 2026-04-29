@@ -51,7 +51,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 
 After install, open **Settings** in Caroline:
 
-- **Google:** create a **Desktop app** OAuth client, paste the Client ID, then use **Connect Google** from the Pi kiosk screen for Calendar and Google Tasks. The old service-account JSON upload is kept only as an advanced fallback.
+- **Google:** create a **Desktop app** OAuth client, then import or paste the downloaded OAuth client JSON in Settings. Use **Connect Google** for Calendar and Google Tasks. If Google lands on a localhost/error page in a remote browser, copy the final address-bar URL and paste it into **Finish Google Sign-In**. The old service-account JSON upload is kept only as an advanced fallback.
 - **Spotify:** add `https://[Pi-IP]:8443/spotify/callback` as the Spotify app redirect URI, open `https://[Pi-IP]:8443` once to accept the self-signed certificate, then use **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 
@@ -82,12 +82,12 @@ After install, open **Settings** in Caroline:
 Browser
   ├── HTTP GET (port 8080) ──────► nginx ──► index.html
   ├── HTTPS Spotify OAuth (8443) ► nginx ──► Node-RED callbacks
-  ├── Google desktop OAuth ──────► 127.0.0.1:1880 callback on the Pi
+  ├── Google desktop OAuth ──────► 127.0.0.1:1880 callback or pasted callback URL
   └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (local)
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and provides a local self-signed HTTPS proxy on port 8443 for OAuth providers that require HTTPS callbacks. Google Calendar/Tasks uses Google's desktop-app loopback flow on `127.0.0.1`, so sign-in should be started from the Pi kiosk browser. WebSocket traffic still goes directly to Node-RED on port 1880.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and provides a local self-signed HTTPS proxy on port 8443 for OAuth providers that require HTTPS callbacks. Google Calendar/Tasks uses Google's desktop-app loopback flow on `127.0.0.1`; kiosk users can complete it directly, and remote browser users can paste the callback URL back into Caroline. WebSocket traffic still goes directly to Node-RED on port 1880.
 
 ---
 

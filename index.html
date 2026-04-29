@@ -989,10 +989,27 @@
           <input class="settings-input" id="set-google-client-secret" type="password" placeholder="client secret" style="width:200px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
+          <div><div class="settings-label">OAuth Client JSON</div><div class="settings-sub">Import the downloaded Google OAuth client file</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <input type="file" id="google-client-json-input" accept=".json,application/json" style="display:none" onchange="handleGoogleClientJsonUpload(event)"/>
+            <button type="button" onclick="document.getElementById('google-client-json-input').click()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Import OAuth JSON</button>
+            <button type="button" onclick="handleGoogleClientJsonPaste()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.28);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Paste OAuth JSON</button>
+            <span id="google-client-json-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:240px;"></span>
+          </div>
+        </div>
+        <div class="settings-row" style="margin-top:14px">
           <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
           <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
             <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
             <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
+          </div>
+        </div>
+        <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
+          <div><div class="settings-label">Finish Sign-In</div><div class="settings-sub">Paste the final Google URL or code if the browser gets stuck</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste callback URL or code" style="width:260px"/>
+            <button id="google-manual-callback-btn" type="button" onclick="handleGoogleManualCallback()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Finish Google Sign-In</button>
+            <span id="google-manual-callback-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;"></span>
           </div>
         </div>
         <details style="margin-top:12px">
@@ -2846,6 +2863,70 @@ async function handleServiceAccountUpload(event) {
   reader.readAsText(file);
 }
 
+function extractGoogleOAuthClientConfig(json) {
+  const clientType = json?.installed ? 'desktop' : (json?.web ? 'web' : 'oauth');
+  const cfg = json && (json.installed || json.web || json);
+  const clientId = String(cfg?.client_id || '').trim();
+  const clientSecret = String(cfg?.client_secret || '').trim();
+  if (!clientId) throw new Error('OAuth client_id was not found');
+  return { clientId, clientSecret, clientType };
+}
+
+async function applyGoogleOAuthClientConfig(config, sourceName = 'OAuth client') {
+  const statusEl = document.getElementById('google-client-json-status');
+  const idEl = document.getElementById('set-google-client-id');
+  const secretEl = document.getElementById('set-google-client-secret');
+  S.googleClientId = config.clientId;
+  S.googleClientSecret = config.clientSecret || '';
+  S.googleRedirectUri = GOOGLE_LOOPBACK_REDIRECT_URI;
+  if (idEl) idEl.value = S.googleClientId;
+  if (secretEl) secretEl.value = S.googleClientSecret;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  await postSettingsToNodeRed({
+    googleClientId: S.googleClientId,
+    googleClientSecret: S.googleClientSecret,
+    googleRedirectUri: S.googleRedirectUri
+  }, NODE_RED_TIMEOUT_MS);
+  if (statusEl) {
+    statusEl.textContent = config.clientType === 'web'
+      ? 'Loaded web client; desktop client works best'
+      : 'Loaded ' + sourceName;
+  }
+  refreshGoogleStatus();
+}
+
+async function handleGoogleClientJsonUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('google-client-json-status');
+  if (statusEl) statusEl.textContent = 'Reading...';
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const config = extractGoogleOAuthClientConfig(JSON.parse(e.target.result));
+      await applyGoogleOAuthClientConfig(config, file.name);
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Import failed: ' + (err.message || 'invalid JSON');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function handleGoogleClientJsonPaste() {
+  const statusEl = document.getElementById('google-client-json-status');
+  const raw = prompt('Paste the Google OAuth client JSON here');
+  if (!raw) return;
+  try {
+    if (statusEl) statusEl.textContent = 'Reading pasted JSON...';
+    const config = extractGoogleOAuthClientConfig(JSON.parse(raw));
+    await applyGoogleOAuthClientConfig(config, 'pasted OAuth client');
+  } catch(err) {
+    if (statusEl) statusEl.textContent = 'Import failed: ' + (err.message || 'invalid JSON');
+  }
+}
+
 async function refreshGoogleStatus() {
   const statusEl = document.getElementById('google-auth-status');
   const btn = document.getElementById('google-connect-btn');
@@ -2888,14 +2969,41 @@ async function handleGoogleAuth() {
   try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: redirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
 
   const params = new URLSearchParams({ clientId, redirectUri });
-  if (statusEl) statusEl.textContent = 'Waiting for Google...';
-  window.open(httpBase() + '/admin/google/auth?' + params.toString(), 'caroline_google_auth', 'width=520,height=720');
+  if (statusEl) statusEl.textContent = 'Waiting for Google... paste URL below if it stalls';
+  window.open(httpBase() + '/admin/google/auth?' + params.toString(), '_blank', 'width=520,height=720');
   let tries = 0;
   const timer = setInterval(async () => {
     tries++;
     const data = await refreshGoogleStatus();
     if ((data && data.connected) || tries > 60) clearInterval(timer);
   }, 2000);
+}
+
+async function handleGoogleManualCallback() {
+  const input = document.getElementById('google-manual-callback');
+  const statusEl = document.getElementById('google-manual-callback-status');
+  const value = (input?.value || '').trim();
+  if (!value) {
+    if (statusEl) statusEl.textContent = 'Paste the Google URL or code first';
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Finishing sign-in...';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/manual-callback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback: value }),
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Finish Google sign-in');
+    let data = {};
+    try { data = await resp.clone().json(); } catch(e) {}
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    if (input) input.value = '';
+    if (statusEl) statusEl.textContent = 'Google connected';
+    await refreshGoogleStatus();
+  } catch(err) {
+    if (statusEl) statusEl.textContent = 'Could not finish: ' + (err.message || 'try Connect Google again');
+  }
 }
 
 async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
