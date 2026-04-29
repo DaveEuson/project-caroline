@@ -1486,10 +1486,15 @@ async function syncSettingsFromServer() {
     if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
     Object.keys(d).forEach(k => {
       if (d[k] === '__configured__') return;
+      if (k === 'googleRedirectUri') {
+        S.googleRedirectUri = normalizeGoogleRedirectUri(d[k] || S.googleRedirectUri);
+        return;
+      }
       if (S[k] === undefined || S[k] === null || S[k] === '' || k === 'timezone' || k === 'location' || k === 'nodeRedUrl') {
         S[k] = d[k];
       }
     });
+    S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
     localStorage.setItem('caro_settings', JSON.stringify(S));
     updateTopbarNetwork(false);
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
@@ -1624,6 +1629,24 @@ let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const HTTPS_PROXY_PORT = 8443;
 const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callback';
 const RESTART_PORT = 8090;
+
+function isPrivateIpHost(host) {
+  const h = String(host || '').toLowerCase();
+  if (h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]') return false;
+  if (/^10\./.test(h) || /^192\.168\./.test(h)) return true;
+  const m = h.match(/^172\.(\d+)\./);
+  return !!(m && Number(m[1]) >= 16 && Number(m[1]) <= 31);
+}
+
+function normalizeGoogleRedirectUri(uri) {
+  const raw = String(uri || '').trim();
+  if (!raw) return GOOGLE_LOOPBACK_REDIRECT_URI;
+  try {
+    const u = new URL(raw);
+    if (u.pathname === '/admin/google/callback' && isPrivateIpHost(u.hostname)) return GOOGLE_LOOPBACK_REDIRECT_URI;
+  } catch(e) {}
+  return raw;
+}
 
 function httpBase(port) {
   if (!port || port === NODE_RED_PORT) return getNodeRedUrl();
@@ -1863,7 +1886,7 @@ function toggleSettings() {
     if (googleClientIdEl) googleClientIdEl.value = S.googleClientId || '';
     if (googleClientSecretEl) googleClientSecretEl.value = S.googleClientSecret || '';
     if (googleRedirectEl) {
-      S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
+      S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
       googleRedirectEl.textContent = S.googleRedirectUri;
     }
     refreshGoogleStatus();
@@ -2828,7 +2851,7 @@ async function refreshGoogleStatus() {
   const btn = document.getElementById('google-connect-btn');
   const redirectEl = document.getElementById('google-redirect-uri');
   if (redirectEl) {
-    S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
+    S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
     redirectEl.textContent = S.googleRedirectUri;
   }
   try {
@@ -2840,7 +2863,8 @@ async function refreshGoogleStatus() {
     if (statusEl) statusEl.textContent = data.connected ? 'Connected' : 'Not connected';
     if (btn) btn.textContent = data.connected ? 'Reconnect Google' : 'Connect Google';
     if (data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
-    if (data.redirectUri) S.googleRedirectUri = data.redirectUri;
+    if (data.redirectUri) S.googleRedirectUri = normalizeGoogleRedirectUri(data.redirectUri);
+    localStorage.setItem('caro_settings', JSON.stringify(S));
     return data;
   } catch(e) {
     if (statusEl) statusEl.textContent = 'Status unavailable';
@@ -2852,7 +2876,7 @@ async function handleGoogleAuth() {
   const statusEl = document.getElementById('google-auth-status');
   const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
   const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
-  const redirectUri = (S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI).trim();
+  const redirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   if (!clientId) {
     if (statusEl) statusEl.textContent = 'Enter OAuth Client ID first';
     return;
@@ -2963,7 +2987,7 @@ async function saveSettings() {
   S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
   S.googleClientId = (document.getElementById('set-google-client-id') || {}).value?.trim() || '';
   S.googleClientSecret = (document.getElementById('set-google-client-secret') || {}).value?.trim() || '';
-  S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
+  S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.location = document.getElementById('set-location').value.trim();
   S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
@@ -4942,7 +4966,7 @@ async function finalizeOnboarding(){
   S.spotifyClientId  = onbState.config.modules.spotify?.clientId || S.spotifyClientId  || '';
   S.googleClientId   = onbState.config.modules.calendar?.googleClientId || S.googleClientId || '';
   S.googleClientSecret = onbState.config.modules.calendar?.googleClientSecret || S.googleClientSecret || '';
-  S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
+  S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.calendarId       = S.calendarId || 'primary';
   S.hueIp            = onbState.config.modules.hue?.bridgeIp     || S.hueIp            || '';
   S.hueKey           = onbState.config.modules.hue?.apiKey       || S.hueKey           || '';
