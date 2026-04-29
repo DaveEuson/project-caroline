@@ -504,7 +504,7 @@ jq -n \
     spotifyClientId: "",
     googleClientId:  "",
     googleClientSecret: "",
-    googleRedirectUri: "",
+    googleRedirectUri: "http://127.0.0.1:1880/admin/google/callback",
     googleConnected: false,
     discordToken:    "",
     kioskMode:       $kiosk
