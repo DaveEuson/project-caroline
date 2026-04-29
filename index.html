@@ -1622,6 +1622,7 @@ const NODE_RED_PORT = 1880;
 const NODE_RED_TIMEOUT_MS = 10000;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const HTTPS_PROXY_PORT = 8443;
+const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callback';
 const RESTART_PORT = 8090;
 
 function httpBase(port) {
@@ -1862,7 +1863,7 @@ function toggleSettings() {
     if (googleClientIdEl) googleClientIdEl.value = S.googleClientId || '';
     if (googleClientSecretEl) googleClientSecretEl.value = S.googleClientSecret || '';
     if (googleRedirectEl) {
-      S.googleRedirectUri = S.googleRedirectUri || (httpsBase() + '/admin/google/callback');
+      S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
       googleRedirectEl.textContent = S.googleRedirectUri;
     }
     refreshGoogleStatus();
@@ -2827,7 +2828,7 @@ async function refreshGoogleStatus() {
   const btn = document.getElementById('google-connect-btn');
   const redirectEl = document.getElementById('google-redirect-uri');
   if (redirectEl) {
-    S.googleRedirectUri = S.googleRedirectUri || (httpsBase() + '/admin/google/callback');
+    S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
     redirectEl.textContent = S.googleRedirectUri;
   }
   try {
@@ -2851,7 +2852,7 @@ async function handleGoogleAuth() {
   const statusEl = document.getElementById('google-auth-status');
   const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
   const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
-  const redirectUri = (S.googleRedirectUri || (httpsBase() + '/admin/google/callback')).trim();
+  const redirectUri = (S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI).trim();
   if (!clientId) {
     if (statusEl) statusEl.textContent = 'Enter OAuth Client ID first';
     return;
@@ -2962,7 +2963,7 @@ async function saveSettings() {
   S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
   S.googleClientId = (document.getElementById('set-google-client-id') || {}).value?.trim() || '';
   S.googleClientSecret = (document.getElementById('set-google-client-secret') || {}).value?.trim() || '';
-  S.googleRedirectUri = S.googleRedirectUri || (httpsBase() + '/admin/google/callback');
+  S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.location = document.getElementById('set-location').value.trim();
   S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
@@ -3470,11 +3471,11 @@ const HOWTO_CONTENT = {
 <h4>Step-by-step</h4><ol>
 <li>Go to <code>console.cloud.google.com</code> → create a new project</li>
 <li>Enable <strong>Google Calendar API</strong> and <strong>Google Tasks API</strong></li>
-<li>Create an OAuth client for Caroline with redirect URI <code>https://[Pi-IP]:8443/admin/google/callback</code></li>
+<li>Create a <strong>Desktop app</strong> OAuth client for Caroline</li>
 <li>Paste the OAuth Client ID in Settings → Google</li>
-<li>Click <strong>Connect Google</strong> and approve Calendar/Tasks access</li>
+<li>On the Pi kiosk screen, click <strong>Connect Google</strong> and approve Calendar/Tasks access</li>
 </ol>
-<div class="howto-note">Open <code>https://[Pi-IP]:8443</code> once first and accept the self-signed certificate warning. The old service-account JSON upload still exists under Advanced, but OAuth is the normal setup path now.</div>`
+<div class="howto-note">Google blocks private LAN IP redirects for Calendar/Tasks. Caroline uses the desktop loopback redirect <code>http://127.0.0.1:1880/admin/google/callback</code>, so start Google sign-in from the Pi kiosk browser itself.</div>`
   },
   weather: {
     title:'WEATHER WIDGET',
@@ -4941,7 +4942,7 @@ async function finalizeOnboarding(){
   S.spotifyClientId  = onbState.config.modules.spotify?.clientId || S.spotifyClientId  || '';
   S.googleClientId   = onbState.config.modules.calendar?.googleClientId || S.googleClientId || '';
   S.googleClientSecret = onbState.config.modules.calendar?.googleClientSecret || S.googleClientSecret || '';
-  S.googleRedirectUri = S.googleRedirectUri || (httpsBase() + '/admin/google/callback');
+  S.googleRedirectUri = S.googleRedirectUri || GOOGLE_LOOPBACK_REDIRECT_URI;
   S.calendarId       = S.calendarId || 'primary';
   S.hueIp            = onbState.config.modules.hue?.bridgeIp     || S.hueIp            || '';
   S.hueKey           = onbState.config.modules.hue?.apiKey       || S.hueKey           || '';
