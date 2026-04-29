@@ -971,23 +971,41 @@
         </div>
       </div>
       <div class="settings-section">
-        <h3>Google Calendar</h3>
+        <h3>Google</h3>
         <div class="settings-row">
           <div><div class="settings-label">Calendar ID</div><div class="settings-sub">Usually your Gmail address</div></div>
-          <input class="settings-input" id="set-calendar-id" type="text" placeholder="you@gmail.com" style="width:200px"/>
+          <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:200px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Google Sheet used for tasks</div></div>
+          <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Optional legacy Sheets sync</div></div>
           <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Service account</div><div class="settings-sub">JSON key from Google Cloud</div></div>
+          <div><div class="settings-label">Google OAuth Client ID</div><div class="settings-sub">Used for Calendar and Google Tasks</div></div>
+          <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
+        </div>
+        <div class="settings-row" style="margin-top:14px">
+          <div><div class="settings-label">Google OAuth Secret</div><div class="settings-sub">Optional for desktop clients</div></div>
+          <input class="settings-input" id="set-google-client-secret" type="password" placeholder="client secret" style="width:200px"/>
+        </div>
+        <div class="settings-row" style="margin-top:14px">
+          <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
+            <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
+          </div>
+        </div>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;color:rgba(226,232,240,0.45);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Advanced service account fallback</summary>
+          <div class="settings-row" style="margin-top:10px">
+          <div><div class="settings-label">Service account</div><div class="settings-sub">Legacy JSON key fallback</div></div>
           <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
             <input type="file" id="sa-upload-input" accept=".json,application/json" style="display:none" onchange="handleServiceAccountUpload(event)"/>
             <button onclick="document.getElementById('sa-upload-input').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Upload JSON</button>
             <span id="sa-upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file uploaded</span>
           </div>
         </div>
+        </details>
       </div>
       <div class="settings-section">
         <h3>Discord <span style="font-size:10px;font-weight:400;opacity:.5;text-transform:none;letter-spacing:0">(optional)</span></h3>
@@ -1409,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 const QUICK_ACTION_DEFAULTS = ['Brief me', 'Schedule', 'Motivate', 'Tasks'];
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
@@ -1835,8 +1853,18 @@ function toggleSettings() {
     document.getElementById('set-location').value = S.location || S.cityName || '';
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
-    document.getElementById('set-calendar-id').value = S.calendarId || '';
+    document.getElementById('set-calendar-id').value = S.calendarId || 'primary';
     document.getElementById('set-sheet-id').value = S.sheetId || '';
+    const googleClientIdEl = document.getElementById('set-google-client-id');
+    const googleClientSecretEl = document.getElementById('set-google-client-secret');
+    const googleRedirectEl = document.getElementById('google-redirect-uri');
+    if (googleClientIdEl) googleClientIdEl.value = S.googleClientId || '';
+    if (googleClientSecretEl) googleClientSecretEl.value = S.googleClientSecret || '';
+    if (googleRedirectEl) {
+      S.googleRedirectUri = S.googleRedirectUri || (httpBase() + '/admin/google/callback');
+      googleRedirectEl.textContent = S.googleRedirectUri;
+    }
+    refreshGoogleStatus();
     document.getElementById('set-discord-enabled').checked = !!S.discordEnabled;
     document.getElementById('set-discord-token').value = S.discordToken || '';
     document.getElementById('set-discord-channel').value = S.discordChannelId || '';
@@ -2793,6 +2821,57 @@ async function handleServiceAccountUpload(event) {
   reader.readAsText(file);
 }
 
+async function refreshGoogleStatus() {
+  const statusEl = document.getElementById('google-auth-status');
+  const btn = document.getElementById('google-connect-btn');
+  const redirectEl = document.getElementById('google-redirect-uri');
+  if (redirectEl) {
+    S.googleRedirectUri = S.googleRedirectUri || (httpBase() + '/admin/google/callback');
+    redirectEl.textContent = S.googleRedirectUri;
+  }
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/status', {
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Google status');
+    const data = await resp.json();
+    S.googleConnected = !!data.connected;
+    if (statusEl) statusEl.textContent = data.connected ? 'Connected' : 'Not connected';
+    if (btn) btn.textContent = data.connected ? 'Reconnect Google' : 'Connect Google';
+    if (data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
+    if (data.redirectUri) S.googleRedirectUri = data.redirectUri;
+    return data;
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Status unavailable';
+    return null;
+  }
+}
+
+async function handleGoogleAuth() {
+  const statusEl = document.getElementById('google-auth-status');
+  const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
+  const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
+  const redirectUri = (S.googleRedirectUri || (httpBase() + '/admin/google/callback')).trim();
+  if (!clientId) {
+    if (statusEl) statusEl.textContent = 'Enter OAuth Client ID first';
+    return;
+  }
+  S.googleClientId = clientId;
+  S.googleClientSecret = clientSecret;
+  S.googleRedirectUri = redirectUri;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: redirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
+
+  const params = new URLSearchParams({ clientId, redirectUri });
+  if (statusEl) statusEl.textContent = 'Waiting for Google...';
+  window.open(httpBase() + '/admin/google/auth?' + params.toString(), 'caroline_google_auth', 'width=520,height=720');
+  let tries = 0;
+  const timer = setInterval(async () => {
+    tries++;
+    const data = await refreshGoogleStatus();
+    if ((data && data.connected) || tries > 60) clearInterval(timer);
+  }, 2000);
+}
+
 async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
   const endpoint = httpBase() + '/admin/save-settings';
   applyAiSettingsInputsToState();
@@ -2880,9 +2959,12 @@ async function saveSettings() {
   if (hgEl && hgEl.value) { S.hueGroup = hgEl.value; S.hueGroupName = hgEl.options[hgEl.selectedIndex]?.text || ''; }
   HUE_GROUP = S.hueGroup || '4';
   S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
+  S.googleClientId = (document.getElementById('set-google-client-id') || {}).value?.trim() || '';
+  S.googleClientSecret = (document.getElementById('set-google-client-secret') || {}).value?.trim() || '';
+  S.googleRedirectUri = S.googleRedirectUri || (httpBase() + '/admin/google/callback');
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.location = document.getElementById('set-location').value.trim();
-  S.calendarId = document.getElementById('set-calendar-id').value.trim();
+  S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
   S.sheetId = document.getElementById('set-sheet-id').value.trim();
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
   S.discordToken = document.getElementById('set-discord-token').value.trim();
@@ -3383,17 +3465,15 @@ const HOWTO_CONTENT = {
   },
   calendar: {
     title:'GOOGLE CALENDAR + TASKS',
-    html:`<h4>What it does</h4><p>Reads your upcoming events and syncs your task list with Google Sheets.</p>
+    html:`<h4>What it does</h4><p>Reads your upcoming events and syncs your task list with Google Tasks.</p>
 <h4>Step-by-step</h4><ol>
 <li>Go to <code>console.cloud.google.com</code> → create a new project</li>
-<li>Search for and enable: <strong>Google Calendar API</strong> and <strong>Google Sheets API</strong></li>
-<li>Go to <strong>IAM &amp; Admin → Service Accounts</strong> → <strong>Create Service Account</strong></li>
-<li>Give it any name, skip optional steps, click <strong>Done</strong></li>
-<li>Click the service account → <strong>Keys</strong> tab → <strong>Add Key → JSON</strong></li>
-<li>Download the JSON file — upload it in the setup wizard</li>
-<li>Share your Google Calendar and task Sheet with the service account email</li>
+<li>Enable <strong>Google Calendar API</strong> and <strong>Google Tasks API</strong></li>
+<li>Create an OAuth client for Caroline</li>
+<li>Paste the OAuth Client ID in Settings → Google</li>
+<li>Click <strong>Connect Google</strong> and approve Calendar/Tasks access</li>
 </ol>
-<div class="howto-note">📋 Full guide with screenshots available on the project GitHub.</div>`
+<div class="howto-note">The old service-account JSON upload still exists under Advanced, but OAuth is the normal setup path now.</div>`
   },
   weather: {
     title:'WEATHER WIDGET',
@@ -4419,8 +4499,9 @@ const ONB_MODULES = [
     desc:'Local Philips Hue bridge control. Full setup guide on GitHub.',
     githubNote: true, fields:[] },
   { id:'calendar', title:'Calendar / Tasks', required:[],
-    desc:'Google Calendar + Sheets tasks. Full setup guide on GitHub.',
-    githubNote: true, fields:[] },
+    desc:'Google Calendar + Google Tasks over OAuth.',
+    fields:[{ key:'googleClientId', label:'Google OAuth Client ID', type:'text', placeholder:'client id' },
+      { key:'googleClientSecret', label:'Google OAuth Secret', type:'password', placeholder:'optional' }] },
   { id:'weather',  title:'Weather',   required:[],
     desc:'Uses ZIP code — no extra key required.', fields:[] },
   { id:'voice',    title:'Voice',     required:[],
@@ -4857,6 +4938,10 @@ async function finalizeOnboarding(){
   S.avatar = _avIdx >= 0 ? _avIdx : 0;
   S.openrouterKey    = onbState.config.modules.aiCore?.apiKey    || S.openrouterKey    || '';
   S.spotifyClientId  = onbState.config.modules.spotify?.clientId || S.spotifyClientId  || '';
+  S.googleClientId   = onbState.config.modules.calendar?.googleClientId || S.googleClientId || '';
+  S.googleClientSecret = onbState.config.modules.calendar?.googleClientSecret || S.googleClientSecret || '';
+  S.googleRedirectUri = S.googleRedirectUri || (httpBase() + '/admin/google/callback');
+  S.calendarId       = S.calendarId || 'primary';
   S.hueIp            = onbState.config.modules.hue?.bridgeIp     || S.hueIp            || '';
   S.hueKey           = onbState.config.modules.hue?.apiKey       || S.hueKey           || '';
   const f = S.features || { ...FEATURE_DEFAULTS };
