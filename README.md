@@ -32,12 +32,12 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Cyberpunk UI** — Ambient kiosk interface served on port 8080
 - **Robust Backend** — Node-RED on port 1880 as a bare-metal systemd service
 - **Persistent Memory** — AI chat with memory across sessions
-- **Productivity** — Creates calendar events and manages tasks via chat
-- **Proactive AI** — Caroline checks in every 15 minutes and speaks up when something matters
+- **Productivity** — Creates calendar events and manages Google Tasks via chat
+- **Proactive AI** — Caroline checks in four times a day with lightweight context
 - **Local & Cloud AI** — Ollama (llama3.2, phi3:mini, gemma2:2b) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
 - **Smart Home** — Philips Hue control
-- **Auto To-Dos** — Calendar events automatically generate prep tasks
+- **OAuth Integrations** — Google and Spotify connect from the GUI; no JSON key upload required for normal setup
 
 ---
 
@@ -48,6 +48,12 @@ curl -sSL https://raw.githubusercontent.com/daveeuson/project-caroline/main/inst
 ```
 
 The installer asks for your name, timezone, location, and whether to install Ollama. **No terminal is needed after install** — everything is configured in the GUI, with API keys entered directly in the kiosk settings panel.
+
+After install, open **Settings** in Caroline:
+
+- **Google:** create an OAuth client, paste the Client ID, then use **Connect Google** for Calendar and Google Tasks. The old service-account JSON upload is kept only as an advanced fallback.
+- **Spotify:** add `https://[Pi-IP]:8443/spotify/callback` as the Spotify app redirect URI, open `https://[Pi-IP]:8443` once to accept the self-signed certificate, then use **Connect Spotify**.
+- **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 
 ### Requirements
 
@@ -63,7 +69,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 |---|---|
 | Frontend | Single HTML file |
 | Backend | Node-RED (bare-metal systemd, no Docker) |
-| Web server | nginx (serves HTML on port 8080) |
+| Web server | nginx (serves HTML on port 8080; HTTPS OAuth proxy on 8443) |
 | AI (local) | Ollama on localhost:11434 |
 | AI (cloud) | OpenRouter API |
 | Display | Firefox ESR, kiosk mode, 1280×800 |
@@ -74,12 +80,13 @@ The installer asks for your name, timezone, location, and whether to install Oll
 
 ```
 Browser
-  ├── HTTP GET (port 8080) ──────► nginx ──► caroline-kiosk.html
+  ├── HTTP GET (port 8080) ──────► nginx ──► index.html
+  ├── HTTPS OAuth (port 8443) ───► nginx ──► Node-RED callbacks
   └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (local)
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves only the static HTML file — WebSocket traffic goes directly to Node-RED on port 1880 and never passes through nginx.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and provides a local self-signed HTTPS proxy on port 8443 for OAuth providers that require HTTPS callbacks. WebSocket traffic still goes directly to Node-RED on port 1880.
 
 ---
 

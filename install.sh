@@ -48,6 +48,7 @@ phase() {
 CAROLINE_VERSION="0.2.0-dev"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
+HTTPS_PROXY_PORT=8443
 AI_MODEL="anthropic/claude-haiku-4.5"
 
 # Node-RED palette nodes required by Caroline
@@ -141,15 +142,6 @@ else
   OLLAMA_MODEL="gemma2:2b"
   echo -e "${DIM}  Cloud mode selected. Add your OpenRouter key in Caroline's settings after install.${RESET}"
 fi
-echo ""
-
-echo -e "${MAGENTA}  // GOOGLE CALENDAR (optional)${RESET}"
-echo ""
-echo -e "${DIM}  Google Calendar needs a Service Account JSON file.${RESET}"
-echo -e "${DIM}  See README.md for how to create one. Press Enter to skip — you can add it later.${RESET}"
-echo ""
-read -p "  Path to Google service account JSON (or Enter to skip): " GOOG_SA_PATH </dev/tty
-GOOG_SA_PATH="${GOOG_SA_PATH/#\~/$HOME}"
 echo ""
 
 echo -e "${MAGENTA}  // DISPLAY MODE${RESET}"
@@ -344,25 +336,11 @@ fi
 
 echo -e "${GREEN}  ✓ Caroline payload ready${RESET}"
 
-# ── GOOGLE SERVICE ACCOUNT ───────────────────────────────────
-if [ -n "$GOOG_SA_PATH" ] && [ -f "$GOOG_SA_PATH" ]; then
-  cp -f "$GOOG_SA_PATH" "$CAROLINE_DIR/caroline-calendar.json"
-  cp -f "$GOOG_SA_PATH" "$CAROLINE_DIR/service-account.json"
-  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline-calendar.json"
-  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/service-account.json"
-  echo -e "${GREEN}  ✓ Google service account installed${RESET}"
-else
-  cat > "$CAROLINE_DIR/caroline-calendar.json" << 'GOOGLE_PLACEHOLDER_EOF'
-{
-  "type": "placeholder",
-  "private_key": "",
-  "client_email": ""
-}
-GOOGLE_PLACEHOLDER_EOF
-  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline-calendar.json"
-  chmod 600 "$CAROLINE_DIR/caroline-calendar.json"
-  echo -e "${DIM}  ℹ Google Calendar: no service account configured — enable in Caroline settings later${RESET}"
-fi
+# ── GOOGLE OAUTH TOKEN STORE ─────────────────────────────────
+touch "$CAROLINE_DIR/google_oauth.json"
+chmod 600 "$CAROLINE_DIR/google_oauth.json"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/google_oauth.json"
+echo -e "${DIM}  ℹ Google Calendar/Tasks connect from Caroline Settings after install${RESET}"
 
 # ── IMPORT NODE-RED FLOWS ────────────────────────────────────
 echo -e "${YELLOW}  ► Importing Node-RED flows...${RESET}"
@@ -391,21 +369,6 @@ cp "$FLOWS_FILE" "$CAROLINE_DIR/flows.json"
 echo -e "${GREEN}  ✓ Flows imported${RESET}"
 
 # ── GOOGLE SERVICE ACCOUNT PLACEHOLDER ───────────────────────
-SERVICE_ACCOUNT_FILE="$CAROLINE_DIR/service-account.json"
-if [ ! -f "$SERVICE_ACCOUNT_FILE" ]; then
-  cat > "$SERVICE_ACCOUNT_FILE" << 'GOOGLE_PLACEHOLDER_EOF'
-{
-  "type": "placeholder",
-  "private_key": "",
-  "client_email": ""
-}
-GOOGLE_PLACEHOLDER_EOF
-  chown "$REAL_USER:$REAL_USER" "$SERVICE_ACCOUNT_FILE"
-  chmod 600 "$SERVICE_ACCOUNT_FILE"
-  echo -e "${YELLOW}  ⚠ Created placeholder: $SERVICE_ACCOUNT_FILE${RESET}"
-  echo -e "${DIM}    Replace with your Google service account JSON to enable calendar/sheets${RESET}"
-fi
-
 # ── NODE-RED PALETTE NODES ───────────────────────────────────
 echo -e "${YELLOW}  ► Installing Node-RED palette nodes...${RESET}"
 
@@ -430,11 +393,23 @@ echo -e "${YELLOW}  ► Deploying kiosk interface on port ${KIOSK_PORT}...${RESE
 
 # Clear the port before nginx tries to bind it
 sudo fuser -k ${KIOSK_PORT}/tcp 2>/dev/null || true
+sudo fuser -k ${HTTPS_PROXY_PORT}/tcp 2>/dev/null || true
 
 # nginx runs as www-data — needs execute permission on the home directory
 # to traverse into ~/caroline, and read access on the files themselves.
 sudo chmod o+x "$REAL_HOME"
 sudo chmod -R o+rX "$CAROLINE_DIR"
+
+sudo mkdir -p /etc/caroline
+if [ ! -f /etc/caroline/caroline-selfsigned.crt ] || [ ! -f /etc/caroline/caroline-selfsigned.key ]; then
+  sudo openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
+    -keyout /etc/caroline/caroline-selfsigned.key \
+    -out /etc/caroline/caroline-selfsigned.crt \
+    -subj "/CN=project-caroline.local" >/tmp/caroline-openssl.log 2>&1 || {
+      echo -e "${YELLOW}  ⚠ HTTPS certificate generation failed — Spotify auth may need manual HTTPS setup${RESET}"
+    }
+  sudo chmod 600 /etc/caroline/caroline-selfsigned.key 2>/dev/null || true
+fi
 
 sudo tee /etc/nginx/sites-available/caroline > /dev/null << EOF
 server {
@@ -454,6 +429,28 @@ server {
         try_files \$uri \$uri/ /index.html;
     }
 }
+
+server {
+    listen ${HTTPS_PROXY_PORT} ssl;
+    server_name _;
+
+    ssl_certificate /etc/caroline/caroline-selfsigned.crt;
+    ssl_certificate_key /etc/caroline/caroline-selfsigned.key;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    location / {
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
 EOF
 
 sudo ln -sf /etc/nginx/sites-available/caroline /etc/nginx/sites-enabled/caroline
@@ -463,14 +460,14 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo mkdir -p /etc/systemd/system/nginx.service.d
 sudo tee /etc/systemd/system/nginx.service.d/port-clear.conf > /dev/null << DROPIN_EOF
 [Service]
-ExecStartPre=/bin/sh -c 'fuser -k ${KIOSK_PORT}/tcp 2>/dev/null; true'
+ExecStartPre=/bin/sh -c 'fuser -k ${KIOSK_PORT}/tcp 2>/dev/null; fuser -k ${HTTPS_PROXY_PORT}/tcp 2>/dev/null; true'
 DROPIN_EOF
 sudo systemctl daemon-reload
 
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
-echo -e "${GREEN}  ✓ Web server ready on port ${KIOSK_PORT}${RESET}"
+echo -e "${GREEN}  ✓ Web server ready on ${KIOSK_PORT}; HTTPS proxy ready on ${HTTPS_PROXY_PORT}${RESET}"
 
 # ── WRITE SETTINGS ───────────────────────────────────────────
 echo -e "${YELLOW}  ► Writing settings...${RESET}"
@@ -502,9 +499,13 @@ jq -n \
     openrouterKey:   "",
     hueIp:           "",
     hueKey:          "",
-    calendarId:      "",
+    calendarId:      "primary",
     sheetId:         "",
     spotifyClientId: "",
+    googleClientId:  "",
+    googleClientSecret: "",
+    googleRedirectUri: "",
+    googleConnected: false,
     discordToken:    "",
     kioskMode:       $kiosk
   }' > "$SETTINGS_PATH"
@@ -683,6 +684,7 @@ echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
 echo -e "${CYAN}  │${RESET}  Node-RED:    http://${PI_IP_FINAL}:${NODE_RED_PORT}"
+echo -e "${CYAN}  │${RESET}  HTTPS OAuth: https://${PI_IP_FINAL}:${HTTPS_PROXY_PORT}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
 else
@@ -701,10 +703,8 @@ echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add i
 fi
 echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Integrations (optional)"
 echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Integrations (optional)"
+echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings > Google > Connect Google"
 echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > API & Network (v0.3)"
-if [ -z "$GOOG_SA_PATH" ] || [ ! -f "$GOOG_SA_PATH" ]; then
-echo -e "${CYAN}  │${RESET}  ${DIM}Google Calendar JSON${RESET} — see README.md (optional)"
-fi
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
 echo -e "${MAGENTA}  Reboot to bring her fully online.${RESET}"
