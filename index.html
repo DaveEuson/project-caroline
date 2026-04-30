@@ -86,11 +86,21 @@
   /* SETTINGS MODAL */
   #settings-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 800; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
   #settings-overlay.show { display: flex; }
-  #settings-modal { background: #0c0814; border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; width: 500px; max-height: 82vh; overflow: hidden; display: flex; flex-direction: column; }
+  #settings-modal { background: #0c0814; border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; width: 720px; max-height: 82vh; overflow: hidden; display: flex; flex-direction: column; }
   #settings-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 14px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.1); flex-shrink: 0; }
   #settings-header h2 { font-size: 11px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.25em; }
   #settings-close { background: none; border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 3px 12px; font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; cursor: pointer; }
-  #settings-body { overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 22px; }
+  #settings-body { overflow-y: auto; padding: 18px 24px 20px; display: flex; flex-direction: column; gap: 18px; }
+  #settings-tabs { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; position:sticky; top:0; z-index:3; padding:0 0 12px; background:linear-gradient(180deg,#0c0814 72%,rgba(12,8,20,0)); }
+  .settings-tab { min-width:0; display:flex; align-items:center; justify-content:center; gap:6px; background:rgba(0,0,0,0.28); border:1px solid rgba(var(--t-rgb1),0.14); border-radius:10px; padding:8px 10px; color:rgba(226,232,240,0.58); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s ease; }
+  .settings-tab:hover { color:#f8fafc; border-color:rgba(var(--t-rgb1),0.34); background:rgba(var(--t-rgb1),0.08); }
+  .settings-tab.active { color:var(--t-hex1); border-color:rgba(var(--t-rgb1),0.55); background:rgba(var(--t-rgb1),0.13); box-shadow:inset 0 0 18px rgba(var(--t-rgb1),0.05); }
+  .settings-tab-icon { font-size:13px; line-height:1; }
+  .settings-page-title { display:none; align-items:flex-end; justify-content:space-between; gap:12px; padding:2px 0 4px; border-bottom:1px solid rgba(var(--t-rgb1),0.08); }
+  .settings-page-title.active { display:flex; }
+  .settings-page-title h3 { margin:0; font-size:12px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; letter-spacing:.18em; text-transform:uppercase; }
+  .settings-page-title span { font-size:11px; color:rgba(226,232,240,0.38); font-family:'JetBrains Mono',monospace; text-align:right; }
+  .settings-section[hidden] { display:none !important; }
   .settings-section h3 { font-size: 11px; color: rgba(226,232,240,0.3); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; }
   .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .settings-label { font-size: 15px; color: #e2e8f0; }
@@ -379,7 +389,16 @@
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
   body.idle-mode #avatar-outer { transform: scale(1.4) translateY(15px); }
-  body.idle-mode #bottom-bar { opacity: 1; pointer-events: auto; }
+  #idle-clock-panel { display:none; position:fixed; top:72px; left:50%; transform:translateX(-50%); text-align:center; z-index:13; pointer-events:none; }
+  #idle-clock-time { font-family:'JetBrains Mono',monospace; font-size:96px; line-height:1; color:#f8fafc; font-weight:300; letter-spacing:0; text-shadow:0 0 34px rgba(var(--t-rgb1),0.18); }
+  #idle-clock-date { margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.62); text-transform:uppercase; }
+  body.idle-mode #idle-clock-panel { display:block; }
+  body.idle-mode #bottom-bar { height:245px; opacity:1; pointer-events:auto; }
+  body.idle-mode #bottom-chat { padding:14px 18px 12px; }
+  body.idle-mode #bottom-chat-label { font-size:12px; margin-bottom:10px; }
+  body.idle-mode #bottom-chat-msgs { gap:8px; }
+  body.idle-mode .bc-msg { font-size:17px; line-height:1.45; padding:8px 12px; max-width:82%; }
+  body.idle-mode .bc-sender { font-size:12px; margin-bottom:4px; }
   #screensaver-overlay { display:none; position:fixed; inset:0; background:rgba(2,3,5,0); z-index:5; pointer-events:none; transition:background 2s ease; }
   body.idle-mode #screensaver-overlay { display:block; background:rgba(2,3,5,0.65); }
 
@@ -395,7 +414,7 @@
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
-  #bottom-bar { height: 165px; flex-shrink: 0; display: flex; gap: 0; border-top: 1px solid rgba(var(--t-rgb1), 0.12); background: linear-gradient(180deg, rgba(5,5,10,0.95), rgba(12,8,20,0.98)); position: relative; z-index: 12; transition: opacity 1.5s ease; }
+  #bottom-bar { height: 165px; flex-shrink: 0; display: flex; gap: 0; border-top: 1px solid rgba(var(--t-rgb1), 0.12); background: linear-gradient(180deg, rgba(5,5,10,0.95), rgba(12,8,20,0.98)); position: relative; z-index: 12; transition: opacity 1.5s ease, height 1.5s ease; }
   #bottom-chat { flex: 1; display: flex; flex-direction: column; padding: 10px 14px 8px; min-width: 0; border-right: 1px solid rgba(var(--t-rgb1), 0.08); }
   #bottom-chat #input-row { display:flex; align-items:center; gap:8px; padding:4px 0 0; flex-shrink:0; justify-content:flex-start; max-width:none; width:100%; }
   #bottom-chat #msg-input { flex:1; min-width:0; }
@@ -434,7 +453,8 @@
   @media (max-width: 1100px) {
     #left { width: 160px; padding: 8px; }
     #news-panel { width: 200px; }
-    #settings-modal { width: 95vw; max-width: 480px; }
+    #settings-modal { width: 95vw; max-width: 720px; }
+    #settings-tabs { grid-template-columns:repeat(2, minmax(0, 1fr)); }
     #msg-input { font-size: 16px; }
     #subtitle-text { font-size: 17px; }
     .quick-btn { padding: 8px 12px; font-size: 13px; }
@@ -451,6 +471,19 @@
     .conn-pill { max-width:230px; overflow:hidden; text-overflow:ellipsis; }
     .net-pill { font-size:10px; padding:2px 6px; }
     .topbar-clock { font-size:15px; }
+    #settings-body { padding:14px 16px 18px; }
+    .settings-row { align-items:flex-start; flex-direction:column; gap:8px; }
+    .settings-row > .settings-input,
+    .settings-row > .settings-select,
+    .settings-row .input-detect-row { width:100%; }
+    .settings-input, .settings-select { max-width:100%; }
+    #settings-tabs { grid-template-columns:1fr 1fr; }
+    .settings-tab { font-size:9px; padding:8px 7px; }
+    #idle-clock-panel { top:22px; }
+    #idle-clock-time { font-size:68px; }
+    #idle-clock-date { font-size:11px; }
+    body.idle-mode #bottom-bar { height:235px; }
+    body.idle-mode .bc-msg { font-size:15px; max-width:92%; }
     #settings-modal { width: 98vw; max-height: 85vh; }
     #subtitle-text { font-size: 15px; }
     .quick-btn { padding: 8px 10px; font-size: 12px; }
@@ -468,6 +501,8 @@
     #media-quick-rail { display:none; }
     #news-section { flex: 1; overflow-y: auto; padding: 8px; }
     #avatar-outer { width: 140px; height: 140px; }
+    #idle-clock-time { font-size:48px; }
+    #idle-clock-date { font-size:9px; }
     #center { padding: 4px 6px; gap: 8px; }
     .quick-btn { padding: 7px 8px; font-size: 11px; }
     #topbar-radio { display: none; }
@@ -732,6 +767,11 @@
       <div id="settings-first-run-banner" style="display:none;background:rgba(var(--t-rgb1),0.08);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:12px;padding:14px 18px;margin-bottom:6px;">
         <div style="font-size:15px;color:var(--t-hex1);font-weight:600;margin-bottom:5px;">Welcome to Caroline 👋</div>
         <div style="font-size:12px;color:rgba(226,232,240,0.65);font-family:'JetBrains Mono',monospace;line-height:1.5;">Set your Node-RED URL and OpenRouter key to get started.<br>Save once and Caroline will remember everything.</div>
+      </div>
+      <div id="settings-tabs" role="tablist" aria-label="Settings sections"></div>
+      <div id="settings-page-title" class="settings-page-title" aria-live="polite">
+        <h3></h3>
+        <span></span>
       </div>
       <div class="settings-section">
         <h3>Appearance</h3>
@@ -1332,6 +1372,10 @@
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
     </div>
     <div id="avatar-hint">[ PROJECT: CAROLINE // UPLINK ACTIVE ]</div>
+    <div id="idle-clock-panel" aria-hidden="true">
+      <div id="idle-clock-time">--:--</div>
+      <div id="idle-clock-date">STANDBY</div>
+    </div>
     <div id="interaction-zone">
       <div id="subtitle-box" class="hidden">
         <button id="subtitle-dismiss" aria-label="Dismiss" onclick="this.closest('#subtitle-box').classList.add('hidden')">✕</button>
@@ -1870,10 +1914,83 @@ async function testNodeRedUrl() {
   }
 }
 
+const SETTINGS_PAGES = [
+  { id:'appearance', label:'Appearance', icon:'ti-palette', desc:'Avatar, theme, idle behavior, personality' },
+  { id:'ai', label:'AI Model', icon:'ti-brain', desc:'Cloud or local model, keys, connection tests' },
+  { id:'location', label:'Location', icon:'ti-map-pin', desc:'Weather, timezone, and local context' },
+  { id:'integrations', label:'Integrations', icon:'ti-plug-connected', desc:'Node-RED, Hue, Spotify, Google, Discord' },
+  { id:'modules', label:'Modules', icon:'ti-layout-grid', desc:'Feature toggles and media channels' },
+  { id:'system', label:'System', icon:'ti-device-desktop-cog', desc:'Backup, logs, usage, kiosk controls' }
+];
+let activeSettingsPage = localStorage.getItem('caro_settings_page') || 'appearance';
+
+function settingsPageForSection(title) {
+  const t = String(title || '').toLowerCase();
+  if (t.includes('ai model')) return 'ai';
+  if (t.includes('location')) return 'location';
+  if (t.includes('api & network') || t.includes('google') || t.includes('discord')) return 'integrations';
+  if (t.includes('modules') || t.includes('video channels')) return 'modules';
+  if (t.includes('data') || t.includes('usage') || t.includes('event log') || t === 'system') return 'system';
+  if (t.includes('appearance') || t.includes('behaviour') || t.includes('onboarding') || t.includes('personality')) return 'appearance';
+  return 'system';
+}
+
+function ensureSettingsSubmenus() {
+  const tabs = document.getElementById('settings-tabs');
+  const body = document.getElementById('settings-body');
+  if (!tabs || !body) return;
+  const sections = Array.from(body.children).filter(el => el.classList && el.classList.contains('settings-section'));
+  sections.forEach(section => {
+    if (section.dataset.settingsPage) return;
+    const title = section.querySelector('h3')?.textContent || '';
+    section.dataset.settingsPage = settingsPageForSection(title);
+  });
+  if (!tabs.dataset.ready) {
+    tabs.innerHTML = '';
+    SETTINGS_PAGES.forEach(page => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'settings-tab';
+      btn.dataset.settingsTab = page.id;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-controls', 'settings-body');
+      btn.innerHTML = '<i class="ti ' + page.icon + ' settings-tab-icon" aria-hidden="true"></i><span>' + page.label + '</span>';
+      btn.onclick = () => switchSettingsPage(page.id);
+      tabs.appendChild(btn);
+    });
+    tabs.dataset.ready = 'true';
+  }
+}
+
+function switchSettingsPage(pageId) {
+  ensureSettingsSubmenus();
+  const page = SETTINGS_PAGES.find(p => p.id === pageId) || SETTINGS_PAGES[0];
+  activeSettingsPage = page.id;
+  localStorage.setItem('caro_settings_page', page.id);
+  document.querySelectorAll('#settings-tabs .settings-tab').forEach(btn => {
+    const active = btn.dataset.settingsTab === page.id;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('#settings-body > .settings-section').forEach(section => {
+    section.hidden = section.dataset.settingsPage !== page.id;
+  });
+  const title = document.getElementById('settings-page-title');
+  if (title) {
+    title.classList.add('active');
+    const h = title.querySelector('h3');
+    const s = title.querySelector('span');
+    if (h) h.textContent = page.label;
+    if (s) s.textContent = page.desc;
+  }
+}
+
 function toggleSettings() {
   const ov = document.getElementById('settings-overlay');
   const isOpen = ov.classList.toggle('show');
   if (isOpen) {
+    ensureSettingsSubmenus();
+    switchSettingsPage(activeSettingsPage);
     document.getElementById('set-avatar').value = S.avatar;
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
@@ -3549,7 +3666,12 @@ function toggleFocusMode() {
   resetIdle();
 }
 let idleTimer=0, idleLimit=S.idleTimeout;
-const resetIdle=()=>{ idleTimer=0; document.body.classList.remove('idle-mode'); };
+const resetIdle=()=>{
+  const wasIdle=document.body.classList.contains('idle-mode');
+  idleTimer=0;
+  document.body.classList.remove('idle-mode');
+  if(wasIdle) setTimeout(()=>{ updateBottomChat(); scrollChatToBottom(); },50);
+};
 document.addEventListener('mousemove',resetIdle); document.addEventListener('touchstart',resetIdle);
 document.addEventListener('keydown', e => {
   resetIdle();
@@ -3573,33 +3695,80 @@ document.addEventListener('keydown', e => {
     }
   }
 });
-setInterval(()=>{ idleTimer++; if(idleTimer>idleLimit) document.body.classList.add('idle-mode'); },1000);
+setInterval(()=>{
+  idleTimer++;
+  if(idleTimer>idleLimit && !document.body.classList.contains('idle-mode')){
+    document.body.classList.add('idle-mode');
+    updateClock();
+    updateBottomChat();
+    scrollChatToBottom();
+  }
+},1000);
 
 // ── CLOCK ─────────────────────────────────────
 function getTimeIcon(h){ if(h>=5&&h<8)return'🌅'; if(h>=8&&h<12)return'☀️'; if(h>=12&&h<17)return'🌤️'; if(h>=17&&h<20)return'🌆'; if(h>=20&&h<23)return'🌙'; return'✨'; }
-function updateClock(){ const n=new Date(); document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
+function updateClock(){
+  const n=new Date();
+  const top=document.getElementById('clock');
+  const idleTime=document.getElementById('idle-clock-time');
+  const idleDate=document.getElementById('idle-clock-date');
+  if(top) top.textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  if(idleTime) idleTime.textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  if(idleDate) idleDate.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+}
 updateClock(); setInterval(updateClock,1000);
 
 // ── TTS ───────────────────────────────────────
 let voiceEnabled=!S.voiceMuted;
 const voiceBtn=document.getElementById('voice-btn'), voiceStatus=document.getElementById('voice-status'), avatarOuter=document.getElementById('avatar-outer');
+let carolineVoice=null;
+function setReadyVoiceStatus(){
+  if(!voiceStatus) return;
+  voiceStatus.textContent=voiceEnabled?'● READY TO CHAT · ENTER TO SEND':'● VOICE MUTED';
+  voiceStatus.className='';
+}
+function scoreVoice(v){
+  const name=(v.name||'').toLowerCase();
+  const lang=(v.lang||'').toLowerCase();
+  if(!lang.startsWith('en')) return -999;
+  let score=0;
+  if(lang==='en-us') score+=30;
+  else if(lang.startsWith('en-')) score+=12;
+  if(/ava|emma|jenny|aria|sara|samantha|karen|victoria|google us english/.test(name)) score+=80;
+  if(/natural|neural|online/.test(name)) score+=35;
+  if(/female/.test(name)) score+=10;
+  if(/desktop|zira|david|mark|george|male/.test(name)) score-=70;
+  if(v.default) score+=4;
+  return score;
+}
+function chooseCarolineVoice(){
+  if(!window.speechSynthesis) return null;
+  const voices=window.speechSynthesis.getVoices().filter(v=>scoreVoice(v)>-999);
+  voices.sort((a,b)=>scoreVoice(b)-scoreVoice(a));
+  carolineVoice=voices[0]||null;
+  return carolineVoice;
+}
 function speak(text){
   if(!voiceEnabled||!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=1.0; u.pitch=1.1;
-  const voices=window.speechSynthesis.getVoices(); const pref=['Samantha','Karen','Victoria','Zira','Jenny','Female','Google US English'];
-  const voice=pref.reduce((f,n)=>f||voices.find(v=>v.lang.startsWith('en')&&v.name.includes(n)),null); if(voice) u.voice=voice;
+  const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=0.92; u.pitch=1.02; u.volume=0.95;
+  const voice=carolineVoice||chooseCarolineVoice(); if(voice) u.voice=voice;
   const wp=isPlaying; if(wp) radioAudio.pause();
   u.onstart=()=>{ avatarOuter.classList.add('speaking'); voiceStatus.textContent='● '+(S.aiName||'Caroline').toUpperCase()+' IS SPEAKING...'; voiceStatus.className='speaking-label'; };
-  u.onend=()=>{ avatarOuter.classList.remove('speaking'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; if(wp) radioAudio.play(); };
+  u.onend=()=>{ avatarOuter.classList.remove('speaking'); setReadyVoiceStatus(); if(wp) radioAudio.play(); };
   u.onerror=u.onend; window.speechSynthesis.speak(u);
 }
-function stopSpeaking(){ window.speechSynthesis.cancel(); avatarOuter.classList.remove('speaking'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; }
-window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+function stopSpeaking(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); avatarOuter.classList.remove('speaking'); setReadyVoiceStatus(); }
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=()=>chooseCarolineVoice();
+  chooseCarolineVoice();
+  setTimeout(chooseCarolineVoice,250);
+}
 function renderVoiceState(){
   if(!voiceBtn || !voiceStatus) return;
-  if(!voiceEnabled){ voiceBtn.innerHTML='🔇'; voiceBtn.classList.add('muted'); voiceStatus.textContent='● VOICE MUTED'; }
-  else { voiceBtn.innerHTML='🔊'; voiceBtn.classList.remove('muted'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; }
+  if(!voiceEnabled){ voiceBtn.innerHTML='🔇'; voiceBtn.classList.add('muted'); }
+  else { voiceBtn.innerHTML='🔊'; voiceBtn.classList.remove('muted'); }
+  setReadyVoiceStatus();
 }
 renderVoiceState();
 voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; S.voiceMuted=!voiceEnabled; localStorage.setItem('caro_voice_muted', S.voiceMuted ? 'true' : 'false'); localStorage.setItem('caro_settings', JSON.stringify(S)); if(!voiceEnabled) stopSpeaking(); renderVoiceState(); resetIdle(); };
@@ -3748,7 +3917,7 @@ const HOWTO_CONTENT = {
   voice: {
     title:'VOICE / SPEECH',
     html:`<h4>No setup required!</h4><p>Voice uses your browser's built-in <strong>Web Speech API</strong>.</p>
-<h4>Notes</h4><ul><li>Works best in <strong>Chromium</strong> on the Raspberry Pi</li><li>Firefox does not support speech recognition — use Chromium for the kiosk</li><li>You may need to allow microphone permission the first time</li></ul>`
+<h4>Notes</h4><ul><li>Works best in <strong>Chromium</strong> on the Raspberry Pi</li><li>Firefox does not support speech recognition — use Chromium for the kiosk</li><li>Click the mic once and allow microphone permission when Chromium asks</li><li>Browsers only allow microphone access on <strong>HTTPS</strong>, <strong>localhost</strong>, or <strong>127.0.0.1</strong></li></ul>`
   }
 };
 // ── WIZARD COLOR PREVIEW ──────────────────────
@@ -4008,14 +4177,60 @@ input.addEventListener('focus',()=>{ requestAnimationFrame(()=>{ window.scrollTo
 const micBtn=document.getElementById('mic-btn'), stopBtn=document.getElementById('stop-btn');
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null, isListening=false;
+function micNeedsSecureOrigin(){
+  const host=window.location.hostname;
+  return !window.isSecureContext && host && !['localhost','127.0.0.1','::1'].includes(host);
+}
+async function ensureMicPermission(){
+  if(micNeedsSecureOrigin()){
+    input.placeholder='Mic needs HTTPS or localhost. Open this kiosk locally, or serve it over HTTPS.';
+    voiceStatus.textContent='● MIC NEEDS HTTPS OR LOCALHOST';
+    voiceStatus.className='';
+    return false;
+  }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return true;
+  try{
+    voiceStatus.textContent='● CHECKING MICROPHONE PERMISSION...';
+    voiceStatus.className='listening-label';
+    const stream=await navigator.mediaDevices.getUserMedia({ audio:true });
+    stream.getTracks().forEach(t=>t.stop());
+    return true;
+  }catch(e){
+    input.placeholder='Mic blocked. Click the browser lock icon and allow microphone.';
+    voiceStatus.textContent='● MIC BLOCKED · ALLOW MICROPHONE';
+    voiceStatus.className='';
+    return false;
+  }
+}
 if(SR){
   recognition=new SR(); recognition.lang='en-US'; recognition.continuous=true; recognition.interimResults=true;
-  recognition.onstart=()=>{ isListening=true; micBtn.classList.add('listening'); stopBtn.classList.add('show'); avatarOuter.classList.add('listening'); input.classList.add('listening'); input.placeholder='Listening... pause to send'; input.value=''; voiceStatus.textContent='● LISTENING...'; voiceStatus.className='listening-label'; if(voiceEnabled) window.speechSynthesis.pause(); if(isPlaying) radioAudio.pause(); resetIdle(); };
+  recognition.onstart=()=>{ isListening=true; micBtn.classList.add('listening'); stopBtn.classList.add('show'); avatarOuter.classList.add('listening'); input.classList.add('listening'); input.placeholder='Listening... pause to send'; input.value=''; voiceStatus.textContent='● LISTENING...'; voiceStatus.className='listening-label'; if(voiceEnabled&&window.speechSynthesis) window.speechSynthesis.pause(); if(isPlaying) radioAudio.pause(); resetIdle(); };
   recognition.onresult=(e)=>{ let int='',fin=''; for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) fin+=e.results[i][0].transcript; else int+=e.results[i][0].transcript; } input.value=fin||int; if(fin){ playBeep(600); stopListening(true); } };
   recognition.onend=()=>{ if(isListening) stopListening(false); };
-  recognition.onerror=(e)=>{ if(e.error==='no-speech'){ try{recognition.stop();recognition.start();}catch(ex){} } else { input.placeholder='Mic error: '+e.error; stopListening(false); } };
-  function stopListening(send=true){ isListening=false; try{recognition.stop();}catch(e){} micBtn.classList.remove('listening'); stopBtn.classList.remove('show'); avatarOuter.classList.remove('listening'); input.classList.remove('listening'); input.placeholder='Say something to Caroline...'; voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; if(voiceEnabled) window.speechSynthesis.resume(); if(isPlaying) radioAudio.play(); if(send&&input.value.trim()) sendMessage(); resetIdle(); }
-  micBtn.onclick=()=>{ if(!isListening){ playBeep(800); try{recognition.start();}catch(e){ input.placeholder='Mic: '+e.message; } } };
+  recognition.onerror=(e)=>{
+    const err=e.error||'unknown';
+    if(err==='no-speech'){
+      try{ if(isListening){ recognition.stop(); recognition.start(); } }catch(ex){}
+    } else if(err==='not-allowed'||err==='service-not-allowed'){
+      input.placeholder='Mic blocked. Click the browser lock icon and allow microphone.';
+      stopListening(false,'● MIC BLOCKED · ALLOW MICROPHONE');
+    } else {
+      input.placeholder='Mic error: '+err;
+      stopListening(false,'● MIC ERROR · '+String(err).toUpperCase());
+    }
+  };
+  function stopListening(send=true,statusText=''){ isListening=false; try{recognition.stop();}catch(e){} micBtn.classList.remove('listening'); stopBtn.classList.remove('show'); avatarOuter.classList.remove('listening'); input.classList.remove('listening'); input.placeholder=input.placeholder.startsWith('Mic ')?input.placeholder:'Say something to Caroline...'; if(statusText){ voiceStatus.textContent=statusText; voiceStatus.className=''; } else { setReadyVoiceStatus(); } if(voiceEnabled&&window.speechSynthesis) window.speechSynthesis.resume(); if(isPlaying) radioAudio.play(); if(send&&input.value.trim()) sendMessage(); resetIdle(); }
+  async function startListening(){
+    if(isListening) return;
+    playBeep(800);
+    micBtn.disabled=true;
+    const ok=await ensureMicPermission();
+    micBtn.disabled=false;
+    if(!ok) return;
+    input.placeholder='Starting microphone...';
+    try{ recognition.start(); }catch(e){ input.placeholder='Mic: '+e.message; setReadyVoiceStatus(); }
+  }
+  micBtn.onclick=()=>{ startListening(); };
   stopBtn.onclick=()=>{ playBeep(400); stopListening(true); };
 } else { micBtn.style.opacity='0.3'; micBtn.style.cursor='not-allowed'; }
 
@@ -4322,7 +4537,8 @@ function updateBottomChat() {
   const log = JSON.parse(localStorage.getItem('caro_log') || '[]');
   if (!log.length) return;
   container.innerHTML = '';
-  log.slice(-6).forEach(entry => {
+  const count = document.body.classList.contains('idle-mode') ? 8 : 6;
+  log.slice(-count).forEach(entry => {
     const div = document.createElement('div');
     div.className = 'bc-msg ' + (entry.role === 'dave' ? 'dave' : 'caroline');
     const sender=document.createElement('div');
@@ -4497,9 +4713,23 @@ if (S.spotifyClientId) {
 // ── TODO LIST ─────────────────────────────────
 // todos initialized above
 function saveTodos() { localStorage.setItem('caro_todos', JSON.stringify(todos)); renderInlineTasks(); }
+function cleanTaskText(raw) {
+  let text = String(raw || '').trim();
+  const quoted = text.match(/["“”']([^"“”']+)["“”']/);
+  if (quoted && quoted[1]) text = quoted[1].trim();
+  text = text
+    .replace(/^(?:can you|could you|please|hey caroline|caroline)\b[,.]?\s*/i, '')
+    .replace(/^(?:add|create|put)\s+/i, '')
+    .replace(/\s+(?:to|on|in)\s+(?:my\s+)?(?:to[- ]?do|todo|to do|task|tasks|list)(?:\s+tasks?)?$/i, '')
+    .replace(/^["“”']+|["“”']+$/g, '')
+    .replace(/[?.!]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text;
+}
 function taskTextFromPayload(item) {
-  if (typeof item === 'string') return item.trim();
-  if (item && typeof item === 'object') return String(item.text || item.task || item.title || item.name || '').trim();
+  if (typeof item === 'string') return cleanTaskText(item);
+  if (item && typeof item === 'object') return cleanTaskText(item.text || item.task || item.title || item.name || '');
   return '';
 }
 function taskKey(text) {
