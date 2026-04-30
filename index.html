@@ -1,6 +1,6 @@
 <!--
   Project: Caroline — Personal AI Kiosk
-  Version: 0.2.0-dev
+  Version: 0.2.0
   MIT License
 
   Copyright (c) 2024 Dave Euson
@@ -1481,7 +1481,7 @@
 // ── SPOTIFY OAUTH (PKCE) ──────────────────────
 
 // ── VERSION ───────────────────────────────────
-const VERSION = '0.2.0-dev';
+const VERSION = '0.2.0';
 document.addEventListener('DOMContentLoaded', () => {
   const vEl = document.querySelector('.topbar-version');
   if (vEl) vEl.textContent = 'v' + VERSION;
@@ -1884,10 +1884,10 @@ function updateFeatWarnings() {
   if (!box) return;
   box.innerHTML = '';
   const warn = (msg) => { const d = document.createElement('div'); d.className = 'feat-warning'; d.textContent = msg; box.appendChild(d); };
-  if (f.hue && !S.hueIp)     warn('⚠️ Hue enabled — set Bridge IP in API & Network');
+  if (f.hue && !S.hueIp)     warn('⚠️ Hue enabled — set Bridge IP in Integrations');
   if (f.spotify) {
      const hasToken = localStorage.getItem('spotify_token');
-     if (!hasToken) warn('ℹ️ Spotify enabled — connect account in API & Network');
+     if (!hasToken) warn('ℹ️ Spotify enabled — connect account in Integrations');
   }
   if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Node-RED URL set to receive events');
 }

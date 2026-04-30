@@ -1,9 +1,6 @@
-#### UNDER DEVELOPMENT####
-Looking to launch Late April
-
-
-
 # Project: Caroline
+
+**Current release:** v0.2.0
 
 **Your open-source, highly personalized digital sidekick.**
 
@@ -15,7 +12,7 @@ Looking to launch Late April
 ![Project: Caroline interface](Screenshot_7.png)
 ## The Story
 
-Project: Caroline is your portal to an ambient digital sidekick completely personalized to you. When they wake up, a brief setup wizard establishes their baseline personality. From there, you can dive into the settings to fully customize their core system prompt — creating a smart dashboard that truly understands how you work, think, and communicate. Currurrently optimized for Raspberry Pi 5 with a touch screen.
+Project: Caroline is your portal to an ambient digital sidekick completely personalized to you. When they wake up, a brief setup wizard establishes their baseline personality. From there, you can dive into the settings to fully customize their core system prompt — creating a smart dashboard that truly understands how you work, think, and communicate. Currently optimized for Raspberry Pi 5 with a touch screen.
 
 The personality layer is original, but its mood board is worn proudly: time gates, crystal airships, starlight choruses, polite old robots, tomorrowland apartments, team comms, chrome helmets, four-on-the-floor rooms, and a tiny brass section skanking in the corner.
 
@@ -47,10 +44,12 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 ## Installation
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/daveeuson/project-caroline/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
 The installer asks for your name, timezone, location, and whether to install Ollama. **No terminal is needed after install** — everything is configured in the GUI, with API keys entered directly in the kiosk settings panel.
+
+For the most reliable fresh install, start from Raspberry Pi OS Desktop 64-bit on a Pi 4 or 5. Pi OS Lite can run the backend and web UI, but the fullscreen kiosk auto-launch requires a desktop session.
 
 After install, open **Settings** in Caroline:
 
@@ -120,8 +119,8 @@ Copy and paste this prompt into your existing AI to generate a highly tailored p
 
 ```
 v0.1 — Core kiosk: chat, widgets, smart home, Pomodoro.            [██████████]
-v0.2 — Agent loop, auto-tasks, installer, CI pipeline.             [██████████]  ← you are here
-v0.3 — More Widgets! more personality!          [░░░░░░░░░░]
+v0.2 — Agent loop, auto-tasks, installer, voice/idle polish.       [██████████]  ← current
+v0.3 — More widgets, more personality.                             [░░░░░░░░░░]
 v1.0 — Hardware agnostic (Windows, Mac, tablet, cloud).            [░░░░░░░░░░]
 v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░░░░░░░░░]
 ```
@@ -136,6 +135,6 @@ No other open-source kiosk project combines conversational AI with persistent me
 
 ## Links & Credits
 
-- **GitHub:** [github.com/daveeuson/project-caroline](https://github.com/daveeuson/project-caroline)
+- **GitHub:** [github.com/DaveEuson/project-caroline](https://github.com/DaveEuson/project-caroline)
 - **License:** MIT
 - Built by Dave Euson

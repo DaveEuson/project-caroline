@@ -3,7 +3,7 @@
 # ============================================================
 #   PROJECT: CAROLINE
 #   Personal AI Kiosk — install.sh
-#   github.com/daveeuson/project-caroline
+#   github.com/DaveEuson/project-caroline
 # ============================================================
 
 set -e
@@ -45,7 +45,7 @@ phase() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="0.2.0-dev"
+CAROLINE_VERSION="0.2.0"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
@@ -179,9 +179,9 @@ phase "PHASE 1 — ESTABLISHING UPLINK"
 
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
 sudo apt-get update -q 2>/dev/null
-sudo apt-get install -y -q curl git ca-certificates gnupg jq nginx 2>/dev/null || {
+sudo apt-get install -y -q curl git ca-certificates gnupg jq nginx python3-pip psmisc openssl 2>/dev/null || {
   echo -e "${RED}  ✗ apt-get failed. Is the network up?${RESET}"
-  echo -e "${DIM}    Try: sudo apt-get update && sudo apt-get install -y curl git jq nginx${RESET}"
+  echo -e "${DIM}    Try: sudo apt-get update && sudo apt-get install -y curl git jq nginx python3-pip psmisc openssl${RESET}"
   exit 1
 }
 echo -e "${GREEN}  ✓ System dependencies online${RESET}"
@@ -291,8 +291,7 @@ OLLAMA_ENV_EOF
   ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
   PULL_PID=$!
   spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
-  wait "$PULL_PID"
-  if [ $? -eq 0 ]; then
+  if wait "$PULL_PID"; then
     echo -e "${GREEN}  ✓ Model ${OLLAMA_MODEL} locked and loaded${RESET}"
     echo -e "${YELLOW}  ► Warming ${OLLAMA_MODEL} into memory...${RESET}"
     ollama run "$OLLAMA_MODEL" "hello" >/dev/null 2>&1 || true
@@ -326,7 +325,7 @@ if [ -d "$CLONE_DIR/.git" ]; then
   git -C "$CLONE_DIR" pull --ff-only 2>/tmp/caroline-git.log || \
     echo -e "${YELLOW}    ⚠ git pull failed — using existing clone${RESET}"
 else
-  git clone "https://github.com/daveeuson/project-caroline.git" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
+  git clone "https://github.com/DaveEuson/project-caroline.git" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
     echo -e "${RED}  ✗ Git clone failed. Check your internet connection.${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
     exit 1
@@ -754,8 +753,8 @@ echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add i
 fi
 echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Integrations (optional)"
 echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Integrations (optional)"
-echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings > Google > Connect Google"
-echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > API & Network (v0.3)"
+echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings > Integrations > Connect Google"
+echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > Integrations"
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
 echo -e "${MAGENTA}  Reboot to bring her fully online; launch pad lights are green.${RESET}"

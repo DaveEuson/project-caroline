@@ -33,7 +33,7 @@ Thanks for wanting to make Caroline better. Here's what you need to know.
 
 ## Reporting Bugs
 
-Open an issue at [github.com/daveeuson/project-caroline/issues](https://github.com/daveeuson/project-caroline/issues) with:
+Open an issue at [github.com/DaveEuson/project-caroline/issues](https://github.com/DaveEuson/project-caroline/issues) with:
 - What happened vs. what you expected
 - Pi model and OS version
 - Relevant logs: `sudo journalctl -u caroline --since today`
