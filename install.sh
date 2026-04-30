@@ -64,6 +64,22 @@ REAL_HOME=$(eval echo "~$REAL_USER")
 CAROLINE_DIR="$REAL_HOME/caroline"
 SETTINGS_PATH="$CAROLINE_DIR/caroline_settings.json"
 
+protect_secret_files() {
+  local _secret
+  for _secret in \
+    "$CAROLINE_DIR/caroline_settings.json" \
+    "$CAROLINE_DIR/google_oauth.json" \
+    "$CAROLINE_DIR/caroline_tasks.json" \
+    "$CAROLINE_DIR/caroline_mind.json" \
+    "$CAROLINE_DIR/spotify_auth.json" \
+    "$CAROLINE_DIR/caroline-calendar.json" \
+    "$CAROLINE_DIR/service-account.json"; do
+    [ -f "$_secret" ] || continue
+    sudo chown "$REAL_USER":"$REAL_USER" "$_secret" 2>/dev/null || true
+    chmod 600 "$_secret" 2>/dev/null || true
+  done
+}
+
 clear
 
 echo ""
@@ -75,7 +91,7 @@ echo -e "${CYAN} ╚██████╗██║  ██║██║  ██�
 echo -e "${CYAN}  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}  PROJECT: CAROLINE${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
-echo -e "${DIM}  Your personal AI Chief of Staff.${RESET}"
+echo -e "${DIM}  Your personal AI sidekick with a tiny neon pulse.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -94,7 +110,7 @@ fi
 
 # ── INTRO ────────────────────────────────────────────────────
 echo -e "${BOLD}  Booting Project: Caroline for the first time.${RESET}"
-echo -e "${DIM}  A few questions before she comes online.${RESET}"
+echo -e "${DIM}  A few questions before the launch pad goes green.${RESET}"
 echo -e "${DIM}  API keys and integrations are configured in her GUI after install.${RESET}"
 echo -e "${DIM}  Press Enter to skip any field.${RESET}"
 echo ""
@@ -293,6 +309,7 @@ mkdir -p "$CAROLINE_DIR"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR"
 
 echo -e "${GREEN}  ✓ Memory banks online${RESET}"
+echo -e "${DIM}    Time gate stable; crystal bus humming.${RESET}"
 
 # ── CAROLINE FILES ───────────────────────────────────────────
 phase "PHASE 4 — DEPLOYING CAROLINE'S PAYLOAD"
@@ -300,6 +317,7 @@ phase "PHASE 4 — DEPLOYING CAROLINE'S PAYLOAD"
 mkdir -p "$CAROLINE_DIR"
 
 echo -e "${YELLOW}  ► Cloning Caroline from GitHub...${RESET}"
+echo -e "${DIM}    Fetching the airship manifest.${RESET}"
 
 CLONE_DIR="$REAL_HOME/project-caroline"
 
@@ -316,7 +334,19 @@ else
 fi
 
 echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
+echo -e "${DIM}    Robot manners module: polite.${RESET}"
 cp -r "$CLONE_DIR/." "$CAROLINE_DIR/"
+
+# The published flows are authored from the maintainer's home directory.
+# Rewrite those paths at install time so memory, OAuth, and settings files
+# live in the actual user's Caroline directory.
+CAROLINE_DIR_SED=$(printf '%s' "$CAROLINE_DIR" | sed 's/[&#]/\\&/g')
+for _json in "$CAROLINE_DIR/flows.json" "$CAROLINE_DIR/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-wonder-loop.json"; do
+  [ -f "$_json" ] || continue
+  sed -i "s#/home/davee/caroline#${CAROLINE_DIR_SED}#g" "$_json"
+done
+unset _json CAROLINE_DIR_SED
+
 # Flatten avatar GIFs to root — skip any placeholder stub (43 bytes); only copy files > 1 KB
 for _gif in "$CAROLINE_DIR/assets/"*.gif; do
   [ -f "$_gif" ] || continue
@@ -327,6 +357,7 @@ unset _gif
 # Ensure nginx (www-data) can read all files
 sudo chmod -R 755 "$CAROLINE_DIR"
 sudo chown -R www-data:www-data "$CAROLINE_DIR/assets" 2>/dev/null || true
+protect_secret_files
 
 if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; then
   echo ""
@@ -335,12 +366,23 @@ if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; t
 fi
 
 echo -e "${GREEN}  ✓ Caroline payload ready${RESET}"
+echo -e "${DIM}    Starlight filter sweep locked; brass upstroke detected.${RESET}"
 
 # ── GOOGLE OAUTH TOKEN STORE ─────────────────────────────────
 touch "$CAROLINE_DIR/google_oauth.json"
 chmod 600 "$CAROLINE_DIR/google_oauth.json"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/google_oauth.json"
-echo -e "${DIM}  ℹ Google Calendar/Tasks connect from Caroline Settings after install${RESET}"
+if [ ! -f "$CAROLINE_DIR/caroline_tasks.json" ]; then
+  printf '{\n  "tasks": [],\n  "updatedAt": null\n}\n' > "$CAROLINE_DIR/caroline_tasks.json"
+fi
+chmod 600 "$CAROLINE_DIR/caroline_tasks.json"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_tasks.json"
+if [ ! -f "$CAROLINE_DIR/caroline_mind.json" ]; then
+  printf '{\n  "version": 1,\n  "mood": {\n    "curiosity": 0.62,\n    "energy": 0.55,\n    "socialPull": 0.35,\n    "frustration": 0.1,\n    "trust": 0.5\n  },\n  "wonderQueue": [],\n  "findings": [],\n  "lastOutboundAt": 0,\n  "lastCouncil": null,\n  "updatedAt": null\n}\n' > "$CAROLINE_DIR/caroline_mind.json"
+fi
+chmod 600 "$CAROLINE_DIR/caroline_mind.json"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_mind.json"
+echo -e "${DIM}  ℹ Google Calendar connects from Caroline Settings after install; tasks live in caroline_tasks.json${RESET}"
 
 # ── IMPORT NODE-RED FLOWS ────────────────────────────────────
 echo -e "${YELLOW}  ► Importing Node-RED flows...${RESET}"
@@ -362,6 +404,13 @@ if [ -f "$CAROLINE_DIR/caroline-auto-tasks.json" ]; then
   mv "${MERGED_FLOWS_FILE}.tmp" "$MERGED_FLOWS_FILE"
   FLOWS_FILE="$MERGED_FLOWS_FILE"
   echo -e "${DIM}    Merged auto-tasks into flows${RESET}"
+fi
+
+if [ -f "$CAROLINE_DIR/caroline-wonder-loop.json" ]; then
+  jq -s '.[0] + .[1]' "$FLOWS_FILE" "$CAROLINE_DIR/caroline-wonder-loop.json" > "${MERGED_FLOWS_FILE}.tmp"
+  mv "${MERGED_FLOWS_FILE}.tmp" "$MERGED_FLOWS_FILE"
+  FLOWS_FILE="$MERGED_FLOWS_FILE"
+  echo -e "${DIM}    Merged wonder loop into flows${RESET}"
 fi
 
 cp "$FLOWS_FILE" "$CAROLINE_DIR/flows.json"
@@ -399,6 +448,7 @@ sudo fuser -k ${HTTPS_PROXY_PORT}/tcp 2>/dev/null || true
 # to traverse into ~/caroline, and read access on the files themselves.
 sudo chmod o+x "$REAL_HOME"
 sudo chmod -R o+rX "$CAROLINE_DIR"
+protect_secret_files
 
 sudo mkdir -p /etc/caroline
 if [ ! -f /etc/caroline/caroline-selfsigned.crt ] || [ ! -f /etc/caroline/caroline-selfsigned.key ]; then
@@ -509,6 +559,7 @@ jq -n \
     discordToken:    "",
     kioskMode:       $kiosk
   }' > "$SETTINGS_PATH"
+protect_secret_files
 
 echo -e "${GREEN}  ✓ Settings saved${RESET}"
 
@@ -677,7 +728,7 @@ PI_IP_FINAL=$(hostname -I | awk '{print $1}')
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}  She's alive. Try not to annoy her.${RESET}"
+echo -e "${BOLD}${GREEN}  She's online. Tiny robot manners, big co-pilot energy.${RESET}"
 echo ""
 echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
@@ -707,7 +758,7 @@ echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings >
 echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > API & Network (v0.3)"
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
-echo -e "${MAGENTA}  Reboot to bring her fully online.${RESET}"
+echo -e "${MAGENTA}  Reboot to bring her fully online; launch pad lights are green.${RESET}"
 echo ""
 echo -e "${BOLD}  sudo reboot${RESET}"
 echo ""

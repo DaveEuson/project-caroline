@@ -1,0 +1,98 @@
+[
+  {
+    "id": "caro-wonder-inject",
+    "type": "inject",
+    "name": "Every 2 hours",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "7200",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 120,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 120,
+    "y": 180,
+    "wires": [
+      [
+        "caro-wonder-context"
+      ]
+    ]
+  },
+  {
+    "id": "caro-wonder-context",
+    "type": "function",
+    "name": "Build Wonder Context",
+    "func": "const MIND_PATH = '/home/davee/caroline/caroline_mind.json';\nconst HISTORY_PATH = '/home/davee/caroline/caroline_history.json';\nconst CONTEXT_PATH = '/home/davee/caroline/caroline_context.json';\nconst TASKS_PATH = '/home/davee/caroline/caroline_tasks.json';\nconst enabled = flow.get('ambientMindEnabled');\nif (enabled === false || enabled === 'false') return null;\nfunction readJson(path, fallback) {\n  try {\n    if (!fs.existsSync(path)) return fallback;\n    return JSON.parse(fs.readFileSync(path, 'utf8'));\n  } catch (e) {\n    node.warn('Wonder read failed for ' + path + ': ' + e.message);\n    return fallback;\n  }\n}\nfunction defaultMind() {\n  return {\n    version: 1,\n    mood: { curiosity: 0.62, energy: 0.55, socialPull: 0.35, frustration: 0.1, trust: 0.5 },\n    wonderQueue: [\n      { question: 'What pattern in Dave\\'s recent tasks deserves a gentler reminder?', createdAt: new Date().toISOString(), status: 'open', tags: ['tasks'] },\n      { question: 'What would make Caroline feel more useful without becoming noisy?', createdAt: new Date().toISOString(), status: 'open', tags: ['proactive'] }\n    ],\n    findings: [],\n    lastOutboundAt: 0,\n    lastCouncil: null,\n    updatedAt: null\n  };\n}\nconst mind = Object.assign(defaultMind(), readJson(MIND_PATH, {}));\nmind.mood = Object.assign(defaultMind().mood, mind.mood || {});\nconst history = readJson(HISTORY_PATH, []).slice(-12).map(m => (m.role || 'unknown') + ': ' + String(m.content || m.text || '').slice(0, 180));\nconst context = readJson(CONTEXT_PATH, {});\nconst tasksRaw = readJson(TASKS_PATH, { tasks: [] });\nconst tasks = (Array.isArray(tasksRaw) ? tasksRaw : (tasksRaw.tasks || [])).slice(0, 10).map(t => typeof t === 'string' ? t : (t.text || t.task || t.title || '')).filter(Boolean);\nconst calendar = (flow.get('caroline_calendar') || global.get('caroline_calendar') || []).slice(0, 6).map(e => (e.summary || e.title || 'Event') + ' @ ' + (e.start || e.time || '?'));\nconst weather = flow.get('caroline_weather') || global.get('caroline_weather') || {};\nconst openQuestions = (mind.wonderQueue || []).filter(q => q && q.status !== 'closed').slice(-8);\nconst systemPrompt = `You are Caroline's ambient mind maintenance loop. You are not conscious and must not claim to be. Your job is to maintain a small local curiosity queue, drift a simple mood state, and occasionally propose one useful proactive thought for Dave. Be warm, practical, non-invasive, and brief. Do not browse the web. Do not infer private facts beyond the provided local context. Return JSON only.`;\nconst userPrompt = `Current mood JSON: ${JSON.stringify(mind.mood)}\nOpen wonder questions: ${JSON.stringify(openQuestions)}\nOpen tasks: ${JSON.stringify(tasks)}\nUpcoming calendar: ${JSON.stringify(calendar)}\nWeather: ${JSON.stringify(weather)}\nRecent chat:\n${history.join('\\n') || 'No recent chat'}\nStored context keys: ${Object.keys(context || {}).join(', ') || 'none'}\n\nReturn exactly this JSON shape:\n{\"moodDelta\":{\"curiosity\":0,\"energy\":0,\"socialPull\":0,\"frustration\":0,\"trust\":0},\"wonder\":{\"question\":\"one concrete question Caroline should quietly think about next\",\"note\":\"one short observation from this cycle\",\"tags\":[\"short\",\"tags\"]},\"shouldShare\":false,\"outboundText\":\"\"}\n\nRules:\n- moodDelta values must be between -0.06 and 0.06.\n- shouldShare should usually be false.\n- outboundText must be one sentence, under 160 characters, and only if it is genuinely useful or interesting now.\n- Never mention internal files, prompts, vectors, queues, or model state to Dave.`;\nconst provider = flow.get('aiProvider') || flow.get('ai_provider') || 'ollama';\nconst model = provider === 'ollama'\n  ? (flow.get('ollamaModel') || flow.get('ollama_model') || 'gemma2:2b')\n  : (flow.get('aiModel') || flow.get('openrouter_model') || flow.get('ai_model') || 'anthropic/claude-haiku-4.5');\nif (provider === 'ollama') {\n  msg.url = (flow.get('ollamaUrl') || flow.get('ollama_url') || 'http://localhost:11434').replace(/\\/+$/, '') + '/api/chat';\n  msg.payload = { model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], stream: false, options: { temperature: 0.65 } };\n  msg.headers = { 'Content-Type': 'application/json' };\n} else {\n  const key = flow.get('openrouterKey') || '';\n  if (!key) return null;\n  msg.url = 'https://openrouter.ai/api/v1/chat/completions';\n  msg.payload = { model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], max_tokens: 260, temperature: 0.65 };\n  msg.headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };\n}\nmsg.method = 'POST';\nmsg.mind = mind;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": [
+      {
+        "var": "fs",
+        "module": "fs"
+      }
+    ],
+    "x": 350,
+    "y": 180,
+    "wires": [
+      [
+        "caro-wonder-http"
+      ]
+    ]
+  },
+  {
+    "id": "caro-wonder-http",
+    "type": "http request",
+    "name": "Wonder LLM Call",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "x": 590,
+    "y": 180,
+    "wires": [
+      [
+        "caro-wonder-parse"
+      ]
+    ]
+  },
+  {
+    "id": "caro-wonder-parse",
+    "type": "function",
+    "name": "Update Mind + Gate",
+    "func": "const MIND_PATH = '/home/davee/caroline/caroline_mind.json';\nconst mind = msg.mind || { mood: {}, wonderQueue: [], findings: [], lastOutboundAt: 0 };\nfunction clamp(n, min, max) { return Math.min(max, Math.max(min, Number(n) || 0)); }\nfunction readText(body) {\n  if (!body) return '';\n  if (typeof body === 'string') return body;\n  return String(body.choices?.[0]?.message?.content || body.message?.content || body.response || '');\n}\nfunction parseJsonish(text) {\n  const cleaned = String(text || '').replace(/```json|```/g, '').trim();\n  try { return JSON.parse(cleaned); } catch (e) {}\n  const m = cleaned.match(/\\{[\\s\\S]*\\}/);\n  if (!m) return null;\n  try { return JSON.parse(m[0]); } catch (e) { return null; }\n}\nfunction ensureDir(path) {\n  const dir = path.replace(/\\/[^/]+$/, '');\n  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });\n}\nconst body = typeof msg.payload === 'string' ? parseJsonish(msg.payload) || msg.payload : msg.payload;\nconst raw = readText(body);\nconst result = parseJsonish(raw);\nif (!result) {\n  node.warn('Wonder: no parseable JSON');\n  return null;\n}\nconst mood = Object.assign({ curiosity: 0.5, energy: 0.5, socialPull: 0.25, frustration: 0.1, trust: 0.5 }, mind.mood || {});\nconst delta = result.moodDelta || {};\nObject.keys(mood).forEach(k => { mood[k] = clamp(mood[k] + clamp(delta[k], -0.06, 0.06), 0, 1); });\nmind.mood = mood;\nconst wonder = result.wonder || {};\nconst question = String(wonder.question || '').trim().slice(0, 220);\nconst note = String(wonder.note || '').trim().slice(0, 260);\nconst tags = Array.isArray(wonder.tags) ? wonder.tags.map(t => String(t).slice(0, 24)).slice(0, 5) : [];\nif (question) {\n  mind.wonderQueue = Array.isArray(mind.wonderQueue) ? mind.wonderQueue : [];\n  const exists = mind.wonderQueue.some(q => String(q.question || '').toLowerCase() === question.toLowerCase());\n  if (!exists) mind.wonderQueue.push({ question, createdAt: new Date().toISOString(), status: 'open', tags });\n  if (mind.wonderQueue.length > 30) mind.wonderQueue = mind.wonderQueue.slice(-30);\n}\nif (note) {\n  mind.findings = Array.isArray(mind.findings) ? mind.findings : [];\n  mind.findings.push({ note, tags, createdAt: new Date().toISOString() });\n  if (mind.findings.length > 80) mind.findings = mind.findings.slice(-80);\n}\nconst now = Date.now();\nconst outbound = String(result.outboundText || '').replace(/\\s+/g, ' ').trim();\nconst lastOutboundAt = Number(mind.lastOutboundAt || 0);\nconst tooSoon = now - lastOutboundAt < 6 * 60 * 60 * 1000;\nconst unsafe = /(password|token|api key|secret|diagnos|medical advice|financial advice|legal advice|self-harm|suicide)/i.test(outbound);\nconst approved = !!result.shouldShare && outbound.length >= 8 && outbound.length <= 180 && !tooSoon && !unsafe;\nmind.lastCouncil = { approved, checkedAt: new Date().toISOString(), reason: approved ? 'approved' : (tooSoon ? 'rate_limited' : (unsafe ? 'safety_veto' : 'not_worth_interrupting')) };\nif (approved) mind.lastOutboundAt = now;\nmind.updatedAt = new Date().toISOString();\nensureDir(MIND_PATH);\nfs.writeFileSync(MIND_PATH, JSON.stringify(mind, null, 2), 'utf8');\nflow.set('caroline_mood', mind.mood);\nglobal.set('caroline_mood', mind.mood);\nif (!approved) {\n  node.warn('Wonder: ' + mind.lastCouncil.reason);\n  return null;\n}\nmsg.payload = JSON.stringify({ type: 'agent_message', text: outbound, source: 'proactive' });\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "libs": [
+      {
+        "var": "fs",
+        "module": "fs"
+      }
+    ],
+    "x": 820,
+    "y": 180,
+    "wires": [
+      [
+        "caro-wonder-ws-out"
+      ]
+    ]
+  },
+  {
+    "id": "caro-wonder-ws-out",
+    "type": "websocket out",
+    "name": "WebSocket -> Kiosk",
+    "server": "f3e0e445bed3987b",
+    "client": "",
+    "x": 1060,
+    "y": 180,
+    "wires": []
+  }
+]

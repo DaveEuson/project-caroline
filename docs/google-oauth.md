@@ -1,6 +1,6 @@
 # Google OAuth Setup
 
-Caroline uses a Google **Desktop app OAuth client** for personal Calendar and Google Tasks access. Do not use a service-account JSON for normal setup. A service account is a separate robot account, and its numeric client ID will trigger Google errors such as `redirect_uri_mismatch`.
+Caroline uses a Google **Desktop app OAuth client** for personal Calendar access. Tasks are stored locally on the host. Do not use a service-account JSON for normal setup. A service account is a separate robot account, and its numeric client ID will trigger Google errors such as `redirect_uri_mismatch`.
 
 ## Create the OAuth Client
 
@@ -8,8 +8,6 @@ Caroline uses a Google **Desktop app OAuth client** for personal Calendar and Go
 2. Select an existing project, or create a new project named something like `Project Caroline`.
 3. Enable these APIs in **APIs & Services > Library**:
    - Google Calendar API
-   - Google Tasks API
-   - Google Sheets API, only if you still use the legacy Sheets task sync
 4. Open **Google Auth Platform**.
 5. If prompted, configure the app/consent screen:
    - App name: `Caroline`
