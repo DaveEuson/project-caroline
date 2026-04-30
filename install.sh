@@ -536,6 +536,9 @@ jq -n \
   --argjson kiosk    "$([ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ] && echo true || echo false)" \
   '{
     userName:        $name,
+    aiName:          "Caroline",
+    userMood:        7,
+    aiMood:          7,
     timezone:        $tz,
     location:        $loc,
     zipcode:         $zip,

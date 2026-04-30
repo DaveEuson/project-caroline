@@ -39,7 +39,7 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
 <style>
-  :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; --ui-font: 'Inter', 'Roboto', 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; --mono-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --read-scale: 1; --density-gap: 0px; }
+  :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; --ui-font: 'Inter', 'Roboto', 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; --mono-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --read-scale: 1; --density-gap: 0px; --side-panel-width: 228px; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { width: 100%; height: 100%; overflow: hidden; background: #05050a; }
   body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: var(--ui-font); color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease, height 0.25s cubic-bezier(0.4,0,0.2,1); }
@@ -151,10 +151,8 @@
   }
   body.scale-large #topbar { height:44px; }
   body.scale-kiosk #topbar { height:48px; }
-  body.scale-large #left { width:220px; }
-  body.scale-kiosk #left { width:236px; }
-  body.scale-large #news-panel { width:278px; }
-  body.scale-kiosk #news-panel { width:292px; }
+  body.scale-large { --side-panel-width:236px; }
+  body.scale-kiosk { --side-panel-width:248px; }
   body.scale-large #settings-modal,
   body.scale-kiosk #settings-modal { width:min(94vw, 820px); max-height:90vh; }
   body.density-comfortable #left { gap:calc(8px + var(--density-gap)); padding:12px; }
@@ -192,15 +190,25 @@
   #main { flex: 1; min-height: 0; display: flex; overflow: hidden; position: relative; z-index: 10; }
 
   /* LEFT PANEL */
-  #left { width: 200px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 10px 10px 12px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
+  #left { width: var(--side-panel-width); flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 10px 10px 12px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
   #left::-webkit-scrollbar { width: 2px; }
   #left::-webkit-scrollbar-thumb { background: rgba(var(--t-rgb1),0.2); border-radius: 2px; }
   #left::-webkit-scrollbar-track { background: transparent; }
   #widgets { width: 100%; display: flex; flex-direction: column; gap: 6px; }
   .widget { background: rgba(255,255,255,0.02); border: 1px solid rgba(var(--t-rgb1), 0.1); border-radius: 10px; padding: 6px 10px; }
   .widget-label { font-size: 14px; color: rgba(226,232,240,0.45); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+  .mood-widget { padding: 8px 10px; }
+  .mood-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+  .mood-value { font-family:var(--mono-font); font-size:14px; color:var(--t-hex1); font-weight:600; }
+  .mood-caption { font-size:12px; color:rgba(226,232,240,0.62); line-height:1.25; min-height:16px; }
+  .mood-slider { width:100%; accent-color:var(--t-hex1); cursor:pointer; }
+  .ai-mood-panel { margin-top:10px; width:min(240px, 72vw); padding:9px 12px; border:1px solid rgba(var(--t-rgb1),0.14); border-radius:10px; background:rgba(255,255,255,0.025); }
+  .ai-mood-panel .mood-head { margin-bottom:6px; }
+  .ai-mood-track { height:5px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,0.08); }
+  #ai-mood-fill { height:100%; width:64%; border-radius:99px; background:linear-gradient(90deg, var(--t-hex2), var(--t-hex1)); transition:width .35s ease; }
   .today-row { display:flex; align-items:center; gap:7px; min-width:0; font-size:13px; color:#f8fafc; line-height:1.25; margin-top:4px; }
   .today-row span:last-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .today-row #holiday-text { white-space:normal; overflow:visible; text-overflow:clip; }
   #weather-main { display: flex; align-items: center; gap: 6px; }
   #weather-icon { font-size: 20px; }
   #weather-temp { font-size: 26px; font-weight: 300; }
@@ -369,7 +377,7 @@
   #kbd-btn.active { background: var(--t-hex1); color: #05050a; box-shadow: 0 0 20px rgba(var(--t-rgb1), 0.6); }
 
   /* RIGHT PANEL */
-  #news-panel { width: 260px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
+  #news-panel { width: var(--side-panel-width); flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
   #video-section { flex-shrink: 0; padding: 10px 8px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
   #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -446,8 +454,10 @@
   body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
-  body.idle-mode #avatar-outer { transform: scale(1.4) translateY(15px); }
-  #idle-clock-panel { display:none; position:fixed; top:72px; left:50%; transform:translateX(-50%); text-align:center; z-index:13; pointer-events:none; }
+  body.idle-mode #avatar-outer { transform: scale(1.32) translateY(58px); }
+  body.idle-mode #avatar-wrap .avatar-svg:not(#av-sleeping) { opacity:0; pointer-events:none; }
+  body.idle-mode #avatar-wrap #av-sleeping { opacity:1; pointer-events:none; }
+  #idle-clock-panel { display:none; position:fixed; top:46px; left:50%; transform:translateX(-50%); text-align:center; z-index:13; pointer-events:none; }
   #idle-clock-time { font-family:'JetBrains Mono',monospace; font-size:96px; line-height:1; color:#f8fafc; font-weight:300; letter-spacing:0; text-shadow:0 0 34px rgba(var(--t-rgb1),0.18); }
   #idle-clock-date { margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.62); text-transform:uppercase; }
   body.idle-mode #idle-clock-panel { display:block; }
@@ -509,8 +519,8 @@
   .stat-val { color: #f8fafc; font-weight: 500; }
   /* ── TABLET RESPONSIVE (768px–1100px) ─────── */
   @media (max-width: 1100px) {
-    #left { width: 160px; padding: 8px; }
-    #news-panel { width: 200px; }
+    #left, #news-panel { width: 200px; }
+    #left { padding: 8px; }
     #settings-modal { width: 95vw; max-width: 720px; }
     #settings-tabs { grid-template-columns:repeat(2, minmax(0, 1fr)); }
     #msg-input { font-size: 16px; }
@@ -519,8 +529,8 @@
   }
   /* ── SMALL TABLET / LARGE PHONE (max 768px) ─ */
   @media (max-width: 768px) {
-    #left { display: flex; width: 140px; padding: 7px; }
-    #news-panel { width: 180px; }
+    #left, #news-panel { width: 170px; }
+    #left { display: flex; padding: 7px; }
     #avatar-outer { width: 180px; height: 180px; }
     #topbar { padding: 0 8px; gap: 6px; }
     .topbar-name { font-size: 15px; }
@@ -1339,6 +1349,14 @@
 <div id="main">
   <div id="left">
     <div id="widgets">
+      <div class="widget mood-widget" id="widget-user-mood">
+        <div class="mood-head">
+          <div class="widget-label">Your mood</div>
+          <div class="mood-value" id="user-mood-value">7 / 11</div>
+        </div>
+        <input class="mood-slider" id="user-mood-slider" type="range" min="1" max="11" step="1" value="7" aria-label="Set your mood from 1 to 11"/>
+        <div class="mood-caption" id="user-mood-caption">Steady</div>
+      </div>
       <div class="widget">
         <div class="widget-label" id="weather-city-label"></div>
         <div id="weather-main">
@@ -1421,6 +1439,7 @@
         <div class="listen-ring"></div>
         <div id="avatar-wrap">
           <img id="av-gif" src="assets/caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
+          <img id="av-sleeping" src="assets/Careoline-sleeping.gif" class="avatar-svg hidden" alt="Caroline sleeping" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-crt" viewBox="0 0 100 100">
             <g class="bot-body"><path d="M 45 65 L 45 75 L 35 80 L 65 80 L 55 75 L 55 65 Z"/></g>
             <g class="bot-head">
@@ -1467,6 +1486,14 @@
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
+    </div>
+    <div class="ai-mood-panel" id="ai-mood-panel">
+      <div class="mood-head">
+        <div class="widget-label" id="ai-mood-label">Caroline mood</div>
+        <div class="mood-value" id="ai-mood-value">7 / 11</div>
+      </div>
+      <div class="ai-mood-track" aria-hidden="true"><div id="ai-mood-fill"></div></div>
+      <div class="mood-caption" id="ai-mood-caption">Warm</div>
     </div>
     <div id="avatar-hint">[ PROJECT: CAROLINE // UPLINK ACTIVE ]</div>
     <div id="idle-clock-panel" aria-hidden="true">
@@ -1587,13 +1614,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, uiFont: 'inter', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, uiFont: 'inter', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true, aiName: 'Caroline', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma2:2b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 const QUICK_ACTION_DEFAULTS = ['Brief me', 'Schedule', 'Motivate', 'Tasks'];
 const FONT_CLASSES = ['font-inter','font-outfit','font-roboto','font-open-sans','font-noto-sans','font-system'];
 const SCALE_CLASSES = ['scale-compact','scale-normal','scale-large','scale-kiosk'];
 const DENSITY_CLASSES = ['density-compact','density-comfortable'];
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
+S.aiName = normalizeAiName(S.aiName);
+S.userMood = clampMood(S.userMood);
+S.aiMood = clampMood(S.aiMood);
 S.uiFont = normalizeChoice(S.uiFont, ['inter','outfit','roboto','open-sans','noto-sans','system'], 'inter');
 S.uiScale = normalizeChoice(S.uiScale, ['compact','normal','large','kiosk'], 'large');
 S.uiDensity = normalizeChoice(S.uiDensity, ['compact','comfortable'], 'comfortable');
@@ -1616,6 +1646,109 @@ let quickActions = normalizeQuickActions(JSON.parse(localStorage.getItem('caro_q
 function normalizeChoice(value, allowed, fallback) {
   value = String(value || '').trim();
   return allowed.includes(value) ? value : fallback;
+}
+
+function normalizeAiName(name) {
+  const cleaned = String(name || '')
+    .replace(/[\u0000-\u001f<>]/g, '')
+    .replace(/^[\s\-_.,:;!?'"]+|[\s\-_.,:;!?'"]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .slice(0, 20)
+    .trim();
+  if (!cleaned) return 'Caroline';
+  if (/^[a-z][a-z0-9]*(?: [a-z0-9]+)*$/.test(cleaned)) {
+    return cleaned.replace(/\b[a-z]/g, c => c.toUpperCase());
+  }
+  return cleaned;
+}
+
+function updateIdentityLabels() {
+  const name = normalizeAiName(S.aiName);
+  S.aiName = name;
+  const topbarName = document.getElementById('topbar-name');
+  if (topbarName) topbarName.textContent = name;
+  const subtitleSender = document.getElementById('subtitle-sender');
+  if (subtitleSender) subtitleSender.textContent = name.toUpperCase();
+  const input = document.getElementById('msg-input');
+  if (input && !input.classList.contains('listening')) input.placeholder = 'Say something to ' + name + '...';
+  const bottom = document.getElementById('bottom-chat-msgs');
+  if (bottom && !chatLog.length) bottom.innerHTML = '<div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:\'JetBrains Mono\',monospace;text-align:center;margin-top:8px;">Say something to ' + name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) + '...</div>';
+  const aiMoodLabel = document.getElementById('ai-mood-label');
+  if (aiMoodLabel) aiMoodLabel.textContent = name + ' mood';
+}
+
+function clampMood(value) {
+  const n = Math.round(Number(value));
+  return Math.min(11, Math.max(1, Number.isFinite(n) ? n : 7));
+}
+
+function moodCaption(value) {
+  const n = clampMood(value);
+  if (n <= 2) return 'Hurting';
+  if (n <= 4) return 'Low';
+  if (n <= 6) return 'Tender';
+  if (n <= 8) return 'Steady';
+  if (n <= 10) return 'Bright';
+  return 'Outstanding';
+}
+
+function updateMoodMeters() {
+  S.userMood = clampMood(S.userMood);
+  S.aiMood = clampMood(S.aiMood);
+  const userSlider = document.getElementById('user-mood-slider');
+  const userValue = document.getElementById('user-mood-value');
+  const userCaption = document.getElementById('user-mood-caption');
+  const aiValue = document.getElementById('ai-mood-value');
+  const aiCaption = document.getElementById('ai-mood-caption');
+  const aiFill = document.getElementById('ai-mood-fill');
+  if (userSlider && Number(userSlider.value) !== S.userMood) userSlider.value = S.userMood;
+  if (userValue) userValue.textContent = S.userMood + ' / 11';
+  if (userCaption) userCaption.textContent = moodCaption(S.userMood);
+  if (aiValue) aiValue.textContent = S.aiMood + ' / 11';
+  if (aiCaption) aiCaption.textContent = moodCaption(S.aiMood);
+  if (aiFill) aiFill.style.width = Math.round((S.aiMood - 1) * 10) + '%';
+}
+
+function persistMoodSettings(sync = false) {
+  S.userMood = clampMood(S.userMood);
+  S.aiMood = clampMood(S.aiMood);
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  updateMoodMeters();
+  if (sync && ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(currentSettingsPayload({ userMood: S.userMood, aiMood: S.aiMood })));
+  }
+}
+
+function textMoodDelta(text) {
+  const t = String(text || '').toLowerCase();
+  let delta = 0;
+  if (/\b(outstanding|amazing|great|excellent|happy|excited|proud|relieved|better|good news|nailed it|love this)\b/.test(t)) delta += 2;
+  if (/\b(okay|fine|thanks|thank you|cool|nice|done|finished)\b/.test(t)) delta += 1;
+  if (/\b(upset|sad|angry|mad|awful|terrible|overwhelmed|stressed|anxious|panic|depressed|exhausted|burned out|burnt out|hate this|lonely)\b/.test(t)) delta -= 2;
+  if (/\b(stuck|blocked|frustrated|confused|tired|rough|bad|hard|worried)\b/.test(t)) delta -= 1;
+  return Math.min(2, Math.max(-2, delta));
+}
+
+function updateMoodsFromConversation(role, text) {
+  const delta = textMoodDelta(text);
+  if (role === 'user') {
+    if (delta !== 0) S.userMood = clampMood(S.userMood + delta);
+    S.aiMood = clampMood(S.aiMood + (delta < 0 ? -1 : delta > 0 ? 1 : 0));
+  } else {
+    S.aiMood = clampMood(S.aiMood + (delta < 0 ? -1 : 1));
+    if (delta > 0 && S.userMood < 11) S.userMood = clampMood(S.userMood + 1);
+  }
+  persistMoodSettings(true);
+}
+
+function bindMoodControls() {
+  const userSlider = document.getElementById('user-mood-slider');
+  if (!userSlider) return;
+  userSlider.addEventListener('input', () => {
+    S.userMood = clampMood(userSlider.value);
+    persistMoodSettings(false);
+  });
+  userSlider.addEventListener('change', () => persistMoodSettings(true));
 }
 
 function applyReadability(settings = S) {
@@ -1670,28 +1803,13 @@ function renderQuickActions() {
 // Pull installer-written settings from Node-RED without touching onboarding state.
 async function syncSettingsFromServer() {
   try {
-    const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
+    const settingsUrl = httpBase() + '/admin/get-settings';
     console.log('[Caroline] GET settings from', settingsUrl);
     const r = await fetchJsonWithTimeout(settingsUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'GET settings');
-    if (!r.ok) {
-      return;
-    }
+    if (!r.ok) return;
     const d = await r.json();
-    if (!d || !Object.keys(d).length) {
-      return;
-    }
-    if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
-    if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
-    Object.keys(d).forEach(k => {
-      if (d[k] === '__configured__') return;
-      if (k === 'googleRedirectUri') {
-        S.googleRedirectUri = normalizeGoogleRedirectUri(d[k] || S.googleRedirectUri);
-        return;
-      }
-      if (S[k] === undefined || S[k] === null || S[k] === '' || k === 'timezone' || k === 'location' || k === 'nodeRedUrl' || ['uiFont','uiScale','uiDensity','highContrastText','reduceMonoLabels'].includes(k)) {
-        S[k] = d[k];
-      }
-    });
+    if (!d || !Object.keys(d).length) return;
+    mergeRemoteSettings(d);
     S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
     S.uiFont = normalizeChoice(S.uiFont, ['inter','outfit','roboto','open-sans','noto-sans','system'], 'inter');
     S.uiScale = normalizeChoice(S.uiScale, ['compact','normal','large','kiosk'], 'large');
@@ -1701,7 +1819,7 @@ async function syncSettingsFromServer() {
     localStorage.setItem('caro_settings', JSON.stringify(S));
     applyReadability(S);
     updateTopbarNetwork(false);
-    document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+    updateIdentityLabels();
     updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
@@ -1947,6 +2065,49 @@ async function fetchJsonWithTimeout(url, options = {}, label = 'fetch') {
   }
 }
 
+function mergeRemoteSettings(remote) {
+  if (!remote || typeof remote !== 'object') return false;
+  const incoming = Object.assign({}, remote);
+  incoming.aiName = normalizeAiName(incoming.aiName || S.aiName);
+  ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret'].forEach(key => {
+    if (!incoming[key] && S[key]) incoming[key] = S[key];
+  });
+  Object.assign(S, incoming);
+  if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
+  if (S.zipcode && !S.zipCode) S.zipCode = S.zipcode;
+  S.aiName = normalizeAiName(S.aiName);
+  S.userMood = clampMood(S.userMood);
+  S.aiMood = clampMood(S.aiMood);
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  updateIdentityLabels();
+  updateMoodMeters();
+  return true;
+}
+
+async function hydrateSettingsFromNodeRed() {
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/get-settings', { timeoutMs: 3500 }, 'Load saved settings');
+    if (!r.ok) return false;
+    const data = await r.json();
+    mergeRemoteSettings(data);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function secretValueFromInput(inputId, key) {
+  const val = (document.getElementById(inputId)?.value || '').trim();
+  return val || S[key] || '';
+}
+
+function markSecretInput(inputId, key, label) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  const configured = !!(S[key] || S[key + 'Configured']);
+  if (!el.value && configured) el.placeholder = label + ' saved';
+}
+
 function showRestartCountdown() {
   document.body.innerHTML = '<div id="restart-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;text-align:center;padding:24px;">'
     + '<div style="color:#fb7185;font-size:13px;letter-spacing:.18em;">// RESTART SIGNAL SENT</div>'
@@ -2126,10 +2287,11 @@ function switchSettingsPage(pageId) {
   }
 }
 
-function toggleSettings() {
+async function toggleSettings() {
   const ov = document.getElementById('settings-overlay');
   const isOpen = ov.classList.toggle('show');
   if (isOpen) {
+    await hydrateSettingsFromNodeRed();
     ensureSettingsSubmenus();
     switchSettingsPage(activeSettingsPage);
     document.getElementById('set-avatar').value = S.avatar;
@@ -2170,6 +2332,10 @@ function toggleSettings() {
     document.getElementById('set-discord-enabled').checked = !!S.discordEnabled;
     document.getElementById('set-discord-token').value = S.discordToken || '';
     document.getElementById('set-discord-channel').value = S.discordChannelId || '';
+    markSecretInput('set-orkey', 'openrouterKey', 'OpenRouter key');
+    markSecretInput('set-huekey', 'hueKey', 'Hue key');
+    markSecretInput('set-google-client-secret', 'googleClientSecret', 'Google secret');
+    markSecretInput('set-discord-token', 'discordToken', 'Discord token');
     toggleDiscordFields(!!S.discordEnabled);
 
     const hasToken = localStorage.getItem('spotify_token');
@@ -2308,7 +2474,7 @@ function onProviderChange(provider) {
     olRows.style.display   = 'none';
   }
   S.aiProvider = provider;
-  aiStatus = (provider !== 'ollama' && !(S.openrouterKey || '').trim()) ? 'fail' : 'warn';
+  aiStatus = (provider !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) ? 'fail' : 'warn';
   updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
   updateAiConfigIndicator(provider);
 }
@@ -2321,8 +2487,8 @@ function refreshAiStatusFromSettingsInputs() {
   S.aiProvider = provider;
   if (model) S.aiModel = model;
   if (ollamaModel) S.ollamaModel = ollamaModel;
-  S.openrouterKey = key.trim();
-  aiStatus = (provider !== 'ollama' && !S.openrouterKey) ? 'fail' : 'warn';
+  if (key.trim()) S.openrouterKey = key.trim();
+  aiStatus = (provider !== 'ollama' && !S.openrouterKey && !S.openrouterKeyConfigured) ? 'fail' : 'warn';
   updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
   updateAiConfigIndicator(provider);
 }
@@ -2361,16 +2527,16 @@ function shortAiModelName(model) {
 
 function aiModelLabel() {
   const provider = S.aiProvider || 'ollama';
-  if (provider !== 'ollama' && !(S.openrouterKey || '').trim()) return '⚠ No AI configured';
+  if (provider !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) return '⚠ No AI configured';
   const model = provider === 'ollama' ? (S.ollamaModel || 'gemma2:2b') : (S.aiModel || 'anthropic/claude-haiku-4.5');
   return provider === 'ollama' ? '🏠 Local: ' + shortAiModelName(model) : '☁ Cloud: ' + shortAiModelName(model);
 }
 
-let aiStatus = (S.aiProvider !== 'ollama' && !(S.openrouterKey || '').trim()) ? 'fail' : 'warn';
+let aiStatus = (S.aiProvider !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) ? 'fail' : 'warn';
 
 function updateConnectionPill(status) {
   if (!pill) return;
-  const noAi = (S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim();
+  const noAi = (S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured;
   const cls = status === 'CONNECTED' ? (noAi ? 'ai-fail' : (aiStatus === 'ok' ? 'ai-ok' : aiStatus === 'fail' ? 'ai-fail' : 'ai-warn')) : 'ai-fail';
   pill.classList.remove('ai-ok', 'ai-warn', 'ai-fail');
   pill.classList.add(cls);
@@ -2388,6 +2554,9 @@ function currentSettingsPayload(extra = {}) {
   Object.assign(S, stored);
   applyAiSettingsInputsToState();
   Object.assign(S, extra);
+  S.aiName = normalizeAiName(S.aiName);
+  S.userMood = clampMood(S.userMood);
+  S.aiMood = clampMood(S.aiMood);
   return Object.assign({}, S, {
     type: 'settings_update',
     zipCode: S.zipcode || S.zipCode || '',
@@ -2408,7 +2577,7 @@ async function syncAiModelFromHealth() {
       if (h.aiModel) S.aiModel = h.aiModel;
       if (h.ollamaModel) S.ollamaModel = h.ollamaModel;
     }
-    if ((S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim()) aiStatus = 'fail';
+    if ((S.aiProvider || 'ollama') !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) aiStatus = 'fail';
     else if (aiStatus !== 'ok') aiStatus = 'warn';
     updateConnectionPill(ws && ws.readyState === WebSocket.OPEN ? 'CONNECTED' : 'CONNECTING');
     updateAiConfigIndicator();
@@ -3417,15 +3586,17 @@ async function saveSettings() {
   S.highContrastText = !!((document.getElementById('set-high-contrast') || {}).checked);
   S.reduceMonoLabels = !!((document.getElementById('set-reduce-mono') || {}).checked);
   S.aiModel = document.getElementById('set-model').value;
-  const newName = document.getElementById('set-ainame').value.trim() || 'Caroline';
+  const newName = normalizeAiName(document.getElementById('set-ainame').value || 'Caroline');
   S.aiName = newName;
-  document.getElementById('topbar-name').textContent = newName;
-  document.getElementById('subtitle-sender') && (document.getElementById('subtitle-sender').textContent = newName.toUpperCase());
+  S.userMood = clampMood(S.userMood);
+  S.aiMood = clampMood(S.aiMood);
+  updateIdentityLabels();
+  updateMoodMeters();
   idleLimit = S.idleTimeout;
 
   // Validate required fields — key only required when using OpenRouter
   const orkeyVal = document.getElementById('set-orkey').value.trim();
-  const effectiveOrKey = orkeyVal || S.openrouterKey || '';
+  const effectiveOrKey = orkeyVal || S.openrouterKey || (S.openrouterKeyConfigured ? '__configured__' : '');
   const orkeyErr = document.getElementById('orkey-error');
   const selectedProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   if (selectedProvider === 'openrouter' && !effectiveOrKey) {
@@ -3453,7 +3624,7 @@ async function saveSettings() {
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
   S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'gemma2:2b').trim();
-  aiStatus = (S.aiProvider !== 'ollama' && !S.openrouterKey) ? 'fail' : 'warn';
+  aiStatus = (S.aiProvider !== 'ollama' && !S.openrouterKey && !S.openrouterKeyConfigured) ? 'fail' : 'warn';
   quickActions = normalizeQuickActions(QUICK_ACTION_DEFAULTS.map((fallback, i) => {
     const el = document.getElementById('quick-action-' + i);
     return el ? el.value : fallback;
@@ -3461,20 +3632,20 @@ async function saveSettings() {
   saveQuickActions();
   renderQuickActions();
   S.hueIp = document.getElementById('set-hueip').value.trim();
-  S.hueKey = document.getElementById('set-huekey').value.trim();
+  S.hueKey = secretValueFromInput('set-huekey', 'hueKey');
   const hgEl = document.getElementById('set-hue-group');
   if (hgEl && hgEl.value) { S.hueGroup = hgEl.value; S.hueGroupName = hgEl.options[hgEl.selectedIndex]?.text || ''; }
   HUE_GROUP = S.hueGroup || '4';
   S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
   S.googleClientId = (document.getElementById('set-google-client-id') || {}).value?.trim() || '';
-  S.googleClientSecret = (document.getElementById('set-google-client-secret') || {}).value?.trim() || '';
+  S.googleClientSecret = secretValueFromInput('set-google-client-secret', 'googleClientSecret');
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.location = document.getElementById('set-location').value.trim();
   S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
   S.sheetId = document.getElementById('set-sheet-id').value.trim();
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
-  S.discordToken = document.getElementById('set-discord-token').value.trim();
+  S.discordToken = secretValueFromInput('set-discord-token', 'discordToken');
   S.discordChannelId = document.getElementById('set-discord-channel').value.trim();
   S.zipCode = newZip;
   const tsInp = document.getElementById('set-tides-station');
@@ -4128,6 +4299,7 @@ function addMessage(text, role, source){
   const entry={role:role==='user'?'dave':'caroline', sender:label, text};
   chatLog.push(entry); if(chatLog.length>60) chatLog.shift();
   localStorage.setItem('caro_log', JSON.stringify(chatLog));
+  updateMoodsFromConversation(role, text);
   const hp = document.getElementById('history-panel');
   if(hp && hp.classList.contains('open')){ renderHistory(); setTimeout(()=>document.getElementById('history-messages').scrollTop=99999,30); }
   const scroll = document.getElementById('caro-chat-scroll');
@@ -4166,13 +4338,14 @@ function connectWS(){
   }
   clog('ws','Connecting → '+_wsUrl);
   ws=new WebSocket(_wsUrl); ws.binaryType='blob';
-  ws.onopen=()=>{
+  ws.onopen=async ()=>{
     if (seq !== wsConnectSeq) return;
     updateConnectionPill('CONNECTED'); playBeep(1500);
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
     updateTopbarNetwork(false);
+    await hydrateSettingsFromNodeRed();
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart)
     ws.send(JSON.stringify(currentSettingsPayload()));
     setTimeout(syncAiModelFromHealth, 500);
@@ -4278,7 +4451,9 @@ if (!localStorage.getItem('caroline_configured')) {
   setTimeout(toggleSettings, 900);
 }
 
-document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+updateIdentityLabels();
+bindMoodControls();
+updateMoodMeters();
 updateAiConfigIndicator();
 renderQuickActions();
 updateTopbarNetwork();
@@ -4321,7 +4496,7 @@ function sendMessage(){
   _trackSend(t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
   if(ws&&ws.readyState===WebSocket.OPEN){
-    ws.send(JSON.stringify({type:'user_message',content:t}));
+    ws.send(JSON.stringify({type:'user_message',content:t,userMood:S.userMood,aiMood:S.aiMood,aiName:S.aiName,userName:S.userName||''}));
   } else {
     clog('err', 'Send failed — WebSocket not connected');
     addMessage('⚡ No connection to home base. Reconnecting…', 'caroline', 'display');
@@ -4376,7 +4551,7 @@ if(SR){
       stopListening(false,'● MIC ERROR · '+String(err).toUpperCase());
     }
   };
-  function stopListening(send=true,statusText=''){ isListening=false; try{recognition.stop();}catch(e){} micBtn.classList.remove('listening'); stopBtn.classList.remove('show'); avatarOuter.classList.remove('listening'); input.classList.remove('listening'); input.placeholder=input.placeholder.startsWith('Mic ')?input.placeholder:'Say something to Caroline...'; if(statusText){ voiceStatus.textContent=statusText; voiceStatus.className=''; } else { setReadyVoiceStatus(); } if(voiceEnabled&&window.speechSynthesis) window.speechSynthesis.resume(); if(isPlaying) radioAudio.play(); if(send&&input.value.trim()) sendMessage(); resetIdle(); }
+  function stopListening(send=true,statusText=''){ isListening=false; try{recognition.stop();}catch(e){} micBtn.classList.remove('listening'); stopBtn.classList.remove('show'); avatarOuter.classList.remove('listening'); input.classList.remove('listening'); input.placeholder=input.placeholder.startsWith('Mic ')?input.placeholder:'Say something to '+(S.aiName||'Caroline')+'...'; if(statusText){ voiceStatus.textContent=statusText; voiceStatus.className=''; } else { setReadyVoiceStatus(); } if(voiceEnabled&&window.speechSynthesis) window.speechSynthesis.resume(); if(isPlaying) radioAudio.play(); if(send&&input.value.trim()) sendMessage(); resetIdle(); }
   async function startListening(){
     if(isListening) return;
     playBeep(800);
@@ -4692,7 +4867,11 @@ function updateBottomChat() {
   const container = document.getElementById('bottom-chat-msgs');
   if (!container) return;
   const log = JSON.parse(localStorage.getItem('caro_log') || '[]');
-  if (!log.length) return;
+  if (!log.length) {
+    const name = normalizeAiName(S.aiName || 'Caroline').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    container.innerHTML = '<div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:\'JetBrains Mono\',monospace;text-align:center;margin-top:8px;">Say something to ' + name + '...</div>';
+    return;
+  }
   container.innerHTML = '';
   const count = document.body.classList.contains('idle-mode') ? 8 : 6;
   log.slice(-count).forEach(entry => {
@@ -5679,7 +5858,7 @@ function renderChatStep(){
 
 async function finalizeOnboarding(){
   S.userName         = onbState.config.userName   || S.userName   || '';
-  S.aiName           = onbState.config.aiName      || S.aiName     || 'Caroline';
+  S.aiName           = normalizeAiName(onbState.config.aiName || S.aiName || 'Caroline');
   S.zipcode          = onbState.config.zipCode      || S.zipcode    || '';
   S.zipCode          = S.zipcode;
   S.location         = onbState.config.location     || S.location   || S.cityName || '';
@@ -5738,8 +5917,8 @@ async function finalizeOnboarding(){
 
   applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
   fetchWeather();
-  const tn = document.getElementById('topbar-name');
-  if(tn) tn.textContent = S.aiName;
+  S.aiName = normalizeAiName(S.aiName);
+  updateIdentityLabels();
   updateSettingsStatus();
   document.getElementById('onboarding-overlay').classList.remove('show');
   const greeted = localStorage.getItem('caro_first_greeted');
@@ -5768,7 +5947,7 @@ function updateSettingsStatus(){
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
   if(ps) ps.textContent=bits.length?bits.join(' · '):'No personality profile yet';
-  [['aiCore','AI Core',!!S.openrouterKey],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&S.hueKey)]].forEach(([id,label,on])=>{
+  [['aiCore','AI Core',!!(S.openrouterKey||S.openrouterKeyConfigured)],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&(S.hueKey||S.hueKeyConfigured))]].forEach(([id,label,on])=>{
     const el=document.getElementById('status-'+id);
     if(!el) return;
     el.classList.toggle('online',on);
