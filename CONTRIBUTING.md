@@ -5,7 +5,7 @@ Thanks for wanting to make Caroline better. Here's what you need to know.
 ## Ground Rules
 
 - **Privacy first.** No telemetry, tracking, or phoning home — ever. Don't add features that send user data anywhere without explicit opt-in.
-- **Single-file frontend.** `caroline-kiosk.html` is one file on purpose. Keep it that way.
+- **Single-file frontend.** `index.html` is one file on purpose. Keep it that way.
 - **No Docker.** Node-RED runs as a bare-metal systemd service. Don't add container dependencies.
 - **The WebSocket ID `f3e0e445bed3987b` is sacred.** Changing it breaks every existing install. Don't touch it.
 

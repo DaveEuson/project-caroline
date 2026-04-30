@@ -792,12 +792,10 @@
         "caro-action-calendar-ws"
       ],
       [
-        "8e39103808d737b4",
-        "caro-action-task-add-ws"
+        "8e39103808d737b4"
       ],
       [
-        "883679020367832c",
-        "caro-action-task-complete-ws"
+        "883679020367832c"
       ],
       [
         "caro-hue-action-http"
@@ -1033,9 +1031,9 @@
     "id": "ad0fa7334c8d733b",
     "type": "function",
     "z": "e9526774295cef13",
-    "name": "Handle Task Complete",
-    "func": "try {\n    const d = JSON.parse(msg.payload);\n    if (d.type !== 'task_complete' || !d.task) return null;\n    msg.taskToDelete = d.task;\n    node.warn('Task complete: ' + d.task);\n    return msg;\n} catch (e) { return null; }",
-    "outputs": 1,
+    "name": "Handle Task Mutations",
+    "func": "try {\n    const d = JSON.parse(msg.payload);\n    if (d.type === 'task_complete' && d.task) {\n        msg.taskToDelete = d.task;\n        node.warn('Task complete: ' + d.task);\n        return [msg, null];\n    }\n    if (d.type === 'task_add' && d.task) {\n        msg.taskToAdd = d.task;\n        node.warn('Task add: ' + d.task);\n        return [null, msg];\n    }\n    return null;\n} catch (e) { return null; }",
+    "outputs": 2,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -1046,6 +1044,9 @@
     "wires": [
       [
         "883679020367832c"
+      ],
+      [
+        "8e39103808d737b4"
       ]
     ]
   },
@@ -1053,8 +1054,8 @@
     "id": "883679020367832c",
     "type": "function",
     "z": "e9526774295cef13",
-    "name": "Sheet Delete JWT",
-    "func": "const taskName = msg.taskToDelete;\n\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks complete');\nif (auth) {\n  msg.taskToDelete = taskName;\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks complete');\n}\nmsg.taskToDelete = taskName;\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks complete', 'https://www.googleapis.com/auth/spreadsheets');",
+    "name": "Complete Task in File",
+    "func": "const TASKS_PATH = '/home/davee/caroline/caroline_tasks.json';\nconst taskName = cleanTask(msg.taskToDelete);\nif (!taskName) { node.warn('No local task name to complete'); return null; }\nfunction cleanTask(item) {\n  if (typeof item === 'string') return item.trim();\n  if (item && typeof item === 'object') return String(item.text || item.task || item.title || '').trim();\n  return '';\n}\nfunction taskKey(text) {\n  return String(text || '').trim().replace(/\\s+/g, ' ').toLowerCase();\n}\nfunction readTasks() {\n  try {\n    if (!fs.existsSync(TASKS_PATH)) return [];\n    const parsed = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));\n    const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.tasks) ? parsed.tasks : []);\n    return list.map(cleanTask).filter(Boolean);\n  } catch (e) {\n    node.warn('Task file read failed: ' + e.message);\n    return [];\n  }\n}\nfunction writeTasks(tasks) {\n  const dir = TASKS_PATH.replace(/\\/[^/]+$/, '');\n  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });\n  const unique = [];\n  const seen = {};\n  tasks.forEach(t => {\n    const clean = cleanTask(t);\n    const key = taskKey(clean);\n    if (clean && !seen[key]) { seen[key] = true; unique.push(clean); }\n  });\n  fs.writeFileSync(TASKS_PATH, JSON.stringify({ tasks: unique, updatedAt: new Date().toISOString() }, null, 2), 'utf8');\n  const todoContext = unique.map(text => ({ text, done: false }));\n  flow.set('caroline_todos', todoContext);\n  global.set('caroline_todos', todoContext);\n  return unique;\n}\nconst target = taskKey(taskName);\nconst next = readTasks().filter(t => {\n  const current = taskKey(t);\n  return current !== target && !current.includes(target) && !target.includes(current);\n});\nwriteTasks(next);\nmsg.taskToDelete = taskName;\nnode.warn('Completed local task: ' + taskName);\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1074,7 +1075,7 @@
     "y": 340,
     "wires": [
       [
-        "ef20f9239b0476fb"
+        "caro-action-task-complete-ws"
       ]
     ]
   },
@@ -1192,8 +1193,8 @@
     "id": "8e39103808d737b4",
     "type": "function",
     "z": "e9526774295cef13",
-    "name": "Add Task to Sheet",
-    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks add');\nif (auth) {\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks add');\n}\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks add', 'https://www.googleapis.com/auth/spreadsheets');",
+    "name": "Add Task to File",
+    "func": "const TASKS_PATH = '/home/davee/caroline/caroline_tasks.json';\nconst taskName = cleanTask(msg.taskToAdd);\nif (!taskName) { node.warn('No local task name to add'); return null; }\nfunction cleanTask(item) {\n  if (typeof item === 'string') return item.trim();\n  if (item && typeof item === 'object') return String(item.text || item.task || item.title || '').trim();\n  return '';\n}\nfunction taskKey(text) {\n  return String(text || '').trim().replace(/\\s+/g, ' ').toLowerCase();\n}\nfunction readTasks() {\n  try {\n    if (!fs.existsSync(TASKS_PATH)) return [];\n    const parsed = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));\n    const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.tasks) ? parsed.tasks : []);\n    return list.map(cleanTask).filter(Boolean);\n  } catch (e) {\n    node.warn('Task file read failed: ' + e.message);\n    return [];\n  }\n}\nfunction writeTasks(tasks) {\n  const dir = TASKS_PATH.replace(/\\/[^/]+$/, '');\n  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });\n  const unique = [];\n  const seen = {};\n  tasks.forEach(t => {\n    const clean = cleanTask(t);\n    const key = taskKey(clean);\n    if (clean && !seen[key]) { seen[key] = true; unique.push(clean); }\n  });\n  fs.writeFileSync(TASKS_PATH, JSON.stringify({ tasks: unique, updatedAt: new Date().toISOString() }, null, 2), 'utf8');\n  const todoContext = unique.map(text => ({ text, done: false }));\n  flow.set('caroline_todos', todoContext);\n  global.set('caroline_todos', todoContext);\n  return unique;\n}\nconst tasks = readTasks();\nif (!tasks.some(t => taskKey(t) === taskKey(taskName))) tasks.push(taskName);\nwriteTasks(tasks);\nmsg.taskToAdd = taskName;\nnode.warn('Added local task: ' + taskName);\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -1213,7 +1214,7 @@
     "y": 560,
     "wires": [
       [
-        "c685d882e3743b6b"
+        "caro-action-task-add-ws"
       ]
     ]
   },
@@ -2367,7 +2368,7 @@
     "props": [],
     "repeat": "180",
     "crontab": "",
-    "once": false,
+    "once": true,
     "onceDelay": 0.1,
     "topic": "",
     "x": 670,
@@ -2382,8 +2383,8 @@
     "id": "f1e367dd9ea8fbb2",
     "type": "function",
     "z": "8232baf451bd6288",
-    "name": "Tasks JWT",
-    "func": "function getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nfunction loadGoogleOAuth(label) {\n  try {\n    const path = '/home/davee/caroline/google_oauth.json';\n    if (!fs.existsSync(path)) return null;\n    const auth = JSON.parse(fs.readFileSync(path, 'utf8'));\n    if (auth.refresh_token && /^[0-9A-Za-z._-]+\\.apps\\.googleusercontent\\.com$/.test(String(auth.client_id || ''))) return auth;\n    if (auth.refresh_token && auth.client_id) node.warn('Ignoring invalid Google OAuth client for ' + label);\n  } catch(e) {\n    node.warn('Google OAuth read failed for ' + label + ': ' + e.message);\n  }\n  return null;\n}\nfunction oauthRefreshRequest(auth, label) {\n  const body = {\n    client_id: auth.client_id,\n    grant_type: 'refresh_token',\n    refresh_token: auth.refresh_token\n  };\n  const secret = auth.client_secret || getShared('googleClientSecret', '');\n  if (secret) body.client_secret = secret;\n  msg.googleAuthMode = 'oauth';\n  msg.googleTokenLabel = label;\n  msg.payload = new URLSearchParams(body).toString();\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\nfunction loadGoogleServiceAccount(label) {\n  const paths = ['/home/davee/caroline/caroline-calendar.json', '/home/davee/caroline/service-account.json'];\n  for (const p of paths) {\n    try {\n      if (!fs.existsSync(p)) continue;\n      const raw = fs.readFileSync(p, 'utf8');\n      const key = JSON.parse(raw);\n      if (key.private_key && key.private_key.length >= 100 && key.client_email) return key;\n    } catch(e) {}\n  }\n  const warnKey = 'missingGoogleAuth:' + label;\n  const lastWarn = flow.get(warnKey) || 0;\n  if (Date.now() - lastWarn > 60 * 60 * 1000) {\n    flow.set(warnKey, Date.now());\n    node.warn('No Google OAuth connection or service account found - skipping ' + label);\n  }\n  return null;\n}\nfunction serviceAccountRequest(label, scope) {\n  const key = loadGoogleServiceAccount(label);\n  if (!key) return null;\n  const now = Math.floor(Date.now() / 1000);\n  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');\n  const claim = Buffer.from(JSON.stringify({\n    iss: key.client_email,\n    scope,\n    aud: 'https://oauth2.googleapis.com/token',\n    exp: now + 3600,\n    iat: now\n  })).toString('base64url');\n  const sign = crypto.createSign('RSA-SHA256');\n  sign.update(header + '.' + claim);\n  const signature = sign.sign(key.private_key, 'base64url');\n  const jwt = header + '.' + claim + '.' + signature;\n  msg.googleAuthMode = 'service_account';\n  msg.payload = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt;\n  msg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\n  msg.url = 'https://oauth2.googleapis.com/token';\n  msg.method = 'POST';\n  return msg;\n}\n\nconst auth = loadGoogleOAuth('tasks sync');\nif (auth) {\n  msg.googleTaskBackend = 'tasks';\n  return oauthRefreshRequest(auth, 'tasks sync');\n}\nmsg.googleTaskBackend = 'sheets';\nreturn serviceAccountRequest('tasks sync', 'https://www.googleapis.com/auth/spreadsheets');",
+    "name": "Load Tasks File",
+    "func": "const TASKS_PATH = '/home/davee/caroline/caroline_tasks.json';\nfunction cleanTask(item) {\n  if (typeof item === 'string') return item.trim();\n  if (item && typeof item === 'object') return String(item.text || item.task || item.title || '').trim();\n  return '';\n}\ntry {\n  if (!fs.existsSync(TASKS_PATH)) {\n    msg.tasks = [];\n    return msg;\n  }\n  const parsed = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));\n  const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.tasks) ? parsed.tasks : []);\n  msg.tasks = list.map(cleanTask).filter(Boolean);\n  return msg;\n} catch (e) {\n  node.warn('Task file read failed: ' + e.message);\n  msg.tasks = [];\n  return msg;\n}",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -2403,7 +2404,7 @@
     "y": 380,
     "wires": [
       [
-        "c0d424e64c85d5b2"
+        "0ca2e935b8b14d10"
       ]
     ]
   },
@@ -2491,7 +2492,7 @@
     "type": "function",
     "z": "8232baf451bd6288",
     "name": "Tasks to Kiosk",
-    "func": "let tasks = [];\nif (msg.googleTaskBackend === 'tasks') {\n  tasks = (msg.payload.items || [])\n    .filter(t => t && t.title && t.status !== 'completed')\n    .map(t => t.title.trim())\n    .filter(Boolean);\n} else {\n  const rows = msg.payload.values || [];\n  tasks = rows.map(r => r[0]).filter(t => t && t.trim().length > 0);\n}\nif (!tasks.length) { node.warn('No tasks found'); return null; }\nnode.warn('Google tasks: ' + tasks.join(', '));\nmsg.payload = JSON.stringify({ type: 'todo_update', action: 'replace', tasks });\nreturn msg;",
+    "func": "function cleanTask(item) {\n  if (typeof item === 'string') return item.trim();\n  if (item && typeof item === 'object') return String(item.text || item.task || item.title || '').trim();\n  return '';\n}\nfunction taskKey(text) {\n  return String(text || '').trim().replace(/\\s+/g, ' ').toLowerCase();\n}\nlet rawTasks = Array.isArray(msg.tasks) ? msg.tasks : [];\nif (!rawTasks.length && msg.payload) {\n  if (Array.isArray(msg.payload.tasks)) rawTasks = msg.payload.tasks;\n  else if (Array.isArray(msg.payload)) rawTasks = msg.payload;\n  else if (Array.isArray(msg.payload.values)) rawTasks = msg.payload.values.map(r => r && r[0]);\n  else if (Array.isArray(msg.payload.items)) rawTasks = msg.payload.items.map(t => t && t.title);\n}\nconst seen = {};\nconst tasks = rawTasks.map(cleanTask).filter(Boolean).filter(text => {\n  const key = taskKey(text);\n  if (seen[key]) return false;\n  seen[key] = true;\n  return true;\n});\nconst todoContext = tasks.map(text => ({ text, done: false }));\nflow.set('caroline_todos', todoContext);\nglobal.set('caroline_todos', todoContext);\nnode.warn(tasks.length ? ('Local tasks: ' + tasks.join(', ')) : 'No local tasks found; clearing kiosk list');\nmsg.payload = JSON.stringify({ type: 'todo_update', action: 'replace', tasks });\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,

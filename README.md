@@ -7,7 +7,7 @@ Looking to launch Late April
 
 **Your open-source, highly personalized digital sidekick.**
 
-> "Not a voice assistant you talk at. A co-pilot that's actually on your side."
+> "Not a voice assistant you talk at. A tiny launch-pad co-pilot that keeps the lights warm."
 
 ---
 
@@ -16,6 +16,8 @@ Looking to launch Late April
 ## The Story
 
 Project: Caroline is your portal to an ambient digital sidekick completely personalized to you. When they wake up, a brief setup wizard establishes their baseline personality. From there, you can dive into the settings to fully customize their core system prompt — creating a smart dashboard that truly understands how you work, think, and communicate. Currurrently optimized for Raspberry Pi 5 with a touch screen.
+
+The personality layer is original, but its mood board is worn proudly: time gates, crystal airships, starlight choruses, polite old robots, tomorrowland apartments, team comms, chrome helmets, four-on-the-floor rooms, and a tiny brass section skanking in the corner.
 
 ---
 
@@ -32,8 +34,9 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Cyberpunk UI** — Ambient kiosk interface served on port 8080
 - **Robust Backend** — Node-RED on port 1880 as a bare-metal systemd service
 - **Persistent Memory** — AI chat with memory across sessions
-- **Productivity** — Creates calendar events and manages Google Tasks via chat (more to come soon)
-- **Proactive AI** — Caroline checks in four times a day with lightweight context
+- **Productivity** — Creates calendar events and manages a local task list via chat
+- **Proactive AI** — Caroline checks in with lightweight context, a local wonder queue, and mood drift
+- **Ambient Tribute Layer** — Small original lines and status cues inspired by JRPGs, robot companions, French house, dance floors, and ska energy
 - **Local & Cloud AI** — Ollama (llama3.2, phi3:mini, gemma2:2b) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
 - **Smart Home** — Philips Hue control (More soon)
@@ -51,7 +54,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 
 After install, open **Settings** in Caroline:
 
-- **Google:** create a **Desktop app** OAuth client, then import or paste the downloaded OAuth client JSON in Settings. Use **Connect Google** for Calendar and Google Tasks, or **Use Phone Code** in kiosk mode when there is no address bar. See [Google OAuth setup](docs/google-oauth.md). The old service-account JSON upload is kept only as an advanced fallback.
+- **Google:** create a **Desktop app** OAuth client, then import or paste the downloaded OAuth client JSON in Settings. Use **Connect Google** for Calendar, or **Use Phone Code** in kiosk mode when there is no address bar. Tasks are stored locally on the host. See [Google OAuth setup](docs/google-oauth.md). The old service-account JSON upload is kept only as an advanced fallback.
 - **Spotify:** add `https://[Pi-IP]:8443/spotify/callback` as the Spotify app redirect URI, open `https://[Pi-IP]:8443` once to accept the self-signed certificate, then use **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 
@@ -87,7 +90,7 @@ Browser
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and provides a local self-signed HTTPS proxy on port 8443 for OAuth providers that require HTTPS callbacks. Google Calendar/Tasks uses Google's desktop-app loopback flow on `127.0.0.1`; kiosk users can complete it directly, and remote browser users can paste the callback URL back into Caroline. WebSocket traffic still goes directly to Node-RED on port 1880.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and provides a local self-signed HTTPS proxy on port 8443 for OAuth providers that require HTTPS callbacks. Google Calendar uses Google's desktop-app loopback flow on `127.0.0.1`; kiosk users can complete it directly, and remote browser users can paste the callback URL back into Caroline. WebSocket traffic still goes directly to Node-RED on port 1880.
 
 ---
 
@@ -104,6 +107,8 @@ Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on 
 ## Deep Personality Customization
 
 While the initial setup gives your sidekick a baseline vibe, you can deeply customize their brain in the Settings panel. If you use another AI regularly (like ChatGPT or Claude), it already knows your exact communication style.
+
+Think of the prompt as Caroline's score: a little future funk, a little airship hymn, a little tactical callout, all arranged around how you actually get things done.
 
 Copy and paste this prompt into your existing AI to generate a highly tailored personality:
 

@@ -659,7 +659,7 @@
       <img id="caro-boot-avatar" src="assets/caroline.gif" alt="Project: Caroline"/>
       <div id="caro-boot-log"></div>
       <div id="caro-boot-ready" class="hidden">
-        <span>[ READY FOR CONFIGURATION ]</span>
+        <span>[ TIME GATE OPEN // READY FOR CONFIGURATION ]</span>
         <div class="caro-cli-line"><span class="caro-prompt">&gt;</span><span class="caro-caret">█</span></div>
       </div>
       <button id="caro-begin-btn" class="hidden">[ ENTER ] — Begin First Contact</button>
@@ -981,7 +981,7 @@
           <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Google OAuth Client ID</div><div class="settings-sub">Used for Calendar and Google Tasks</div></div>
+          <div><div class="settings-label">Google OAuth Client ID</div><div class="settings-sub">Used for Calendar</div></div>
           <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
         </div>
         <div class="settings-row" style="margin-top:14px">
@@ -3246,7 +3246,7 @@ async function saveSettings() {
   // Refresh localStorage after zip lookup + feature toggles updated S
   localStorage.setItem('caro_settings', JSON.stringify(S));
 
-  // Persist settings to Node-RED (writes /home/davee/caroline/caroline_settings.json)
+  // Persist settings to Node-RED (writes Caroline's local settings file)
   try {
     await postSettingsToNodeRed();
     nrSaveOk = true;
@@ -3387,7 +3387,14 @@ function renderMediaQuickRail() {
     btn.className = 'media-quick-btn' + (idx === mediaChannelIndex ? ' active' : '');
     btn.title = ch.name + ' — ' + ch.genre;
     btn.setAttribute('aria-label', ch.name);
-    btn.innerHTML = '<span class="media-quick-icon">' + ch.icon + '</span><span class="media-quick-name">' + ch.name + '</span>';
+    const icon=document.createElement('span');
+    icon.className='media-quick-icon';
+    icon.textContent=ch.icon || '';
+    const name=document.createElement('span');
+    name.className='media-quick-name';
+    name.textContent=ch.name || '';
+    btn.appendChild(icon);
+    btn.appendChild(name);
     btn.onclick = () => {
       loadMediaChannel(idx);
       resetIdle();
@@ -3467,7 +3474,17 @@ function renderChannelList() {
   MEDIA_CHANNELS.forEach(ch => {
     const div = document.createElement('div');
     div.className = 'ch-list-item';
-    div.innerHTML = '<span class="ch-list-icon">' + ch.icon + '</span><span>' + ch.name + '</span><span style="margin-left:auto;color:rgba(226,232,240,0.35);font-size:10px;">' + ch.genre + '</span>';
+    const icon=document.createElement('span');
+    icon.className='ch-list-icon';
+    icon.textContent=ch.icon || '';
+    const name=document.createElement('span');
+    name.textContent=ch.name || '';
+    const genre=document.createElement('span');
+    genre.style.cssText='margin-left:auto;color:rgba(226,232,240,0.35);font-size:10px;';
+    genre.textContent=ch.genre || '';
+    div.appendChild(icon);
+    div.appendChild(name);
+    div.appendChild(genre);
     list.appendChild(div);
   });
 }
@@ -3589,6 +3606,12 @@ voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; S.voiceMuted=!voiceEnabled; l
 
 // ── CHAT HISTORY ──────────────────────────────
 let chatLog = JSON.parse(localStorage.getItem('caro_log') || '[]');
+function appendTextWithBreaks(parent, text) {
+  String(text || '').split('\n').forEach((line, i) => {
+    if (i) parent.appendChild(document.createElement('br'));
+    parent.appendChild(document.createTextNode(line));
+  });
+}
 function toggleHistory(){
   const p=document.getElementById('history-panel'), b=document.getElementById('hist-btn');
   if(!p) return;
@@ -3599,7 +3622,16 @@ function toggleHistory(){
 function renderHistory(){
   const c=document.getElementById('history-messages'); if(!c) return; c.innerHTML='';
   if(!chatLog.length){ c.innerHTML='<div class="hist-empty">No messages yet — say something!</div>'; return; }
-  chatLog.forEach(e=>{ const d=document.createElement('div'); d.className='hist-msg '+e.role; d.innerHTML='<div class="hist-sender">'+e.sender+'</div>'+e.text; c.appendChild(d); });
+  chatLog.forEach(e=>{
+    const d=document.createElement('div');
+    d.className='hist-msg '+(e.role === 'dave' ? 'dave' : 'caroline');
+    const senderEl=document.createElement('div');
+    senderEl.className='hist-sender';
+    senderEl.textContent=e.sender || '';
+    d.appendChild(senderEl);
+    appendTextWithBreaks(d, e.text || '');
+    c.appendChild(d);
+  });
 }
 function clearHistory(){
   if(confirm('Clear all conversation history?')){ chatLog=[]; localStorage.removeItem('caro_log'); renderHistory(); }
@@ -3698,16 +3730,16 @@ const HOWTO_CONTENT = {
 <div class="howto-note">💡 The bridge button step must be done within 30 seconds of clicking POST.</div>`
   },
   calendar: {
-    title:'GOOGLE CALENDAR + TASKS',
-    html:`<h4>What it does</h4><p>Reads your upcoming events and syncs your task list with Google Tasks.</p>
+    title:'GOOGLE CALENDAR',
+    html:`<h4>What it does</h4><p>Reads your upcoming events. Tasks are stored locally on this host.</p>
 <h4>Step-by-step</h4><ol>
 <li>Go to <code>console.cloud.google.com</code> → create a new project</li>
-<li>Enable <strong>Google Calendar API</strong> and <strong>Google Tasks API</strong></li>
+<li>Enable <strong>Google Calendar API</strong></li>
 <li>Create a <strong>Desktop app</strong> OAuth client for Caroline</li>
 <li>Paste the OAuth Client ID in Settings → Google</li>
-<li>On the Pi kiosk screen, click <strong>Connect Google</strong> and approve Calendar/Tasks access</li>
+<li>On the Pi kiosk screen, click <strong>Connect Google</strong> and approve Calendar access</li>
 </ol>
-<div class="howto-note">Google blocks private LAN IP redirects for Calendar/Tasks. Caroline uses the desktop loopback redirect <code>http://127.0.0.1:1880/admin/google/callback</code>, so start Google sign-in from the Pi kiosk browser itself.</div>`
+<div class="howto-note">Google blocks private LAN IP redirects for Calendar. Caroline uses the desktop loopback redirect <code>http://127.0.0.1:1880/admin/google/callback</code>, so start Google sign-in from the Pi kiosk browser itself.</div>`
   },
   weather: {
     title:'WEATHER WIDGET',
@@ -3832,6 +3864,16 @@ function connectWS(){
       _trackRecv(t);
       setAiStatus(/^⚠|OpenRouter key/i.test(t) ? 'fail' : 'ok');
       clog('recv', t.length > 60 ? t.slice(0,60)+'…' : t);
+    }
+    else if (d.type === 'agent_message' && d.text) {
+      const t = String(d.text || '').trim();
+      if (t) {
+        playBeep(650);
+        addMessage(t, 'caroline', d.source || 'proactive');
+        speak(t);
+        _trackRecv(t);
+        clog('ambient', t.length > 60 ? t.slice(0,60)+'…' : t);
+      }
     }
     else if (d.type === 'settings_confirmed') {
       clog('ws', 'Settings confirmed; OpenRouter key length ' + (d.keyLength || 0));
@@ -3993,7 +4035,7 @@ function updateCpuTemp(tempF, tempC) {
 }
 
 // ── GREETING ──────────────────────────────────
-function generateGreeting(){ const h=new Date().getHours(); const n=S.userName?', '+S.userName:''; let g; if(h>=5&&h<12)g='Good morning'+n+'! ☀️'; else if(h>=12&&h<17)g='Good afternoon'+n+'! 🌤️'; else if(h>=17&&h<21)g='Good evening'+n+'! 🌅'; else g='Hey night owl! 🌙'; addMessage(g+' Uplink active. What are we working on?','caroline','display'); }
+function generateGreeting(){ const h=new Date().getHours(); const n=S.userName?', '+S.userName:''; let g; if(h>=5&&h<12)g='Good morning'+n+'! ☀️'; else if(h>=12&&h<17)g='Good afternoon'+n+'! 🌤️'; else if(h>=17&&h<21)g='Good evening'+n+'! 🌅'; else g='Hey night owl! 🌙'; addMessage(g+' Uplink active, launch pad warm. What are we working on?','caroline','display'); }
 setTimeout(generateGreeting,1000);
 
 // ── MOON ──────────────────────────────────────
@@ -4078,7 +4120,7 @@ let pomoSeconds = POMO_WORK, pomoRunning = false, pomoIsBreak = false, pomoInter
 fetchWeather(); setInterval(fetchWeather,10*60*1000); updatePomoDisplay(); setTimeout(function(){ fetchTides(); setInterval(fetchTides, 30*60*1000); }, 500);
 
 // ── NEWS ──────────────────────────────────────
-async function fetchNews(){ const nl=document.getElementById('news-list'); try{ const feeds=[{url:'http://feeds.bbci.co.uk/news/rss.xml',src:'BBC'},{url:'https://www.theverge.com/rss/index.xml',src:'Verge'}]; const items=[]; for(const f of feeds){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f.url));const d=await r.json();if(d.items)d.items.slice(0,3).forEach(i=>items.push({title:i.title,src:f.src,thumb:i.thumbnail||''}));}catch(e){}} if(!items.length) throw new Error(); nl.innerHTML=''; items.slice(0,5).forEach(i=>{const el=document.createElement('div');el.className='news-item';const th=i.thumb?'<img class="news-thumb" src="'+i.thumb+'" onerror="this.style.display=\'none\'">':' ';el.innerHTML=th+'<div><div class="news-source">'+i.src+'</div><div class="news-title">'+i.title+'</div></div>';nl.appendChild(el);}); }catch(e){ nl.innerHTML='<div id="news-loading">Headlines unavailable</div>'; } }
+async function fetchNews(){ const nl=document.getElementById('news-list'); try{ const feeds=[{url:'http://feeds.bbci.co.uk/news/rss.xml',src:'BBC'},{url:'https://www.theverge.com/rss/index.xml',src:'Verge'}]; const items=[]; for(const f of feeds){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f.url));const d=await r.json();if(d.items)d.items.slice(0,3).forEach(i=>items.push({title:i.title,src:f.src,thumb:i.thumbnail||''}));}catch(e){}} if(!items.length) throw new Error(); nl.innerHTML=''; items.slice(0,5).forEach(i=>{const el=document.createElement('div');el.className='news-item'; if(i.thumb){ try{ const u=new URL(i.thumb, window.location.href); if(/^https?:$/.test(u.protocol)){ const img=document.createElement('img'); img.className='news-thumb'; img.src=u.href; img.onerror=()=>{ img.style.display='none'; }; el.appendChild(img); } }catch(e){} } const wrap=document.createElement('div'); const src=document.createElement('div'); src.className='news-source'; src.textContent=i.src; const title=document.createElement('div'); title.className='news-title'; title.textContent=i.title || ''; wrap.appendChild(src); wrap.appendChild(title); el.appendChild(wrap); nl.appendChild(el);}); }catch(e){ nl.innerHTML='<div id="news-loading">Headlines unavailable</div>'; } }
 fetchNews(); setInterval(fetchNews,15*60*1000);
 
 // ── HOLIDAYS ──────────────────────────────────
@@ -4242,10 +4284,10 @@ function checkinFocusSummary() {
 
 function checkinLine(slotId) {
   const focus = checkinFocusSummary();
-  if (slotId === 'morning') return 'Checking in. I see ' + focus + '. What is the one thing that gets the day moving?';
-  if (slotId === 'midday') return 'Midday check-in. I see ' + focus + '. Need to adjust the plan or keep pushing?';
-  if (slotId === 'afternoon') return 'Afternoon check-in. I see ' + focus + '. What deserves the next 25 minutes?';
-  return 'Evening check-in. I see ' + focus + '. Want to close one loop before you downshift?';
+  if (slotId === 'morning') return 'Checking in. I see ' + focus + '. What is the one thing that opens the day gate?';
+  if (slotId === 'midday') return 'Midday check-in. I see ' + focus + '. Adjust the route or keep the rhythm?';
+  if (slotId === 'afternoon') return 'Afternoon check-in. I see ' + focus + '. What deserves the next clean push?';
+  return 'Evening check-in. I see ' + focus + '. Want to close one loop before the lights go soft?';
 }
 
 function maybeRunScheduledCheckin() {
@@ -4282,8 +4324,12 @@ function updateBottomChat() {
   container.innerHTML = '';
   log.slice(-6).forEach(entry => {
     const div = document.createElement('div');
-    div.className = 'bc-msg ' + entry.role;
-    div.innerHTML = '<div class="bc-sender">' + entry.sender + '</div>' + entry.text;
+    div.className = 'bc-msg ' + (entry.role === 'dave' ? 'dave' : 'caroline');
+    const sender=document.createElement('div');
+    sender.className='bc-sender';
+    sender.textContent=entry.sender || '';
+    div.appendChild(sender);
+    appendTextWithBreaks(div, entry.text || '');
     container.appendChild(div);
   });
   container.scrollTop = container.scrollHeight;
@@ -4451,6 +4497,27 @@ if (S.spotifyClientId) {
 // ── TODO LIST ─────────────────────────────────
 // todos initialized above
 function saveTodos() { localStorage.setItem('caro_todos', JSON.stringify(todos)); renderInlineTasks(); }
+function taskTextFromPayload(item) {
+  if (typeof item === 'string') return item.trim();
+  if (item && typeof item === 'object') return String(item.text || item.task || item.title || item.name || '').trim();
+  return '';
+}
+function taskKey(text) {
+  return String(text || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+function sendTaskAdd(text) {
+  if (ws && ws.readyState === 1 && text) {
+    ws.send(JSON.stringify({ type: 'task_add', task: text }));
+  }
+}
+function upsertTodo(text, extra) {
+  const clean = taskTextFromPayload(text);
+  if (!clean) return false;
+  const key = taskKey(clean);
+  if (todos.some(existing => taskKey(existing.text) === key)) return false;
+  todos.push(Object.assign({ text: clean, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }, extra || {}));
+  return true;
+}
 function renderInlineTasks() {
   const container = document.getElementById('inline-task-list');
   if (!container) return;
@@ -4462,9 +4529,14 @@ function renderInlineTasks() {
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background 0.2s;' + (todo.done ? 'opacity:0.4;' : 'background:rgba(var(--t-rgb1),0.04);border:1px solid rgba(var(--t-rgb1),0.1);');
     div.onclick = () => { toggleTodoItem(realIdx); };
-    const check = todo.done ? '<i class="ti ti-circle-check" style="font-size:14px;color:var(--t-hex1);flex-shrink:0;margin-top:1px;"></i>' : '<i class="ti ti-circle" style="font-size:14px;color:rgba(var(--t-rgb1),0.3);flex-shrink:0;margin-top:1px;"></i>';
-    const text = `<span style="font-size:12px;color:${todo.done?'rgba(226,232,240,0.35)':'#e2e8f0'};line-height:1.3;${todo.done?'text-decoration:line-through;':''}">${todo.text}</span>`;
-    div.innerHTML = check + text;
+    const check=document.createElement('i');
+    check.className=todo.done ? 'ti ti-circle-check' : 'ti ti-circle';
+    check.style.cssText='font-size:14px;color:'+(todo.done?'var(--t-hex1)':'rgba(var(--t-rgb1),0.3)')+';flex-shrink:0;margin-top:1px;';
+    const text=document.createElement('span');
+    text.style.cssText='font-size:12px;color:'+(todo.done?'rgba(226,232,240,0.35)':'#e2e8f0')+';line-height:1.3;'+(todo.done?'text-decoration:line-through;':'');
+    text.textContent=todo.text || '';
+    div.appendChild(check);
+    div.appendChild(text);
     container.appendChild(div);
   });
 }
@@ -4488,16 +4560,51 @@ function renderTodos() {
   const body = document.getElementById('todo-body');
   if (!body) return;
   body.innerHTML = '';
-  if (!todos.length) { body.innerHTML = '<div style="text-align:center;color:rgba(226,232,240,0.25);font-size:12px;font-family:JetBrains Mono,monospace;margin-top:40px;">No tasks yet — add one below or ask '+(S.aiName||'Caroline')+'!</div>'; return; }
+  if (!todos.length) {
+    const empty=document.createElement('div');
+    empty.style.cssText='text-align:center;color:rgba(226,232,240,0.25);font-size:12px;font-family:JetBrains Mono,monospace;margin-top:40px;';
+    empty.textContent='No tasks yet — add one below or ask '+(S.aiName||'Caroline')+'!';
+    body.appendChild(empty);
+    return;
+  }
   const sorted = [...todos].sort((a,b) => (a.done===b.done) ? 0 : a.done ? 1 : -1);
   sorted.forEach((todo, i) => {
     const realIdx = todos.indexOf(todo);
     const div = document.createElement('div');
     div.className = 'todo-item' + (todo.done ? ' done' : '') + (todo.autoDone ? ' auto-done' : '');
     div.onclick = () => toggleTodoItem(realIdx);
-    const tag = todo.tag ? `<span class="todo-tag ${todo.tag}">${todo.tag}</span>` : '';
-    const meta = todo.autoDone ? '<span class="todo-tag auto">✓ auto-completed</span>' : todo.doneAt ? `completed ${new Date(todo.doneAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}` : '';
-    div.innerHTML = `<div class="todo-check"><span class="todo-check-icon">✓</span></div><div style="flex:1"><div class="todo-text">${todo.text}</div><div class="todo-meta">${tag}${meta}</div></div>`;
+    const check=document.createElement('div');
+    check.className='todo-check';
+    const checkIcon=document.createElement('span');
+    checkIcon.className='todo-check-icon';
+    checkIcon.textContent='✓';
+    check.appendChild(checkIcon);
+    const content=document.createElement('div');
+    content.style.flex='1';
+    const text=document.createElement('div');
+    text.className='todo-text';
+    text.textContent=todo.text || '';
+    const meta=document.createElement('div');
+    meta.className='todo-meta';
+    if (todo.tag) {
+      const safeTag=String(todo.tag).toLowerCase().replace(/[^a-z0-9_-]/g,'');
+      const tag=document.createElement('span');
+      tag.className='todo-tag '+safeTag;
+      tag.textContent=todo.tag;
+      meta.appendChild(tag);
+    }
+    if (todo.autoDone) {
+      const auto=document.createElement('span');
+      auto.className='todo-tag auto';
+      auto.textContent='✓ auto-completed';
+      meta.appendChild(auto);
+    } else if (todo.doneAt) {
+      meta.appendChild(document.createTextNode('completed '+new Date(todo.doneAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})));
+    }
+    content.appendChild(text);
+    content.appendChild(meta);
+    div.appendChild(check);
+    div.appendChild(content);
     body.appendChild(div);
   });
 }
@@ -4515,30 +4622,45 @@ function addTodoItem() {
   const input = document.getElementById('todo-input');
   const text = input.value.trim();
   if (!text) return;
-  todos.push({ text, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null });
+  upsertTodo(text);
+  sendTaskAdd(text);
   input.value = ''; saveTodos(); renderTodos(); playBeep(700);
 }
 function clearDoneTodos() { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); playBeep(400); }
 function autoCompleteTodo(text) {
-  const lower = text.toLowerCase(); let matched = false;
-  todos.forEach((todo, i) => {
-    if (!todo.done) {
-      const words = todo.text.toLowerCase().split(' ').filter(w => w.length > 3);
-      const matchCount = words.filter(w => lower.includes(w)).length;
-      if (matchCount >= Math.max(1, Math.floor(words.length * 0.5))) { todos[i].done = true; todos[i].autoDone = true; todos[i].doneAt = Date.now(); matched = true; }
-    }
+  const lower = taskKey(text); let matched = false;
+  todos = todos.filter(todo => {
+    if (matched) return true;
+    const current = taskKey(todo.text);
+    const words = current.split(' ').filter(w => w.length > 3);
+    const matchCount = words.filter(w => lower.includes(w)).length;
+    const isMatch = current === lower || matchCount >= Math.max(1, Math.floor(words.length * 0.5));
+    if (isMatch) { matched = true; return false; }
+    return true;
   });
   if (matched) saveTodos(); return matched;
 }
 function handleTodoUpdate(data) {
-  if (data.action === 'replace' && data.tasks) {
-    const kept = todos.filter(t => t.done);
-    const newTasks = data.tasks.map(t => ({ text: t, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }));
-    todos = [...kept, ...newTasks];
+  if (data.action === 'replace' && Array.isArray(data.tasks)) {
+    const seen = new Set();
+    todos = data.tasks
+      .map(taskTextFromPayload)
+      .filter(text => {
+        const key = taskKey(text);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map(text => ({ text, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }));
     saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
   }
-  if (data.action === 'add' && data.tasks) {
-    data.tasks.forEach(t => { if (!todos.find(existing => existing.text.toLowerCase() === t.toLowerCase())) { todos.push({ text: t, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }); } });
+  if (data.action === 'add' && Array.isArray(data.tasks)) {
+    let changed = false;
+    data.tasks.forEach(t => {
+      const text = taskTextFromPayload(t);
+      changed = upsertTodo(text, (t && typeof t === 'object') ? { tag: t.tag || 'work', createdAt: t.createdAt || Date.now() } : null) || changed;
+    });
+    if (!changed) return;
     saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
   }
   if (data.action === 'complete' && data.task) {
@@ -4550,7 +4672,7 @@ document.getElementById('todo-input') && document.getElementById('todo-input').a
 document.getElementById('inline-task-text') && document.getElementById('inline-task-text').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const txt = document.getElementById('inline-task-text').value.trim();
-    if (txt) { todos.push({ text:txt, done:false, autoDone:false, tag:'work', createdAt:Date.now(), doneAt:null }); saveTodos(); document.getElementById('inline-task-text').value=''; document.getElementById('inline-task-input').style.display='none'; playBeep(700); }
+    if (txt) { upsertTodo(txt); sendTaskAdd(txt); saveTodos(); document.getElementById('inline-task-text').value=''; document.getElementById('inline-task-input').style.display='none'; playBeep(700); }
   }
   if (e.key === 'Escape') { document.getElementById('inline-task-input').style.display='none'; }
 });
@@ -4716,36 +4838,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
-  { id:'pilot', title:'Red Pilot Girl', desc:'Curious, grounded, warm. The default energy.', src:'assets/caroline.gif' },
-  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with soft neon energy.', src:'assets/robot.gif' },
+  { id:'pilot', title:'Red Pilot Girl', desc:'Curious, grounded, warm. Airship-ready default energy.', src:'assets/caroline.gif' },
+  { id:'robot', title:'Neon Bot',       desc:'Polite retro robot manners with soft neon timing.', src:'assets/robot.gif' },
   { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'assets/cat.gif' },
-  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, softly haunted.', src:'assets/ghost.gif' }
+  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, softly time-displaced.', src:'assets/ghost.gif' }
 ];
 
 const ONB_MODULES = [
   { id:'aiCore',   title:'AI Core',   required:['apiKey'],
-    desc:'OpenRouter + conversation brain. Needed for chat.',
+    desc:'OpenRouter + conversation brain. Crystal-clear comms, no summoning ritual.',
     fields:[{ key:'apiKey', label:'OpenRouter API Key', type:'password', placeholder:'sk-or-v1-...' }] },
   { id:'spotify',  title:'Spotify',   required:[],
-    desc:'Now playing + auth flow. Full setup guide on GitHub.',
+    desc:'Now playing + auth flow. Four-on-the-floor optional, focus mode encouraged.',
     githubNote: true, fields:[] },
   { id:'hue',      title:'Hue Lights', required:[],
-    desc:'Local Philips Hue bridge control. Full setup guide on GitHub.',
+    desc:'Local Philips Hue bridge control. Apartment-of-tomorrow glow, locally switched.',
     githubNote: true, fields:[] },
-  { id:'calendar', title:'Calendar / Tasks', required:[],
-    desc:'Google Calendar + Google Tasks over OAuth.',
+  { id:'calendar', title:'Calendar', required:[],
+    desc:'Google Calendar over OAuth. Tasks are stored locally.',
     fields:[{ key:'googleClientId', label:'Google OAuth Client ID', type:'text', placeholder:'client id' },
       { key:'googleClientSecret', label:'Google OAuth Secret', type:'password', placeholder:'optional' }] },
   { id:'weather',  title:'Weather',   required:[],
-    desc:'Uses ZIP code — no extra key required.', fields:[] },
+    desc:'Uses ZIP code — no extra key required. Tiny sky report, big mission impact.', fields:[] },
   { id:'voice',    title:'Voice',     required:[],
-    desc:'Speech input/output preferences.', fields:[] }
+    desc:'Speech input/output preferences. Team channel, but cozy.', fields:[] }
 ];
 
 const ONB_QUESTIONS = [
   { id:'identity-user', type:'text',  save:'config.userName',
     prompt:"What should I call you?",
-    placeholder:'Your name', nextLabel:'Nice to meet you' },
+    placeholder:'Your name', nextLabel:'Launch pad set' },
   { id:'identity-ai',   type:'text',  save:'config.aiName',
     prompt:'And what should I call myself?', placeholder:'Caroline', defaultValue:'Caroline' },
   { id:'identity-zip',  type:'text',  save:'config.zipCode',
@@ -4762,37 +4884,37 @@ const ONB_QUESTIONS = [
     defaultValue:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1')?h:''; })() },
   { id:'workstyle', type:'chips', save:'personality.workstyle', prompt:'How do you work best?', options:[
     { label:'Deep focus — one thing at a time', value:'deep',     reply:'Got it. I\'ll respect the tunnel.' },
-    { label:'Juggling many things at once',      value:'juggler',  reply:'Multitasking mode noted. I\'ll keep up.' },
-    { label:'Sprints — bursts then breaks',      value:'sprints',  reply:'Sprint and breathe. Healthy rhythm.' },
-    { label:'Follows curiosity wherever it goes',value:'curious',  reply:'Chaotic productive. My favourite kind.' }
+    { label:'Juggling many things at once',      value:'juggler',  reply:'Multitasking mode noted. Team comms open.' },
+    { label:'Sprints — bursts then breaks',      value:'sprints',  reply:'Sprint and breathe. Checkpoint rhythm.' },
+    { label:'Follows curiosity wherever it goes',value:'curious',  reply:'Curiosity route selected. Time map unfolding.' }
   ]},
   { id:'comms', type:'chips', save:'personality.comms', prompt:'How should I talk to you?', options:[
-    { label:'Short and direct',       value:'direct',       reply:'Concise mode locked in.' },
-    { label:'Conversational',         value:'conversational',reply:'Chatty it is. I like that.' },
-    { label:'Detailed and thorough',  value:'detailed',     reply:'Full context always. Noted.' },
+    { label:'Short and direct',       value:'direct',       reply:'Concise mode locked in. Clean callouts only.' },
+    { label:'Conversational',         value:'conversational',reply:'Chatty it is. Warm signal, low static.' },
+    { label:'Detailed and thorough',  value:'detailed',     reply:'Full context always. Crystal archive mode.' },
     { label:'Depends on my mood',     value:'adaptive',     reply:'I\'ll read the room.' }
   ]},
   { id:'energy', type:'chips', save:'personality.energy', prompt:'Early bird or night owl?', options:[
-    { label:'Early Bird', value:'early', reply:'Morning mode acknowledged.' },
-    { label:'Night Owl',  value:'night', reply:'Noted. Night creature.' },
+    { label:'Early Bird', value:'early', reply:'Morning mode acknowledged. Launch lights at dawn.' },
+    { label:'Night Owl',  value:'night', reply:'Noted. Night-drive synths on standby.' },
     { label:'Both',       value:'both',  reply:'Time has no power here.' },
     { label:'Cryptid',    value:'night', reply:'Understood. Deeply nocturnal.' }
   ]},
   { id:'vibe', type:'chips', save:'personality.vibe', prompt:'Calm or chaotic?', options:[
     { label:'Calm',     value:'calm',     reply:'Softly glowing. Grounded. Good.' },
-    { label:'Chaotic',  value:'chaotic',  reply:'I had a feeling.' },
-    { label:'Balanced', value:'balanced', reply:'A rare and powerful answer.' },
+    { label:'Chaotic',  value:'chaotic',  reply:'I had a feeling. Brass section warming up.' },
+    { label:'Balanced', value:'balanced', reply:'A rare and powerful answer. Groove and grid.' },
     { label:'Gremlin',  value:'chaotic',  reply:'Excellent. I was hoping you\'d say that.' }
   ]},
   { id:'tone', type:'chips', save:'personality.tone', prompt:'When you need encouragement — gentle or hype?', options:[
-    { label:'Gentle',                value:'gentle',   reply:'Soft support mode. Got it.' },
+    { label:'Gentle',                value:'gentle',   reply:'Soft support mode. Starlight, not sirens.' },
     { label:'Hype',                  value:'hype',     reply:'Understood. Full energy when needed.' },
     { label:'Adaptive',              value:'adaptive', reply:'I\'ll read the room.' },
     { label:'Unhinged Encouragement',value:'hype',     reply:'Motivational turbulence enabled.' }
   ]},
   { id:'avatar',  type:'avatar',  prompt:'How should I appear to you?' },
   { id:'modules', type:'modules', prompt:'I can connect to a few things. Only enable what\'s actually ready.' },
-  { id:'summary', type:'summary', prompt:'Okay… I think I\'m ready.\nStay with me a second while everything comes online.' }
+  { id:'summary', type:'summary', prompt:'Okay… I think I\'m ready.\nStay with me a second while everything comes online. The launch pad is almost green.' }
 ];
 
 let _onbAnimatedMsgCount = 0;
@@ -4886,9 +5008,11 @@ function startBootSequence(){
   document.getElementById('wipe-memory-btn').classList.add('hidden');
   const lines=[
     '[ INITIALIZING PROJECT: CAROLINE CORE... ]',
-    '[ LOADING PERSONALITY MATRIX... ]',
-    '[ CALIBRATING UPLINK / MEMORY BUS... ]',
-    '[ NEURAL INTERFACE READY ]'
+    '[ OPENING TIME GATE HANDSHAKE... ]',
+    '[ ALIGNING CRYSTAL MEMORY BUS... ]',
+    '[ TUNING STARLIGHT FILTER SWEEP... ]',
+    '[ ROBOT MANNERS: POLITE / READY ]',
+    '[ TEAM CHANNEL READY ]'
   ];
   let i=0;
   (function typeLine(){
@@ -5007,7 +5131,11 @@ function renderChatStep(){
   msgs.forEach((m, i) => {
     const el = document.createElement('div');
     el.className = `caro-msg ${m.role==='ai'?'ai':'you'}`;
-    el.innerHTML = `<div class="caro-who">${m.role==='ai'?_aiLabel:'YOU'}</div>${m.text.replace(/\n/g,'<br>')}`;
+    const who=document.createElement('div');
+    who.className='caro-who';
+    who.textContent=m.role==='ai'?_aiLabel:'YOU';
+    el.appendChild(who);
+    appendTextWithBreaks(el, m.text || '');
     if(i >= animateFrom){
       el.style.cssText += 'opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease;';
       _onbMsgTimers.push(setTimeout(()=>{
@@ -5080,8 +5208,14 @@ function renderChatStep(){
       const fieldWrap=document.createElement('div');
       mod.fields.forEach(field=>{
         const w=document.createElement('div'); w.className='caro-field';
-        w.innerHTML=`<label>${field.label}</label><input type="${field.type}" placeholder="${field.placeholder}" value="${(cfg[field.key]||'').replace(/"/g,'&quot;')}">`;
-        const inp=w.querySelector('input');
+        const label=document.createElement('label');
+        label.textContent=field.label;
+        const inp=document.createElement('input');
+        inp.type=field.type;
+        inp.placeholder=field.placeholder;
+        inp.value=cfg[field.key] || '';
+        w.appendChild(label);
+        w.appendChild(inp);
         inp.oninput=()=>{ cfg[field.key]=inp.value.trim(); };
         fieldWrap.appendChild(w);
       });
@@ -5105,7 +5239,7 @@ function renderChatStep(){
               onbState.serviceAccountPending=ev.target.result;
               cfg.enabled=true;
               const saEl=document.getElementById('sa-status');
-              if(saEl) saEl.innerHTML='<span style="color:#4ade80;font-size:11px;">✓ '+f.name+' — will upload on finish</span>';
+              if(saEl) { saEl.textContent='✓ '+f.name+' — will upload on finish'; saEl.style.cssText='color:#4ade80;font-size:11px;'; }
               card.querySelector('.caro-toggle').classList.add('active');
               renderChatStep();
             } catch(err){ alert('Invalid service account file: '+err.message); }
