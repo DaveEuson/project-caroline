@@ -15,7 +15,7 @@ Looking to launch Late April
 ![Project: Caroline interface](Screenshot_7.png)
 ## The Story
 
-Project: Caroline is your portal to an ambient digital sidekick completely personalized to you. When they wake up, a brief setup wizard establishes their baseline personality. From there, you can dive into the settings to fully customize their core system prompt — creating a smart dashboard that truly understands how you work, think, and communicate.
+Project: Caroline is your portal to an ambient digital sidekick completely personalized to you. When they wake up, a brief setup wizard establishes their baseline personality. From there, you can dive into the settings to fully customize their core system prompt — creating a smart dashboard that truly understands how you work, think, and communicate. Currurrently optimized for Raspberry Pi 5 with a touch screen.
 
 ---
 
@@ -23,7 +23,7 @@ Project: Caroline is your portal to an ambient digital sidekick completely perso
 
 One of the core values of this project is that your information is safe. There is no telemetry, no data harvesting, and no corporate oversight. Personal information is not collected.
 
-If you choose to run the AI in **Local** mode (via Ollama), your prompts, calendar events, and tasks never even leave your local network. Your data is yours.
+If you choose to run the AI in **Local** mode (via Ollama), your prompts, calendar events, and tasks never even leave your local network. Your data is yours. Caroline also gives you the option to use Open Router to use cloud model at a very very modest cost. 
 
 ---
 
@@ -32,11 +32,11 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Cyberpunk UI** — Ambient kiosk interface served on port 8080
 - **Robust Backend** — Node-RED on port 1880 as a bare-metal systemd service
 - **Persistent Memory** — AI chat with memory across sessions
-- **Productivity** — Creates calendar events and manages Google Tasks via chat
+- **Productivity** — Creates calendar events and manages Google Tasks via chat (more to come soon)
 - **Proactive AI** — Caroline checks in four times a day with lightweight context
 - **Local & Cloud AI** — Ollama (llama3.2, phi3:mini, gemma2:2b) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
-- **Smart Home** — Philips Hue control
+- **Smart Home** — Philips Hue control (More soon)
 - **OAuth Integrations** — Google and Spotify connect from the GUI; no JSON key upload required for normal setup
 
 ---
@@ -116,7 +116,7 @@ Copy and paste this prompt into your existing AI to generate a highly tailored p
 ```
 v0.1 — Core kiosk: chat, widgets, smart home, Pomodoro.            [██████████]
 v0.2 — Agent loop, auto-tasks, installer, CI pipeline.             [██████████]  ← you are here
-v0.3 — GitHub remote, public release, widget marketplace.          [░░░░░░░░░░]
+v0.3 — More Widgets! more personality!          [░░░░░░░░░░]
 v1.0 — Hardware agnostic (Windows, Mac, tablet, cloud).            [░░░░░░░░░░]
 v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░░░░░░░░░]
 ```
