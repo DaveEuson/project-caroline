@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -o '/data/[^\"\\\\\\\\]*' \"C:/Users/Dave/Downloads/caroline-github/flows.json\")",
+      "Bash(grep -n \"e\\\\.key.*'/'\\\\\\\\|'/'.*e\\\\.key\\\\\\\\|keyboard.*slash\\\\\\\\|slash\" \"C:/Users/Dave/Downloads/caroline-kiosk-backup.html\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "PowerShell(Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force; Import-Module Posh-SSH; $pass = ConvertTo-SecureString 'AWMNPLFWAU890-' -AsPlainText -Force; $cred = New-Object System.Management.Automation.PSCredential\\('davee-', $pass\\); $session = New-SSHSession -ComputerName 192.168.1.50 -Credential $cred -AcceptKey -ErrorAction Stop; Invoke-SSHCommand -SessionId $session.SessionId -Command 'cd ~/caroline && git pull && sudo systemctl restart nodered'; Remove-SSHSession -SessionId $session.SessionId)",
+      "Bash(git push *)",
+      "PowerShell(Get-Command -Module Posh-SSH)",
+      "PowerShell(Import-Module Posh-SSH; Get-Command -Module Posh-SSH | Select-Object Name)"
+    ]
+  }
+}
