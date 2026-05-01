@@ -1,8 +1,3 @@
-#### UNDER DEVELOPMENT####
-Looking to launch Late April
-
-
-
 # Project: Caroline
 
 **Your open-source, highly personalized digital sidekick.**
@@ -54,7 +49,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 After install, open **Settings** in Caroline:
 
 - **Google:** create an OAuth client, paste the Client ID, then use **Connect Google** for Calendar and Google Tasks. The old service-account JSON upload is kept only as an advanced fallback.
-- **Spotify:** add `https://[Pi-IP]:8443/spotify/callback` as the Spotify app redirect URI, open `https://[Pi-IP]:8443` once to accept the self-signed certificate, then use **Connect Spotify**.
+- **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (e.g. `http://localhost:8080/`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 
 ### Requirements
@@ -71,7 +66,7 @@ After install, open **Settings** in Caroline:
 |---|---|
 | Frontend | Single HTML file |
 | Backend | Node-RED (bare-metal systemd, no Docker) |
-| Web server | nginx (serves HTML on port 8080; HTTPS OAuth proxy on 8443) |
+| Web server | nginx (serves HTML on port 8080) |
 | AI (local) | Ollama on localhost:11434 |
 | AI (cloud) | OpenRouter API |
 | Display | Firefox ESR, kiosk mode, 1280×800 |
@@ -83,12 +78,11 @@ After install, open **Settings** in Caroline:
 ```
 Browser
   ├── HTTP GET (port 8080) ──────► nginx ──► index.html
-  ├── HTTPS OAuth (port 8443) ───► nginx ──► Node-RED callbacks
   └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (local)
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and provides a local self-signed HTTPS proxy on port 8443 for OAuth providers that require HTTPS callbacks. WebSocket traffic still goes directly to Node-RED on port 1880.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses the browser-native PKCE OAuth flow — no HTTPS proxy required.
 
 ---
 
@@ -116,8 +110,8 @@ Copy and paste this prompt into your existing AI to generate a highly tailored p
 
 ```
 v0.1 — Core kiosk: chat, widgets, smart home, Pomodoro.            [██████████]
-v0.2 — Agent loop, auto-tasks, installer, CI pipeline.             [██████████]  ← you are here
-v0.3 — GitHub remote, public release, widget marketplace.          [░░░░░░░░░░]
+v0.2 — Agent loop, auto-tasks, installer, CI pipeline.             [██████████]
+v0.3 — Tabbed settings, meme widget, Spotify PKCE, public release. [████████░░]  ← you are here
 v1.0 — Hardware agnostic (Windows, Mac, tablet, cloud).            [░░░░░░░░░░]
 v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░░░░░░░░░]
 ```

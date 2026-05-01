@@ -852,7 +852,7 @@
           <div id="openrouter-model-row" style="margin-top:14px">
             <div class="settings-row">
               <div><div class="settings-label">OpenRouter model</div><div class="settings-sub">Requires an OpenRouter API key</div></div>
-              <select class="settings-select" id="set-model">
+              <select class="settings-select" id="set-model" onchange="S.aiModel=this.value;updateAiConfigIndicator()">
                 <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 — Fast</option>
                 <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Balanced</option>
                 <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
@@ -1196,6 +1196,7 @@
   <span class="topbar-version">v0.2</span>
   <span class="topbar-sub">AI companion</span>
   <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
+  <span class="net-pill" id="model-pill" title="Active AI model">-- --</span>
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
   <span class="net-pill" id="resource-pill" title="Pi CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
@@ -1998,12 +1999,31 @@ function onProviderChange(provider) {
   updateAiConfigIndicator(provider);
 }
 
+function _shortModelName(provider, model) {
+  if (provider === 'ollama') return (model || S.ollamaModel || 'Ollama').replace(/:.+/, m => m); // keep tag
+  const map = {
+    'anthropic/claude-haiku-4.5': 'Haiku 4.5',
+    'anthropic/claude-haiku-4-5': 'Haiku 4.5',
+    'anthropic/claude-sonnet-4-5': 'Sonnet 4.5',
+    'anthropic/claude-sonnet-4-6': 'Sonnet 4.6',
+    'anthropic/claude-opus-4': 'Opus 4',
+    'openai/gpt-4o-mini': 'GPT-4o mini',
+    'openai/gpt-4o': 'GPT-4o',
+    'google/gemini-flash-1.5': 'Gemini Flash',
+    'google/gemini-pro-1.5': 'Gemini Pro',
+  };
+  const m = model || S.aiModel || '';
+  return map[m] || m.split('/').pop().replace(/-(\d)/, ' $1');
+}
+
 function updateAiConfigIndicator(provider) {
   const pill = document.getElementById('ai-config-pill');
   if (!pill) return;
   const selected = provider || S.aiProvider || 'openrouter';
   const needsKey = selected !== 'ollama' && !(S.openrouterKey || '').trim();
   pill.classList.toggle('show', needsKey);
+  const mPill = document.getElementById('model-pill');
+  if (mPill) mPill.textContent = _shortModelName(selected, S.aiModel);
 }
 
 const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
@@ -2926,11 +2946,12 @@ const HOWTO_CONTENT = {
 <h4>Step-by-step</h4><ol>
 <li>Go to <code>developer.spotify.com</code> and log in</li>
 <li>Click <strong>Create App</strong></li>
-<li>Set the Redirect URI to: <code>http://[Pi-IP]:1880/spotify/callback</code></li>
+<li>In Caroline Settings → Connect tab → find your <strong>Redirect URI</strong> (shown in the Spotify section)</li>
+<li>In your Spotify app → <strong>Edit → Redirect URIs</strong> → add that exact URI → Save</li>
 <li>Copy the <strong>Client ID</strong> from your app settings</li>
-<li>In Caroline Settings → paste the Client ID → click <strong>Connect Spotify</strong></li>
+<li>In Caroline Settings → Connect → paste the Client ID → click <strong>Connect Spotify</strong></li>
 </ol>
-<div class="howto-note">⚠ The Caddy HTTPS proxy (port 8443) must be running on the Pi. The browser will show a certificate warning for the self-signed cert — click Advanced → Accept the Risk.</div>`
+<div class="howto-note">✓ No HTTPS proxy or extra server needed — Spotify OAuth runs entirely in the browser.</div>`
   },
   hue: {
     title:'PHILIPS HUE LIGHTS',
