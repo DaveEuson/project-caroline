@@ -55,7 +55,6 @@ AI_MODEL="anthropic/claude-haiku-4.5"
 PALETTE_NODES=(
   "node-red-contrib-google-calendar"
   "node-red-contrib-google-sheets"
-  "node-red-contrib-huemagic"
 )
 
 # ── RESOLVE REAL USER (safe even if run with sudo) ───────────
@@ -334,7 +333,14 @@ fi
 
 echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
 echo -e "${DIM}    Robot manners module: polite.${RESET}"
-cp -r "$CLONE_DIR/." "$CAROLINE_DIR/"
+
+# Existing installs may contain a .git directory with ownership left over from
+# older installer runs. The runtime directory does not need Git metadata, so
+# skip it entirely and copy only the deployable project files.
+sudo chown -R "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR" 2>/dev/null || true
+rm -rf "$CAROLINE_DIR/.git"
+tar --exclude='./.git' -C "$CLONE_DIR" -cf - . | tar -C "$CAROLINE_DIR" -xf -
+sudo chown -R "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR"
 
 # The published flows are authored from the maintainer's home directory.
 # Rewrite those paths at install time so memory, OAuth, and settings files
@@ -455,9 +461,14 @@ if [ ! -f /etc/caroline/caroline-selfsigned.crt ] || [ ! -f /etc/caroline/caroli
     -keyout /etc/caroline/caroline-selfsigned.key \
     -out /etc/caroline/caroline-selfsigned.crt \
     -subj "/CN=project-caroline.local" >/tmp/caroline-openssl.log 2>&1 || {
-      echo -e "${YELLOW}  ⚠ HTTPS certificate generation failed — Spotify auth may need manual HTTPS setup${RESET}"
+      echo -e "${YELLOW}  ⚠ HTTPS certificate generation failed${RESET}"
     }
   sudo chmod 600 /etc/caroline/caroline-selfsigned.key 2>/dev/null || true
+fi
+if [ ! -f /etc/caroline/caroline-selfsigned.crt ] || [ ! -f /etc/caroline/caroline-selfsigned.key ]; then
+  echo -e "${RED}  ✗ HTTPS certificate is missing; nginx would fail to start.${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-openssl.log${RESET}"
+  exit 1
 fi
 
 sudo tee /etc/nginx/sites-available/caroline > /dev/null << EOF
@@ -524,6 +535,7 @@ echo -e "${YELLOW}  ► Writing settings...${RESET}"
 # jq writes valid JSON regardless of special characters in user input.
 # API key fields are written empty — configure them in Caroline's GUI.
 PI_IP=$(hostname -I | awk '{print $1}')
+[ -n "$PI_IP" ] || PI_IP="localhost"
 jq -n \
   --arg name         "$USER_NAME" \
   --arg tz           "${TIMEZONE:-America/New_York}" \
@@ -578,10 +590,12 @@ echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   CAROLINE_AFTER="network-online.target ollama.service"
   CAROLINE_REQUIRES="Requires=ollama.service"
+  CAROLINE_ENV="Environment=\"OLLAMA_MODEL=${OLLAMA_MODEL}\""
   CAROLINE_POST='ExecStartPost=/bin/bash -c '\''sleep 30 && ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &'\'''
 else
   CAROLINE_AFTER="network-online.target"
   CAROLINE_REQUIRES=""
+  CAROLINE_ENV=""
   CAROLINE_POST=""
 fi
 
@@ -596,6 +610,7 @@ ${CAROLINE_REQUIRES}
 Type=simple
 User=${REAL_USER}
 WorkingDirectory=${CAROLINE_DIR}
+${CAROLINE_ENV}
 ExecStartPre=/bin/sleep 5
 ExecStart=${NODE_RED_BIN} --port ${NODE_RED_PORT} --userDir ${CAROLINE_DIR}
 ${CAROLINE_POST}
@@ -614,7 +629,9 @@ sudo systemctl enable caroline
 rm -f "$CAROLINE_DIR/.config.runtime.json" 2>/dev/null || true
 rm -f "$CAROLINE_DIR/.config.nodes.json"   2>/dev/null || true
 
-sudo systemctl start caroline
+# Use restart rather than start so rerunning the installer actually reloads
+# updated flows/settings on an existing Caroline install.
+sudo systemctl restart caroline
 
 echo -e "${GREEN}  ✓ Caroline service enabled${RESET}"
 
@@ -732,6 +749,7 @@ unset _svc _svc_ok
 # ── DONE ─────────────────────────────────────────────────────
 phase "SHE'S ONLINE"
 PI_IP_FINAL=$(hostname -I | awk '{print $1}')
+[ -n "$PI_IP_FINAL" ] || PI_IP_FINAL="localhost"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -742,7 +760,7 @@ echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
 echo -e "${CYAN}  │${RESET}  Node-RED:    http://${PI_IP_FINAL}:${NODE_RED_PORT}"
-echo -e "${CYAN}  │${RESET}  HTTPS OAuth: https://${PI_IP_FINAL}:${HTTPS_PROXY_PORT}"
+echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${PI_IP_FINAL}:${HTTPS_PROXY_PORT}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
 else

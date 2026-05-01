@@ -111,16 +111,6 @@
     "name": "caroline-bot@carlinemoodtracker.iam.gserviceaccount.com"
   },
   {
-    "id": "6922657d5a5bd1c8",
-    "type": "hue-bridge",
-    "name": "Hue Bridge",
-    "bridge": "",
-    "key": "",
-    "worker": "10",
-    "autoupdates": true,
-    "disableupdates": false
-  },
-  {
     "id": "b2febca8f73fb508",
     "type": "google-credentials",
     "displayName": "Google"
@@ -131,7 +121,6 @@
     "env": [],
     "modules": {
       "node-red-contrib-google-sheets": "1.1.2",
-      "node-red-contrib-huemagic": "4.2.2",
       "node-red-contrib-google-calendar": "0.1.5"
     }
   },
