@@ -450,8 +450,6 @@
   }
   /* ── MOOD WIDGET ─────────────────────────────── */
   .mood-widget { padding: 8px 10px; }
-  .mood-row { display:flex; gap:12px; align-items:flex-start; }
-  .mood-col { flex:1; min-width:0; }
   .mood-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
   .mood-value { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--t-hex1); font-weight:600; }
   .mood-caption { font-size:11px; color:rgba(226,232,240,0.62); line-height:1.25; min-height:14px; margin-top:3px; }
@@ -1204,25 +1202,22 @@
         </div>
       </div>
 
-      <div class="widget mood-widget" id="widget-mood">
-        <div class="mood-row">
-          <div class="mood-col">
-            <div class="mood-head">
-              <div class="widget-label">Your mood</div>
-              <div class="mood-value" id="user-mood-value">7 / 11</div>
-            </div>
-            <input class="mood-slider" id="user-mood-slider" type="range" min="1" max="11" step="1" value="7" aria-label="Your mood 1–11"/>
-            <div class="mood-caption" id="user-mood-caption">Steady</div>
-          </div>
-          <div class="mood-col">
-            <div class="mood-head">
-              <div class="widget-label" id="ai-mood-label">Caroline mood</div>
-              <div class="mood-value" id="ai-mood-value">7 / 11</div>
-            </div>
-            <div class="ai-mood-track" aria-hidden="true"><div id="ai-mood-fill"></div></div>
-            <div class="mood-caption" id="ai-mood-caption">Warm</div>
-          </div>
+      <div class="widget mood-widget" id="widget-user-mood">
+        <div class="mood-head">
+          <div class="widget-label">Your mood</div>
+          <div class="mood-value" id="user-mood-value">7 / 11</div>
         </div>
+        <input class="mood-slider" id="user-mood-slider" type="range" min="1" max="11" step="1" value="7" aria-label="Your mood 1–11"/>
+        <div class="mood-caption" id="user-mood-caption">Steady</div>
+      </div>
+
+      <div class="widget mood-widget" id="widget-caroline-mood">
+        <div class="mood-head">
+          <div class="widget-label" id="ai-mood-label">Caroline mood</div>
+          <div class="mood-value" id="ai-mood-value">7 / 11</div>
+        </div>
+        <div class="ai-mood-track" aria-hidden="true"><div id="ai-mood-fill"></div></div>
+        <div class="mood-caption" id="ai-mood-caption">Warm</div>
       </div>
     </div>
 
@@ -1655,7 +1650,8 @@ function applyFeatures() {
   show('video-section',     f.video);
   show('widget-pomodoro',   f.pomodoro);
   show('widget-tides',      f.tides);
-  show('widget-mood',       f.mood !== false);
+  show('widget-user-mood',      f.mood !== false);
+  show('widget-caroline-mood',  f.mood !== false);
 
   // News: hide the header + list together
   const newsList = document.getElementById('news-list');
@@ -2443,11 +2439,10 @@ const DEFAULT_CHANNELS = [
   { name:'NASA Live',   icon:'🚀', type:'youtube', ytId:'21X5lGlDOfg' },
   { name:'Lofi Girl',   icon:'🎵', type:'youtube', ytId:'jfKfPfyJRdk' },
   { name:'Lofi Study',  icon:'📚', type:'youtube', ytId:'5qap5aO4i9A' },
-  { name:'ChillHop',    icon:'🎧', type:'youtube', ytId:'7NOSDKb0HlU' },
   { name:'Jazz BGM',    icon:'🎷', type:'youtube', ytId:'Dx5qFachd3A' },
   { name:'NHK World',   icon:'🌏', type:'iframe', url:'https://www3.nhk.or.jp/nhkworld/en/live/' }
 ];
-const CHANNEL_VERSION = 10;
+const CHANNEL_VERSION = 11;
 const savedChData = JSON.parse(localStorage.getItem('caro_channels') || 'null');
 let videoChannels = (savedChData && savedChData.v === CHANNEL_VERSION) ? savedChData.channels : DEFAULT_CHANNELS;
 let currentChannel = S.defaultChannel || 0;
@@ -3149,7 +3144,7 @@ let up=0; setInterval(()=>{ up++; document.getElementById('uptime').innerHTML='�
 const modal=document.getElementById('modal-overlay');
 document.getElementById('restart-btn').onclick=()=>{ playBeep(800); modal.classList.add('show'); };
 document.getElementById('modal-cancel').onclick=()=>{ playBeep(400); modal.classList.remove('show'); };
-document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); fetch(httpBase(RESTART_PORT) + '/restart',{method:'POST'}).catch(()=>{}); document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;">RESTARTING...</div>'; };
+document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); fetch(httpBase(RESTART_PORT) + '/restart',{method:'POST'}).catch(()=>{}); document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;">RESTARTING...</div>'; setTimeout(()=>window.location.reload(), 8000); };
 
 // ── PARTICLES ─────────────────────────────────
 function drawParticles(){ const pc=document.getElementById('particles'); pc.innerHTML=''; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
