@@ -122,6 +122,7 @@
   .stab { background: none; border: 1px solid rgba(var(--t-rgb1),0.2); border-radius: 20px; padding: 5px 13px; font-size: 10px; color: rgba(226,232,240,0.45); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
   .stab.active { background: rgba(var(--t-rgb1),0.12); border-color: rgba(var(--t-rgb1),0.5); color: var(--t-hex1); }
   .stab-panel { display: flex; flex-direction: column; gap: 22px; }
+  .stab-panel[hidden] { display: none !important; }
   #widget-meme img { width:100%; border-radius:8px; cursor:pointer; display:block; object-fit:cover; max-height:180px; transition:opacity 0.3s; }
   #meme-title { font-size:10px; color:rgba(226,232,240,0.45); font-family:'JetBrains Mono',monospace; margin-top:5px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   #meme-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9000; align-items:center; justify-content:center; cursor:pointer; }
@@ -1026,6 +1027,15 @@
               <span id="sa-upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file uploaded</span>
             </div>
           </div>
+          <div style="margin-top:10px;">
+            <details>
+              <summary style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;cursor:pointer;list-style:none;text-align:right;">▸ or paste JSON directly</summary>
+              <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+                <textarea id="sa-paste-area" rows="5" placeholder='{"type":"service_account","project_id":"..."}' style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(var(--t-rgb1),0.2);border-radius:8px;color:rgba(226,232,240,0.8);font-family:'JetBrains Mono',monospace;font-size:9px;padding:7px;box-sizing:border-box;resize:vertical;"></textarea>
+                <button onclick="submitPastedServiceAccount()" style="align-self:flex-end;background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">✔ Use Pasted JSON</button>
+              </div>
+            </details>
+          </div>
         </div>
       </div>
 
@@ -1035,7 +1045,10 @@
           <h3>Location</h3>
           <div class="settings-row">
             <div><div class="settings-label">Zip code (US)</div><div class="settings-sub">Updates weather &amp; city name</div></div>
-            <input class="settings-input" id="set-zip" type="text" maxlength="5" placeholder="e.g. 90210"/>
+            <div class="input-detect-row">
+              <input class="settings-input" id="set-zip" type="text" maxlength="5" placeholder="e.g. 90210" style="width:90px"/>
+              <button type="button" class="detect-btn" onclick="detectLocationFromZip(this)">🔍 Detect</button>
+            </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
@@ -1300,7 +1313,7 @@
       </div>
 
       <div class="widget" id="widget-meme" style="display:none">
-        <div class="widget-label">😂 Meme</div>
+        <div class="widget-label" style="display:flex;justify-content:space-between;align-items:center;">😂 Meme<button onclick="fetchMeme()" title="New meme" style="background:none;border:none;color:rgba(226,232,240,0.35);cursor:pointer;font-size:14px;padding:0;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='rgba(226,232,240,0.8)'" onmouseout="this.style.color='rgba(226,232,240,0.35)'">⟳</button></div>
         <div id="meme-placeholder" style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;">Loading...</div>
         <img id="meme-img" src="" alt="" style="display:none" onclick="openMemeOverlay()"/>
         <div id="meme-title"></div>
@@ -2435,6 +2448,69 @@ async function handleServiceAccountUpload(event) {
     }
   };
   reader.readAsText(file);
+}
+
+async function submitPastedServiceAccount() {
+  const text = (document.getElementById('sa-paste-area')?.value || '').trim();
+  const statusEl = document.getElementById('sa-upload-status');
+  if (!text) return;
+  try { JSON.parse(text); } catch(e) { statusEl.textContent = '✗ Invalid JSON'; return; }
+  statusEl.textContent = 'Uploading...';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/upload-service-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: text,
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Upload service account');
+    statusEl.textContent = resp.ok ? '✓ Service account saved' : ('✗ HTTP ' + resp.status);
+  } catch(err) {
+    statusEl.textContent = '✗ Upload failed — check Pi connection';
+  }
+}
+
+async function detectLocationFromZip(btn) {
+  const zip = (document.getElementById('set-zip')?.value || '').trim();
+  if (!zip || zip.length < 5) { btn.textContent = '✗ Enter zip'; setTimeout(() => btn.textContent = '🔍 Detect', 1500); return; }
+  const orig = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('https://api.zippopotam.us/us/' + zip);
+    if (!r.ok) throw new Error('ZIP not found');
+    const data = await r.json();
+    const place = data.places[0];
+    const city = place['place name'];
+    const state = place['state abbreviation'];
+    const lat = parseFloat(place.latitude);
+    const lon = parseFloat(place.longitude);
+
+    const locEl = document.getElementById('set-location');
+    if (locEl) locEl.value = city + ', ' + state;
+
+    const tzEl = document.getElementById('set-timezone');
+    if (tzEl) tzEl.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    try {
+      const nr = await fetch('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=waterlevels');
+      const nd = await nr.json();
+      const stations = nd.stations || [];
+      let nearest = null, nearestDist = Infinity;
+      for (const s of stations) {
+        const d = Math.hypot((s.lat || 0) - lat, (s.lng || 0) - lon);
+        if (d < nearestDist) { nearestDist = d; nearest = s; }
+      }
+      if (nearest) {
+        const tidesEl = document.getElementById('set-tides-station');
+        if (tidesEl && !tidesEl.value) tidesEl.value = nearest.id;
+      }
+    } catch(e) {}
+
+    btn.textContent = '✓ Done';
+  } catch(e) {
+    btn.textContent = '✗ Not found';
+  }
+  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
 }
 
 async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
