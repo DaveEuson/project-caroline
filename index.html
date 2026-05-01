@@ -1971,12 +1971,20 @@ function toggleSettings() {
           'set-timezone': S.timezone, 'set-location': S.location || S.cityName,
           'set-zip': S.zipcode || S.zipCode, 'set-ainame': S.aiName,
           'set-tides-station': S.tidesStation, 'set-google-client-id': S.googleClientId,
-          'set-username': S.userName, 'set-ollama-url': S.ollamaUrl
+          'set-username': S.userName, 'set-ollama-url': S.ollamaUrl,
+          'set-ollama-model': S.ollamaModel, 'set-ainame-sys': S.aiName
         };
         Object.entries(refresh).forEach(([id, val]) => {
           const el = document.getElementById(id);
           if (el && val != null && val !== '') el.value = val;
         });
+        // Re-apply feature checkboxes from server-authoritative S.features
+        if (S.features && Object.keys(S.features).length) {
+          ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
+            const el = document.getElementById('feat-' + k);
+            if (el) el.checked = S.features[k] !== false;
+          });
+        }
         checkGoogleStatus();
       })
       .catch(() => {});
@@ -2656,7 +2664,7 @@ async function saveSettings() {
   S.nodeRedUrl = (rawNrUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '');
   try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
   const needReconnect = getNodeRedUrl() !== prevNrUrl;
-  S.openrouterKey = orkeyVal;
+  if (orkeyVal) S.openrouterKey = orkeyVal; // never clear key by switching providers
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
   S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'llama3.2').trim();
