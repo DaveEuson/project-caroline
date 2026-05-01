@@ -354,8 +354,10 @@
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
   body.idle-mode #avatar-outer { transform: scale(1.4) translateY(80px); }
+  #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
-  body.idle-mode #avatar-wrap #av-sleeping { opacity: 1; }
+  body.idle-mode #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode .nav-btn { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
   body.idle-mode #bottom-bar { opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
   #screensaver-overlay { display:none; position:fixed; inset:0; background:rgba(2,3,5,0); z-index:5; pointer-events:none; transition:background 2s ease; }
   body.idle-mode #screensaver-overlay { display:block; background:rgba(2,3,5,0.65); }
@@ -365,6 +367,10 @@
   #idle-clock-date { margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.62); text-transform:uppercase; }
   @media (max-width:1024px) { #idle-clock-time { font-size:68px; } }
   @media (max-width:768px) { #idle-clock-time { font-size:48px; } }
+  #idle-recent { display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); width:min(520px,80vw); text-align:center; z-index:14; pointer-events:none; }
+  body.idle-mode #idle-recent { display:block; }
+  #idle-recent-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.45); text-transform:uppercase; margin-bottom:6px; }
+  #idle-recent-text { font-size:13px; color:rgba(226,232,240,0.65); line-height:1.6; font-style:italic; }
 
   /* ANIMATIONS */
   @keyframes holidayFade { 0%,10%{opacity:0;transform:translateY(3px)} 15%,85%{opacity:1;transform:translateY(0)} 90%,100%{opacity:0;transform:translateY(-3px)} }
@@ -638,6 +644,10 @@
 <div id="idle-clock-panel">
   <div id="idle-clock-time">--:-- --</div>
   <div id="idle-clock-date">---</div>
+</div>
+<div id="idle-recent">
+  <div id="idle-recent-label">💬 Recent</div>
+  <div id="idle-recent-text"></div>
 </div>
 <div id="corner-glow-tl"></div>
 <div id="corner-glow-br"></div>
@@ -1285,7 +1295,7 @@
             <line x1="15" y1="48" x2="85" y2="48" stroke="var(--t-hex1)" stroke-width="0.5" opacity="0.3"/>
           </svg>
           <img id="av-custom" src="" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
-          <img id="av-sleeping" src="assets/Careoline-sleeping.gif" class="avatar-svg hidden" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-sleeping" src="assets/Careoline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -2826,6 +2836,10 @@ function addMessage(text, role, source){
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
   setTimeout(() => { updateBottomChat(); scrollChatToBottom(); }, 100);
   clearTimeout(subtitleTimeout); subtitleTimeout=setTimeout(()=>box.classList.add('hidden'),15000);
+  if (role !== 'user') {
+    const idleText = document.getElementById('idle-recent-text');
+    if (idleText) idleText.textContent = text.length > 160 ? text.slice(0, 157) + '…' : text;
+  }
 }
 function showTyping(){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text');
