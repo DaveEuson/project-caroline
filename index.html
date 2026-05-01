@@ -70,6 +70,8 @@
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
   #settings-topbar-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
   #settings-topbar-btn:hover { background: rgba(var(--t-rgb1),0.2); }
+  #hist-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 8px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
+  #hist-btn:hover { background: rgba(var(--t-rgb1),0.2); }
   .date-sep { color: rgba(var(--t-rgb1), 0.2); font-size: 14px; }
   /* DATE/MOON WIDGET */
   #widget-datetime .dt-date { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: rgba(var(--t-rgb1), 0.9); font-weight: 500; letter-spacing: 0.04em; }
@@ -137,6 +139,11 @@
   .hist-msg.caroline .hist-sender { color: var(--t-hex1); }
   .hist-msg.dave .hist-sender { color: var(--t-hex2); }
   .hist-empty { text-align: center; color: rgba(226,232,240,0.25); font-size: 13px; font-family: 'JetBrains Mono', monospace; margin-top: 40px; }
+  #history-panel { position:absolute; right:18px; top:52px; width:min(420px, calc(100vw - 36px)); max-height:70vh; display:none; flex-direction:column; gap:10px; padding:14px; z-index:760; background:rgba(5,5,10,0.96); border:1px solid rgba(var(--t-rgb1),0.24); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.45); backdrop-filter:blur(18px); }
+  #history-panel.open { display:flex; }
+  #history-panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; }
+  #history-messages { display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-right:4px; }
+  #hist-btn.open { background:rgba(var(--t-rgb1),0.2); }
 
   /* LAYOUT */
   #main { flex: 1; min-height: 0; display: flex; overflow: hidden; position: relative; z-index: 10; }
@@ -1016,36 +1023,67 @@
         <div class="settings-section">
           <h3>Google</h3>
           <div class="settings-row">
-            <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub">From Google Cloud Console</div></div>
-            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <input class="settings-input" id="set-google-client-id" type="text" placeholder="xxx.apps.googleusercontent.com" style="width:220px"/>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <span id="google-oauth-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">Checking...</span>
-                <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.4);border-radius:10px;padding:6px 12px;color:rgba(100,160,255,0.9);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">🔗 Connect Google</button>
-              </div>
-            </div>
-          </div>
-          <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Calendar ID</div><div class="settings-sub">Usually your Gmail address</div></div>
-            <input class="settings-input" id="set-calendar-id" type="text" placeholder="you@gmail.com" style="width:200px"/>
+            <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:200px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Service account</div><div class="settings-sub">JSON key from Google Cloud</div></div>
+            <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Optional legacy Sheets sync</div></div>
+            <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Google OAuth Client ID</div><div class="settings-sub">Used for Calendar</div></div>
+            <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Google OAuth Secret</div><div class="settings-sub">Optional for desktop clients</div></div>
+            <input class="settings-input" id="set-google-client-secret" type="password" placeholder="client secret" style="width:200px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">OAuth Client JSON</div><div class="settings-sub">Import the downloaded Google OAuth client file</div></div>
             <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <input type="file" id="sa-upload-input" accept=".json,application/json" style="display:none" onchange="handleServiceAccountUpload(event)"/>
-              <button onclick="document.getElementById('sa-upload-input').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Upload JSON</button>
-              <span id="sa-upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file uploaded</span>
+              <input type="file" id="google-client-json-input" accept=".json,application/json" style="display:none" onchange="handleGoogleClientJsonUpload(event)"/>
+              <button type="button" onclick="document.getElementById('google-client-json-input').click()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Import OAuth JSON</button>
+              <button type="button" onclick="handleGoogleClientJsonPaste()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.28);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Paste OAuth JSON</button>
+              <span id="google-client-json-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:240px;"></span>
             </div>
           </div>
-          <div style="margin-top:10px;">
-            <details>
-              <summary style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;cursor:pointer;list-style:none;text-align:right;">▸ or paste JSON directly</summary>
-              <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-                <textarea id="sa-paste-area" rows="5" placeholder='{"type":"service_account","project_id":"..."}' style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(var(--t-rgb1),0.2);border-radius:8px;color:rgba(226,232,240,0.8);font-family:'JetBrains Mono',monospace;font-size:9px;padding:7px;box-sizing:border-box;resize:vertical;"></textarea>
-                <button onclick="submitPastedServiceAccount()" style="align-self:flex-end;background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">✔ Use Pasted JSON</button>
-              </div>
-            </details>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
+              <button id="google-device-btn" type="button" onclick="handleGoogleDeviceAuth()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.32);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Use Phone Code</button>
+              <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
+              <span id="google-device-status" style="font-size:9px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;text-align:right;max-width:280px;word-break:break-word;"></span>
+            </div>
           </div>
+          <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
+            <div><div class="settings-label">Finish Sign-In</div><div class="settings-sub">Paste the final Google URL or code if the browser gets stuck</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste callback URL or code" style="width:260px"/>
+              <button id="google-manual-callback-btn" type="button" onclick="handleGoogleManualCallback()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Finish Google Sign-In</button>
+              <span id="google-manual-callback-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;"></span>
+            </div>
+          </div>
+          <details style="margin-top:12px">
+            <summary style="cursor:pointer;color:rgba(226,232,240,0.45);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Advanced service account fallback</summary>
+            <div class="settings-row" style="margin-top:10px">
+              <div><div class="settings-label">Service account</div><div class="settings-sub">Legacy JSON key fallback</div></div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                <input type="file" id="sa-upload-input" accept=".json,application/json" style="display:none" onchange="handleServiceAccountUpload(event)"/>
+                <button onclick="document.getElementById('sa-upload-input').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Upload JSON</button>
+                <span id="sa-upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file uploaded</span>
+              </div>
+            </div>
+            <div style="margin-top:10px;">
+              <details>
+                <summary style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;cursor:pointer;list-style:none;text-align:right;">▸ or paste JSON directly</summary>
+                <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+                  <textarea id="sa-paste-area" rows="5" placeholder='{"type":"service_account","project_id":"..."}' style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(var(--t-rgb1),0.2);border-radius:8px;color:rgba(226,232,240,0.8);font-family:'JetBrains Mono',monospace;font-size:9px;padding:7px;box-sizing:border-box;resize:vertical;"></textarea>
+                  <button onclick="submitPastedServiceAccount()" style="align-self:flex-end;background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">✔ Use Pasted JSON</button>
+                </div>
+              </details>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -1209,6 +1247,14 @@
   </div>
 </div>
 
+<div id="history-panel" aria-label="Chat history">
+  <div id="history-panel-head">
+    <span>Chat History</span>
+    <button class="clear-history-btn" onclick="clearHistory()">Clear</button>
+  </div>
+  <div id="history-messages"></div>
+</div>
+
 <div id="todo-panel" style="transform:translateY(110%);display:none;">  <div id="todo-header">
     <div>
       <div id="todo-title">☑ TASK LIST</div>
@@ -1240,6 +1286,7 @@
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
     <span id="wifi-strength" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:rgba(var(--t-rgb1),0.5);">--</span>
   </div>
+  <button id="hist-btn" onclick="toggleHistory()" title="Chat history" aria-label="Open chat history"><i class="ti ti-message-circle"></i></button>
   <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog">⚙️ Settings</button>
   <span id="restart-btn"><i class="ti ti-refresh"></i> RESTART</span>
 </div>
@@ -1532,9 +1579,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
-if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
+S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
@@ -1562,11 +1609,14 @@ async function syncSettingsFromServer() {
     }
     if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
     if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
+    if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
     Object.keys(d).forEach(k => {
       if (S[k] === undefined || S[k] === null || S[k] === '' || k === 'timezone' || k === 'location' || k === 'nodeRedUrl') {
         S[k] = d[k];
       }
     });
+    S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+    S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
     localStorage.setItem('caro_settings', JSON.stringify(S));
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
     updateAiConfigIndicator();
@@ -1683,6 +1733,7 @@ const NODE_RED_TIMEOUT_MS = 10000;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const CADDY_PORT = 8443;
 const RESTART_PORT = 8090;
+const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callback';
 
 function httpBase(port) {
   if (!port || port === NODE_RED_PORT) return getNodeRedUrl();
@@ -1695,6 +1746,28 @@ function httpsBase(port) {
 
 function wsBase(path) {
   return getNodeRedUrl().replace(/^http/, 'ws') + (path || '');
+}
+
+function isPrivateIpHost(host) {
+  const h = String(host || '').toLowerCase();
+  if (h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]') return false;
+  if (/^10\./.test(h) || /^192\.168\./.test(h)) return true;
+  const m = h.match(/^172\.(\d+)\./);
+  return !!(m && Number(m[1]) >= 16 && Number(m[1]) <= 31);
+}
+
+function normalizeGoogleRedirectUri(uri) {
+  const raw = String(uri || '').trim();
+  if (!raw) return GOOGLE_LOOPBACK_REDIRECT_URI;
+  try {
+    const u = new URL(raw);
+    if (u.pathname === '/admin/google/callback' && isPrivateIpHost(u.hostname)) return GOOGLE_LOOPBACK_REDIRECT_URI;
+  } catch(e) {}
+  return raw;
+}
+
+function isGoogleOAuthClientId(clientId) {
+  return /^[0-9A-Za-z._-]+\.apps\.googleusercontent\.com$/.test(String(clientId || '').trim());
 }
 
 async function fetchJsonWithTimeout(url, options = {}, label = 'fetch') {
@@ -1752,9 +1825,11 @@ async function handleSpotifyCallback() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   if (!code) return;
-  window.history.replaceState({}, document.title, window.location.pathname);
   const verifier = sessionStorage.getItem('spotify_code_verifier');
-  if (!verifier || !S.spotifyClientId) return;
+  if (!verifier || !S.spotifyClientId) {
+    console.warn('Spotify callback missing verifier or client ID');
+    return;
+  }
   try {
     const res = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1765,10 +1840,19 @@ async function handleSpotifyCallback() {
     });
     if (!res.ok) { console.error('Spotify token error:', await res.text()); return; }
     const data = await res.json();
+    spotifyToken = data.access_token;
     localStorage.setItem('spotify_token', data.access_token);
     if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
     localStorage.setItem('spotify_token_expires', Date.now() + data.expires_in * 1000);
     sessionStorage.removeItem('spotify_code_verifier');
+    window.history.replaceState({}, document.title, window.location.pathname);
+    const statusEl = document.getElementById('spotify-status');
+    const btnEl = document.getElementById('spotify-connect-btn');
+    if (statusEl) statusEl.textContent = '✓ Connected';
+    if (btnEl) btnEl.textContent = '🔄 Reconnect';
+    if (spotifyPollInterval) clearInterval(spotifyPollInterval);
+    spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000);
+    fetchSpotifyNowPlaying();
     clog('info', 'Spotify connected via PKCE');
   } catch(e) { console.error('Spotify callback error:', e); }
 }
@@ -1815,19 +1899,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── FEATURE TOGGLES ───────────────────────────
 function applyFeatures() {
-  const f = S.features || FEATURE_DEFAULTS;
+  const f = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  S.features = f;
   const show = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
 
   show('widget-datetime',    f.datetime !== false);
   show('widget-weather',     f.weather !== false);
-  show('widget-radio',      f.radio);
-  show('hue-btn',           f.hue);
-  show('hue-warning',       f.hue && !S.hueIp);
-  show('now-playing-panel', f.spotify);
-  show('widget-calendar',   f.calendar);
-  show('video-section',     f.video);
-  show('widget-pomodoro',   f.pomodoro);
-  show('widget-tides',      f.tides);
+  show('widget-radio',       f.radio !== false);
+  show('hue-btn',            !!f.hue);
+  show('hue-warning',        !!f.hue && !S.hueIp);
+  show('now-playing-panel',  !!f.spotify);
+  show('widget-calendar',    f.calendar !== false);
+  show('video-section',      f.video !== false);
+  show('widget-pomodoro',    f.pomodoro !== false);
+  show('widget-tides',       f.tides !== false);
   show('widget-user-mood',      f.mood !== false);
   show('widget-caroline-mood',  f.mood !== false);
   show('widget-meme',           !!f.memes);
@@ -1835,8 +1920,8 @@ function applyFeatures() {
   // News: hide the header + list together
   const newsList = document.getElementById('news-list');
   const newsHeaders = document.querySelectorAll('.news-header');
-  if (newsList) newsList.style.display = f.news ? '' : 'none';
-  newsHeaders.forEach(h => { if (h.textContent.includes('Top Stories')) h.style.display = f.news ? '' : 'none'; });
+  if (newsList) newsList.style.display = f.news !== false ? '' : 'none';
+  newsHeaders.forEach(h => { if (h.textContent.includes('Top Stories')) h.style.display = f.news !== false ? '' : 'none'; });
 }
 
 function previewFeature(key, val) {
@@ -1909,7 +1994,9 @@ function toggleSettings() {
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
     switchSettingsTab('look');
-    document.getElementById('set-calendar-id').value = S.calendarId || '';
+    document.getElementById('set-calendar-id').value = S.calendarId || 'primary';
+    const sheetEl = document.getElementById('set-sheet-id');
+    if (sheetEl) sheetEl.value = S.sheetId || '';
     document.getElementById('set-discord-enabled').checked = !!S.discordEnabled;
     document.getElementById('set-discord-token').value = S.discordToken || '';
     document.getElementById('set-discord-channel').value = S.discordChannelId || '';
@@ -1950,6 +2037,10 @@ function toggleSettings() {
     if (tsEl) tsEl.value = S.tidesStation || '';
     const gcidEl = document.getElementById('set-google-client-id');
     if (gcidEl) gcidEl.value = S.googleClientId || '';
+    const gcsecEl = document.getElementById('set-google-client-secret');
+    if (gcsecEl) gcsecEl.value = S.googleClientSecret || '';
+    const grEl = document.getElementById('google-redirect-uri');
+    if (grEl) { S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri); grEl.textContent = S.googleRedirectUri; }
     const unEl = document.getElementById('set-username');
     if (unEl) unEl.value = S.userName || '';
     const ainSysEl = document.getElementById('set-ainame-sys');
@@ -1960,8 +2051,11 @@ function toggleSettings() {
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d || !Object.keys(d).length) return;
-        const UI_ONLY = new Set(['theme','uiFont','avatar','idleTimeout','defaultChannel','autoTheme','features']);
+        const UI_ONLY = new Set(['theme','uiFont','avatar','idleTimeout','defaultChannel','autoTheme']);
+        if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
         Object.keys(d).forEach(k => { if (!UI_ONLY.has(k)) S[k] = d[k]; });
+        S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+        S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
         localStorage.setItem('caro_settings', JSON.stringify(S));
         const refresh = {
           'set-hueip': S.hueIp, 'set-huekey': S.hueKey,
@@ -1971,6 +2065,7 @@ function toggleSettings() {
           'set-timezone': S.timezone, 'set-location': S.location || S.cityName,
           'set-zip': S.zipcode || S.zipCode, 'set-ainame': S.aiName,
           'set-tides-station': S.tidesStation, 'set-google-client-id': S.googleClientId,
+          'set-google-client-secret': S.googleClientSecret, 'set-sheet-id': S.sheetId,
           'set-username': S.userName, 'set-ollama-url': S.ollamaUrl,
           'set-ollama-model': S.ollamaModel, 'set-ainame-sys': S.aiName
         };
@@ -1978,6 +2073,8 @@ function toggleSettings() {
           const el = document.getElementById(id);
           if (el && val != null && val !== '') el.value = val;
         });
+        const grEl = document.getElementById('google-redirect-uri');
+        if (grEl) grEl.textContent = S.googleRedirectUri;
         // Re-apply feature checkboxes from server-authoritative S.features
         if (S.features && Object.keys(S.features).length) {
           ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
@@ -2097,7 +2194,10 @@ function updateAiConfigIndicator(provider) {
   const needsKey = selected !== 'ollama' && !(S.openrouterKey || '').trim();
   pill.classList.toggle('show', needsKey);
   const mPill = document.getElementById('model-pill');
-  if (mPill) mPill.textContent = _shortModelName(selected, S.aiModel);
+  if (mPill) {
+    const model = selected === 'ollama' ? S.ollamaModel : S.aiModel;
+    mPill.textContent = _shortModelName(selected, model);
+  }
 }
 
 const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
@@ -2511,27 +2611,228 @@ async function handleServiceAccountUpload(event) {
   reader.readAsText(file);
 }
 
-async function handleGoogleAuth() {
-  const clientId = (document.getElementById('set-google-client-id')?.value || '').trim();
-  if (!clientId) { alert('Paste your Google OAuth Client ID first, then save settings.'); return; }
-  S.googleClientId = clientId;
-  localStorage.setItem('caro_settings', JSON.stringify(S));
-  try { await postSettingsToNodeRed({ googleClientId: clientId }, 5000); } catch(e) {}
-  window.open(getNodeRedUrl() + '/admin/google/auth', '_blank');
+function extractGoogleOAuthClientConfig(json) {
+  if (json?.type === 'service_account' || json?.private_key || json?.client_email) {
+    throw new Error('That is a service-account JSON. Use a Desktop app OAuth client JSON here.');
+  }
+  const cfg = json?.installed || json?.web || json;
+  const clientType = json?.installed ? 'installed' : (json?.web ? 'web' : 'raw');
+  const clientId = String(cfg?.client_id || '').trim();
+  const clientSecret = String(cfg?.client_secret || '').trim();
+  if (!clientId) throw new Error('OAuth client_id was not found');
+  if (!isGoogleOAuthClientId(clientId)) throw new Error('Use an OAuth client ID ending in .apps.googleusercontent.com');
+  return { clientId, clientSecret, clientType };
 }
 
-async function checkGoogleStatus() {
-  const el = document.getElementById('google-oauth-status');
-  const btn = document.getElementById('google-connect-btn');
+async function applyGoogleOAuthClientConfig(config, sourceName = 'OAuth client') {
+  const statusEl = document.getElementById('google-client-json-status');
+  const idEl = document.getElementById('set-google-client-id');
+  const secretEl = document.getElementById('set-google-client-secret');
+  S.googleClientId = config.clientId;
+  S.googleClientSecret = config.clientSecret || '';
+  S.googleRedirectUri = GOOGLE_LOOPBACK_REDIRECT_URI;
+  if (idEl) idEl.value = S.googleClientId;
+  if (secretEl) secretEl.value = S.googleClientSecret;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  await postSettingsToNodeRed({
+    googleClientId: S.googleClientId,
+    googleClientSecret: S.googleClientSecret,
+    googleRedirectUri: S.googleRedirectUri
+  }, NODE_RED_TIMEOUT_MS);
+  if (statusEl) statusEl.textContent = config.clientType === 'web'
+    ? 'Loaded web OAuth client; Desktop app is recommended'
+    : 'Loaded ' + sourceName;
+  refreshGoogleStatus();
+}
+
+async function handleGoogleClientJsonUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('google-client-json-status');
+  if (statusEl) statusEl.textContent = 'Reading...';
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const config = extractGoogleOAuthClientConfig(JSON.parse(e.target.result));
+      await applyGoogleOAuthClientConfig(config, file.name);
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Import failed: ' + (err.message || 'invalid JSON');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function handleGoogleClientJsonPaste() {
+  const statusEl = document.getElementById('google-client-json-status');
+  const raw = prompt('Paste the Google OAuth client JSON here');
+  if (!raw) return;
   try {
-    const r = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/google/status', { timeoutMs: 3000 }, 'Google status');
-    if (!r.ok) throw new Error('no response');
-    const d = await r.json();
-    if (el) { el.textContent = d.connected ? '✓ Connected' : 'Not connected'; el.style.color = d.connected ? 'rgba(52,211,153,0.9)' : 'rgba(226,232,240,0.4)'; }
-    if (btn) btn.textContent = d.connected ? '🔄 Reconnect' : '🔗 Connect Google';
-  } catch(e) {
-    if (el) { el.textContent = 'Node-RED offline'; el.style.color = 'rgba(226,232,240,0.3)'; }
+    if (statusEl) statusEl.textContent = 'Reading pasted JSON...';
+    const config = extractGoogleOAuthClientConfig(JSON.parse(raw));
+    await applyGoogleOAuthClientConfig(config, 'pasted OAuth client');
+  } catch(err) {
+    if (statusEl) statusEl.textContent = 'Import failed: ' + (err.message || 'invalid JSON');
   }
+}
+
+async function refreshGoogleStatus() {
+  const statusEl = document.getElementById('google-auth-status');
+  const legacyStatusEl = document.getElementById('google-oauth-status');
+  const btn = document.getElementById('google-connect-btn');
+  const redirectEl = document.getElementById('google-redirect-uri');
+  if (redirectEl) {
+    S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
+    redirectEl.textContent = S.googleRedirectUri;
+  }
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/status', { timeoutMs: 3000 }, 'Google status');
+    const data = await resp.json();
+    S.googleConnected = !!data.connected;
+    if (data.invalidClient) {
+      S.googleClientId = '';
+      S.googleClientSecret = '';
+      const idEl = document.getElementById('set-google-client-id');
+      const secretEl = document.getElementById('set-google-client-secret');
+      if (idEl) idEl.value = '';
+      if (secretEl) secretEl.value = '';
+    }
+    const text = data.connected ? 'Connected' : (data.invalidClient ? 'Import Desktop OAuth JSON' : 'Not connected');
+    const color = data.connected ? 'rgba(52,211,153,0.9)' : 'rgba(226,232,240,0.4)';
+    if (statusEl) { statusEl.textContent = text; statusEl.style.color = color; }
+    if (legacyStatusEl) { legacyStatusEl.textContent = text; legacyStatusEl.style.color = color; }
+    if (btn) btn.textContent = data.connected ? 'Reconnect Google' : 'Connect Google';
+    if (!data.invalidClient && data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
+    if (data.redirectUri) S.googleRedirectUri = normalizeGoogleRedirectUri(data.redirectUri);
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    return data;
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = 'Node-RED offline'; statusEl.style.color = 'rgba(226,232,240,0.3)'; }
+    if (legacyStatusEl) { legacyStatusEl.textContent = 'Node-RED offline'; legacyStatusEl.style.color = 'rgba(226,232,240,0.3)'; }
+    return null;
+  }
+}
+
+async function handleGoogleAuth() {
+  const statusEl = document.getElementById('google-auth-status');
+  const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
+  const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
+  const redirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
+  if (!clientId) { if (statusEl) statusEl.textContent = 'Enter OAuth Client ID first'; return; }
+  if (!isGoogleOAuthClientId(clientId)) { if (statusEl) statusEl.textContent = 'Import a Desktop app OAuth JSON first'; return; }
+  S.googleClientId = clientId;
+  S.googleClientSecret = clientSecret;
+  S.googleRedirectUri = redirectUri;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: redirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
+  const params = new URLSearchParams({ clientId, redirectUri });
+  if (statusEl) statusEl.textContent = 'Waiting for Google... paste URL below if it stalls';
+  window.open(httpBase() + '/admin/google/auth?' + params.toString(), '_blank', 'width=520,height=720');
+  let tries = 0;
+  const timer = setInterval(async () => {
+    tries++;
+    const data = await refreshGoogleStatus();
+    if ((data && data.connected) || tries > 60) clearInterval(timer);
+  }, 2000);
+}
+
+let googleDevicePollTimer = null;
+async function handleGoogleDeviceAuth() {
+  const statusEl = document.getElementById('google-auth-status');
+  const deviceEl = document.getElementById('google-device-status');
+  const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
+  const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
+  if (!clientId) { if (statusEl) statusEl.textContent = 'Import OAuth JSON first'; return; }
+  if (!isGoogleOAuthClientId(clientId)) { if (statusEl) statusEl.textContent = 'Import a valid OAuth JSON first'; return; }
+  S.googleClientId = clientId;
+  S.googleClientSecret = clientSecret;
+  S.googleRedirectUri = GOOGLE_LOOPBACK_REDIRECT_URI;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: S.googleRedirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
+  if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+  if (statusEl) statusEl.textContent = 'Starting phone sign-in...';
+  if (deviceEl) deviceEl.textContent = '';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, clientSecret }),
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Start Google device sign-in');
+    const data = await resp.json();
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    const code = data.user_code || data.userCode || '';
+    const url = data.verification_url || data.verificationUri || 'https://www.google.com/device';
+    if (statusEl) statusEl.textContent = 'Waiting for phone approval...';
+    if (deviceEl) deviceEl.textContent = 'Go to ' + url + ' and enter ' + code;
+    const intervalMs = Math.max(5000, Number(data.interval || 5) * 1000);
+    googleDevicePollTimer = setInterval(() => pollGoogleDeviceAuth(statusEl, deviceEl), intervalMs);
+    pollGoogleDeviceAuth(statusEl, deviceEl);
+  } catch(err) {
+    if (statusEl) statusEl.textContent = 'Phone sign-in unavailable';
+    if (deviceEl) deviceEl.textContent = err.message || 'Try Connect Google instead';
+  }
+}
+
+async function pollGoogleDeviceAuth(statusEl, deviceEl) {
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/poll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Poll Google device sign-in');
+    const data = await resp.json();
+    if (data.connected) {
+      if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+      googleDevicePollTimer = null;
+      if (statusEl) statusEl.textContent = 'Connected';
+      if (deviceEl) deviceEl.textContent = 'Google connected';
+      await refreshGoogleStatus();
+      return;
+    }
+    if (data.pending) {
+      if (statusEl) statusEl.textContent = 'Waiting for phone approval...';
+      return;
+    }
+    throw new Error(data.error || 'Google phone sign-in failed');
+  } catch(err) {
+    const msg = err.message || '';
+    if (/authorization_pending/i.test(msg)) return;
+    if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+    googleDevicePollTimer = null;
+    if (statusEl) statusEl.textContent = 'Phone sign-in stopped';
+    if (deviceEl) deviceEl.textContent = msg || 'Start phone sign-in again';
+  }
+}
+
+async function handleGoogleManualCallback() {
+  const input = document.getElementById('google-manual-callback');
+  const statusEl = document.getElementById('google-manual-callback-status');
+  const value = (input?.value || '').trim();
+  if (!value) { if (statusEl) statusEl.textContent = 'Paste the Google URL or code first'; return; }
+  if (statusEl) statusEl.textContent = 'Finishing sign-in...';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/manual-callback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback: value }),
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Finish Google sign-in');
+    let data = {};
+    try { data = await resp.clone().json(); } catch(e) {}
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    if (input) input.value = '';
+    if (statusEl) statusEl.textContent = 'Google connected';
+    await refreshGoogleStatus();
+  } catch(err) {
+    if (statusEl) statusEl.textContent = 'Could not finish: ' + (err.message || 'try Connect Google again');
+  }
+}
+
+function checkGoogleStatus() {
+  return refreshGoogleStatus();
 }
 
 async function submitPastedServiceAccount() {
@@ -2628,6 +2929,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
 
 async function saveSettings() {
   const newZip = document.getElementById('set-zip').value.trim();
+  const oldZip = S.zipcode || S.zipCode || '';
   S.avatar = parseInt(document.getElementById('set-avatar').value);
   S.theme = pendingSwatch;
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
@@ -2676,15 +2978,21 @@ async function saveSettings() {
   S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.location = document.getElementById('set-location').value.trim();
-  S.calendarId = document.getElementById('set-calendar-id').value.trim();
+  S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
+  const sheetInp = document.getElementById('set-sheet-id');
+  if (sheetInp) S.sheetId = sheetInp.value.trim();
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
   S.discordToken = document.getElementById('set-discord-token').value.trim();
   S.discordChannelId = document.getElementById('set-discord-channel').value.trim();
   S.zipCode = newZip;
+  S.zipcode = newZip;
   const tsInp = document.getElementById('set-tides-station');
   if (tsInp) S.tidesStation = tsInp.value.trim();
   const gcidInp = document.getElementById('set-google-client-id');
   if (gcidInp) S.googleClientId = gcidInp.value.trim();
+  const gcsecInp = document.getElementById('set-google-client-secret');
+  if (gcsecInp) S.googleClientSecret = gcsecInp.value.trim();
+  S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   const unInp = document.getElementById('set-username');
   if (unInp && unInp.value.trim()) S.userName = unInp.value.trim();
   const ainSysInp = document.getElementById('set-ainame-sys');
@@ -2695,7 +3003,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiName: S.aiName, userName: S.userName, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
   }
 
   let nrSaveOk = false;
@@ -2704,7 +3012,7 @@ async function saveSettings() {
   // Reconnect WebSocket if Pi IP changed
   if (needReconnect) { try { ws.close(); } catch(e) {} setTimeout(connectWS, 500); }
 
-  if (newZip.length === 5 && newZip !== S.zipcode) {
+  if (newZip.length === 5 && newZip !== oldZip) {
     try {
       const r = await fetch('https://api.zippopotam.us/us/' + newZip, { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
       if (r.ok) {
@@ -3026,14 +3334,19 @@ let chatLog = JSON.parse(localStorage.getItem('caro_log') || '[]');
 function toggleHistory(){
   const p=document.getElementById('history-panel'), b=document.getElementById('hist-btn');
   if(!p) return;
-  const open=p.classList.toggle('open'); b.classList.toggle('open',open);
-  if(open){ renderHistory(); setTimeout(()=>{ document.getElementById('history-messages').scrollTop=99999; },50); }
+  const open=p.classList.toggle('open'); if (b) b.classList.toggle('open',open);
+  if(open){ renderHistory(); setTimeout(()=>{ const h=document.getElementById('history-messages'); if(h) h.scrollTop=99999; },50); }
   resetIdle();
 }
 function renderHistory(){
   const c=document.getElementById('history-messages'); if(!c) return; c.innerHTML='';
   if(!chatLog.length){ c.innerHTML='<div class="hist-empty">No messages yet — say something!</div>'; return; }
-  chatLog.forEach(e=>{ const d=document.createElement('div'); d.className='hist-msg '+e.role; d.innerHTML='<div class="hist-sender">'+e.sender+'</div>'+e.text; c.appendChild(d); });
+  chatLog.forEach(e=>{
+    const d=document.createElement('div'); d.className='hist-msg '+e.role;
+    const senderEl=document.createElement('div'); senderEl.className='hist-sender'; senderEl.textContent=e.sender || '';
+    const bodyEl=document.createElement('div'); bodyEl.textContent=e.text || '';
+    d.appendChild(senderEl); d.appendChild(bodyEl); c.appendChild(d);
+  });
 }
 function clearHistory(){
   if(confirm('Clear all conversation history?')){ chatLog=[]; localStorage.removeItem('caro_log'); renderHistory(); }
@@ -3201,7 +3514,7 @@ function addMessage(text, role, source){
   chatLog.push(entry); if(chatLog.length>60) chatLog.shift();
   localStorage.setItem('caro_log', JSON.stringify(chatLog));
   const hp = document.getElementById('history-panel');
-  if(hp && hp.classList.contains('open')){ renderHistory(); setTimeout(()=>document.getElementById('history-messages').scrollTop=99999,30); }
+  if(hp && hp.classList.contains('open')){ renderHistory(); setTimeout(()=>{ const h=document.getElementById('history-messages'); if(h) h.scrollTop=99999; },30); }
   const scroll = document.getElementById('caro-chat-scroll');
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
   setTimeout(() => { updateBottomChat(); scrollChatToBottom(); }, 100);
@@ -3285,7 +3598,7 @@ function connectWS(){
     // Only send keys that are actually set in localStorage — empty values must never
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     (()=>{
-      const _syncKeys=['aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','discordEnabled','discordToken','discordChannelId'];
+      const _syncKeys=['aiName','userName','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','features'];
       const _payload={type:'settings_update',setupComplete:true};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       ws.send(JSON.stringify(_payload));
@@ -3559,7 +3872,81 @@ let pomoSeconds = POMO_WORK, pomoRunning = false, pomoIsBreak = false, pomoInter
 fetchWeather(); setInterval(fetchWeather,10*60*1000); updatePomoDisplay(); setTimeout(function(){ fetchTides(); setInterval(fetchTides, 30*60*1000); }, 500);
 
 // ── NEWS ──────────────────────────────────────
-async function fetchNews(){ const nl=document.getElementById('news-list'); try{ const feeds=[{url:'http://feeds.bbci.co.uk/news/rss.xml',src:'BBC'},{url:'https://www.theverge.com/rss/index.xml',src:'Verge'}]; const items=[]; for(const f of feeds){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f.url));const d=await r.json();if(d.items)d.items.slice(0,3).forEach(i=>items.push({title:i.title,src:f.src,thumb:i.thumbnail||''}));}catch(e){}} if(!items.length) throw new Error(); nl.innerHTML=''; items.slice(0,5).forEach(i=>{const el=document.createElement('div');el.className='news-item';const th=i.thumb?'<img class="news-thumb" src="'+i.thumb+'" onerror="this.style.display=\'none\'">':' ';el.innerHTML=th+'<div><div class="news-source">'+i.src+'</div><div class="news-title">'+i.title+'</div></div>';nl.appendChild(el);}); }catch(e){ nl.innerHTML='<div id="news-loading">Headlines unavailable</div>'; } }
+function closeNewsModal() {
+  document.getElementById('news-modal')?.classList.remove('show');
+}
+
+function openNewsModal(item) {
+  const modal = document.getElementById('news-modal');
+  if (!modal || !item) return;
+  const source = document.getElementById('news-modal-source');
+  const title = document.getElementById('news-modal-title');
+  const desc = document.getElementById('news-modal-desc');
+  const link = document.getElementById('news-modal-link');
+  const img = document.getElementById('news-modal-img');
+  if (source) source.textContent = item.src || '';
+  if (title) title.textContent = item.title || '';
+  if (desc) desc.textContent = (item.description || 'Open the full story for details.').replace(/<[^>]*>/g, '').trim();
+  if (link) {
+    link.replaceChildren();
+    if (item.link) {
+      const a = document.createElement('a');
+      a.href = item.link;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = 'Open full story';
+      link.appendChild(a);
+    }
+  }
+  if (img) {
+    img.src = item.thumb || '';
+    img.style.display = item.thumb ? 'block' : 'none';
+  }
+  modal.classList.add('show');
+}
+
+async function fetchNews() {
+  const nl = document.getElementById('news-list');
+  if (!nl) return;
+  try {
+    const feeds = [{ url: 'http://feeds.bbci.co.uk/news/rss.xml', src: 'BBC' }, { url: 'https://www.theverge.com/rss/index.xml', src: 'Verge' }];
+    const items = [];
+    for (const f of feeds) {
+      try {
+        const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url));
+        const d = await r.json();
+        if (d.items) d.items.slice(0, 3).forEach(i => items.push({ title: i.title, src: f.src, thumb: i.thumbnail || '', link: i.link || '', description: i.description || i.content || '' }));
+      } catch(e) {}
+    }
+    if (!items.length) throw new Error();
+    nl.innerHTML = '';
+    items.slice(0, 5).forEach(i => {
+      const el = document.createElement('div');
+      el.className = 'news-item';
+      if (i.thumb) {
+        const img = document.createElement('img');
+        img.className = 'news-thumb';
+        img.src = i.thumb;
+        img.onerror = () => { img.style.display = 'none'; };
+        el.appendChild(img);
+      }
+      const body = document.createElement('div');
+      const source = document.createElement('div');
+      source.className = 'news-source';
+      source.textContent = i.src;
+      const title = document.createElement('div');
+      title.className = 'news-title';
+      title.textContent = i.title;
+      body.appendChild(source);
+      body.appendChild(title);
+      el.appendChild(body);
+      el.onclick = () => openNewsModal(i);
+      nl.appendChild(el);
+    });
+  } catch(e) {
+    nl.innerHTML = '<div id="news-loading">Headlines unavailable</div>';
+  }
+}
 fetchNews(); setInterval(fetchNews,15*60*1000);
 
 // ── HOLIDAYS ──────────────────────────────────
@@ -3711,14 +4098,34 @@ async function refreshSpotifyToken() {
     return false;
   }
   try {
-    const r = await fetchJsonWithTimeout(httpBase() + '/spotify/refresh', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Spotify refresh');
-    const d = await r.json();
+    let d = null;
+    const browserRefresh = localStorage.getItem('spotify_refresh_token') || '';
+    if (browserRefresh) {
+      const r = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: S.spotifyClientId,
+          grant_type: 'refresh_token',
+          refresh_token: browserRefresh
+        }),
+        signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS)
+      });
+      d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error_description || d.error || ('Spotify HTTP ' + r.status));
+      d.ok = true;
+      d.access_token = d.access_token || spotifyToken;
+    } else {
+      const r = await fetchJsonWithTimeout(httpBase() + '/spotify/refresh', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Spotify refresh');
+      d = await r.json();
+    }
 
     if (!d || !d.ok || !d.access_token) throw new Error('Refresh failed');
 
     spotifyToken = d.access_token;
     localStorage.setItem('spotify_token', d.access_token);
     if (d.refresh_token) localStorage.setItem('spotify_refresh_token', d.refresh_token);
+    if (d.expires_in) localStorage.setItem('spotify_token_expires', Date.now() + d.expires_in * 1000);
 
     const statusEl = document.getElementById('spotify-status');
     const btnEl = document.getElementById('spotify-connect-btn');
@@ -3730,7 +4137,7 @@ async function refreshSpotifyToken() {
     console.error('Spotify refresh failed:', e);
     spotifyToken = null;
     localStorage.removeItem('spotify_token');
-    localStorage.removeItem('spotify_refresh_token');
+    localStorage.removeItem('spotify_token_expires');
 
     const statusEl = document.getElementById('spotify-status');
     const btnEl = document.getElementById('spotify-connect-btn');
@@ -4661,7 +5068,7 @@ function updateSettingsStatus(){
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
   if(ps) ps.textContent=bits.length?bits.join(' · '):'No personality profile yet';
-  [['aiCore','AI Core',!!S.openrouterKey],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&S.hueKey)]].forEach(([id,label,on])=>{
+  [['aiCore','AI Core',(S.aiProvider === 'ollama') || !!S.openrouterKey],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&S.hueKey)]].forEach(([id,label,on])=>{
     const el=document.getElementById('status-'+id);
     if(!el) return;
     el.classList.toggle('online',on);
