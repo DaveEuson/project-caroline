@@ -35,14 +35,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Project: Caroline</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Nunito:wght@300;400;600&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@300;400;600&family=Exo+2:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
 <style>
-  :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; }
+  :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; --ui-font: 'Nunito'; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { width: 100%; height: 100%; overflow: hidden; background: #05050a; }
-  body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: 'Outfit', sans-serif; color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease, height 0.25s cubic-bezier(0.4,0,0.2,1); }
+  body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: var(--ui-font, 'Nunito'), sans-serif; color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease, height 0.25s cubic-bezier(0.4,0,0.2,1); }
   body.osk-open { height: calc(100vh - 320px) !important; }
   body.osk-open #settings-modal { max-height: calc(100vh - 340px) !important; }
 
@@ -70,11 +70,14 @@
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
   #settings-topbar-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
   #settings-topbar-btn:hover { background: rgba(var(--t-rgb1),0.2); }
-  #date-strip { display: flex; align-items: center; gap: 8px; margin-left: 6px; }
-  #date-text { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: rgba(var(--t-rgb1), 0.7); white-space: nowrap; }
-  #holiday-text { font-size: 13px; color: rgba(250,204,21,0.85); font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; max-width: 180px; }
-  #holiday-icon { font-size: 14px; flex-shrink: 0; }
   .date-sep { color: rgba(var(--t-rgb1), 0.2); font-size: 14px; }
+  /* DATE/MOON WIDGET */
+  #widget-datetime .dt-date { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: rgba(var(--t-rgb1), 0.9); font-weight: 500; letter-spacing: 0.04em; }
+  #widget-datetime .dt-dayname { font-size: 12px; color: rgba(250,204,21,0.9); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #widget-datetime .dt-moon { display: flex; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(var(--t-rgb1),0.08); }
+  #widget-datetime .dt-moon-icon { font-size: 18px; }
+  #moon-name { font-size: 12px; color: rgba(226,232,240,0.75); font-family: 'JetBrains Mono', monospace; }
+  #moon-age { font-size: 10px; color: rgba(226,232,240,0.4); font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
 
   /* RESTART MODAL */
   #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10500; align-items: center; justify-content: center; }
@@ -114,6 +117,11 @@
   #discord-fields { overflow:hidden; max-height:0; opacity:0; transition:max-height 0.35s ease, opacity 0.25s ease; }
   #discord-fields.open { max-height:160px; opacity:1; }
   .clear-history-btn { background: none; border: 1px solid rgba(244,63,94,0.3); border-radius: 10px; padding: 6px 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; }
+  #settings-tabs { display: flex; gap: 4px; padding: 10px 18px; border-bottom: 1px solid rgba(var(--t-rgb1),0.1); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
+  #settings-tabs::-webkit-scrollbar { display: none; }
+  .stab { background: none; border: 1px solid rgba(var(--t-rgb1),0.2); border-radius: 20px; padding: 5px 13px; font-size: 10px; color: rgba(226,232,240,0.45); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
+  .stab.active { background: rgba(var(--t-rgb1),0.12); border-color: rgba(var(--t-rgb1),0.5); color: var(--t-hex1); }
+  .stab-panel { display: flex; flex-direction: column; gap: 22px; }
 
   /* HISTORY PANEL */
   .hist-msg { max-width: 82%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
@@ -128,7 +136,7 @@
   #main { flex: 1; min-height: 0; display: flex; overflow: hidden; position: relative; z-index: 10; }
 
   /* LEFT PANEL */
-  #left { width: 200px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 10px 10px 12px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
+  #left { width: 240px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-right: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 10px 12px 10px 14px; gap: 6px; overflow-y: auto; overflow-x: hidden; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); scroll-behavior: smooth; }
   #left::-webkit-scrollbar { width: 2px; }
   #left::-webkit-scrollbar-thumb { background: rgba(var(--t-rgb1),0.2); border-radius: 2px; }
   #left::-webkit-scrollbar-track { background: transparent; }
@@ -299,7 +307,7 @@
   #kbd-btn.active { background: var(--t-hex1); color: #05050a; box-shadow: 0 0 20px rgba(var(--t-rgb1), 0.6); }
 
   /* RIGHT PANEL */
-  #news-panel { width: 260px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
+  #news-panel { width: 300px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
   #video-section { flex-shrink: 0; padding: 10px 8px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
   #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -365,7 +373,8 @@
   body.idle-mode #avatar-outer { transform: scale(1.4) translateY(80px); }
   #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
-  body.idle-mode #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-night #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-day #avatar-wrap #av-gif { opacity: 1 !important; pointer-events: none; }
   body.idle-mode .nav-btn { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
   body.idle-mode #bottom-bar { opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
   #screensaver-overlay { display:none; position:fixed; inset:0; background:rgba(2,3,5,0); z-index:5; pointer-events:none; transition:background 2s ease; }
@@ -378,8 +387,8 @@
   @media (max-width:768px) { #idle-clock-time { font-size:48px; } }
   #idle-recent { display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); width:min(520px,80vw); text-align:center; z-index:14; pointer-events:none; }
   body.idle-mode #idle-recent { display:block; }
-  #idle-recent-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.45); text-transform:uppercase; margin-bottom:6px; }
-  #idle-recent-text { font-size:13px; color:rgba(226,232,240,0.65); line-height:1.6; font-style:italic; }
+  #idle-recent-label { font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.55); text-transform:uppercase; margin-bottom:8px; }
+  #idle-recent-text { font-size:26px; color:rgba(226,232,240,0.75); line-height:1.5; font-style:italic; }
 
   /* ANIMATIONS */
   @keyframes holidayFade { 0%,10%{opacity:0;transform:translateY(3px)} 15%,85%{opacity:1;transform:translateY(0)} 90%,100%{opacity:0;transform:translateY(-3px)} }
@@ -430,8 +439,8 @@
   .stat-val { color: #f8fafc; font-weight: 500; }
   /* ── TABLET RESPONSIVE (768px–1100px) ─────── */
   @media (max-width: 1100px) {
-    #left { width: 160px; padding: 8px; }
-    #news-panel { width: 200px; }
+    #left { width: 200px; padding: 8px; }
+    #news-panel { width: 240px; }
     #settings-modal { width: 95vw; max-width: 480px; }
     #msg-input { font-size: 16px; }
     #subtitle-text { font-size: 17px; }
@@ -736,364 +745,399 @@
       <h2>// PROJECT: CAROLINE SETTINGS</h2>
       <button id="settings-close" onclick="toggleSettings()">CLOSE ✕</button>
     </div>
+    <div id="settings-tabs">
+      <button class="stab active" data-tab="look" onclick="switchSettingsTab('look')">Look &amp; Feel</button>
+      <button class="stab" data-tab="ai" onclick="switchSettingsTab('ai')">AI</button>
+      <button class="stab" data-tab="connect" onclick="switchSettingsTab('connect')">Connect</button>
+      <button class="stab" data-tab="widgets" onclick="switchSettingsTab('widgets')">Widgets</button>
+      <button class="stab" data-tab="system" onclick="switchSettingsTab('system')">System</button>
+    </div>
     <div id="settings-body">
       <div id="settings-first-run-banner" style="display:none;background:rgba(var(--t-rgb1),0.08);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:12px;padding:14px 18px;margin-bottom:6px;">
         <div style="font-size:15px;color:var(--t-hex1);font-weight:600;margin-bottom:5px;">Welcome to Caroline 👋</div>
         <div style="font-size:12px;color:rgba(226,232,240,0.65);font-family:'JetBrains Mono',monospace;line-height:1.5;">Set your Node-RED URL and OpenRouter key to get started.<br>Save once and Caroline will remember everything.</div>
       </div>
-      <div class="settings-section">
-        <h3>Appearance</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">AI Name</div><div class="settings-sub">Default: Caroline</div></div>
-          <input class="settings-input" id="set-ainame" type="text" maxlength="20" placeholder="Caroline"/>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Default avatar</div><div class="settings-sub">Shown on startup</div></div>
-          <select class="settings-select" id="set-avatar">
-            <option value="0">Caroline (GIF)</option>
-            <option value="1">Retro CRT Bot</option>
-            <option value="2">Space Owl</option>
-            <option value="3">Neko Cat</option>
-            <option value="4">Ghost</option>
-            <option value="5">Samurai</option>
-          </select>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Upload avatar</div><div class="settings-sub">PNG or GIF, square works best</div></div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <input type="file" id="avatar-upload" accept="image/*,.gif" style="display:none" onchange="handleAvatarUpload(event)"/>
-            <button onclick="document.getElementById('avatar-upload').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Browse</button>
-            <span id="avatar-upload-name" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No custom avatar</span>
-          </div>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Theme colour</div><div class="settings-sub">Primary accent</div></div>
-          <div class="theme-swatches">
-            <div class="theme-swatch" id="swatch-0" style="background:linear-gradient(135deg,#22d3ee,#db2777)" onclick="selectSwatch(0)" title="Cyan / Magenta"></div>
-            <div class="theme-swatch" id="swatch-1" style="background:linear-gradient(135deg,#34d399,#059669)" onclick="selectSwatch(1)" title="Green"></div>
-            <div class="theme-swatch" id="swatch-2" style="background:linear-gradient(135deg,#fbbf24,#ea580c)" onclick="selectSwatch(2)" title="Amber"></div>
-          </div>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>AI Model</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">AI provider</div><div class="settings-sub">Where responses come from</div></div>
-          <select class="settings-select" id="set-ai-provider" onchange="onProviderChange(this.value)">
-            <option value="openrouter">OpenRouter (cloud)</option>
-            <option value="ollama">Ollama (local / Pi)</option>
-          </select>
-        </div>
-
-        <div id="openrouter-model-row" style="margin-top:14px">
+      <!-- ── TAB: LOOK & FEEL ── -->
+      <div class="stab-panel" id="stab-look">
+        <div class="settings-section">
+          <h3>Appearance</h3>
           <div class="settings-row">
-            <div><div class="settings-label">OpenRouter model</div><div class="settings-sub">Requires an OpenRouter API key</div></div>
-            <select class="settings-select" id="set-model">
-              <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 — Fast</option>
-              <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Balanced</option>
-              <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-              <option value="openai/gpt-4o">GPT-4o</option>
-              <option value="google/gemini-flash-1.5">Gemini Flash</option>
+            <div><div class="settings-label">AI Name</div><div class="settings-sub">Default: Caroline</div></div>
+            <input class="settings-input" id="set-ainame" type="text" maxlength="20" placeholder="Caroline"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Default avatar</div><div class="settings-sub">Shown on startup</div></div>
+            <select class="settings-select" id="set-avatar">
+              <option value="0">Caroline (GIF)</option>
+              <option value="1">Retro CRT Bot</option>
+              <option value="2">Space Owl</option>
+              <option value="3">Neko Cat</option>
+              <option value="4">Ghost</option>
+              <option value="5">Samurai</option>
             </select>
           </div>
-        </div>
-
-        <div id="ollama-rows" style="display:none">
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Ollama URL</div><div class="settings-sub">Local Ollama server</div></div>
-            <input class="settings-input" id="set-ollama-url" type="text" placeholder="http://localhost:11434" style="width:180px"/>
-          </div>
-
-          <!-- Recommended models collapsible -->
-          <div style="margin-top:14px">
-            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onclick="toggleRecommended()">
-              <div class="settings-label" style="margin:0">Recommended models</div>
-              <span id="rec-chevron" style="color:rgba(226,232,240,0.4);font-size:10px;transition:transform 0.2s;display:inline-block;">▶</span>
-            </div>
-            <div id="rec-models-table" style="display:none;margin-top:10px;overflow-x:auto;">
-              <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.8);">
-                <thead>
-                  <tr style="border-bottom:1px solid rgba(var(--t-rgb1),0.2);">
-                    <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Model</th>
-                    <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Size</th>
-                    <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Speed</th>
-                    <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Best for</th>
-                    <th style="padding:4px 8px;"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="rec-table-row"><td>phi3:mini</td><td>2.3 GB</td><td>⚡⚡⚡</td><td>Coding / chat</td><td><button type="button" class="detect-btn" onclick="startPull('phi3:mini')">Pull</button></td></tr>
-                  <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡⚡⚡</td><td>Simple Q&amp;A</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
-                  <tr class="rec-table-row"><td>llama3.2</td><td>2.0 GB</td><td>⚡⚡</td><td>General use</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2')">Pull</button></td></tr>
-                  <tr class="rec-table-row"><td>mistral:7b</td><td>4.1 GB</td><td>⚡</td><td>Complex tasks</td><td><button type="button" class="detect-btn" onclick="startPull('mistral:7b')">Pull</button></td></tr>
-                </tbody>
-              </table>
+            <div><div class="settings-label">Upload avatar</div><div class="settings-sub">PNG or GIF, square works best</div></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <input type="file" id="avatar-upload" accept="image/*,.gif" style="display:none" onchange="handleAvatarUpload(event)"/>
+              <button onclick="document.getElementById('avatar-upload').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Browse</button>
+              <span id="avatar-upload-name" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No custom avatar</span>
             </div>
           </div>
-
-          <!-- Ollama live status -->
-          <div id="ollama-status-row" style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:8px 12px;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid rgba(var(--t-rgb1),0.15);">
-            <span id="ollama-status-dot" style="width:8px;height:8px;border-radius:50%;background:#4b5563;flex-shrink:0;transition:background 0.3s;"></span>
-            <span id="ollama-status-text" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.6);">Not checked — hit Refresh</span>
-            <span id="ollama-ram-text" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.4);margin-left:auto;"></span>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">UI Font</div><div class="settings-sub">Larger fonts read better at distance</div></div>
+            <select class="settings-select" id="set-font" onchange="applyFont(this.value)">
+              <option value="Nunito">Nunito — Rounded (default)</option>
+              <option value="DM Sans">DM Sans — Clean</option>
+              <option value="Space Grotesk">Space Grotesk — Techy</option>
+              <option value="Exo 2">Exo 2 — Sci-Fi</option>
+              <option value="Outfit">Outfit — Original</option>
+            </select>
           </div>
-
-          <!-- Installed model browser -->
-          <div style="margin-top:14px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <div class="settings-label" style="margin:0">Installed models</div>
-              <button type="button" class="detect-btn" id="ollama-fetch-btn" onclick="fetchOllamaModels()">⟳ Refresh</button>
-              <button type="button" class="detect-btn" id="ollama-load-btn" onclick="loadOllamaModel()">Load Model</button>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Theme colour</div><div class="settings-sub">Primary accent</div></div>
+            <div class="theme-swatches">
+              <div class="theme-swatch" id="swatch-0" style="background:linear-gradient(135deg,#22d3ee,#db2777)" onclick="selectSwatch(0)" title="Cyan / Magenta"></div>
+              <div class="theme-swatch" id="swatch-1" style="background:linear-gradient(135deg,#34d399,#059669)" onclick="selectSwatch(1)" title="Green"></div>
+              <div class="theme-swatch" id="swatch-2" style="background:linear-gradient(135deg,#fbbf24,#ea580c)" onclick="selectSwatch(2)" title="Amber"></div>
             </div>
-            <div id="ollama-model-cards" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;">
-              <span id="ollama-cards-hint" style="font-size:11px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;align-self:center;">Hit ⟳ Refresh to scan installed models</span>
-            </div>
-            <input type="hidden" id="set-ollama-model" value=""/>
-            <div id="ollama-load-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
           </div>
+        </div>
+        <div class="settings-section">
+          <h3>Behaviour</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Idle timeout</div><div class="settings-sub">Before kiosk sleeps</div></div>
+            <select class="settings-select" id="set-idle">
+              <option value="60">1 minute</option>
+              <option value="180">3 minutes</option>
+              <option value="300">5 minutes</option>
+              <option value="600">10 minutes</option>
+              <option value="99999">Never</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
+            <select class="settings-select" id="set-channel">
+              <option value="0">NASA Live</option>
+              <option value="1">Lofi Girl</option>
+              <option value="2">Lofi Study</option>
+              <option value="3">ChillHop</option>
+              <option value="4">Jazz BGM</option>
+              <option value="5">NHK World</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Auto time-of-day theme</div><div class="settings-sub">Dawn / day / dusk / night</div></div>
+            <input type="checkbox" id="set-auto-theme" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
+          </div>
+        </div>
+      </div>
 
-          <!-- Pull new model -->
-          <div style="margin-top:12px">
-            <div class="settings-label" style="margin-bottom:6px">Pull a new model</div>
+      <!-- ── TAB: AI ── -->
+      <div class="stab-panel" id="stab-ai" hidden>
+        <div class="settings-section">
+          <h3>AI Model</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">AI provider</div><div class="settings-sub">Where responses come from</div></div>
+            <select class="settings-select" id="set-ai-provider" onchange="onProviderChange(this.value)">
+              <option value="openrouter">OpenRouter (cloud)</option>
+              <option value="ollama">Ollama (local / Pi)</option>
+            </select>
+          </div>
+          <div id="openrouter-model-row" style="margin-top:14px">
+            <div class="settings-row">
+              <div><div class="settings-label">OpenRouter model</div><div class="settings-sub">Requires an OpenRouter API key</div></div>
+              <select class="settings-select" id="set-model">
+                <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 — Fast</option>
+                <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Balanced</option>
+                <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                <option value="openai/gpt-4o">GPT-4o</option>
+                <option value="google/gemini-flash-1.5">Gemini Flash</option>
+              </select>
+            </div>
+          </div>
+          <div id="ollama-rows" style="display:none">
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Ollama URL</div><div class="settings-sub">Local Ollama server</div></div>
+              <input class="settings-input" id="set-ollama-url" type="text" placeholder="http://localhost:11434" style="width:180px"/>
+            </div>
+            <!-- Recommended models collapsible -->
+            <div style="margin-top:14px">
+              <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onclick="toggleRecommended()">
+                <div class="settings-label" style="margin:0">Recommended models</div>
+                <span id="rec-chevron" style="color:rgba(226,232,240,0.4);font-size:10px;transition:transform 0.2s;display:inline-block;">▶</span>
+              </div>
+              <div id="rec-models-table" style="display:none;margin-top:10px;overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.8);">
+                  <thead>
+                    <tr style="border-bottom:1px solid rgba(var(--t-rgb1),0.2);">
+                      <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Model</th>
+                      <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Size</th>
+                      <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Speed</th>
+                      <th style="text-align:left;padding:4px 8px;color:var(--t-hex1);font-weight:600;">Best for</th>
+                      <th style="padding:4px 8px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="rec-table-row"><td>phi3:mini</td><td>2.3 GB</td><td>⚡⚡⚡</td><td>Coding / chat</td><td><button type="button" class="detect-btn" onclick="startPull('phi3:mini')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡⚡⚡</td><td>Simple Q&amp;A</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>llama3.2</td><td>2.0 GB</td><td>⚡⚡</td><td>General use</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>mistral:7b</td><td>4.1 GB</td><td>⚡</td><td>Complex tasks</td><td><button type="button" class="detect-btn" onclick="startPull('mistral:7b')">Pull</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <!-- Ollama live status -->
+            <div id="ollama-status-row" style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:8px 12px;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid rgba(var(--t-rgb1),0.15);">
+              <span id="ollama-status-dot" style="width:8px;height:8px;border-radius:50%;background:#4b5563;flex-shrink:0;transition:background 0.3s;"></span>
+              <span id="ollama-status-text" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.6);">Not checked — hit Refresh</span>
+              <span id="ollama-ram-text" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.4);margin-left:auto;"></span>
+            </div>
+            <!-- Installed model browser -->
+            <div style="margin-top:14px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <div class="settings-label" style="margin:0">Installed models</div>
+                <button type="button" class="detect-btn" id="ollama-fetch-btn" onclick="fetchOllamaModels()">⟳ Refresh</button>
+                <button type="button" class="detect-btn" id="ollama-load-btn" onclick="loadOllamaModel()">Load Model</button>
+              </div>
+              <div id="ollama-model-cards" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;">
+                <span id="ollama-cards-hint" style="font-size:11px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;align-self:center;">Hit ⟳ Refresh to scan installed models</span>
+              </div>
+              <input type="hidden" id="set-ollama-model" value=""/>
+              <div id="ollama-load-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
+            </div>
+            <!-- Pull new model -->
+            <div style="margin-top:12px">
+              <div class="settings-label" style="margin-bottom:6px">Pull a new model</div>
+              <div class="input-detect-row">
+                <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. phi3:mini" style="width:160px"/>
+                <button type="button" class="detect-btn" id="ollama-pull-btn" onclick="pullOllamaModel()">⬇ Pull</button>
+              </div>
+              <div id="ollama-pull-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
+            </div>
+            <!-- Test AI connection -->
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(var(--t-rgb1),0.08);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" class="detect-btn" id="test-ai-btn" onclick="testAiConnection(this)" style="padding:6px 14px;">⚡ Test Connection</button>
+                <span id="test-ai-result" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Connection</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">http://ip:1880</div></div>
             <div class="input-detect-row">
-              <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. phi3:mini" style="width:160px"/>
-              <button type="button" class="detect-btn" id="ollama-pull-btn" onclick="pullOllamaModel()">⬇ Pull</button>
+              <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
+              <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
+              <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
             </div>
-            <div id="ollama-pull-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
           </div>
-        <!-- Test AI connection -->
-        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(var(--t-rgb1),0.08);">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <button type="button" class="detect-btn" id="test-ai-btn" onclick="testAiConnection(this)" style="padding:6px 14px;">⚡ Test Connection</button>
-            <span id="test-ai-result" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;"></span>
-          </div>
-        </div>
-      </div>
-      </div>
-      <div class="settings-section">
-        <h3>Location</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Zip code (US)</div><div class="settings-sub">Updates weather & city name</div></div>
-          <input class="settings-input" id="set-zip" type="text" maxlength="5" placeholder="e.g. 90210"/>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
-          <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:220px"/>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
-          <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles" style="width:220px"/>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Behaviour</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Idle timeout</div><div class="settings-sub">Before kiosk sleeps</div></div>
-          <select class="settings-select" id="set-idle">
-            <option value="60">1 minute</option>
-            <option value="180">3 minutes</option>
-            <option value="300">5 minutes</option>
-            <option value="600">10 minutes</option>
-            <option value="99999">Never</option>
-          </select>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
-          <select class="settings-select" id="set-channel">
-            <option value="0">NASA Live</option>
-            <option value="1">Lofi Girl</option>
-            <option value="2">Lofi Study</option>
-            <option value="3">ChillHop</option>
-            <option value="4">Jazz BGM</option>
-            <option value="5">NHK World</option>
-          </select>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Auto time-of-day theme</div><div class="settings-sub">Dawn / day / dusk / night</div></div>
-          <input type="checkbox" id="set-auto-theme" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>API & Network</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">http://ip:1880</div></div>
-          <div class="input-detect-row">
-            <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
-            <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
-            <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
-          </div>
-        </div>
-        <div id="openrouter-key-row">
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub">AI API key — required for Cloud</div></div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..."/>
-            <button type="button" id="orkey-eye" onclick="toggleOrkeyVisibility()" style="background:none;border:1px solid rgba(var(--t-rgb1),0.25);border-radius:8px;padding:5px 8px;color:rgba(226,232,240,0.4);cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;" title="Show/hide key">👁</button>
-          </div>
-        </div>
-        <div id="orkey-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Hue Bridge IP</div><div class="settings-sub">Local network</div></div>
-          <div class="input-detect-row">
-            <input class="settings-input" id="set-hueip" type="text" placeholder="192.168.x.x" style="width:130px"/>
-            <button type="button" class="detect-btn" id="hue-discover-btn" onclick="detectHueBridge(this)">🔍 Detect</button>
-          </div>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Hue API Key</div><div class="settings-sub">Press bridge button, then Sync</div></div>
-          <div class="input-detect-row">
-            <input class="settings-input" id="set-huekey" type="password" placeholder="Hue API key" style="width:130px"/>
-            <button type="button" class="detect-btn" id="hue-pair-btn" onclick="pairHueBridge(this)">🔑 Sync</button>
-          </div>
-        </div>
-        <div id="hue-pair-status" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Hue Group</div><div class="settings-sub">Which light group to control</div></div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <select class="settings-select" id="set-hue-group" style="width:160px;"><option value="">— hit Detect —</option></select>
-            <button type="button" class="detect-btn" id="hue-group-fetch-btn" onclick="fetchHueGroups()">⟳ Detect</button>
-          </div>
-        </div>
-        <div id="hue-group-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Spotify Client ID</div><div class="settings-sub" id="spotify-status">Not connected</div></div>
-          <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-            <input class="settings-input" id="set-spotify-id" type="text" placeholder="Spotify Client ID"/>
-            <button id="spotify-connect-btn" type="button" onclick="handleSpotifyAuth()" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;" type="button">🔌 Connect Spotify</button>
+          <div id="openrouter-key-row">
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub">AI API key — required for Cloud</div></div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..."/>
+                <button type="button" id="orkey-eye" onclick="toggleOrkeyVisibility()" style="background:none;border:1px solid rgba(var(--t-rgb1),0.25);border-radius:8px;padding:5px 8px;color:rgba(226,232,240,0.4);cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;" title="Show/hide key">👁</button>
+              </div>
+            </div>
+            <div id="orkey-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
           </div>
         </div>
       </div>
-      <div class="settings-section">
-        <h3>Google Calendar</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Calendar ID</div><div class="settings-sub">Usually your Gmail address</div></div>
-          <input class="settings-input" id="set-calendar-id" type="text" placeholder="you@gmail.com" style="width:200px"/>
-        </div>
-        <div class="settings-row" style="margin-top:14px">
-          <div><div class="settings-label">Service account</div><div class="settings-sub">JSON key from Google Cloud</div></div>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-            <input type="file" id="sa-upload-input" accept=".json,application/json" style="display:none" onchange="handleServiceAccountUpload(event)"/>
-            <button onclick="document.getElementById('sa-upload-input').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Upload JSON</button>
-            <span id="sa-upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file uploaded</span>
-          </div>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Discord <span style="font-size:10px;font-weight:400;opacity:.5;text-transform:none;letter-spacing:0">(optional)</span></h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Enable Discord</div><div class="settings-sub">Relay messages to kiosk</div></div>
-          <input type="checkbox" id="set-discord-enabled" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);" onchange="toggleDiscordFields(this.checked)"/>
-        </div>
-        <div id="discord-fields">
-          <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Bot Token</div><div class="settings-sub">Discord Developer Portal</div></div>
-            <input class="settings-input" id="set-discord-token" type="password" placeholder="Bot token" style="width:180px"/>
+
+      <!-- ── TAB: CONNECT ── -->
+      <div class="stab-panel" id="stab-connect" hidden>
+        <div class="settings-section">
+          <h3>Hue Lights</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Hue Bridge IP</div><div class="settings-sub">Local network</div></div>
+            <div class="input-detect-row">
+              <input class="settings-input" id="set-hueip" type="text" placeholder="192.168.x.x" style="width:130px"/>
+              <button type="button" class="detect-btn" id="hue-discover-btn" onclick="detectHueBridge(this)">🔍 Detect</button>
+            </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Channel ID</div><div class="settings-sub">Right-click channel → Copy ID</div></div>
-            <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
+            <div><div class="settings-label">Hue API Key</div><div class="settings-sub">Press bridge button, then Sync</div></div>
+            <div class="input-detect-row">
+              <input class="settings-input" id="set-huekey" type="password" placeholder="Hue API key" style="width:130px"/>
+              <button type="button" class="detect-btn" id="hue-pair-btn" onclick="pairHueBridge(this)">🔑 Sync</button>
+            </div>
+          </div>
+          <div id="hue-pair-status" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Hue Group</div><div class="settings-sub">Which light group to control</div></div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <select class="settings-select" id="set-hue-group" style="width:160px;"><option value="">— hit Detect —</option></select>
+              <button type="button" class="detect-btn" id="hue-group-fetch-btn" onclick="fetchHueGroups()">⟳ Detect</button>
+            </div>
+          </div>
+          <div id="hue-group-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
+        </div>
+        <div class="settings-section">
+          <h3>Spotify</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Spotify Client ID</div><div class="settings-sub" id="spotify-status">Not connected</div></div>
+            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+              <input class="settings-input" id="set-spotify-id" type="text" placeholder="Spotify Client ID"/>
+              <button id="spotify-connect-btn" type="button" onclick="handleSpotifyAuth()" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;">🔌 Connect Spotify</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="settings-section">
-        <h3>System</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Pi CPU Temp</div><div class="settings-sub">Live reading</div></div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div id="cpu-temp-bar" style="width:80px;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;"><div id="cpu-temp-fill" style="height:100%;border-radius:4px;width:0%;transition:width 1s ease,background 0.8s ease;"></div></div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;">
-              <div id="cpu-temp-val" class="cool" style="font-size:18px;font-weight:300;transition:color 0.8s ease;">--°F</div>
-              <div id="cpu-temp-desc" style="font-size:11px;color:rgba(226,232,240,0.5);">Loading...</div>
+        <div class="settings-section">
+          <h3>Discord <span style="font-size:10px;font-weight:400;opacity:.5;text-transform:none;letter-spacing:0">(optional)</span></h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Enable Discord</div><div class="settings-sub">Relay messages to kiosk</div></div>
+            <input type="checkbox" id="set-discord-enabled" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);" onchange="toggleDiscordFields(this.checked)"/>
+          </div>
+          <div id="discord-fields">
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Bot Token</div><div class="settings-sub">Discord Developer Portal</div></div>
+              <input class="settings-input" id="set-discord-token" type="password" placeholder="Bot token" style="width:180px"/>
+            </div>
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Channel ID</div><div class="settings-sub">Right-click channel → Copy ID</div></div>
+              <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Google Calendar</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Calendar ID</div><div class="settings-sub">Usually your Gmail address</div></div>
+            <input class="settings-input" id="set-calendar-id" type="text" placeholder="you@gmail.com" style="width:200px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Service account</div><div class="settings-sub">JSON key from Google Cloud</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <input type="file" id="sa-upload-input" accept=".json,application/json" style="display:none" onchange="handleServiceAccountUpload(event)"/>
+              <button onclick="document.getElementById('sa-upload-input').click()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">📁 Upload JSON</button>
+              <span id="sa-upload-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">No file uploaded</span>
             </div>
           </div>
         </div>
       </div>
-      <div class="settings-section">
-        <h3>Modules — enable / disable features</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:4px;">
-          <label class="feat-toggle"><input type="checkbox" id="feat-radio"    onchange="previewFeature('radio',    this.checked)"/> 📻 Radio</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-hue"      onchange="previewFeature('hue',      this.checked)"/> 💡 Hue Lights</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-spotify"  onchange="previewFeature('spotify',  this.checked)"/> 🎵 Spotify</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-calendar" onchange="previewFeature('calendar', this.checked)"/> 📅 Calendar</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-news"     onchange="previewFeature('news',     this.checked)"/> 📰 News</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-video"    onchange="previewFeature('video',    this.checked)"/> 📺 Video Player</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-pomodoro" onchange="previewFeature('pomodoro', this.checked)"/> ⏱ Pomodoro</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> 🌊 Tides</label>
-          <label class="feat-toggle"><input type="checkbox" id="feat-mood"     onchange="previewFeature('mood',     this.checked)"/> 🎭 Mood Meters</label>
-        </div>
-        <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
-        <div class="settings-row" style="margin-top:14px;">
-          <div><div class="settings-label">NOAA Tides Station</div><div class="settings-sub">7-digit station ID from tidesandcurrents.noaa.gov</div></div>
-          <input class="settings-input" id="set-tides-station" type="text" placeholder="e.g. 9410230" style="width:130px;"/>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Video channels</h3>
-        <div id="ch-list"></div>
-        <div id="add-channel-row">
-          <input class="settings-input" id="new-ch-icon" placeholder="🎬" style="width:44px;text-align:center;"/>
-          <input class="settings-input" id="new-ch-name" placeholder="Channel name"/>
-          <input class="settings-input" id="new-ch-url" placeholder="HLS .m3u8 URL or YouTube video ID"/>
-          <button class="add-ch-btn" onclick="addCustomChannel()">+ Add</button>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Onboarding &amp; Personality</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Boot sequence</div><div class="settings-sub">Run the first-meeting wizard again anytime</div></div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="settings-boot-btn" type="button" onclick="restartWizard()">⚡ Run Boot Sequence</button>
-            <button class="settings-boot-btn" type="button" onclick="resetPersonality()" style="color:rgba(251,191,36,0.8);border-color:rgba(251,191,36,0.3);" title="Clear saved personality and rerun wizard">↺ Reset Personality</button>
+
+      <!-- ── TAB: WIDGETS ── -->
+      <div class="stab-panel" id="stab-widgets" hidden>
+        <div class="settings-section">
+          <h3>Location</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Zip code (US)</div><div class="settings-sub">Updates weather &amp; city name</div></div>
+            <input class="settings-input" id="set-zip" type="text" maxlength="5" placeholder="e.g. 90210"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
+            <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:220px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
+            <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles" style="width:220px"/>
           </div>
         </div>
-        <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
-          <div><div class="settings-label">Personality memory</div><div class="settings-sub" id="personality-status">No personality profile yet</div></div>
-          <div id="module-status-stack" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-            <div class="settings-status-chip" id="status-aiCore"><span class="mini-dot"></span><span>AI Core offline</span></div>
-            <div class="settings-status-chip" id="status-spotify"><span class="mini-dot"></span><span>Spotify offline</span></div>
-            <div class="settings-status-chip" id="status-hue"><span class="mini-dot"></span><span>Hue offline</span></div>
+        <div class="settings-section">
+          <h3>Modules — enable / disable features</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-top:4px;">
+            <label class="feat-toggle"><input type="checkbox" id="feat-weather"  onchange="previewFeature('weather',  this.checked)"/> 🌤 Weather</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-datetime" onchange="previewFeature('datetime', this.checked)"/> 📅 Date &amp; Moon</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-radio"    onchange="previewFeature('radio',    this.checked)"/> 📻 Radio</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-hue"      onchange="previewFeature('hue',      this.checked)"/> 💡 Hue Lights</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-spotify"  onchange="previewFeature('spotify',  this.checked)"/> 🎵 Spotify</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-calendar" onchange="previewFeature('calendar', this.checked)"/> 📅 Calendar</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-news"     onchange="previewFeature('news',     this.checked)"/> 📰 News</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-video"    onchange="previewFeature('video',    this.checked)"/> 📺 Video Player</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-pomodoro" onchange="previewFeature('pomodoro', this.checked)"/> ⏱ Pomodoro</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> 🌊 Tides</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-mood"     onchange="previewFeature('mood',     this.checked)"/> 🎭 Mood Meters</label>
+          </div>
+          <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
+          <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">NOAA Tides Station</div><div class="settings-sub">7-digit station ID from tidesandcurrents.noaa.gov</div></div>
+            <input class="settings-input" id="set-tides-station" type="text" placeholder="e.g. 9410230" style="width:130px;"/>
           </div>
         </div>
-        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
-          <div><div class="settings-label">Personality prompt</div><div class="settings-sub">How Caroline talks to you — edit freely, then sync</div></div>
-          <textarea id="personalityPrompt" class="settings-input" style="width:100%;min-height:90px;resize:vertical;line-height:1.5;font-size:12px;" placeholder="Run the boot sequence to generate a personality prompt."></textarea>
-          <button class="settings-boot-btn" type="button" onclick="syncPersonalityToBrain()">⟳ Sync to Brain</button>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Data &amp; Backup</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Export all settings</div><div class="settings-sub">Download settings, history &amp; tasks as JSON</div></div>
-          <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="exportBackup()">⬇ Export</button>
-        </div>
-        <div class="settings-row" style="margin-top:14px;">
-          <div><div class="settings-label">Import backup</div><div class="settings-sub">Restore from exported JSON — overwrites current</div></div>
-          <label style="background:rgba(var(--t-rgb1),0.06);border:1px solid rgba(var(--t-rgb1),0.28);border-radius:10px;padding:6px 12px;color:var(--t-hex1);font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">⬆ Import<input type="file" accept=".json" style="display:none;" onchange="importBackup(this)"></label>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Usage &amp; Cost Estimate</h3>
-        <div id="usage-stats"><span style="color:rgba(226,232,240,0.3);font-size:11px;">No usage recorded yet</span></div>
-        <button class="clear-history-btn" style="margin-top:10px;border-color:rgba(226,232,240,0.15);color:rgba(226,232,240,0.4);" onclick="resetUsage()">Reset counters</button>
-      </div>
-      <div class="settings-section">
-        <h3>Event Log <span id="log-count" style="font-size:10px;font-weight:400;opacity:.5;letter-spacing:0;text-transform:none;"></span></h3>
-        <div id="settings-log"><span style="color:rgba(226,232,240,0.25);font-size:11px;">No events yet</span></div>
-        <button class="clear-history-btn" style="margin-top:8px;border-color:rgba(226,232,240,0.15);color:rgba(226,232,240,0.4);" onclick="_clog=[];renderSettingsLog()">Clear log</button>
-      </div>
-      <div class="settings-section">
-        <h3>System</h3>
-        <div class="settings-row">
-          <div><div class="settings-label">Kiosk mode</div><div class="settings-sub">Escape or open a terminal on the Pi</div></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-            <button class="sys-btn" onclick="exitKiosk()">⛶ Exit Fullscreen</button>
-            <button class="sys-btn" onclick="openTerminal()">⌨ Open Terminal</button>
+        <div class="settings-section">
+          <h3>Video channels</h3>
+          <div id="ch-list"></div>
+          <div id="add-channel-row">
+            <input class="settings-input" id="new-ch-icon" placeholder="🎬" style="width:44px;text-align:center;"/>
+            <input class="settings-input" id="new-ch-name" placeholder="Channel name"/>
+            <input class="settings-input" id="new-ch-url" placeholder="HLS .m3u8 URL or YouTube video ID"/>
+            <button class="add-ch-btn" onclick="addCustomChannel()">+ Add</button>
           </div>
         </div>
-        <div class="settings-row" style="margin-top:14px;">
-          <div><div class="settings-label">Wipe all memory</div><div class="settings-sub">Delete settings, history &amp; personality — she won't be happy</div></div>
-          <button class="sys-btn danger" onclick="wipeMemory(this)">💀 Factory Reset</button>
+      </div>
+
+      <!-- ── TAB: SYSTEM ── -->
+      <div class="stab-panel" id="stab-system" hidden>
+        <div class="settings-section">
+          <h3>Onboarding &amp; Personality</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Boot sequence</div><div class="settings-sub">Run the first-meeting wizard again anytime</div></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="settings-boot-btn" type="button" onclick="restartWizard()">⚡ Run Boot Sequence</button>
+              <button class="settings-boot-btn" type="button" onclick="resetPersonality()" style="color:rgba(251,191,36,0.8);border-color:rgba(251,191,36,0.3);" title="Clear saved personality and rerun wizard">↺ Reset Personality</button>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
+            <div><div class="settings-label">Personality memory</div><div class="settings-sub" id="personality-status">No personality profile yet</div></div>
+            <div id="module-status-stack" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <div class="settings-status-chip" id="status-aiCore"><span class="mini-dot"></span><span>AI Core offline</span></div>
+              <div class="settings-status-chip" id="status-spotify"><span class="mini-dot"></span><span>Spotify offline</span></div>
+              <div class="settings-status-chip" id="status-hue"><span class="mini-dot"></span><span>Hue offline</span></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+            <div><div class="settings-label">Personality prompt</div><div class="settings-sub">How Caroline talks to you — edit freely, then sync</div></div>
+            <textarea id="personalityPrompt" class="settings-input" style="width:100%;min-height:90px;resize:vertical;line-height:1.5;font-size:12px;" placeholder="Run the boot sequence to generate a personality prompt."></textarea>
+            <button class="settings-boot-btn" type="button" onclick="syncPersonalityToBrain()">⟳ Sync to Brain</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Hardware</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Pi CPU Temp</div><div class="settings-sub">Live reading</div></div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="cpu-temp-bar" style="width:80px;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;"><div id="cpu-temp-fill" style="height:100%;border-radius:4px;width:0%;transition:width 1s ease,background 0.8s ease;"></div></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                <div id="cpu-temp-val" class="cool" style="font-size:18px;font-weight:300;transition:color 0.8s ease;">--°F</div>
+                <div id="cpu-temp-desc" style="font-size:11px;color:rgba(226,232,240,0.5);">Loading...</div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Kiosk mode</div><div class="settings-sub">Escape or open a terminal on the Pi</div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="sys-btn" onclick="exitKiosk()">⛶ Exit Fullscreen</button>
+              <button class="sys-btn" onclick="openTerminal()">⌨ Open Terminal</button>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Wipe all memory</div><div class="settings-sub">Delete settings, history &amp; personality — she won't be happy</div></div>
+            <button class="sys-btn danger" onclick="wipeMemory(this)">💀 Factory Reset</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Data &amp; Backup</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Export all settings</div><div class="settings-sub">Download settings, history &amp; tasks as JSON</div></div>
+            <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="exportBackup()">⬇ Export</button>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Import backup</div><div class="settings-sub">Restore from exported JSON — overwrites current</div></div>
+            <label style="background:rgba(var(--t-rgb1),0.06);border:1px solid rgba(var(--t-rgb1),0.28);border-radius:10px;padding:6px 12px;color:var(--t-hex1);font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;">⬆ Import<input type="file" accept=".json" style="display:none;" onchange="importBackup(this)"></label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Usage &amp; Cost Estimate</h3>
+          <div id="usage-stats"><span style="color:rgba(226,232,240,0.3);font-size:11px;">No usage recorded yet</span></div>
+          <button class="clear-history-btn" style="margin-top:10px;border-color:rgba(226,232,240,0.15);color:rgba(226,232,240,0.4);" onclick="resetUsage()">Reset counters</button>
+        </div>
+        <div class="settings-section">
+          <h3>Event Log <span id="log-count" style="font-size:10px;font-weight:400;opacity:.5;letter-spacing:0;text-transform:none;"></span></h3>
+          <div id="settings-log"><span style="color:rgba(226,232,240,0.25);font-size:11px;">No events yet</span></div>
+          <button class="clear-history-btn" style="margin-top:8px;border-color:rgba(226,232,240,0.15);color:rgba(226,232,240,0.4);" onclick="_clog=[];renderSettingsLog()">Clear log</button>
         </div>
       </div>
       <div class="settings-footer">
@@ -1145,21 +1189,10 @@
   <span class="net-pill" id="resource-pill" title="Pi CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI Model">AI KEY NEEDED</span>
-  <span class="date-sep">│</span>
-  <div id="date-strip">
-    <span id="date-text">--/--/----</span>
-    <span id="holiday-icon">🌿</span>
-    <span id="holiday-text">Loading...</span>
-  </div>
-  <span id="time-icon" style="font-size:16px">🌅</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
   <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
     <span id="wifi-strength" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:rgba(var(--t-rgb1),0.5);">--</span>
-  </div>
-  <div id="topbar-moon" style="display:flex;align-items:center;gap:4px;margin-left:4px;cursor:pointer;position:relative;" title="Moon Phase">
-    <span id="moon-icon" style="font-size:14px;">🌑</span>
-    <span id="moon-name" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:rgba(226,232,240,0.6);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;"></span>
   </div>
   <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog">⚙️ Settings</button>
   <span id="restart-btn"><i class="ti ti-refresh"></i> RESTART</span>
@@ -1170,7 +1203,19 @@
 <div id="main">
   <div id="left">
     <div id="widgets">
-      <div class="widget">
+      <div class="widget" id="widget-datetime">
+        <div class="widget-label">📅 Date</div>
+        <div class="dt-date" id="date-text">--/--/----</div>
+        <div class="dt-dayname"><span id="holiday-icon">✨</span> <span id="holiday-text">Loading...</span></div>
+        <div class="dt-moon">
+          <span class="dt-moon-icon" id="moon-icon">🌑</span>
+          <div>
+            <div id="moon-name"></div>
+            <div id="moon-age"></div>
+          </div>
+        </div>
+      </div>
+      <div class="widget" id="widget-weather">
         <div class="widget-label" id="weather-city-label"></div>
         <div id="weather-main">
           <span id="weather-icon">⏳</span>
@@ -1428,9 +1473,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
-const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true };
+const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
@@ -1676,6 +1721,8 @@ function applyFeatures() {
   const f = S.features || FEATURE_DEFAULTS;
   const show = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
 
+  show('widget-datetime',    f.datetime !== false);
+  show('widget-weather',     f.weather !== false);
   show('widget-radio',      f.radio);
   show('hue-btn',           f.hue);
   show('hue-warning',       f.hue && !S.hueIp);
@@ -1743,6 +1790,8 @@ function toggleSettings() {
   const isOpen = ov.classList.toggle('show');
   if (isOpen) {
     document.getElementById('set-avatar').value = S.avatar;
+    const fontSel = document.getElementById('set-font');
+    if (fontSel) fontSel.value = S.uiFont || 'Nunito';
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
     if (S.defaultChannel >= videoChannels.length) S.defaultChannel = 0;
@@ -1760,6 +1809,7 @@ function toggleSettings() {
     document.getElementById('set-location').value = S.location || S.cityName || '';
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
+    switchSettingsTab('look');
     document.getElementById('set-calendar-id').value = S.calendarId || '';
     document.getElementById('set-discord-enabled').checked = !!S.discordEnabled;
     document.getElementById('set-discord-token').value = S.discordToken || '';
@@ -1777,7 +1827,7 @@ function toggleSettings() {
     for(let i=0;i<3;i++) document.getElementById('swatch-'+i).classList.toggle('active', i===pendingSwatch);
     // Populate feature checkboxes
     const f = S.features || FEATURE_DEFAULTS;
-    ['radio','hue','spotify','calendar','news','video','pomodoro','tides','mood'].forEach(k => {
+    ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood'].forEach(k => {
       const el = document.getElementById('feat-'+k);
       if (el) el.checked = f[k] !== false;
     });
@@ -1803,6 +1853,11 @@ function toggleSettings() {
     if (btn) btn.focus();
   }
   resetIdle();
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.stab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.stab-panel').forEach(p => { p.hidden = p.id !== 'stab-' + tab; });
 }
 
 function selectSwatch(i) {
@@ -2370,7 +2425,7 @@ async function saveSettings() {
 
   // Save feature toggles
   if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
-  ['radio','hue','spotify','calendar','news','video','pomodoro','tides'].forEach(k => {
+  ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood'].forEach(k => {
     const el = document.getElementById('feat-'+k);
     if (el) S.features[k] = el.checked;
   });
@@ -2386,6 +2441,8 @@ async function saveSettings() {
     nrSaveError = e.message || String(e);
   }
 
+  const fontEl = document.getElementById('set-font');
+  if (fontEl) { S.uiFont = fontEl.value; applyFont(S.uiFont); }
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
@@ -2419,6 +2476,14 @@ const companions = [
   { id:'av-custom',  hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' }
 ];
 let currentAvatarIndex = S.avatar;
+
+function applyFont(fontName) {
+  const f = fontName || S.uiFont || 'Nunito';
+  document.documentElement.style.setProperty('--ui-font', "'" + f + "'");
+  S.uiFont = f;
+  const sel = document.getElementById('set-font');
+  if (sel) sel.value = f;
+}
 
 function applyTheme(idx) {
   const t = companions[idx], r = document.documentElement;
@@ -2604,7 +2669,14 @@ function toggleFocusMode() {
   resetIdle();
 }
 let idleTimer=0, idleLimit=S.idleTimeout;
-const resetIdle=()=>{ idleTimer=0; document.body.classList.remove('idle-mode'); };
+function enterIdleMode() {
+  const h = new Date().getHours();
+  const isNight = h >= 20 || h < 8;
+  document.body.classList.toggle('idle-night', isNight);
+  document.body.classList.toggle('idle-day', !isNight);
+  document.body.classList.add('idle-mode');
+}
+const resetIdle=()=>{ idleTimer=0; document.body.classList.remove('idle-mode','idle-night','idle-day'); };
 document.addEventListener('mousemove',resetIdle); document.addEventListener('touchstart',resetIdle);
 document.addEventListener('keydown', e => {
   resetIdle();
@@ -2628,11 +2700,11 @@ document.addEventListener('keydown', e => {
     }
   }
 });
-setInterval(()=>{ idleTimer++; if(idleTimer>idleLimit) document.body.classList.add('idle-mode'); },1000);
+setInterval(()=>{ idleTimer++; if(idleTimer>idleLimit && !document.body.classList.contains('idle-mode')) enterIdleMode(); },1000);
 
 // ── CLOCK ─────────────────────────────────────
 function getTimeIcon(h){ if(h>=5&&h<8)return'🌅'; if(h>=8&&h<12)return'☀️'; if(h>=12&&h<17)return'🌤️'; if(h>=17&&h<20)return'🌆'; if(h>=20&&h<23)return'🌙'; return'✨'; }
-function updateClock(){ const n=new Date(); const t=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('clock').textContent=t; document.getElementById('time-icon').innerHTML=getTimeIcon(n.getHours()); const it=document.getElementById('idle-clock-time'); const id=document.getElementById('idle-clock-date'); if(it) it.textContent=t; if(id) id.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase(); }
+function updateClock(){ const n=new Date(); const t=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('clock').textContent=t; const ti=document.getElementById('time-icon'); if(ti) ti.innerHTML=getTimeIcon(n.getHours()); const it=document.getElementById('idle-clock-time'); const id=document.getElementById('idle-clock-date'); if(it) it.textContent=t; if(id) id.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase(); }
 updateClock(); setInterval(updateClock,1000);
 
 // ── TTS ───────────────────────────────────────
@@ -4257,7 +4329,7 @@ async function finalizeOnboarding(){
     }
   }
 
-  applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
+  applyFont(S.uiFont); applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
   fetchWeather();
   const tn = document.getElementById('topbar-name');
   if(tn) tn.textContent = S.aiName;
