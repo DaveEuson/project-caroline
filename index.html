@@ -1014,8 +1014,18 @@
           </div>
         </div>
         <div class="settings-section">
-          <h3>Google Calendar</h3>
+          <h3>Google</h3>
           <div class="settings-row">
+            <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub">From Google Cloud Console</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <input class="settings-input" id="set-google-client-id" type="text" placeholder="xxx.apps.googleusercontent.com" style="width:220px"/>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span id="google-oauth-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;">Checking...</span>
+                <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.4);border-radius:10px;padding:6px 12px;color:rgba(100,160,255,0.9);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">🔗 Connect Google</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Calendar ID</div><div class="settings-sub">Usually your Gmail address</div></div>
             <input class="settings-input" id="set-calendar-id" type="text" placeholder="you@gmail.com" style="width:200px"/>
           </div>
@@ -1095,6 +1105,17 @@
 
       <!-- ── TAB: SYSTEM ── -->
       <div class="stab-panel" id="stab-system" hidden>
+        <div class="settings-section">
+          <h3>Identity</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Your name</div><div class="settings-sub">How Caroline addresses you</div></div>
+            <input class="settings-input" id="set-username" type="text" placeholder="Your name" style="width:180px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">AI Name</div><div class="settings-sub">Default: Caroline</div></div>
+            <input class="settings-input" id="set-ainame-sys" type="text" maxlength="20" placeholder="Caroline" style="width:180px"/>
+          </div>
+        </div>
         <div class="settings-section">
           <h3>Onboarding &amp; Personality</h3>
           <div class="settings-row">
@@ -1927,6 +1948,38 @@ function toggleSettings() {
     if (pTa) pTa.value = localStorage.getItem('caroline_personality_prompt') || '';
     const tsEl = document.getElementById('set-tides-station');
     if (tsEl) tsEl.value = S.tidesStation || '';
+    const gcidEl = document.getElementById('set-google-client-id');
+    if (gcidEl) gcidEl.value = S.googleClientId || '';
+    const unEl = document.getElementById('set-username');
+    if (unEl) unEl.value = S.userName || '';
+    const ainSysEl = document.getElementById('set-ainame-sys');
+    if (ainSysEl) ainSysEl.value = S.aiName || 'Caroline';
+    checkGoogleStatus();
+    // Background refresh from server — silently fills any stale/empty fields
+    fetchJsonWithTimeout(getNodeRedUrl() + '/admin/get-settings', { timeoutMs: 3000 }, 'panel sync')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d || !Object.keys(d).length) return;
+        const UI_ONLY = new Set(['theme','uiFont','avatar','idleTimeout','defaultChannel','autoTheme','features']);
+        Object.keys(d).forEach(k => { if (!UI_ONLY.has(k)) S[k] = d[k]; });
+        localStorage.setItem('caro_settings', JSON.stringify(S));
+        const refresh = {
+          'set-hueip': S.hueIp, 'set-huekey': S.hueKey,
+          'set-orkey': S.openrouterKey, 'set-spotify-id': S.spotifyClientId,
+          'set-nodered-url': S.nodeRedUrl, 'set-calendar-id': S.calendarId,
+          'set-discord-token': S.discordToken, 'set-discord-channel': S.discordChannelId,
+          'set-timezone': S.timezone, 'set-location': S.location || S.cityName,
+          'set-zip': S.zipcode || S.zipCode, 'set-ainame': S.aiName,
+          'set-tides-station': S.tidesStation, 'set-google-client-id': S.googleClientId,
+          'set-username': S.userName, 'set-ollama-url': S.ollamaUrl
+        };
+        Object.entries(refresh).forEach(([id, val]) => {
+          const el = document.getElementById(id);
+          if (el && val != null && val !== '') el.value = val;
+        });
+        checkGoogleStatus();
+      })
+      .catch(() => {});
     setTimeout(() => { const first = document.querySelector('#settings-modal button, #settings-modal input, #settings-modal select'); if (first) first.focus(); }, 50);
   } else {
     const btn = document.getElementById('settings-topbar-btn');
@@ -2450,6 +2503,29 @@ async function handleServiceAccountUpload(event) {
   reader.readAsText(file);
 }
 
+async function handleGoogleAuth() {
+  const clientId = (document.getElementById('set-google-client-id')?.value || '').trim();
+  if (!clientId) { alert('Paste your Google OAuth Client ID first, then save settings.'); return; }
+  S.googleClientId = clientId;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  try { await postSettingsToNodeRed({ googleClientId: clientId }, 5000); } catch(e) {}
+  window.open(getNodeRedUrl() + '/admin/google/auth', '_blank');
+}
+
+async function checkGoogleStatus() {
+  const el = document.getElementById('google-oauth-status');
+  const btn = document.getElementById('google-connect-btn');
+  try {
+    const r = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/google/status', { timeoutMs: 3000 }, 'Google status');
+    if (!r.ok) throw new Error('no response');
+    const d = await r.json();
+    if (el) { el.textContent = d.connected ? '✓ Connected' : 'Not connected'; el.style.color = d.connected ? 'rgba(52,211,153,0.9)' : 'rgba(226,232,240,0.4)'; }
+    if (btn) btn.textContent = d.connected ? '🔄 Reconnect' : '🔗 Connect Google';
+  } catch(e) {
+    if (el) { el.textContent = 'Node-RED offline'; el.style.color = 'rgba(226,232,240,0.3)'; }
+  }
+}
+
 async function submitPastedServiceAccount() {
   const text = (document.getElementById('sa-paste-area')?.value || '').trim();
   const statusEl = document.getElementById('sa-upload-status');
@@ -2599,6 +2675,12 @@ async function saveSettings() {
   S.zipCode = newZip;
   const tsInp = document.getElementById('set-tides-station');
   if (tsInp) S.tidesStation = tsInp.value.trim();
+  const gcidInp = document.getElementById('set-google-client-id');
+  if (gcidInp) S.googleClientId = gcidInp.value.trim();
+  const unInp = document.getElementById('set-username');
+  if (unInp && unInp.value.trim()) S.userName = unInp.value.trim();
+  const ainSysInp = document.getElementById('set-ainame-sys');
+  if (ainSysInp && ainSysInp.value.trim()) { S.aiName = ainSysInp.value.trim(); document.getElementById('topbar-name').textContent = S.aiName; }
 
   // Persist to localStorage immediately — never block the save on Node-RED being reachable
   localStorage.setItem('caro_settings', JSON.stringify(S));
