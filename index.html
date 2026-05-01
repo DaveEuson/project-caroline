@@ -122,6 +122,11 @@
   .stab { background: none; border: 1px solid rgba(var(--t-rgb1),0.2); border-radius: 20px; padding: 5px 13px; font-size: 10px; color: rgba(226,232,240,0.45); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
   .stab.active { background: rgba(var(--t-rgb1),0.12); border-color: rgba(var(--t-rgb1),0.5); color: var(--t-hex1); }
   .stab-panel { display: flex; flex-direction: column; gap: 22px; }
+  #widget-meme img { width:100%; border-radius:8px; cursor:pointer; display:block; object-fit:cover; max-height:180px; transition:opacity 0.3s; }
+  #meme-title { font-size:10px; color:rgba(226,232,240,0.45); font-family:'JetBrains Mono',monospace; margin-top:5px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  #meme-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9000; align-items:center; justify-content:center; cursor:pointer; }
+  #meme-overlay.show { display:flex; }
+  #meme-overlay img { max-width:90vw; max-height:90vh; border-radius:12px; object-fit:contain; }
 
   /* HISTORY PANEL */
   .hist-msg { max-width: 82%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
@@ -984,6 +989,11 @@
               <button id="spotify-connect-btn" type="button" onclick="handleSpotifyAuth()" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;">🔌 Connect Spotify</button>
             </div>
           </div>
+          <div style="margin-top:10px;padding:8px 10px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(var(--t-rgb1),0.1);">
+            <div style="font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this as a Redirect URI in your Spotify app:</div>
+            <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
+            <div style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;margin-top:4px;">Dashboard → Your App → Edit → Redirect URIs</div>
+          </div>
         </div>
         <div class="settings-section">
           <h3>Discord <span style="font-size:10px;font-weight:400;opacity:.5;text-transform:none;letter-spacing:0">(optional)</span></h3>
@@ -1050,6 +1060,7 @@
             <label class="feat-toggle"><input type="checkbox" id="feat-pomodoro" onchange="previewFeature('pomodoro', this.checked)"/> ⏱ Pomodoro</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> 🌊 Tides</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-mood"     onchange="previewFeature('mood',     this.checked)"/> 🎭 Mood Meters</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-memes"   onchange="previewFeature('memes',   this.checked)"/> 😂 Memes</label>
           </div>
           <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
           <div class="settings-row" style="margin-top:14px;">
@@ -1286,6 +1297,17 @@
         <div class="ai-mood-track" aria-hidden="true"><div id="ai-mood-fill"></div></div>
         <div class="mood-caption" id="ai-mood-caption">Warm</div>
       </div>
+
+      <div class="widget" id="widget-meme" style="display:none">
+        <div class="widget-label">😂 Meme</div>
+        <div id="meme-placeholder" style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;">Loading...</div>
+        <img id="meme-img" src="" alt="" style="display:none" onclick="openMemeOverlay()"/>
+        <div id="meme-title"></div>
+      </div>
+    </div>
+
+    <div id="meme-overlay" onclick="closeMemeOverlay()">
+      <img id="meme-overlay-img" src="" alt=""/>
     </div>
 
     <div id="uptime">⏱ UPTIME: 0m</div>
@@ -1473,7 +1495,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
-const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true };
+const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
 const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
@@ -1482,6 +1504,7 @@ if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
+handleSpotifyCallback(); // handle ?code= redirect from Spotify OAuth
 localStorage.setItem('caro_settings', JSON.stringify(S));
 
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
@@ -1660,21 +1683,60 @@ function requestPiRestart() {
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:JetBrains Mono;color:#e2e8f0;background:#05050a;">REBOOTING...</div>';
 }
 
+function getSpotifyRedirectUri() {
+  return window.location.origin + window.location.pathname;
+}
+function _generateCodeVerifier(len = 128) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, n => chars[n % chars.length]).join('');
+}
+async function _generateCodeChallenge(verifier) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
 async function handleSpotifyAuth() {
   const clientId = document.getElementById('set-spotify-id').value.trim();
-  if (!clientId) {
-    alert("Please enter a Spotify Client ID first.");
-    return;
-  }
-
+  if (!clientId) { alert('Enter a Spotify Client ID first.'); return; }
   S.spotifyClientId = clientId;
   localStorage.setItem('caro_settings', JSON.stringify(S));
-
-  const startUrl = httpsBase() + '/spotify/start?clientId=' + encodeURIComponent(clientId);
-  window.location.href = startUrl;
+  const verifier = _generateCodeVerifier();
+  sessionStorage.setItem('spotify_code_verifier', verifier);
+  const challenge = await _generateCodeChallenge(verifier);
+  const params = new URLSearchParams({
+    client_id: clientId, response_type: 'code',
+    redirect_uri: getSpotifyRedirectUri(),
+    scope: 'user-read-playback-state user-modify-playback-state streaming user-read-currently-playing',
+    code_challenge_method: 'S256', code_challenge: challenge,
+  });
+  window.location.href = 'https://accounts.spotify.com/authorize?' + params;
 }
-
-// Spotify callback is handled by Node-RED at /spotify/callback
+async function handleSpotifyCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (!code) return;
+  window.history.replaceState({}, document.title, window.location.pathname);
+  const verifier = sessionStorage.getItem('spotify_code_verifier');
+  if (!verifier || !S.spotifyClientId) return;
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: S.spotifyClientId, grant_type: 'authorization_code', code,
+        redirect_uri: getSpotifyRedirectUri(), code_verifier: verifier,
+      })
+    });
+    if (!res.ok) { console.error('Spotify token error:', await res.text()); return; }
+    const data = await res.json();
+    localStorage.setItem('spotify_token', data.access_token);
+    if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
+    localStorage.setItem('spotify_token_expires', Date.now() + data.expires_in * 1000);
+    sessionStorage.removeItem('spotify_code_verifier');
+    clog('info', 'Spotify connected via PKCE');
+  } catch(e) { console.error('Spotify callback error:', e); }
+}
 
 // ── MOOD ──────────────────────────────────────
 function clampMood(v) { return Math.max(1, Math.min(11, Math.round(Number(v) || 7))); }
@@ -1733,6 +1795,7 @@ function applyFeatures() {
   show('widget-tides',      f.tides);
   show('widget-user-mood',      f.mood !== false);
   show('widget-caroline-mood',  f.mood !== false);
+  show('widget-meme',           !!f.memes);
 
   // News: hide the header + list together
   const newsList = document.getElementById('news-list');
@@ -1747,6 +1810,7 @@ function previewFeature(key, val) {
   S.features[key] = val;
   applyFeatures();
   updateFeatWarnings();
+  if (key === 'memes' && val && !currentMeme) { fetchMeme(); scheduleMemeRotation(); }
 }
 
 function updateFeatWarnings() {
@@ -1819,6 +1883,8 @@ function toggleSettings() {
     const hasToken = localStorage.getItem('spotify_token');
     document.getElementById('spotify-status').textContent = hasToken ? '✓ Connected' : 'Not connected';
     document.getElementById('spotify-connect-btn').textContent = hasToken ? '🔄 Reconnect' : '🔌 Connect Spotify';
+    const rdEl = document.getElementById('spotify-redirect-display');
+    if (rdEl) rdEl.textContent = getSpotifyRedirectUri();
 
     const customSrc = localStorage.getItem('caro_custom_avatar');
     const nameEl = document.getElementById('avatar-upload-name');
@@ -1827,7 +1893,7 @@ function toggleSettings() {
     for(let i=0;i<3;i++) document.getElementById('swatch-'+i).classList.toggle('active', i===pendingSwatch);
     // Populate feature checkboxes
     const f = S.features || FEATURE_DEFAULTS;
-    ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood'].forEach(k => {
+    ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
       const el = document.getElementById('feat-'+k);
       if (el) el.checked = f[k] !== false;
     });
@@ -1853,6 +1919,50 @@ function toggleSettings() {
     if (btn) btn.focus();
   }
   resetIdle();
+}
+
+// ── MEME WIDGET ───────────────────────────────
+let currentMeme = null;
+const MEME_SUBREDDITS = ['memes','dankmemes','me_irl','ProgrammerHumor','Unexpected','TIHI','Showerthoughts'];
+
+async function fetchMeme() {
+  const sub = MEME_SUBREDDITS[Math.floor(Math.random() * MEME_SUBREDDITS.length)];
+  try {
+    const r = await fetch(`https://www.reddit.com/r/${sub}/top.json?limit=50&t=day&raw_json=1`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return;
+    const data = await r.json();
+    const posts = (data.data?.children || [])
+      .map(p => p.data)
+      .filter(p => p?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(p.url) && !p.over_18 && !p.stickied);
+    if (!posts.length) return;
+    const post = posts[Math.floor(Math.random() * Math.min(posts.length, 25))];
+    currentMeme = { title: post.title, url: post.url, sub };
+    const img = document.getElementById('meme-img');
+    const title = document.getElementById('meme-title');
+    const ph = document.getElementById('meme-placeholder');
+    if (img) {
+      img.onload = () => { img.style.display = ''; if (ph) ph.style.display = 'none'; };
+      img.onerror = () => { currentMeme = null; };
+      img.src = post.url;
+    }
+    if (title) title.textContent = post.title;
+  } catch(e) { /* silent fail */ }
+}
+
+function scheduleMemeRotation() {
+  const delay = (2 + Math.random() * 2) * 60 * 60 * 1000;
+  setTimeout(() => { fetchMeme(); scheduleMemeRotation(); }, delay);
+}
+
+function openMemeOverlay() {
+  if (!currentMeme) return;
+  const ov = document.getElementById('meme-overlay');
+  const oImg = document.getElementById('meme-overlay-img');
+  if (ov && oImg) { oImg.src = currentMeme.url; ov.classList.add('show'); }
+}
+function closeMemeOverlay() {
+  const ov = document.getElementById('meme-overlay');
+  if (ov) ov.classList.remove('show');
 }
 
 function switchSettingsTab(tab) {
@@ -2425,7 +2535,7 @@ async function saveSettings() {
 
   // Save feature toggles
   if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
-  ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood'].forEach(k => {
+  ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
     const el = document.getElementById('feat-'+k);
     if (el) S.features[k] = el.checked;
   });
@@ -3135,7 +3245,9 @@ function sendMessage(){
   _trackSend(t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
   if(ws&&ws.readyState===WebSocket.OPEN){
-    ws.send(JSON.stringify({type:'user_message',content:t}));
+    const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
+    if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
+    ws.send(JSON.stringify({type:'user_message', content:t, context: ctx}));
   } else {
     clog('err', 'Send failed — WebSocket not connected');
     addMessage('⚡ No connection to home base. Reconnecting…', 'caroline', 'display');
@@ -3757,6 +3869,7 @@ applyAvatar(S.avatar);
 applyAutoTheme();
 applyFeatures();
 if(S.cityName) document.getElementById('weather-city-label').textContent=S.cityName;
+if (S.features?.memes) { fetchMeme(); scheduleMemeRotation(); }
 
 setTimeout(async () => {
   if (!S.spotifyClientId) return;
