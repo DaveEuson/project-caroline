@@ -448,6 +448,17 @@
     .quick-btn { padding: 7px 8px; font-size: 11px; }
     #topbar-moon, #topbar-radio { display: none; }
   }
+  /* ── MOOD WIDGET ─────────────────────────────── */
+  .mood-widget { padding: 8px 10px; }
+  .mood-row { display:flex; gap:12px; align-items:flex-start; }
+  .mood-col { flex:1; min-width:0; }
+  .mood-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+  .mood-value { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--t-hex1); font-weight:600; }
+  .mood-caption { font-size:11px; color:rgba(226,232,240,0.62); line-height:1.25; min-height:14px; margin-top:3px; }
+  .mood-slider { width:100%; accent-color:var(--t-hex1); cursor:pointer; margin:2px 0; }
+  .ai-mood-track { height:5px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,0.08); margin-top:4px; }
+  #ai-mood-fill { height:100%; width:64%; border-radius:99px; background:linear-gradient(90deg, var(--t-hex2), var(--t-hex1)); transition:width .35s ease; }
+
   .feat-toggle { display:flex; align-items:center; gap:10px; font-size:14px; color:#e2e8f0; cursor:pointer; padding:6px 10px; border-radius:10px; border:1px solid rgba(var(--t-rgb1),0.1); transition:background 0.2s; }
   .feat-toggle:hover { background:rgba(var(--t-rgb1),0.06); }
   .feat-toggle input[type=checkbox] { width:18px; height:18px; accent-color:var(--t-hex1); cursor:pointer; flex-shrink:0; }
@@ -992,6 +1003,7 @@
           <label class="feat-toggle"><input type="checkbox" id="feat-video"    onchange="previewFeature('video',    this.checked)"/> 📺 Video Player</label>
           <label class="feat-toggle"><input type="checkbox" id="feat-pomodoro" onchange="previewFeature('pomodoro', this.checked)"/> ⏱ Pomodoro</label>
           <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> 🌊 Tides</label>
+          <label class="feat-toggle"><input type="checkbox" id="feat-mood"     onchange="previewFeature('mood',     this.checked)"/> 🎭 Mood Meters</label>
         </div>
         <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
         <div class="settings-row" style="margin-top:14px;">
@@ -1191,6 +1203,27 @@
           </div>
         </div>
       </div>
+
+      <div class="widget mood-widget" id="widget-mood">
+        <div class="mood-row">
+          <div class="mood-col">
+            <div class="mood-head">
+              <div class="widget-label">Your mood</div>
+              <div class="mood-value" id="user-mood-value">7 / 11</div>
+            </div>
+            <input class="mood-slider" id="user-mood-slider" type="range" min="1" max="11" step="1" value="7" aria-label="Your mood 1–11"/>
+            <div class="mood-caption" id="user-mood-caption">Steady</div>
+          </div>
+          <div class="mood-col">
+            <div class="mood-head">
+              <div class="widget-label" id="ai-mood-label">Caroline mood</div>
+              <div class="mood-value" id="ai-mood-value">7 / 11</div>
+            </div>
+            <div class="ai-mood-track" aria-hidden="true"><div id="ai-mood-fill"></div></div>
+            <div class="mood-caption" id="ai-mood-caption">Warm</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="uptime">⏱ UPTIME: 0m</div>
@@ -1366,9 +1399,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
-const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true };
+const FEATURE_DEFAULTS = { radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', timezone: '', location: '', calendarId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
@@ -1569,6 +1602,46 @@ async function handleSpotifyAuth() {
 
 // Spotify callback is handled by Node-RED at /spotify/callback
 
+// ── MOOD ──────────────────────────────────────
+function clampMood(v) { return Math.max(1, Math.min(11, Math.round(Number(v) || 7))); }
+function moodCaption(v) {
+  const labels = ['','Struggling','Low','Quiet','Mellow','Below par','Steady','Good','Bright','High','Excellent','Outstanding'];
+  return labels[clampMood(v)] || 'Steady';
+}
+function renderMoods() {
+  S.userMood = clampMood(S.userMood);
+  S.aiMood   = clampMood(S.aiMood);
+  const slider  = document.getElementById('user-mood-slider');
+  const userVal = document.getElementById('user-mood-value');
+  const userCap = document.getElementById('user-mood-caption');
+  const aiVal   = document.getElementById('ai-mood-value');
+  const aiCap   = document.getElementById('ai-mood-caption');
+  const aiFill  = document.getElementById('ai-mood-fill');
+  const aiLabel = document.getElementById('ai-mood-label');
+  if (slider && Number(slider.value) !== S.userMood) slider.value = S.userMood;
+  if (userVal) userVal.textContent = S.userMood + ' / 11';
+  if (userCap) userCap.textContent = moodCaption(S.userMood);
+  if (aiVal)   aiVal.textContent   = S.aiMood + ' / 11';
+  if (aiCap)   aiCap.textContent   = moodCaption(S.aiMood);
+  if (aiFill)  aiFill.style.width  = Math.round((S.aiMood - 1) * 10) + '%';
+  if (aiLabel) aiLabel.textContent = (S.aiName || 'Caroline') + ' mood';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  S.userMood = clampMood(S.userMood);
+  S.aiMood   = clampMood(S.aiMood);
+  renderMoods();
+  const slider = document.getElementById('user-mood-slider');
+  if (slider) {
+    slider.addEventListener('input', () => {
+      S.userMood = clampMood(slider.value);
+      renderMoods();
+      localStorage.setItem('caro_settings', JSON.stringify(S));
+      if (ws && ws.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify({ type: 'settings_update', userMood: S.userMood, aiMood: S.aiMood, setupComplete: true }));
+    });
+  }
+});
+
 // ── FEATURE TOGGLES ───────────────────────────
 function applyFeatures() {
   const f = S.features || FEATURE_DEFAULTS;
@@ -1582,6 +1655,7 @@ function applyFeatures() {
   show('video-section',     f.video);
   show('widget-pomodoro',   f.pomodoro);
   show('widget-tides',      f.tides);
+  show('widget-mood',       f.mood !== false);
 
   // News: hide the header + list together
   const newsList = document.getElementById('news-list');
@@ -1673,7 +1747,7 @@ function toggleSettings() {
     for(let i=0;i<3;i++) document.getElementById('swatch-'+i).classList.toggle('active', i===pendingSwatch);
     // Populate feature checkboxes
     const f = S.features || FEATURE_DEFAULTS;
-    ['radio','hue','spotify','calendar','news','video','pomodoro','tides'].forEach(k => {
+    ['radio','hue','spotify','calendar','news','video','pomodoro','tides','mood'].forEach(k => {
       const el = document.getElementById('feat-'+k);
       if (el) el.checked = f[k] !== false;
     });
@@ -2801,12 +2875,33 @@ function connectWS(){
     const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
 
     if (d.type === 'reply' || d.reply) {
-      const t = d.content || d.reply;
+      let t = d.content || d.reply;
+      // Parse and strip mood-change tags before displaying
+      const moodMatch = t.match(/\[SET_USER_MOOD:(\d+)\]/i);
+      if (moodMatch) {
+        const newMood = clampMood(parseInt(moodMatch[1]));
+        S.userMood = newMood;
+        localStorage.setItem('caro_settings', JSON.stringify(S));
+        renderMoods();
+        t = t.replace(/\[SET_USER_MOOD:\d+\]/gi, '').trim();
+      }
+      const aiMoodMatch = t.match(/\[SET_AI_MOOD:(\d+)\]/i);
+      if (aiMoodMatch) {
+        S.aiMood = clampMood(parseInt(aiMoodMatch[1]));
+        localStorage.setItem('caro_settings', JSON.stringify(S));
+        renderMoods();
+        t = t.replace(/\[SET_AI_MOOD:\d+\]/gi, '').trim();
+      }
       playBeep(600);
       addMessage(t, 'caroline', 'display');
       speak(t);
       _trackRecv(t);
       clog('recv', t.length > 60 ? t.slice(0,60)+'…' : t);
+    }
+    else if (d.type === 'set_user_mood' && d.value !== undefined) {
+      S.userMood = clampMood(d.value);
+      localStorage.setItem('caro_settings', JSON.stringify(S));
+      renderMoods();
     }
     else if (d.type === 'user_telegram') {
       addMessage(d.content, 'user', 'telegram');
