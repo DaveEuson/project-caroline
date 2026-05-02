@@ -215,7 +215,7 @@ Use this if you want custom streams in the video widget.
 
 - Raspberry Pi 4 or 5 (4GB+ recommended)
 - Raspberry Pi OS Desktop 64-bit *(Ubuntu 22.04+ also supported)*
-- Firefox ESR in kiosk mode via the labwc Wayland compositor
+- Firefox in kiosk mode via the labwc Wayland compositor
 
 ---
 
@@ -228,7 +228,7 @@ Use this if you want custom streams in the video widget.
 | Web server | nginx (serves HTML on port 8080) |
 | AI (local) | Ollama on localhost:11434 |
 | AI (cloud) | OpenRouter API |
-| Display | Firefox ESR, kiosk mode, 1280×800 |
+| Display | Firefox, kiosk mode, 1280×800 |
 
 ---
 

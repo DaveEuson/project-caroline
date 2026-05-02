@@ -118,7 +118,7 @@ write_desktop_shortcuts() {
 Type=Application
 Name=Project Caroline
 Comment=Launch Project: Caroline in a browser window
-Exec=firefox-esr --profile ${WINDOWED_PROFILE_DIR} --new-window ${KIOSK_URL}
+Exec=${BROWSER_BIN} --profile ${WINDOWED_PROFILE_DIR} --new-window ${KIOSK_URL}
 Icon=web-browser
 Terminal=false
 Categories=Utility;
@@ -130,7 +130,7 @@ EOF
 Type=Application
 Name=Project Caroline Kiosk
 Comment=Launch Project: Caroline fullscreen kiosk
-Exec=firefox-esr --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL}
+Exec=${BROWSER_BIN} --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL}
 Icon=web-browser
 Terminal=false
 Categories=Utility;
@@ -143,6 +143,35 @@ EOF
     sudo -u "$REAL_USER" gio set "$_windowed_file" metadata::trusted true 2>/dev/null || true
     sudo -u "$REAL_USER" gio set "$_kiosk_file" metadata::trusted true 2>/dev/null || true
   fi
+}
+
+ensure_browser() {
+  if command -v firefox-esr >/dev/null 2>&1; then
+    BROWSER_BIN=$(command -v firefox-esr)
+    return 0
+  fi
+  if command -v firefox >/dev/null 2>&1; then
+    BROWSER_BIN=$(command -v firefox)
+    return 0
+  fi
+
+  sudo apt-get install -y -q firefox-esr >/tmp/caroline-browser-apt.log 2>&1 || \
+  sudo apt-get install -y -q firefox >/tmp/caroline-browser-apt.log 2>&1 || {
+    echo -e "${YELLOW}  ⚠ Browser install failed. Check: cat /tmp/caroline-browser-apt.log${RESET}"
+    BROWSER_BIN=""
+    return 1
+  }
+
+  if command -v firefox-esr >/dev/null 2>&1; then
+    BROWSER_BIN=$(command -v firefox-esr)
+  elif command -v firefox >/dev/null 2>&1; then
+    BROWSER_BIN=$(command -v firefox)
+  else
+    echo -e "${YELLOW}  ⚠ Browser package installed but no Firefox command was found.${RESET}"
+    BROWSER_BIN=""
+    return 1
+  fi
+  return 0
 }
 
 clear
@@ -227,7 +256,7 @@ echo ""
 
 echo -e "${MAGENTA}  // DISPLAY MODE${RESET}"
 echo ""
-echo -e "${DIM}  Kiosk mode locks Firefox ESR fullscreen on boot — ideal for a dedicated Pi display.${RESET}"
+echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated Pi display.${RESET}"
 echo -e "${DIM}  Skip this if you're just testing, or if you don't have a desktop environment.${RESET}"
 echo ""
 read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
@@ -243,9 +272,14 @@ sleep 1
 phase "PHASE 1 — ESTABLISHING UPLINK"
 
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
-sudo apt-get update -q 2>/dev/null
-sudo apt-get install -y -q curl git ca-certificates gnupg jq nginx python3-pip psmisc openssl 2>/dev/null || {
+sudo apt-get update -q >/tmp/caroline-apt-update.log 2>&1 || {
+  echo -e "${RED}  ✗ apt-get update failed. Is the network up?${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-apt-update.log${RESET}"
+  exit 1
+}
+sudo apt-get install -y -q curl git ca-certificates gnupg jq nginx python3-pip psmisc openssl >/tmp/caroline-apt-install.log 2>&1 || {
   echo -e "${RED}  ✗ apt-get failed. Is the network up?${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-apt-install.log${RESET}"
   echo -e "${DIM}    Try: sudo apt-get update && sudo apt-get install -y curl git jq nginx python3-pip psmisc openssl${RESET}"
   exit 1
 }
@@ -256,13 +290,13 @@ echo -e "${YELLOW}  ► Checking Node.js runtime...${RESET}"
 
 install_node_from_apt() {
   echo -e "${DIM}    Installing Node.js from OS package repositories...${RESET}"
-  sudo apt-get install -y nodejs npm 2>/tmp/caroline-node-apt.log || {
+  sudo apt-get install -y nodejs npm >/tmp/caroline-node-apt.log 2>&1 || {
     echo -e "${RED}  ✗ Node.js apt install failed. Check: cat /tmp/caroline-node-apt.log${RESET}"
     exit 1
   }
 }
 
-if ! command -v node &> /dev/null; then
+install_node_runtime() {
   ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
   if [[ "$ARCH" == "i386" || "$ARCH" == "i686" ]]; then
     echo -e "${YELLOW}  ⚠ i386 VM detected. NodeSource does not publish Node 20 for i386.${RESET}"
@@ -271,7 +305,7 @@ if ! command -v node &> /dev/null; then
   else
     echo -e "${DIM}    Node.js not found — installing via NodeSource...${RESET}"
     if curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/tmp/caroline-nodesource.log 2>&1; then
-      sudo apt-get install -y nodejs 2>/tmp/caroline-node-apt.log || {
+      sudo apt-get install -y nodejs >/tmp/caroline-node-apt.log 2>&1 || {
         echo -e "${YELLOW}  ⚠ NodeSource package install failed — falling back to OS packages.${RESET}"
         install_node_from_apt
       }
@@ -281,13 +315,25 @@ if ! command -v node &> /dev/null; then
       install_node_from_apt
     fi
   fi
+}
+
+if ! command -v node &> /dev/null; then
+  install_node_runtime
 fi
 NODE_MAJOR=$(node -p "parseInt(process.versions.node.split('.')[0], 10)" 2>/dev/null || echo 0)
 if [ "$NODE_MAJOR" -lt 18 ]; then
-  echo -e "${RED}  ✗ Node.js $(node --version 2>/dev/null || echo unknown) is too old. Node-RED 4.x needs Node.js 18+.${RESET}"
-  echo -e "${DIM}    On i386, use Raspberry Pi OS Bookworm/Debian 12+ so apt provides Node.js 18.${RESET}"
-  echo -e "${DIM}    Or run a 64-bit VM/real Pi for the closest supported environment.${RESET}"
-  exit 1
+  echo -e "${YELLOW}  ⚠ Node.js $(node --version 2>/dev/null || echo unknown) is too old. Trying to upgrade...${RESET}"
+  install_node_runtime
+  NODE_MAJOR=$(node -p "parseInt(process.versions.node.split('.')[0], 10)" 2>/dev/null || echo 0)
+  if [ "$NODE_MAJOR" -lt 18 ]; then
+    echo -e "${RED}  ✗ Node.js $(node --version 2>/dev/null || echo unknown) is too old. Node-RED 4.x needs Node.js 18+.${RESET}"
+    echo -e "${DIM}    On i386, use Raspberry Pi OS Bookworm/Debian 12+ so apt provides Node.js 18.${RESET}"
+    echo -e "${DIM}    Or run a 64-bit VM/real Pi for the closest supported environment.${RESET}"
+    exit 1
+  fi
+fi
+if ! command -v npm &> /dev/null; then
+  install_node_from_apt
 fi
 echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 
@@ -775,16 +821,18 @@ WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
 
 echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
 if command -v startx &> /dev/null || command -v labwc &> /dev/null || [ -d "$REAL_HOME/Desktop" ]; then
-  sudo apt-get install -y -q firefox-esr 2>/dev/null || {
-    echo -e "${YELLOW}  ⚠ Firefox ESR install failed — desktop shortcuts may not launch yet.${RESET}"
-  }
-  configure_firefox_profile "$FIREFOX_PROFILE_DIR"
-  configure_firefox_profile "$WINDOWED_PROFILE_DIR"
-  DESKTOP_DIR=$(desktop_dir_for_user)
-  write_desktop_shortcuts "$DESKTOP_DIR"
-  echo -e "${GREEN}  ✓ Desktop shortcuts created${RESET}"
-  echo -e "${DIM}    Windowed: ${DESKTOP_DIR}/Project Caroline.desktop${RESET}"
-  echo -e "${DIM}    Kiosk:    ${DESKTOP_DIR}/Project Caroline Kiosk.desktop${RESET}"
+  if ensure_browser; then
+    configure_firefox_profile "$FIREFOX_PROFILE_DIR"
+    configure_firefox_profile "$WINDOWED_PROFILE_DIR"
+    DESKTOP_DIR=$(desktop_dir_for_user)
+    write_desktop_shortcuts "$DESKTOP_DIR"
+    echo -e "${GREEN}  ✓ Desktop shortcuts created${RESET}"
+    echo -e "${DIM}    Browser:  ${BROWSER_BIN}${RESET}"
+    echo -e "${DIM}    Windowed: ${DESKTOP_DIR}/Project Caroline.desktop${RESET}"
+    echo -e "${DIM}    Kiosk:    ${DESKTOP_DIR}/Project Caroline Kiosk.desktop${RESET}"
+  else
+    echo -e "${YELLOW}  ⚠ Desktop shortcuts skipped because no supported browser was installed.${RESET}"
+  fi
 else
   echo -e "${YELLOW}  ⚠ No desktop environment detected — skipping desktop shortcuts.${RESET}"
 fi
@@ -799,49 +847,57 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
     echo -e "${DIM}  You can enable it later in Caroline's settings panel.${RESET}"
   else
     sudo apt-get install -y -q xdotool unclutter 2>/dev/null || true
-    sudo apt-get install -y -q firefox-esr
+    if ensure_browser; then
+      KIOSK_BROWSER_READY=true
+    else
+      echo -e "${YELLOW}  ⚠ No supported browser found — skipping kiosk autostart.${RESET}"
+      KIOSK_BROWSER_READY=false
+    fi
 
-    # ── FIREFOX PROFILE: suppress first-run and crash-recovery screens ──
-    configure_firefox_profile
-    echo -e "${GREEN}  ✓ Firefox kiosk profile configured${RESET}"
+    if [ "$KIOSK_BROWSER_READY" = "true" ]; then
 
-    # Remove any pre-existing Firefox autostart entries to prevent double-launch
-    rm -f "$REAL_HOME/.config/autostart/firefox"*.desktop 2>/dev/null || true
-    [ -f "$REAL_HOME/.config/labwc/autostart" ] && \
-      sed -i '/firefox/Id' "$REAL_HOME/.config/labwc/autostart" 2>/dev/null || true
-    [ -f "$REAL_HOME/.config/wayfire.ini" ] && \
-      sed -i '/firefox/Id' "$REAL_HOME/.config/wayfire.ini" 2>/dev/null || true
+      # ── FIREFOX PROFILE: suppress first-run and crash-recovery screens ──
+      configure_firefox_profile
+      echo -e "${GREEN}  ✓ Firefox kiosk profile configured${RESET}"
 
-    # XDG autostart — primary launch method across all Pi OS window managers
-    mkdir -p "$REAL_HOME/.config/autostart"
-    cat > "$REAL_HOME/.config/autostart/caroline-kiosk.desktop" << EOF
+      # Remove any pre-existing Firefox autostart entries to prevent double-launch
+      rm -f "$REAL_HOME/.config/autostart/firefox"*.desktop 2>/dev/null || true
+      [ -f "$REAL_HOME/.config/labwc/autostart" ] && \
+        sed -i '/firefox/Id' "$REAL_HOME/.config/labwc/autostart" 2>/dev/null || true
+      [ -f "$REAL_HOME/.config/wayfire.ini" ] && \
+        sed -i '/firefox/Id' "$REAL_HOME/.config/wayfire.ini" 2>/dev/null || true
+
+      # XDG autostart — primary launch method across all Pi OS window managers
+      mkdir -p "$REAL_HOME/.config/autostart"
+      cat > "$REAL_HOME/.config/autostart/caroline-kiosk.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=Caroline Kiosk
 Comment=Launch Project: Caroline UI
-Exec=firefox-esr --kiosk --profile ${FIREFOX_PROFILE_DIR} http://localhost:${KIOSK_PORT}/
+Exec=${BROWSER_BIN} --kiosk --profile ${FIREFOX_PROFILE_DIR} http://localhost:${KIOSK_PORT}/
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
 
-    # labwc autostart — default Wayland compositor on Pi OS Bookworm (Pi 5)
-    # Written unconditionally: labwc may not be in PATH until first boot
-    mkdir -p "$REAL_HOME/.config/labwc"
-    if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
-      echo "sleep 3 && /usr/bin/firefox-esr --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
-      chmod +x "$REAL_HOME/.config/labwc/autostart"
-    fi
-    echo -e "${DIM}    labwc autostart configured${RESET}"
+      # labwc autostart — default Wayland compositor on Pi OS Bookworm (Pi 5)
+      # Written unconditionally: labwc may not be in PATH until first boot
+      mkdir -p "$REAL_HOME/.config/labwc"
+      if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
+        echo "sleep 3 && ${BROWSER_BIN} --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
+        chmod +x "$REAL_HOME/.config/labwc/autostart"
+      fi
+      echo -e "${DIM}    labwc autostart configured${RESET}"
 
-    # wayfire autostart — older Bookworm installs / alternative compositor
-    # Written unconditionally: harmless if wayfire is not the active session
-    mkdir -p "$REAL_HOME/.config"
-    if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
-      printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && /usr/bin/firefox-esr --kiosk --profile %s %s"\n' "${FIREFOX_PROFILE_DIR}" "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
-    fi
-    echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
+      # wayfire autostart — older Bookworm installs / alternative compositor
+      # Written unconditionally: harmless if wayfire is not the active session
+      mkdir -p "$REAL_HOME/.config"
+      if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
+        printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && %s --kiosk --profile %s %s"\n' "${BROWSER_BIN}" "${FIREFOX_PROFILE_DIR}" "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
+      fi
+      echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
 
-    echo -e "${GREEN}  ✓ Kiosk mode configured${RESET}"
+      echo -e "${GREEN}  ✓ Kiosk mode configured${RESET}"
+    fi
   fi
 fi
 
