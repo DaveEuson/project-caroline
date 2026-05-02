@@ -1608,8 +1608,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
+let settingsHydrated = false;
 S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
@@ -1799,6 +1800,13 @@ async function syncSettingsFromServer() {
       return;
     }
     mergeServerSettings(d);
+    if (d.setupComplete !== true) {
+      localStorage.removeItem('caro_onboarded');
+      localStorage.removeItem('caroline_configured');
+      localStorage.removeItem('caro_first_greeted');
+      S.setupComplete = false;
+      localStorage.setItem('caro_settings', JSON.stringify(S));
+    }
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
     updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
@@ -1806,6 +1814,8 @@ async function syncSettingsFromServer() {
     fetchWeather();
   } catch(e) {
     console.warn('[Caroline] /admin/get-settings failed:', e);
+  } finally {
+    settingsHydrated = true;
   }
 }
 // ── EVENT LOG ─────────────────────────────────
@@ -3892,9 +3902,9 @@ function connectWS(){
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart).
     // Only send keys that are actually set in localStorage — empty values must never
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
-    (()=>{
+    if(settingsHydrated) (()=>{
       const _syncKeys=['aiName','userName','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','features'];
-      const _payload={type:'settings_update',setupComplete:true};
+      const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       ws.send(JSON.stringify(_payload));
     })();
@@ -3999,11 +4009,6 @@ function retryNodeRedConnection() {
   }
   setTimeout(connectWS, 50);
   testNodeRedUrl();
-}
-
-// First-run: open settings automatically if never saved
-if (!localStorage.getItem('caroline_configured')) {
-  setTimeout(toggleSettings, 900);
 }
 
 document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
@@ -5010,6 +5015,7 @@ function _onbModuleReady(id){
   return def.required.every(k=>!!cfg[k]);
 }
 function shouldRunOnboarding(){
+  if(S.setupComplete === false) return true;
   if(!localStorage.getItem('caro_onboarded')) return true;
   const m = S.onboardingModules||{};
   if(m.aiCore?.enabled && !m.aiCore.apiKey) return true;
@@ -5354,6 +5360,7 @@ async function finalizeOnboarding(){
   const _prompt = _onbBuildPrompt();
   localStorage.setItem('caroline_personality_prompt', _prompt);
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'personality_update', text: _prompt }));
+  S.setupComplete = true;
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
   try {

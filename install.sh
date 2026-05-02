@@ -117,7 +117,7 @@ write_desktop_shortcuts() {
 Type=Application
 Name=Project Caroline
 Comment=Launch Project: Caroline in a browser window
-Exec=${BROWSER_BIN} --profile ${WINDOWED_PROFILE_DIR} --new-window ${KIOSK_URL}
+Exec=${WINDOWED_LAUNCHER}
 Icon=web-browser
 Terminal=false
 Categories=Utility;
@@ -129,7 +129,7 @@ EOF
 Type=Application
 Name=Project Caroline Kiosk
 Comment=Launch Project: Caroline fullscreen kiosk
-Exec=${BROWSER_BIN} --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL}
+Exec=${KIOSK_LAUNCHER}
 Icon=web-browser
 Terminal=false
 Categories=Utility;
@@ -142,6 +142,46 @@ EOF
     sudo -u "$REAL_USER" gio set "$_windowed_file" metadata::trusted true 2>/dev/null || true
     sudo -u "$REAL_USER" gio set "$_kiosk_file" metadata::trusted true 2>/dev/null || true
   fi
+}
+
+write_browser_launchers() {
+  local _bin_dir="$REAL_HOME/.local/bin"
+  mkdir -p "$_bin_dir"
+  WINDOWED_LAUNCHER="$_bin_dir/caroline-window"
+  KIOSK_LAUNCHER="$_bin_dir/caroline-kiosk"
+
+  cat > "$WINDOWED_LAUNCHER" << EOF
+#!/bin/bash
+exec "${BROWSER_BIN}" --no-remote --new-instance --profile "${WINDOWED_PROFILE_DIR}" --new-window "${KIOSK_URL}"
+EOF
+
+  cat > "$KIOSK_LAUNCHER" << EOF
+#!/bin/bash
+BROWSER="${BROWSER_BIN}"
+PROFILE="${FIREFOX_PROFILE_DIR}"
+URL="${KIOSK_URL}"
+LOCKDIR="/tmp/caroline-kiosk-\$(id -u).lock"
+
+if [ -d "\$LOCKDIR" ]; then
+  if pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
+    exit 0
+  fi
+  rmdir "\$LOCKDIR" 2>/dev/null || true
+fi
+
+if ! pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
+  rm -f "\$PROFILE/parent.lock" "\$PROFILE/lock" 2>/dev/null || true
+fi
+
+mkdir "\$LOCKDIR" 2>/dev/null || exit 0
+"\$BROWSER" --no-remote --new-instance --kiosk --profile "\$PROFILE" "\$URL"
+status=\$?
+rmdir "\$LOCKDIR" 2>/dev/null || true
+exit \$status
+EOF
+
+  chmod +x "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER"
+  chown "$REAL_USER:$REAL_USER" "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER" 2>/dev/null || true
 }
 
 ensure_browser() {
@@ -746,14 +786,17 @@ jq -n \
     googleRedirectUri: "http://127.0.0.1:1880/admin/google/callback",
     googleConnected: false,
     discordToken:    "",
-    kioskMode:       $kiosk
+    kioskMode:       $kiosk,
+    setupComplete:   false
   }' > "$DEFAULT_SETTINGS_PATH"
 
 if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
   SETTINGS_BACKUP="$SETTINGS_PATH.bak.$(date +%Y%m%d-%H%M%S)"
   cp -p "$SETTINGS_PATH" "$SETTINGS_BACKUP" 2>/dev/null || true
   jq -s '
-    .[0] * .[1]
+    .[0] as $defaults | .[1] as $existing |
+    ($defaults * $existing)
+    | if ($existing.setupComplete == null) then .setupComplete = true else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
   ' "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
@@ -850,6 +893,7 @@ if command -v startx &> /dev/null || command -v labwc &> /dev/null || [ -d "$REA
   if ensure_browser; then
     configure_firefox_profile "$FIREFOX_PROFILE_DIR"
     configure_firefox_profile "$WINDOWED_PROFILE_DIR"
+    write_browser_launchers
     DESKTOP_DIR=$(desktop_dir_for_user)
     write_desktop_shortcuts "$DESKTOP_DIR"
     echo -e "${GREEN}  ✓ Desktop shortcuts created${RESET}"
@@ -884,6 +928,7 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 
       # ── FIREFOX PROFILE: suppress first-run and crash-recovery screens ──
       configure_firefox_profile
+      write_browser_launchers
       echo -e "${GREEN}  ✓ Firefox kiosk profile configured${RESET}"
 
       # Remove any pre-existing Firefox autostart entries to prevent double-launch
@@ -900,7 +945,7 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 Type=Application
 Name=Caroline Kiosk
 Comment=Launch Project: Caroline UI
-Exec=${BROWSER_BIN} --kiosk --profile ${FIREFOX_PROFILE_DIR} http://localhost:${KIOSK_PORT}/
+Exec=${KIOSK_LAUNCHER}
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
@@ -909,7 +954,7 @@ EOF
       # Written unconditionally: labwc may not be in PATH until first boot
       mkdir -p "$REAL_HOME/.config/labwc"
       if ! grep -q "caroline" "$REAL_HOME/.config/labwc/autostart" 2>/dev/null; then
-        echo "sleep 3 && ${BROWSER_BIN} --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL} &" >> "$REAL_HOME/.config/labwc/autostart"
+        echo "sleep 3 && ${KIOSK_LAUNCHER} &" >> "$REAL_HOME/.config/labwc/autostart"
         chmod +x "$REAL_HOME/.config/labwc/autostart"
       fi
       echo -e "${DIM}    labwc autostart configured${RESET}"
@@ -918,7 +963,7 @@ EOF
       # Written unconditionally: harmless if wayfire is not the active session
       mkdir -p "$REAL_HOME/.config"
       if ! grep -q "caroline" "$REAL_HOME/.config/wayfire.ini" 2>/dev/null; then
-        printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && %s --kiosk --profile %s %s"\n' "${BROWSER_BIN}" "${FIREFOX_PROFILE_DIR}" "${KIOSK_URL}" >> "$REAL_HOME/.config/wayfire.ini"
+        printf '\n[autostart]\ncaroline = /bin/bash -c "sleep 3 && %s"\n' "${KIOSK_LAUNCHER}" >> "$REAL_HOME/.config/wayfire.ini"
       fi
       echo -e "${DIM}    wayfire.ini autostart configured${RESET}"
 
