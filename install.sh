@@ -82,14 +82,14 @@ protect_secret_files() {
 clear
 
 echo ""
-echo -e "${CYAN}  ██████╗ █████╗ ██████╗  ██████╗ ██╗     ██╗███╗   ██╗███████╗${RESET}"
-echo -e "${CYAN} ██╔════╝██╔══██╗██╔══██╗██╔═══██╗██║     ██║████╗  ██║██╔════╝${RESET}"
-echo -e "${MAGENTA} ██║     ███████║██████╔╝██║   ██║██║     ██║██╔██╗ ██║█████╗  ${RESET}"
-echo -e "${MAGENTA} ██║     ██╔══██║██╔══██╗██║   ██║██║     ██║██║╚██╗██║██╔══╝  ${RESET}"
-echo -e "${CYAN} ╚██████╗██║  ██║██║  ██║╚██████╔╝███████╗██║██║ ╚████║███████╗${RESET}"
-echo -e "${CYAN}  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝${RESET}"
+echo -e "${CYAN}  ____            _           _        ____                 _ _            ${RESET}"
+echo -e "${CYAN} |  _ \\ _ __ ___ (_) ___  ___| |_     / ___|__ _ _ __ ___ | (_)_ __   ___ ${RESET}"
+echo -e "${MAGENTA} | |_) | '__/ _ \\| |/ _ \\/ __| __|   | |   / _\` | '__/ _ \\| | | '_ \\ / _ \\${RESET}"
+echo -e "${MAGENTA} |  __/| | | (_) | |  __/ (__| |_    | |__| (_| | | | (_) | | | | | |  __/${RESET}"
+echo -e "${CYAN} |_|   |_|  \\___// |\\___|\\___|\\__|    \\____\\__,_|_|  \\___/|_|_|_| |_|\\___|${RESET}"
+echo -e "${CYAN}              |__/                                                        ${RESET}"
 echo ""
-echo -e "${BOLD}${CYAN}  PROJECT: CAROLINE${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
+echo -e "${BOLD}${CYAN}  Project: Caroline${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
 echo -e "${DIM}  Your personal AI sidekick with a tiny neon pulse.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
@@ -109,7 +109,7 @@ fi
 
 # ── INTRO ────────────────────────────────────────────────────
 echo -e "${BOLD}  Booting Project: Caroline for the first time.${RESET}"
-echo -e "${DIM}  A few questions before the launch pad goes green.${RESET}"
+echo -e "${DIM}  A few questions before the time gate opens.${RESET}"
 echo -e "${DIM}  API keys and integrations are configured in her GUI after install.${RESET}"
 echo -e "${DIM}  Press Enter to skip any field.${RESET}"
 echo ""
@@ -169,7 +169,7 @@ echo ""
 
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}  Acknowledged. Deploying consciousness to ~/caroline/...${RESET}"
+echo -e "${BOLD}  Acknowledged. Preparing the local core at ~/caroline/...${RESET}"
 echo ""
 sleep 1
 
@@ -371,7 +371,7 @@ if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; t
 fi
 
 echo -e "${GREEN}  ✓ Caroline payload ready${RESET}"
-echo -e "${DIM}    Starlight filter sweep locked; brass upstroke detected.${RESET}"
+echo -e "${DIM}    Chronal sweep clean; pilot sync stable.${RESET}"
 
 # ── GOOGLE OAUTH TOKEN STORE ─────────────────────────────────
 touch "$CAROLINE_DIR/google_oauth.json"
@@ -755,7 +755,7 @@ PI_IP_FINAL=$(hostname -I | awk '{print $1}')
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}  She's online. Tiny robot manners, big co-pilot energy.${RESET}"
+echo -e "${BOLD}${GREEN}  She's online. Soft signal, steady co-pilot energy.${RESET}"
 echo ""
 echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
@@ -785,7 +785,7 @@ echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings >
 echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > Integrations"
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
-echo -e "${MAGENTA}  Reboot to bring her fully online; launch pad lights are green.${RESET}"
+echo -e "${MAGENTA}  Reboot to bring her fully online; the signal is green.${RESET}"
 echo ""
 echo -e "${BOLD}  sudo reboot${RESET}"
 echo ""
