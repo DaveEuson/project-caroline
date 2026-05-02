@@ -702,7 +702,7 @@
           <div class="caro-chat-title">PROJECT: CAROLINE // FIRST CONTACT</div>
           <div class="caro-chat-sub" id="caro-chat-sub">A quiet time-gate briefing before the dashboard wakes.</div>
         </div>
-        <div class="caro-chat-progress" id="caro-chat-progress">01 / 12</div>
+        <div class="caro-chat-progress" id="caro-chat-progress">01 / 15</div>
       </div>
       <div id="caro-chat-scroll" aria-live="polite" aria-label="Chat messages" role="log">
         <div class="caro-chat-body" id="caro-chat-body"></div>
@@ -4960,11 +4960,22 @@ const ONB_MODULES = [
     githubNote: true, fields:[] },
   { id:'calendar', title:'Calendar / Tasks', required:[],
     desc:'Google Calendar + local tasks. Your near-future timeline.',
-    githubNote: true, fields:[] },
-  { id:'weather',  title:'Weather',   required:[],
-    desc:'Uses ZIP code — no extra key required.', fields:[] },
-  { id:'voice',    title:'Voice',     required:[],
-    desc:'Speech input/output preferences.', fields:[] }
+    githubNote: true, fields:[] }
+];
+
+const ONB_WIDGETS = [
+  { id:'weather',  title:'Weather',       desc:'Forecast and local sky context.', defaultOn:true },
+  { id:'datetime', title:'Date & Moon',    desc:'Date, weekday, moon phase, and daily markers.', defaultOn:true },
+  { id:'radio',    title:'Radio',          desc:'Nightwave Plaza and ambient audio controls.', defaultOn:true },
+  { id:'calendar', title:'Calendar',       desc:'Calendar and task timeline panels.', defaultOn:true },
+  { id:'news',     title:'News',           desc:'Top stories in the side rail.', defaultOn:true },
+  { id:'video',    title:'Video Player',   desc:'Lo-fi, TV, or custom video channels.', defaultOn:true },
+  { id:'pomodoro', title:'Pomodoro',       desc:'Focus timer for sprint mode.', defaultOn:true },
+  { id:'tides',    title:'Tides',          desc:'NOAA tide widget for coastal context.', defaultOn:true },
+  { id:'mood',     title:'Mood Meters',    desc:'User and Caroline mood sliders.', defaultOn:true },
+  { id:'spotify',  title:'Spotify',        desc:'Now playing widget; needs Spotify setup.', defaultOn:false },
+  { id:'hue',      title:'Hue Lights',     desc:'Quick light controls; needs Hue setup.', defaultOn:false },
+  { id:'memes',    title:'Memes',          desc:'Optional chaos tile. Completely skippable.', defaultOn:false }
 ];
 
 const ONB_QUESTIONS = [
@@ -5016,6 +5027,7 @@ const ONB_QUESTIONS = [
     { label:'High-Energy Lift',      value:'hype',     reply:'Extra lift when needed. Still controlled.' }
   ]},
   { id:'avatar',  type:'avatar',  prompt:'How should I appear to you?' },
+  { id:'widgets', type:'widgets', prompt:'What should I put on the dashboard? Keep it calm, or bring the whole command center online.' },
   { id:'modules', type:'modules', prompt:'I can connect to a few things. Only enable what\'s actually ready.' },
   { id:'summary', type:'summary', prompt:'Okay… I think I\'m ready.\nHold one second while everything comes online.' }
 ];
@@ -5063,8 +5075,10 @@ function _onbBuildPrompt() {
 function _onbLoadConfig(){
   const m = (S.onboardingModules && typeof S.onboardingModules==='object') ? S.onboardingModules : {};
   ONB_MODULES.forEach(mod=>{ if(!m[mod.id]) m[mod.id]={enabled:false}; });
+  const widgets = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  ONB_WIDGETS.forEach(w=>{ if(widgets[w.id] === undefined) widgets[w.id] = w.defaultOn !== false; });
   S.onboardingModules = m;
-  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_URL, modules: m };
+  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_URL, modules: m, widgets };
 }
 function _onbModuleReady(id){
   const def = ONB_MODULES.find(m=>m.id===id);
@@ -5202,6 +5216,10 @@ function _onbTranscript(){
       const a=ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
       msgs.push({role:'you', text:a.title});
       msgs.push({role:'ai', text:'Okay. '+a.title+' it is.'});
+    } else if(q.type==='widgets'){
+      msgs.push({role:'ai', text:q.prompt});
+      const on=ONB_WIDGETS.filter(w=>onbState.config.widgets?.[w.id] !== false).map(w=>w.title);
+      msgs.push({role:'you', text:on.length?'Dashboard: '+on.join(', '):'Minimal dashboard only.'});
     } else if(q.type==='modules'){
       msgs.push({role:'ai', text:q.prompt});
       const on=ONB_MODULES.filter(mod=>onbState.config.modules[mod.id]?.enabled).map(m=>m.title);
@@ -5300,6 +5318,25 @@ function renderChatStep(){
     });
     response.appendChild(grid);
 
+  } else if(q.type==='widgets'){
+    const grid=document.createElement('div'); grid.className='caro-module-grid';
+    if(!onbState.config.widgets) onbState.config.widgets = Object.assign({}, FEATURE_DEFAULTS);
+    ONB_WIDGETS.forEach(widget=>{
+      const enabled = onbState.config.widgets[widget.id] !== false;
+      const card=document.createElement('div'); card.className='caro-module-card';
+      card.innerHTML=`<div class="caro-module-head"><div><h4>${widget.title}</h4><p style="font-size:12px;color:rgba(226,232,240,0.55);margin-top:4px;">${widget.desc}</p></div><button class="caro-toggle ${enabled?'active':''}" data-widget="${widget.id}" type="button"></button></div>`;
+      const status=document.createElement('div'); status.className='caro-module-status';
+      status.innerHTML=`<span class="caro-dot ${enabled?'ok':'off'}"></span><span>${enabled?'Visible on dashboard.':'Hidden for now.'}</span>`;
+      card.appendChild(status);
+      const toggle=card.querySelector('.caro-toggle');
+      toggle.onclick=()=>{
+        onbState.config.widgets[widget.id] = !(onbState.config.widgets[widget.id] !== false);
+        renderChatStep();
+      };
+      grid.appendChild(card);
+    });
+    response.appendChild(grid);
+
   } else if(q.type==='modules'){
     const grid=document.createElement('div'); grid.className='caro-module-grid';
     ONB_MODULES.forEach(mod=>{
@@ -5376,11 +5413,16 @@ function renderChatStep(){
       let lbl=!cfg.enabled?'Offline':(ready?'Enabled':'Waiting for config');
       return `<li>${mod.title}: ${lbl}</li>`;
     }).join('');
+    const wList=ONB_WIDGETS.map(widget=>{
+      const enabled = onbState.config.widgets?.[widget.id] !== false;
+      return `<li>${widget.title}: ${enabled?'Visible':'Hidden'}</li>`;
+    }).join('');
     grid.innerHTML=`
       <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>ZIP ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
       <div class="caro-summary-card"><h4>Personality</h4><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
       <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}</p></div>
-      <div class="caro-summary-card"><h4>Modules</h4><ul>${mList}</ul></div>`;
+      <div class="caro-summary-card"><h4>Widgets</h4><ul>${wList}</ul></div>
+      <div class="caro-summary-card"><h4>Integrations</h4><ul>${mList}</ul></div>`;
     response.appendChild(grid);
   }
   scrollChatToBottom();
@@ -5405,11 +5447,10 @@ async function finalizeOnboarding(){
   S.spotifyClientId  = onbState.config.modules.spotify?.clientId || S.spotifyClientId  || '';
   S.hueIp            = onbState.config.modules.hue?.bridgeIp     || S.hueIp            || '';
   S.hueKey           = onbState.config.modules.hue?.apiKey       || S.hueKey           || '';
-  const f = S.features || { ...FEATURE_DEFAULTS };
-  f.spotify  = !!onbState.config.modules.spotify?.enabled;
-  f.hue      = !!onbState.config.modules.hue?.enabled;
-  f.calendar = !!onbState.config.modules.calendar?.enabled;
-  f.weather  = !!onbState.config.modules.weather?.enabled;
+  const f = Object.assign({}, FEATURE_DEFAULTS, onbState.config.widgets || {});
+  if (onbState.config.modules.spotify?.enabled) f.spotify = true;
+  if (onbState.config.modules.hue?.enabled) f.hue = true;
+  if (onbState.config.modules.calendar?.enabled) f.calendar = true;
   S.features = f;
   S.onboardingModules = onbState.config.modules;
   localStorage.setItem('caroline_avatar_id', onbState.avatarId);
@@ -5423,7 +5464,25 @@ async function finalizeOnboarding(){
   localStorage.setItem('caro_settings', JSON.stringify(S));
   localStorage.setItem('caro_onboarded','true');
   try {
-    await postSettingsToNodeRed({ onboardingModules: S.onboardingModules }, NODE_RED_TIMEOUT_MS);
+    await postSettingsToNodeRed({
+      aiName: S.aiName,
+      userName: S.userName,
+      zipcode: S.zipcode,
+      zipCode: S.zipCode,
+      location: S.location,
+      timezone: S.timezone,
+      piIp: S.piIp,
+      nodeRedUrl: S.nodeRedUrl,
+      openrouterKey: S.openrouterKey,
+      spotifyClientId: S.spotifyClientId,
+      hueIp: S.hueIp,
+      hueKey: S.hueKey,
+      features: S.features,
+      onboardingModules: S.onboardingModules,
+      personalityPrompt: S.personalityPrompt,
+      userProfilePrompt: S.userProfilePrompt,
+      setupComplete: true
+    }, NODE_RED_TIMEOUT_MS);
     localStorage.setItem('caroline_configured', 'true');
   } catch(err) {
     console.warn('[Caroline] onboarding settings sync failed:', err);

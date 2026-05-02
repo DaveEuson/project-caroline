@@ -62,7 +62,7 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, timezone, location, and whether to install Ollama. For Raspberry Pi installs, the default local model is `smollm2:360m` because it is small and responsive on Pi hardware; an 8GB Pi test returned a one-word reply in about 2 seconds. `tinyllama` is the alternate small model. Bigger models can give better replies, but they may pin the CPU and feel stuck on smaller boards.
+The installer asks for your name, timezone, location, and whether to install Ollama. On first launch, Caroline walks through identity, personality, dashboard widget choices, and optional integrations. For Raspberry Pi installs, the default local model is `smollm2:360m` because it is small and responsive on Pi hardware; an 8GB Pi test returned a one-word reply in about 2 seconds. `tinyllama` is the alternate small model. Bigger models can give better replies, but they may pin the CPU and feel stuck on smaller boards.
 
 | Local model | Pi recommendation | Notes |
 |---|---|---|
