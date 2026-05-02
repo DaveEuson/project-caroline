@@ -452,10 +452,21 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
 
   echo -e "${YELLOW}  ► Installing Ollama...${RESET}"
   if ! command -v ollama &> /dev/null; then
-    curl -fsSL https://ollama.ai/install.sh | sh >/tmp/caroline-ollama.log 2>&1 || {
-      echo -e "${RED}  ✗ Ollama install failed. Check your internet connection.${RESET}"
+    if curl -fsSL https://ollama.ai/install.sh -o /tmp/caroline-ollama-install.sh; then
+      sh /tmp/caroline-ollama-install.sh >/tmp/caroline-ollama.log 2>&1 || {
+        echo -e "${RED}  ✗ Ollama install failed. Check: cat /tmp/caroline-ollama.log${RESET}"
+        exit 1
+      }
+    else
+      echo -e "${RED}  ✗ Ollama installer download failed. Check your internet connection.${RESET}"
       echo -e "${DIM}    Manual install: curl -fsSL https://ollama.ai/install.sh | sh${RESET}"
-    }
+      exit 1
+    fi
+  fi
+  if ! command -v ollama &> /dev/null; then
+    echo -e "${RED}  ✗ Ollama command was not found after install.${RESET}"
+    echo -e "${DIM}    Manual install: curl -fsSL https://ollama.ai/install.sh | sh${RESET}"
+    exit 1
   fi
   echo -e "${GREEN}  ✓ Ollama installed${RESET}"
 
@@ -471,7 +482,6 @@ OLLAMA_ENV_EOF
   sudo systemctl enable ollama 2>/dev/null || true
   sudo systemctl daemon-reload
   sudo systemctl restart ollama 2>/dev/null || sudo systemctl start ollama 2>/dev/null || true
-  ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &
   sleep 3
 
   echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"

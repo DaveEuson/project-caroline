@@ -63,6 +63,8 @@ fi
 echo -e "${YELLOW}  ► Stopping services and kiosk browser...${RESET}"
 pkill -TERM -f 'firefox-esr --kiosk --profile .*/caroline-kiosk' 2>/dev/null || true
 pkill -TERM -f 'firefox-esr --profile .*/caroline-window' 2>/dev/null || true
+pkill -TERM -f 'firefox --kiosk --profile .*/caroline-kiosk' 2>/dev/null || true
+pkill -TERM -f 'firefox --profile .*/caroline-window' 2>/dev/null || true
 sudo systemctl stop caroline 2>/dev/null || true
 sudo systemctl disable caroline 2>/dev/null || true
 
