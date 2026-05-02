@@ -79,6 +79,72 @@ protect_secret_files() {
   done
 }
 
+configure_firefox_profile() {
+  local _profile_dir="${1:-$FIREFOX_PROFILE_DIR}"
+  mkdir -p "$_profile_dir"
+  cat > "$_profile_dir/user.js" << 'USERJS'
+user_pref("browser.sessionstore.resume_from_crash", false);
+user_pref("browser.aboutwelcome.enabled", false);
+user_pref("browser.startup.homepage_override.mstone", "ignore");
+user_pref("profile.default_content_setting_values.notifications", 2);
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+USERJS
+  chown -R "$REAL_USER:$REAL_USER" "$_profile_dir" 2>/dev/null || true
+}
+
+desktop_dir_for_user() {
+  local _desktop="$REAL_HOME/Desktop"
+  local _xdg_file="$REAL_HOME/.config/user-dirs.dirs"
+  local _xdg_desktop=""
+  if [ -f "$_xdg_file" ]; then
+    _xdg_desktop=$(grep '^XDG_DESKTOP_DIR=' "$_xdg_file" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')
+    _xdg_desktop="${_xdg_desktop/#\$HOME/$REAL_HOME}"
+    [ -n "$_xdg_desktop" ] && _desktop="$_xdg_desktop"
+  fi
+  printf '%s' "$_desktop"
+}
+
+write_desktop_shortcuts() {
+  local _desktop_dir="$1"
+  local _windowed_file="$_desktop_dir/Project Caroline.desktop"
+  local _kiosk_file="$_desktop_dir/Project Caroline Kiosk.desktop"
+
+  mkdir -p "$_desktop_dir"
+  cat > "$_windowed_file" << EOF
+[Desktop Entry]
+Type=Application
+Name=Project Caroline
+Comment=Launch Project: Caroline in a browser window
+Exec=firefox-esr --profile ${WINDOWED_PROFILE_DIR} --new-window ${KIOSK_URL}
+Icon=web-browser
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+EOF
+
+  cat > "$_kiosk_file" << EOF
+[Desktop Entry]
+Type=Application
+Name=Project Caroline Kiosk
+Comment=Launch Project: Caroline fullscreen kiosk
+Exec=firefox-esr --kiosk --profile ${FIREFOX_PROFILE_DIR} ${KIOSK_URL}
+Icon=web-browser
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+EOF
+
+  chmod +x "$_windowed_file" "$_kiosk_file"
+  chown "$REAL_USER:$REAL_USER" "$_windowed_file" "$_kiosk_file" 2>/dev/null || true
+  if command -v gio >/dev/null 2>&1; then
+    sudo -u "$REAL_USER" gio set "$_windowed_file" metadata::trusted true 2>/dev/null || true
+    sudo -u "$REAL_USER" gio set "$_kiosk_file" metadata::trusted true 2>/dev/null || true
+  fi
+}
+
 clear
 
 echo ""
@@ -675,6 +741,27 @@ else
   echo -e "${YELLOW}  ⚠ Node-RED didn't respond in time — it will load flows on next boot${RESET}"
 fi
 
+# ── DESKTOP SHORTCUTS ────────────────────────────────────────
+KIOSK_URL="http://localhost:${KIOSK_PORT}/"
+FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
+WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
+
+echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
+if command -v startx &> /dev/null || command -v labwc &> /dev/null || [ -d "$REAL_HOME/Desktop" ]; then
+  sudo apt-get install -y -q firefox-esr 2>/dev/null || {
+    echo -e "${YELLOW}  ⚠ Firefox ESR install failed — desktop shortcuts may not launch yet.${RESET}"
+  }
+  configure_firefox_profile "$FIREFOX_PROFILE_DIR"
+  configure_firefox_profile "$WINDOWED_PROFILE_DIR"
+  DESKTOP_DIR=$(desktop_dir_for_user)
+  write_desktop_shortcuts "$DESKTOP_DIR"
+  echo -e "${GREEN}  ✓ Desktop shortcuts created${RESET}"
+  echo -e "${DIM}    Windowed: ${DESKTOP_DIR}/Project Caroline.desktop${RESET}"
+  echo -e "${DIM}    Kiosk:    ${DESKTOP_DIR}/Project Caroline Kiosk.desktop${RESET}"
+else
+  echo -e "${YELLOW}  ⚠ No desktop environment detected — skipping desktop shortcuts.${RESET}"
+fi
+
 # ── KIOSK MODE ───────────────────────────────────────────────
 if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
   echo -e "${YELLOW}  ► Configuring kiosk mode...${RESET}"
@@ -687,22 +774,8 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
     sudo apt-get install -y -q xdotool unclutter 2>/dev/null || true
     sudo apt-get install -y -q firefox-esr
 
-    KIOSK_URL="http://localhost:${KIOSK_PORT}/"
-
     # ── FIREFOX PROFILE: suppress first-run and crash-recovery screens ──
-    FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
-    mkdir -p "$FIREFOX_PROFILE_DIR"
-    cat > "$FIREFOX_PROFILE_DIR/user.js" << 'USERJS'
-user_pref("browser.sessionstore.resume_from_crash", false);
-user_pref("browser.aboutwelcome.enabled", false);
-user_pref("browser.startup.homepage_override.mstone", "ignore");
-user_pref("profile.default_content_setting_values.notifications", 2);
-user_pref("browser.shell.checkDefaultBrowser", false);
-user_pref("browser.tabs.warnOnClose", false);
-user_pref("toolkit.telemetry.enabled", false);
-user_pref("datareporting.healthreport.uploadEnabled", false);
-USERJS
-    chown -R "$REAL_USER:$REAL_USER" "$FIREFOX_PROFILE_DIR" 2>/dev/null || true
+    configure_firefox_profile
     echo -e "${GREEN}  ✓ Firefox kiosk profile configured${RESET}"
 
     # Remove any pre-existing Firefox autostart entries to prevent double-launch

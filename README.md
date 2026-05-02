@@ -46,6 +46,11 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 
 The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
+On desktop Raspberry Pi OS, the installer also creates two desktop shortcuts:
+
+- **Project Caroline** — opens Caroline in a normal Firefox window.
+- **Project Caroline Kiosk** — opens Caroline in fullscreen kiosk mode.
+
 ### Upgrading
 
 To upgrade an existing Caroline install after a new GitHub release, rerun the installer:
