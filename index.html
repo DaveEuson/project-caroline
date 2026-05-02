@@ -1224,7 +1224,11 @@
           </div>
           <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Wipe all memory</div><div class="settings-sub">Delete settings, history &amp; personality — she won't be happy</div></div>
-            <button class="sys-btn danger" onclick="wipeMemory(this)">💀 Factory Reset</button>
+            <button class="sys-btn danger" id="factory-reset-btn" onclick="wipeMemory(this)">💀 Factory Reset</button>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Uninstall Caroline</div><div class="settings-sub" id="uninstall-command-status">Shows the terminal command for a clean Pi wipe</div></div>
+            <button class="sys-btn danger" onclick="showUninstallCommand(this)">💔 Uninstall</button>
           </div>
         </div>
         <div class="settings-section">
@@ -3655,9 +3659,26 @@ function wipeMemory(btn){
 }
 function _wipeReset(){
   _wipeStage=0; _wipeBtn=null;
-  document.querySelectorAll('.sys-btn.danger').forEach(b=>{ b.textContent='💀 Factory Reset'; b.style.cssText=''; });
+  const frb=document.getElementById('factory-reset-btn');
+  if(frb){ frb.textContent='💀 Factory Reset'; frb.style.cssText=''; }
   const wb=document.getElementById('wipe-memory-btn');
   if(wb){ wb.textContent='⚠ Wipe All Memory & Start Over'; wb.style.cssText=''; }
+}
+
+function showUninstallCommand(btn) {
+  const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash';
+  const status = document.getElementById('uninstall-command-status');
+  const message = 'Fine. If you need a clean break, run this in the Pi terminal: ' + cmd;
+  if (status) {
+    status.textContent = message;
+    status.style.color = 'rgba(251,113,133,0.95)';
+  }
+  if (btn) {
+    btn.textContent = 'Copied command';
+    setTimeout(() => { btn.textContent = '💔 Uninstall'; }, 1800);
+  }
+  navigator.clipboard?.writeText(cmd).catch(() => {});
+  clog('warn', 'Uninstall command shown');
 }
 
 // ── KIOSK SYSTEM CONTROLS ─────────────────────

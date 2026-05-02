@@ -63,6 +63,24 @@ On an existing install, the script pulls the latest repository into `~/project-c
 
 Your API keys, Hue pairing, Discord token, Google/Spotify credentials, local tasks, memory, and OAuth files are preserved. If you edited files directly inside `~/caroline`, move those changes into your repo first because the runtime app files are replaced during upgrade.
 
+### Uninstalling
+
+To remove Caroline from a Pi and start fresh:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash
+```
+
+The uninstaller asks you to type `UNINSTALL CAROLINE` before it removes anything. It removes Caroline services, nginx site config, desktop launchers, kiosk autostart entries, Firefox Caroline profiles, `~/caroline`, and `~/project-caroline`. Shared packages such as Node.js, Node-RED, nginx, Firefox, and Ollama are left installed in case other projects use them.
+
+For automated QA on a disposable VM:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash -s -- --yes
+```
+
+Use `--keep-data` if you only want to remove services and launchers while preserving `~/caroline`.
+
 After install, open **Settings** in Caroline:
 
 - **Google:** create a Desktop OAuth client, import its OAuth JSON or paste the Client ID, then use **Connect Google** for Calendar. The old Sheets/service-account path is kept only as an advanced fallback.
@@ -81,6 +99,17 @@ For clean installs, wipes, and kiosk debugging, set up Raspberry Pi Connect befo
 - Access the Pi later from [connect.raspberrypi.com](https://connect.raspberrypi.com/).
 
 Official guide: [Raspberry Pi Connect documentation](https://www.raspberrypi.com/documentation/services/connect.html)
+
+### QA Checklist
+
+Before calling a release good, test these paths on a clean Pi or VM:
+
+- Fresh install from the public `curl -fsSL ... install.sh | bash` command.
+- Reboot after install and confirm Caroline, nginx, kiosk autostart, and desktop shortcuts still work.
+- Settings save/reopen for every integration: OpenRouter, Ollama, Hue, Spotify, Discord, Google, Tides, time format, and temperature unit.
+- Upgrade by rerunning the installer and confirm saved settings/API keys still show as saved or connected.
+- Uninstall with `uninstall.sh`, then reinstall cleanly.
+- Kiosk recovery: Raspberry Pi Connect or SSH is available before enabling boot-to-kiosk on a physical display.
 
 ### Advanced Widget Setup
 
