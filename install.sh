@@ -288,7 +288,31 @@ echo -e "${GREEN}  ✓ System dependencies online${RESET}"
 # ── NODE.JS ──────────────────────────────────────────────────
 echo -e "${YELLOW}  ► Checking Node.js runtime...${RESET}"
 
+node_major_from_version() {
+  local _version="${1:-0}"
+  local _major
+  _major=$(printf '%s' "$_version" | sed -E 's/^v?([0-9]+).*/\1/')
+  if [[ "$_major" =~ ^[0-9]+$ ]]; then
+    printf '%s' "$_major"
+  else
+    printf '0'
+  fi
+}
+
+node_apt_candidate() {
+  apt-cache policy nodejs 2>/dev/null | awk '/Candidate:/ {print $2; exit}'
+}
+
 install_node_from_apt() {
+  local _candidate _candidate_major
+  _candidate=$(node_apt_candidate)
+  _candidate_major=$(node_major_from_version "$_candidate")
+  if [ "$_candidate_major" -lt 18 ]; then
+    echo -e "${RED}  ✗ This OS repository offers Node.js ${_candidate:-unknown}, but Node-RED 4.x needs Node.js 18+.${RESET}"
+    echo -e "${DIM}    Use a 64-bit Raspberry Pi OS/Ubuntu/Debian VM, or a real Pi running Raspberry Pi OS 64-bit.${RESET}"
+    echo -e "${DIM}    32-bit i386 VM images often only provide old Node.js packages and are not a reliable QA target.${RESET}"
+    exit 1
+  fi
   echo -e "${DIM}    Installing Node.js from OS package repositories...${RESET}"
   sudo apt-get install -y nodejs npm >/tmp/caroline-node-apt.log 2>&1 || {
     echo -e "${RED}  ✗ Node.js apt install failed. Check: cat /tmp/caroline-node-apt.log${RESET}"
@@ -327,8 +351,7 @@ if [ "$NODE_MAJOR" -lt 18 ]; then
   NODE_MAJOR=$(node -p "parseInt(process.versions.node.split('.')[0], 10)" 2>/dev/null || echo 0)
   if [ "$NODE_MAJOR" -lt 18 ]; then
     echo -e "${RED}  ✗ Node.js $(node --version 2>/dev/null || echo unknown) is too old. Node-RED 4.x needs Node.js 18+.${RESET}"
-    echo -e "${DIM}    On i386, use Raspberry Pi OS Bookworm/Debian 12+ so apt provides Node.js 18.${RESET}"
-    echo -e "${DIM}    Or run a 64-bit VM/real Pi for the closest supported environment.${RESET}"
+    echo -e "${DIM}    For QA, use a 64-bit VM or real Pi for the closest supported environment.${RESET}"
     exit 1
   fi
 fi

@@ -46,7 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 
 The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
-VM note: Caroline is built for Raspberry Pi/Linux, but it is not ARM-only. A 64-bit `amd64` Linux VM is fine for QA. A 32-bit `i386` VM can work only if its OS repositories provide Node.js 18 or newer; NodeSource does not publish Node 20 packages for `i386`, so the installer falls back to Debian/Raspberry Pi OS packages there.
+VM note: Caroline is built for Raspberry Pi/Linux, but it is not ARM-only. A 64-bit `amd64` Linux VM is fine for QA. Avoid 32-bit `i386` VM images: NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages. If you do use `i386`, the installer can only continue when `apt` offers Node.js 18 or newer.
 
 On desktop Raspberry Pi OS, the installer also creates two desktop shortcuts:
 
