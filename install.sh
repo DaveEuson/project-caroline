@@ -454,8 +454,13 @@ OLLAMA_ENV_EOF
   spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
   if wait "$PULL_PID"; then
     echo -e "${GREEN}  ✓ Model ${OLLAMA_MODEL} locked and loaded${RESET}"
-    echo -e "${YELLOW}  ► Warming ${OLLAMA_MODEL} into memory...${RESET}"
-    ollama run "$OLLAMA_MODEL" "hello" >/dev/null 2>&1 || true
+    echo -e "${YELLOW}  ► Warming ${OLLAMA_MODEL} into memory briefly...${RESET}"
+    if timeout 45s ollama run "$OLLAMA_MODEL" "hello" >/tmp/caroline-ollama-warmup.log 2>&1; then
+      echo -e "${GREEN}  ✓ Model warm-up complete${RESET}"
+    else
+      echo -e "${YELLOW}  ⚠ Model warm-up timed out — continuing install.${RESET}"
+      echo -e "${DIM}    First local AI reply may be slow. Log: cat /tmp/caroline-ollama-warmup.log${RESET}"
+    fi
   else
     echo -e "${YELLOW}  ⚠ Model pull failed — run 'ollama pull ${OLLAMA_MODEL}' manually after install${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-pull.log${RESET}"
@@ -773,7 +778,7 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   CAROLINE_AFTER="network-online.target ollama.service"
   CAROLINE_REQUIRES="Requires=ollama.service"
   CAROLINE_ENV="Environment=\"OLLAMA_MODEL=${OLLAMA_MODEL}\""
-  CAROLINE_POST='ExecStartPost=/bin/bash -c '\''sleep 30 && ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &'\'''
+  CAROLINE_POST='ExecStartPost=/bin/bash -c '\''sleep 30 && timeout 45s ollama run "$OLLAMA_MODEL" "ready" > /dev/null 2>&1 &'\'''
 else
   CAROLINE_AFTER="network-online.target"
   CAROLINE_REQUIRES=""
