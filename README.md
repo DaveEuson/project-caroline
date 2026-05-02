@@ -41,7 +41,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - Raspberry Pi OS Desktop 64-bit *(Ubuntu 22.04+ also supported)*
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
 The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
@@ -51,7 +51,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 To upgrade an existing Caroline install after a new GitHub release, rerun the installer:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
 On an existing install, the script pulls the latest repository into `~/project-caroline`, copies the updated app and Node-RED flows into `~/caroline`, preserves `caroline_settings.json` by merging new defaults underneath your current settings, backs that settings file up with a timestamp, and restarts the Caroline services.
