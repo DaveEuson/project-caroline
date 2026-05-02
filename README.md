@@ -29,7 +29,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Persistent Memory** — AI chat with memory across sessions
 - **Productivity** — Creates calendar events and manages a local task list via chat
 - **Proactive AI** — Caroline checks in four times a day with lightweight context
-- **Local & Cloud AI** — Ollama (llama3.2, phi3:mini, gemma2:2b) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
+- **Local & Cloud AI** — Ollama (qwen2.5:0.5b, tinyllama, gemma2:2b, phi3:mini) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
 - **Smart Home** — Philips Hue control
 - **OAuth Integrations** — Google and Spotify connect from the GUI; no JSON key upload required for normal setup
@@ -62,7 +62,9 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
+The installer asks for your name, timezone, location, and whether to install Ollama. For Raspberry Pi installs, the default local model is `qwen2.5:0.5b` because it is much smaller and more realistic on Pi hardware. Bigger models can give better replies, but they may pin the CPU and feel stuck on smaller boards.
+
+The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
 Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work.
 

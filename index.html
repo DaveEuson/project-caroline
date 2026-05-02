@@ -891,10 +891,10 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr class="rec-table-row"><td>phi3:mini</td><td>2.3 GB</td><td>⚡⚡⚡</td><td>Coding / chat</td><td><button type="button" class="detect-btn" onclick="startPull('phi3:mini')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡⚡⚡</td><td>Simple Q&amp;A</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>llama3.2</td><td>2.0 GB</td><td>⚡⚡</td><td>General use</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>mistral:7b</td><td>4.1 GB</td><td>⚡</td><td>Complex tasks</td><td><button type="button" class="detect-btn" onclick="startPull('mistral:7b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>qwen2.5:0.5b</td><td>398 MB</td><td>⚡⚡⚡⚡</td><td>Pi-safe chat</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:0.5b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>tinyllama</td><td>638 MB</td><td>⚡⚡⚡</td><td>Fast simple chat</td><td><button type="button" class="detect-btn" onclick="startPull('tinyllama')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡⚡</td><td>Better replies, slower</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>llama3.2</td><td>2.0 GB</td><td>⚡</td><td>Stronger Pi / desktop</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2')">Pull</button></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -922,7 +922,7 @@
             <div style="margin-top:12px">
               <div class="settings-label" style="margin-bottom:6px">Pull a new model</div>
               <div class="input-detect-row">
-                <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. phi3:mini" style="width:160px"/>
+                <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. qwen2.5:0.5b" style="width:160px"/>
                 <button type="button" class="detect-btn" id="ollama-pull-btn" onclick="pullOllamaModel()">⬇ Pull</button>
               </div>
               <div id="ollama-pull-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
@@ -1608,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:0.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
@@ -1765,7 +1765,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-google-client-secret', S.googleClientSecret || '', { allowBlank });
   setInputValue('set-username', S.userName || '', { allowBlank });
   setInputValue('set-ollama-url', S.ollamaUrl || 'http://localhost:11434', { allowBlank });
-  setInputValue('set-ollama-model', S.ollamaModel || 'llama3.2', { allowBlank });
+  setInputValue('set-ollama-model', S.ollamaModel || 'qwen2.5:0.5b', { allowBlank });
   setInputValue('set-ainame-sys', S.aiName || 'Caroline', { allowBlank });
   const timeFormatEl = document.getElementById('set-time-format');
   if (timeFormatEl) timeFormatEl.value = S.timeFormat || '12';
@@ -2226,7 +2226,7 @@ function toggleSettings() {
     const ollamaUrlEl = document.getElementById('set-ollama-url');
     if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
     const ollamaModelEl = document.getElementById('set-ollama-model');
-    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'llama3.2';
+    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'qwen2.5:0.5b';
     if ((S.aiProvider || 'openrouter') === 'ollama') setTimeout(fetchOllamaModels, 100);
     const hgSel = document.getElementById('set-hue-group');
     if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
@@ -2429,7 +2429,7 @@ function updateAiConfigIndicator(provider) {
   }
 }
 
-const OLLAMA_RECOMMENDED = new Set(['phi3:mini','gemma2:2b','llama3.2']);
+const OLLAMA_RECOMMENDED = new Set(['qwen2.5:0.5b','tinyllama','gemma2:2b','phi3:mini','llama3.2']);
 let _cachedOllamaModels = null;
 
 async function fetchDirectOllamaTags() {
@@ -2593,7 +2593,7 @@ async function startPull(model) {
 }
 
 async function loadOllamaModel() {
-  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'llama3.2';
+  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'qwen2.5:0.5b';
   const statusEl = document.getElementById('ollama-load-status');
   const btn = document.getElementById('ollama-load-btn');
   if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'Loading ' + model + '...'; }
@@ -3214,7 +3214,7 @@ async function saveSettings() {
   if (orkeyVal) S.openrouterKey = orkeyVal; // never clear key by switching providers
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
-  S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'llama3.2').trim();
+  S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'qwen2.5:0.5b').trim();
   const hueIpVal = document.getElementById('set-hueip').value.trim();
   const hueKeyVal = document.getElementById('set-huekey').value.trim();
   if (hueIpVal || !S.hueIp) S.hueIp = hueIpVal;

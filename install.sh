@@ -261,7 +261,7 @@ echo ""
 
 echo -e "${MAGENTA}  // NEURAL CORE SELECTION${RESET}"
 echo ""
-echo -e "${DIM}  Ollama = local AI, free forever, runs on your Pi. No API key.${RESET}"
+echo -e "${DIM}  Ollama = local AI, private and free, but slower on Pi. No API key.${RESET}"
 echo -e "${DIM}  OpenRouter = cloud AI (Claude Haiku). Costs ~\$0.05/month. Needs a key.${RESET}"
 echo ""
 
@@ -269,7 +269,7 @@ echo ""
 TOTAL_RAM_MB=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
 if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo -e "${YELLOW}  ⚠ ${TOTAL_RAM_MB}MB RAM detected. Ollama runs better with 4GB+.${RESET}"
-  echo -e "${DIM}    gemma2:2b is the safest local default on smaller Pi installs.${RESET}"
+  echo -e "${DIM}    qwen2.5:0.5b is the safest local default on smaller Pi installs.${RESET}"
   echo ""
 fi
 
@@ -279,16 +279,16 @@ echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  OLLAMA_MODEL="gemma2:2b"
-  echo -e "${DIM}  Pulling gemma2:2b by default. Choose a different model if you want:${RESET}"
-  echo -e "${DIM}  (Options: gemma2:2b, phi3:mini, llama3.2 — Enter to keep gemma2:2b)${RESET}"
-  read -p "  Model [gemma2:2b]: " OLLAMA_MODEL_INPUT </dev/tty
-  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-gemma2:2b}"
+  OLLAMA_MODEL="qwen2.5:0.5b"
+  echo -e "${DIM}  Pulling qwen2.5:0.5b by default for Pi-friendly local chat.${RESET}"
+  echo -e "${DIM}  (Options: qwen2.5:0.5b, tinyllama, gemma2:2b, phi3:mini, llama3.2)${RESET}"
+  read -p "  Model [qwen2.5:0.5b]: " OLLAMA_MODEL_INPUT </dev/tty
+  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-qwen2.5:0.5b}"
   echo ""
   echo -e "${DIM}  Good. ${OLLAMA_MODEL} is her brain. Worth the wait.${RESET}"
 else
   AI_PROVIDER="openrouter"
-  OLLAMA_MODEL="gemma2:2b"
+  OLLAMA_MODEL="qwen2.5:0.5b"
   echo -e "${DIM}  Cloud mode selected. Add your OpenRouter key in Caroline's settings after install.${RESET}"
 fi
 echo ""
@@ -797,6 +797,11 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     .[0] as $defaults | .[1] as $existing |
     ($defaults * $existing)
     | if ($existing.setupComplete == null) then .setupComplete = true else . end
+    | if (($defaults.aiProvider == "ollama")
+          and ((($existing.ollamaModel // "") == "")
+               or ($existing.ollamaModel == "gemma2:2b")
+               or ($existing.ollamaModel == "llama3.2")))
+      then .ollamaModel = $defaults.ollamaModel else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
   ' "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
