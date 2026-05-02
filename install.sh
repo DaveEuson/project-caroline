@@ -558,7 +558,7 @@ jq -n \
     zipcode:         $zip,
     zipCode:         $zip,
     nodeRedUrl:      $nrUrl,
-    uiFont:          "inter",
+    uiFont:          "Inter",
     uiScale:         "large",
     uiDensity:       "comfortable",
     highContrastText: true,

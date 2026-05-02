@@ -35,14 +35,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Project: Caroline</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Nunito:wght@300;400;600&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@300;400;600&family=Exo+2:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Roboto:wght@300;400;500&family=Open+Sans:wght@300;400;600&family=Noto+Sans:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
 <style>
-  :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; --ui-font: 'Nunito'; }
+  :root { --t-hex1: #22d3ee; --t-hex2: #db2777; --t-rgb1: 34, 211, 238; --t-rgb2: 219, 39, 119; --ui-font: 'Inter'; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { width: 100%; height: 100%; overflow: hidden; background: #05050a; }
-  body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: var(--ui-font, 'Nunito'), sans-serif; color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease, height 0.25s cubic-bezier(0.4,0,0.2,1); }
+  body { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: #05050a; font-family: var(--ui-font, 'Inter'), sans-serif; color: #e2e8f0; display: flex; flex-direction: column; user-select: none; transition: background 2s ease, height 0.25s cubic-bezier(0.4,0,0.2,1); }
   body.osk-open { height: calc(100vh - 320px) !important; }
   body.osk-open #settings-modal { max-height: calc(100vh - 340px) !important; }
 
@@ -87,7 +87,7 @@
   #modal h3 { font-size: 13px; color: var(--t-hex1); margin-bottom: 8px; font-family:'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase; }
   #modal p { font-size: 11px; color: rgba(226,232,240,0.6); margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
   .modal-btns { display: flex; gap: 10px; justify-content: center; }
-  .modal-btns button { padding: 8px 20px; border-radius: 20px; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; }
+  .modal-btns button { padding: 8px 20px; border-radius: 20px; border: none; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 12px; cursor: pointer; }
   #modal-confirm { background: linear-gradient(135deg, var(--t-hex2), rgba(var(--t-rgb2),0.5)); border: 1px solid var(--t-hex2); color: white; }
   #modal-cancel { background: rgba(255,255,255,0.05); border: 1px solid rgba(148,163,184,0.2); color: rgba(148,163,184,0.7); }
 
@@ -103,15 +103,15 @@
   .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .settings-label { font-size: 15px; color: #e2e8f0; }
   .settings-sub { font-size: 12px; color: rgba(226,232,240,0.4); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
-  .settings-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: 'Outfit', sans-serif; font-size: 13px; outline: none; width: 140px; }
+  .settings-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; outline: none; width: 140px; }
   .settings-input:focus { border-color: rgba(var(--t-rgb1), 0.6); }
-  .settings-select { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: 'Outfit', sans-serif; font-size: 13px; outline: none; width: 160px; cursor: pointer; }
+  .settings-select { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; outline: none; width: 160px; cursor: pointer; }
   .settings-select option { background: #0c0814; }
   .theme-swatches { display: flex; gap: 10px; }
   .theme-swatch { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
   .theme-swatch.active { border-color: #f8fafc; transform: scale(1.15); }
   .settings-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-  .settings-save-btn { background: linear-gradient(135deg, var(--t-hex1), rgba(var(--t-rgb1),0.5)); border: none; border-radius: 12px; padding: 10px 28px; color: #05050a; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .settings-save-btn { background: linear-gradient(135deg, var(--t-hex1), rgba(var(--t-rgb1),0.5)); border: none; border-radius: 12px; padding: 10px 28px; color: #05050a; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
   .settings-feedback { font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; opacity: 0; transition: opacity 0.3s; }
   .settings-feedback.show { opacity: 1; }
   .settings-feedback.error { color: #fb7185; }
@@ -236,10 +236,10 @@
   .todo-tag.personal { background:rgba(219,39,119,0.1); color:var(--t-hex2); border:1px solid rgba(219,39,119,0.2); }
   .todo-tag.auto { background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.2); }
   #todo-input-row { display:flex; gap:8px; padding:10px 16px; border-top:1px solid rgba(var(--t-rgb1),0.1); flex-shrink:0; }
-  #todo-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb1),0.25); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:'Outfit',sans-serif; font-size:13px; outline:none; }
+  #todo-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb1),0.25); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:var(--ui-font, 'Inter'),sans-serif; font-size:13px; outline:none; }
   #todo-add-btn { background:rgba(var(--t-rgb1),0.1); border:1px solid rgba(var(--t-rgb1),0.3); border-radius:20px; padding:8px 16px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:13px; cursor:pointer; }
   #todo-clear-btn { background:none; border:1px solid rgba(244,63,94,0.3); border-radius:20px; padding:8px 12px; color:#fb7185; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; }
-  #note-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb2),0.3); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:'Outfit',sans-serif; font-size:13px; outline:none; }
+  #note-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb2),0.3); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:var(--ui-font, 'Inter'),sans-serif; font-size:13px; outline:none; }
   #note-add-btn { background:linear-gradient(135deg,var(--t-hex2),rgba(var(--t-rgb2),0.4)); border:1px solid var(--t-hex2); border-radius:20px; padding:8px 16px; color:white; font-size:12px; cursor:pointer; }
   #pomo-widget { display:flex; align-items:center; gap:8px; }
   #pomo-display { font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--t-hex1); font-weight:300; min-width:44px; transition:color 0.5s; }
@@ -298,7 +298,7 @@
   #input-row { display: flex; gap: 10px; align-items: center; width: 100%; max-width: 650px; position: relative; z-index: 30; justify-content: center; }
   
   /* INPUT */
-  #msg-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 32px; padding: 16px 20px; color: #f8fafc; caret-color: var(--t-hex1); font-family: 'Outfit', sans-serif; font-size: 18px; outline: none; transition: all 0.3s ease; min-width: 0; }
+  #msg-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 32px; padding: 16px 20px; color: #f8fafc; caret-color: var(--t-hex1); font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 18px; outline: none; transition: all 0.3s ease; min-width: 0; }
   #msg-input:focus { border-color: rgba(var(--t-rgb1), 0.6); box-shadow: 0 0 15px rgba(var(--t-rgb1), 0.15); }
   #msg-input::placeholder { color: rgba(148,163,184,0.4); }
   #msg-input.listening { border-color: rgba(var(--t-rgb2), 0.6); background: rgba(var(--t-rgb2), 0.05); }
@@ -537,11 +537,11 @@
   .caro-msg.ai .caro-who { color:var(--t-hex1); }
   .caro-msg.you .caro-who { color:var(--t-hex2); }
   .caro-chat-response { padding:0 18px 14px; display:flex; flex-direction:column; gap:10px; }
-  .caro-answer-input { width:100%; background:rgba(0,0,0,0.45); border:2px solid rgba(var(--t-rgb1),0.40); border-radius:16px; padding:12px 16px; color:#f8fafc; caret-color:var(--t-hex1); font-family:'Outfit',sans-serif; font-size:18px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+  .caro-answer-input { width:100%; background:rgba(0,0,0,0.45); border:2px solid rgba(var(--t-rgb1),0.40); border-radius:16px; padding:12px 16px; color:#f8fafc; caret-color:var(--t-hex1); font-family:var(--ui-font, 'Inter'),sans-serif; font-size:18px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
   .caro-answer-input:focus { border-color:var(--t-hex1); box-shadow:0 0 0 3px rgba(var(--t-rgb1),0.15); }
   .caro-answer-input::placeholder { color:rgba(226,232,240,0.30); }
   .caro-chip-row { display:flex; flex-wrap:wrap; gap:10px; }
-  .caro-chip { appearance:none; background:rgba(255,255,255,0.03); border:1px solid rgba(var(--t-rgb1),0.18); color:#e2e8f0; border-radius:999px; padding:10px 14px; font-size:14px; cursor:pointer; transition:all .18s ease; font-family:'Outfit',sans-serif; }
+  .caro-chip { appearance:none; background:rgba(255,255,255,0.03); border:1px solid rgba(var(--t-rgb1),0.18); color:#e2e8f0; border-radius:999px; padding:10px 14px; font-size:14px; cursor:pointer; transition:all .18s ease; font-family:var(--ui-font, 'Inter'),sans-serif; }
   .caro-chip:hover, .caro-chip.active { background:rgba(var(--t-rgb1),0.12); border-color:rgba(var(--t-rgb1),0.32); }
   .caro-avatar-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; }
   .caro-avatar-card, .caro-module-card, .caro-summary-card { background:rgba(255,255,255,0.03); border:1px solid rgba(var(--t-rgb1),0.12); border-radius:18px; padding:14px; }
@@ -568,7 +568,7 @@
   .caro-summary-card li { margin:6px 0; }
   .caro-chat-footer { display:flex; justify-content:space-between; gap:12px; padding:14px 18px 18px; border-top:1px solid rgba(var(--t-rgb1),0.10); }
   .caro-chat-footer-right { display:flex; gap:10px; }
-  .caro-chat-btn { appearance:none; border:none; border-radius:14px; padding:12px 16px; font-size:14px; cursor:pointer; font-family:'Outfit',sans-serif; }
+  .caro-chat-btn { appearance:none; border:none; border-radius:14px; padding:12px 16px; font-size:14px; cursor:pointer; font-family:var(--ui-font, 'Inter'),sans-serif; }
   .caro-chat-btn.ghost { background:rgba(255,255,255,0.04); color:#e2e8f0; border:1px solid rgba(var(--t-rgb1),0.14); }
   .caro-chat-btn.primary { background:linear-gradient(135deg, var(--t-hex1), rgba(var(--t-rgb1),0.55)); color:#04100b; font-weight:600; }
   .settings-status-chip { display:inline-flex; align-items:center; gap:6px; font-size:10px; color:rgba(226,232,240,0.7); font-family:'JetBrains Mono',monospace; }
@@ -591,7 +591,7 @@
   .osk-key.shift-key { background:rgba(var(--t-rgb1),0.06); }
   .osk-key.shift-key.on { background:rgba(var(--t-rgb1),0.22); border-color:var(--t-hex1); color:var(--t-hex1); }
   #osk-bar { display:flex; align-items:center; gap:12px; padding:4px 4px 8px; }
-  #osk-preview { flex:1; font-size:20px; color:#f8fafc; font-family:'Outfit',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:4px 8px; border-bottom:2px solid rgba(var(--t-rgb1),0.30); min-height:32px; letter-spacing:0.01em; }
+  #osk-preview { flex:1; font-size:20px; color:#f8fafc; font-family:var(--ui-font, 'Inter'),sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:4px 8px; border-bottom:2px solid rgba(var(--t-rgb1),0.30); min-height:32px; letter-spacing:0.01em; }
   #osk-preview:empty::before { content:attr(data-placeholder); color:rgba(226,232,240,0.25); font-size:16px; }
   #osk-close { flex-shrink:0; background:none; border:1px solid rgba(var(--t-rgb1),0.18); border-radius:8px; color:rgba(226,232,240,0.45); font-family:'JetBrains Mono',monospace; font-size:11px; cursor:pointer; padding:4px 10px; letter-spacing:0.1em; }
   #osk-close:hover { color:rgba(226,232,240,0.8); border-color:rgba(var(--t-rgb1),0.4); }
@@ -799,11 +799,11 @@
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">UI Font</div><div class="settings-sub">Larger fonts read better at distance</div></div>
             <select class="settings-select" id="set-font" onchange="applyFont(this.value)">
-              <option value="Nunito">Nunito — Rounded (default)</option>
-              <option value="DM Sans">DM Sans — Clean</option>
-              <option value="Space Grotesk">Space Grotesk — Techy</option>
-              <option value="Exo 2">Exo 2 — Sci-Fi</option>
-              <option value="Outfit">Outfit — Original</option>
+              <option value="Inter">Inter — Interface default</option>
+              <option value="Roboto">Roboto — Google UI</option>
+              <option value="Open Sans">Open Sans — Neutral friendly</option>
+              <option value="SF Pro">SF Pro — Apple system</option>
+              <option value="Noto Sans">Noto Sans — Universal</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -1604,7 +1604,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
@@ -2019,7 +2019,7 @@ function toggleSettings() {
   if (isOpen) {
     document.getElementById('set-avatar').value = S.avatar;
     const fontSel = document.getElementById('set-font');
-    if (fontSel) fontSel.value = S.uiFont || 'Nunito';
+    if (fontSel) fontSel.value = normalizeUiFont(S.uiFont);
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
     if (S.defaultChannel >= videoChannels.length) S.defaultChannel = 0;
@@ -3189,9 +3189,21 @@ const companions = [
 ];
 let currentAvatarIndex = S.avatar;
 
+const UI_FONT_STACKS = {
+  'Inter': "'Inter', sans-serif",
+  'Roboto': "'Roboto', sans-serif",
+  'Open Sans': "'Open Sans', sans-serif",
+  'SF Pro': "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif",
+  'Noto Sans': "'Noto Sans', sans-serif"
+};
+function normalizeUiFont(fontName) {
+  const f = String(fontName || '').trim();
+  const match = Object.keys(UI_FONT_STACKS).find(name => name.toLowerCase() === f.toLowerCase());
+  return match || 'Inter';
+}
 function applyFont(fontName) {
-  const f = fontName || S.uiFont || 'Nunito';
-  document.documentElement.style.setProperty('--ui-font', "'" + f + "'");
+  const f = normalizeUiFont(fontName || S.uiFont);
+  document.documentElement.style.setProperty('--ui-font', UI_FONT_STACKS[f]);
   S.uiFont = f;
   const sel = document.getElementById('set-font');
   if (sel) sel.value = f;
@@ -4574,6 +4586,7 @@ setInterval(updateWifi, 30000);
   });
 })();
 applyTheme(S.theme);
+applyFont(S.uiFont);
 applyAvatar(S.avatar);
 applyAutoTheme();
 applyFeatures();
