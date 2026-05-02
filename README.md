@@ -38,21 +38,17 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 
 ## System Requirements
 
-Recommended release target:
-
-- Raspberry Pi 4 or 5 with 4GB+ RAM
-- Raspberry Pi OS Desktop 64-bit
-- Storage: 32GB+ microSD card recommended
-- Storage: 16GB microSD card minimum if you skip local AI/Ollama and keep the install lean
-- Storage: 64GB+ microSD card recommended if you install Ollama/local models or plan to keep lots of local data
-- Internet access during install
-- SSH or Raspberry Pi Connect configured before kiosk testing
-
-Alternate supported target:
-
-- 64-bit Ubuntu/Debian/Linux desktop or VM
-- `x86_64` / `amd64` is fine
-- Node.js 18+ must be available through NodeSource or the OS package repositories
+| Category | Recommended | Minimum / Alternate |
+|---|---|---|
+| Hardware | Raspberry Pi 4 or 5 | 64-bit Ubuntu/Debian/Linux desktop or VM |
+| RAM | 4GB+ | 4GB recommended for a smooth kiosk experience |
+| OS | Raspberry Pi OS Desktop 64-bit | 64-bit Ubuntu/Debian/Linux |
+| CPU architecture | `arm64` / `aarch64` | `x86_64` / `amd64` also works |
+| Storage | 32GB+ microSD card | 16GB microSD minimum if skipping local AI/Ollama |
+| Local AI storage | 64GB+ microSD card | Recommended when installing Ollama/local models |
+| Network | Internet access during install | Local network access for kiosk and integrations |
+| Recovery access | Raspberry Pi Connect or SSH before kiosk testing | Strongly recommended before enabling boot-to-kiosk |
+| Runtime | Node.js 18+ | Installed by the Caroline installer when available |
 
 Avoid 32-bit `i386` VM images for this release. NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages.
 
