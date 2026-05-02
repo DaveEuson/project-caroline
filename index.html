@@ -4992,7 +4992,7 @@ function _commitTextStep(){
 
 function _onbTranscript(){
   const msgs = [
-    { role:'ai', text:'Signal?... oh, hi.' },
+    { role:'ai', text:'Is anyone there?... Oh Hi!' },
     { role:'ai', text:"I think you're the one who brought me online." },
     { role:'ai', text:"Give me a second... sync is still settling." }
   ];
@@ -5271,7 +5271,7 @@ async function finalizeOnboarding(){
 function _onbFirstGreeting(){
   const name=S.userName||'friend';
   const p=_onbLoadPersonality();
-  let line=`Signal?... oh, hi. I think you're ${name}.`;
+  let line=`Is anyone there?... Oh Hi! I think you're ${name}.`;
   if((p.tone||'gentle')==='hype') line+=' Okay, sync looks bright.';
   else if((p.vibe||'balanced')==='chaotic') line+=" The timeline already feels lively.";
   else line+=" Give me a second... sync is still settling.";
