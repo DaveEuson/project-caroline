@@ -44,7 +44,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 curl -sSL https://raw.githubusercontent.com/daveeuson/project-caroline/main/install.sh | bash
 ```
 
-The installer asks for your name, timezone, location, and whether to install Ollama. **No terminal is needed after install** — everything is configured in the GUI, with API keys entered directly in the kiosk settings panel.
+The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
 After install, open **Settings** in Caroline:
 
@@ -52,6 +52,116 @@ After install, open **Settings** in Caroline:
 - **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (e.g. `http://localhost:8080/`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 - **Display preferences:** Settings → Widgets controls 12/24-hour time and Fahrenheit/Celsius for weather and Pi health.
+
+### Before QA: Remote Access
+
+For clean installs, wipes, and kiosk debugging, set up Raspberry Pi Connect before you depend on the kiosk screen alone. It gives you browser-based access to the Pi desktop or shell, which is helpful if Firefox opens full-screen or the Pi is across the room.
+
+- Raspberry Pi Connect requires Raspberry Pi OS Bookworm or later.
+- Raspberry Pi OS Desktop and Full include Connect by default; Raspberry Pi OS Lite includes the remote-shell-only variant.
+- Screen sharing requires the Wayland desktop session, which is the default on current Raspberry Pi OS Desktop releases.
+- Turn it on from the desktop tray icon with **Turn On Raspberry Pi Connect**, or run `rpi-connect on`, then `rpi-connect signin` and finish sign-in with your Raspberry Pi ID.
+- Access the Pi later from [connect.raspberrypi.com](https://connect.raspberrypi.com/).
+
+Official guide: [Raspberry Pi Connect documentation](https://www.raspberrypi.com/documentation/services/connect.html)
+
+### Advanced Widget Setup
+
+Most advanced setup happens outside Caroline first, then you paste credentials into **Settings**.
+
+#### OpenRouter Cloud AI
+
+Use this if you want Claude/other cloud models instead of local Ollama.
+
+1. Create an account at [openrouter.ai](https://openrouter.ai/).
+2. Create an API key.
+3. In Caroline, open **Settings → AI Model**.
+4. Choose **OpenRouter**, paste the key, and pick the model.
+5. Save, then check that the top bar no longer says the AI key is needed.
+
+#### Google Calendar
+
+Use this for calendar context and calendar event creation.
+
+1. Open [Google Cloud Console](https://console.cloud.google.com/).
+2. Create or choose a project.
+3. Enable the Google Calendar API.
+4. Configure an OAuth consent screen.
+5. Create an OAuth client of type **Desktop app**.
+6. Download the OAuth JSON.
+7. In Caroline, open **Settings → Connect → Google**.
+8. Import the OAuth JSON, or paste the Client ID.
+9. Click **Connect Google** and finish the browser sign-in.
+
+The Calendar ID can usually stay `primary`.
+
+#### Google Sheets Legacy Sync
+
+This is optional and only needed if you are using the older Sheets/task sync path.
+
+1. Create or choose a Google Sheet.
+2. Copy the spreadsheet ID from the sheet URL.
+3. In Caroline, open **Settings → Connect → Google → Advanced Google options**.
+4. Paste the spreadsheet ID.
+5. If using a service account, upload or paste the service account JSON and share the sheet with the service account email.
+
+Normal Calendar setup does not require this.
+
+#### Spotify
+
+Use this for Spotify account connection/control.
+
+1. Open the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Create an app.
+3. In Caroline, open **Settings → Connect → Spotify** and copy the redirect URI shown there.
+4. In Spotify, add that exact redirect URI under **Edit Settings → Redirect URIs**.
+5. Copy the Spotify Client ID into Caroline.
+6. Click **Connect Spotify** and finish sign-in.
+
+The redirect URI must match exactly, including trailing slash.
+
+#### Discord
+
+Use this for Discord channel messaging.
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Create an application, then add a bot.
+3. Copy the bot token. It should look like a long secret token, not a numeric channel/user ID.
+4. Invite the bot to your server with permission to read and send messages in the target channel.
+5. Enable Developer Mode in Discord, right-click the channel, and copy the channel ID.
+6. In Caroline, open **Settings → Connect → Discord**.
+7. Enable Discord, paste the bot token and channel ID, then use **Test Discord**.
+
+#### Philips Hue
+
+Use this for Hue lights.
+
+1. Make sure the Pi and Hue Bridge are on the same network.
+2. In Caroline, open **Settings → Connect → Hue**.
+3. Enter the bridge IP, or use the detect button if available.
+4. Press the physical link button on the Hue Bridge.
+5. In Caroline, request/create the Hue API key.
+6. Detect/select the Hue group to control.
+
+#### Tides
+
+Use this for tide predictions.
+
+1. Find the nearest NOAA tide station ID from [NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/).
+2. In Caroline, open **Settings → Widgets**.
+3. Paste the station ID into **Tides station**.
+4. Save and wait for the tide widget to refresh.
+
+If you leave it blank, Caroline uses a default station that may not match your location.
+
+#### Custom Video Channels
+
+Use this if you want custom streams in the video widget.
+
+1. Open **Settings → Widgets → Video channels**.
+2. Add a channel name and icon.
+3. Paste a direct HLS `.m3u8` URL or a YouTube video ID.
+4. Save and select the channel in the kiosk.
 
 ### Requirements
 
