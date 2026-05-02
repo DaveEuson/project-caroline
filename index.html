@@ -948,7 +948,7 @@
           </div>
           <div id="openrouter-key-row">
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub">AI API key — required for Cloud</div></div>
+              <div><div class="settings-label">OpenRouter Key</div><div class="settings-sub" id="openrouter-key-status">AI API key — required for Cloud</div></div>
               <div style="display:flex;align-items:center;gap:6px;">
                 <input class="settings-input" id="set-orkey" type="password" placeholder="sk-or-..."/>
                 <button type="button" id="orkey-eye" onclick="toggleOrkeyVisibility()" style="background:none;border:1px solid rgba(var(--t-rgb1),0.25);border-radius:8px;padding:5px 8px;color:rgba(226,232,240,0.4);cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;" title="Show/hide key">👁</button>
@@ -964,14 +964,14 @@
         <div class="settings-section">
           <h3>Hue Lights</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Hue Bridge IP</div><div class="settings-sub">Local network</div></div>
+            <div><div class="settings-label">Hue Bridge IP</div><div class="settings-sub" id="hue-ip-status">Local network</div></div>
             <div class="input-detect-row">
               <input class="settings-input" id="set-hueip" type="text" placeholder="192.168.x.x" style="width:130px"/>
               <button type="button" class="detect-btn" id="hue-discover-btn" onclick="detectHueBridge(this)">🔍 Detect</button>
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Hue API Key</div><div class="settings-sub">Press bridge button, then Sync</div></div>
+            <div><div class="settings-label">Hue API Key</div><div class="settings-sub" id="hue-key-status">Press bridge button, then Sync</div></div>
             <div class="input-detect-row">
               <input class="settings-input" id="set-huekey" type="password" placeholder="Hue API key" style="width:130px"/>
               <button type="button" class="detect-btn" id="hue-pair-btn" onclick="pairHueBridge(this)">🔑 Sync</button>
@@ -979,7 +979,7 @@
           </div>
           <div id="hue-pair-status" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Hue Group</div><div class="settings-sub">Which light group to control</div></div>
+            <div><div class="settings-label">Hue Group</div><div class="settings-sub" id="hue-group-status">Which light group to control</div></div>
             <div style="display:flex;align-items:center;gap:6px;">
               <select class="settings-select" id="set-hue-group" style="width:160px;"><option value="">— hit Detect —</option></select>
               <button type="button" class="detect-btn" id="hue-group-fetch-btn" onclick="fetchHueGroups()">⟳ Detect</button>
@@ -1005,16 +1005,16 @@
         <div class="settings-section">
           <h3>Discord <span style="font-size:10px;font-weight:400;opacity:.5;text-transform:none;letter-spacing:0">(optional)</span></h3>
           <div class="settings-row">
-            <div><div class="settings-label">Enable Discord</div><div class="settings-sub">Relay messages to kiosk</div></div>
+            <div><div class="settings-label">Enable Discord</div><div class="settings-sub" id="discord-enabled-status">Relay messages to kiosk</div></div>
             <input type="checkbox" id="set-discord-enabled" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);" onchange="toggleDiscordFields(this.checked)"/>
           </div>
           <div id="discord-fields">
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Bot Token</div><div class="settings-sub">Discord Developer Portal</div></div>
+              <div><div class="settings-label">Bot Token</div><div class="settings-sub" id="discord-token-status">Discord Developer Portal</div></div>
               <input class="settings-input" id="set-discord-token" type="password" placeholder="Bot token" style="width:180px"/>
             </div>
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Channel ID</div><div class="settings-sub">Right-click channel → Copy ID</div></div>
+              <div><div class="settings-label">Channel ID</div><div class="settings-sub" id="discord-channel-status">Right-click channel → Copy ID</div></div>
               <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
             </div>
             <div class="settings-row" style="margin-top:14px">
@@ -1029,11 +1029,11 @@
         <div class="settings-section">
           <h3>Google</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Calendar ID</div><div class="settings-sub">Usually your Gmail address</div></div>
+            <div><div class="settings-label">Calendar ID</div><div class="settings-sub" id="google-calendar-status">Usually your Gmail address</div></div>
             <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:200px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub">Desktop app client from Google Cloud</div></div>
+            <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub" id="google-client-id-status">Desktop app client from Google Cloud</div></div>
             <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -1056,11 +1056,11 @@
           <details style="margin-top:12px">
             <summary style="cursor:pointer;color:rgba(226,232,240,0.45);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Advanced Google options</summary>
             <div class="settings-row" style="margin-top:10px">
-              <div><div class="settings-label">OAuth Secret</div><div class="settings-sub">Usually imported from JSON</div></div>
+              <div><div class="settings-label">OAuth Secret</div><div class="settings-sub" id="google-secret-status">Usually imported from JSON</div></div>
               <input class="settings-input" id="set-google-client-secret" type="password" placeholder="client secret" style="width:200px"/>
             </div>
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Legacy Sheets sync only</div></div>
+              <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub" id="sheet-id-status">Legacy Sheets sync only</div></div>
               <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
             </div>
             <div class="settings-row" style="margin-top:14px">
@@ -1151,7 +1151,7 @@
           </div>
           <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
           <div class="settings-row" style="margin-top:14px;">
-            <div><div class="settings-label">NOAA Tides Station</div><div class="settings-sub">7-digit station ID from tidesandcurrents.noaa.gov</div></div>
+            <div><div class="settings-label">NOAA Tides Station</div><div class="settings-sub" id="tides-station-status">7-digit station ID from tidesandcurrents.noaa.gov</div></div>
             <input class="settings-input" id="set-tides-station" type="text" placeholder="e.g. 9410230" style="width:130px;"/>
           </div>
         </div>
@@ -1620,6 +1620,7 @@ const SAVED_SECRET_FIELDS = {
   discordToken: { id: 'set-discord-token', placeholder: 'Bot token saved on Pi' },
   googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on Pi' }
 };
+let integrationHealth = {};
 
 function mergeServerSettings(d, options = {}) {
   if (!d || !Object.keys(d).length) return false;
@@ -1664,6 +1665,82 @@ function applySavedSecretPlaceholders() {
   });
 }
 
+function setSettingsSubStatus(id, text, kind = 'neutral') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  const colors = {
+    ok: 'rgba(52,211,153,0.9)',
+    warn: 'rgba(251,191,36,0.9)',
+    err: '#f87171',
+    neutral: 'rgba(226,232,240,0.45)'
+  };
+  el.style.color = colors[kind] || colors.neutral;
+}
+
+function renderIntegrationStatus() {
+  const openrouterSaved = !!S.openrouterKey || !!S.openrouterKeyConfigured || !!integrationHealth.openrouter?.configured;
+  const usingOllama = (S.aiProvider || 'ollama') === 'ollama';
+  setSettingsSubStatus(
+    'openrouter-key-status',
+    usingOllama ? (openrouterSaved ? 'Saved on Pi, currently using Ollama' : 'Optional while using Ollama') : (openrouterSaved ? 'Saved on Pi' : 'Required for Cloud mode'),
+    usingOllama ? 'neutral' : (openrouterSaved ? 'ok' : 'warn')
+  );
+
+  const hueKeySaved = !!S.hueKey || !!S.hueKeyConfigured || !!integrationHealth.hue?.configured;
+  setSettingsSubStatus('hue-ip-status', S.hueIp ? 'Saved on Pi: ' + S.hueIp : 'Not configured', S.hueIp ? 'ok' : 'neutral');
+  setSettingsSubStatus('hue-key-status', hueKeySaved ? 'Saved on Pi' : 'Not paired yet', hueKeySaved ? 'ok' : 'warn');
+  setSettingsSubStatus('hue-group-status', S.hueGroupName ? 'Selected: ' + S.hueGroupName : (S.hueGroup ? 'Selected group ' + S.hueGroup : 'No group selected'), S.hueGroup ? 'ok' : 'neutral');
+
+  const spotifyBrowserConnected = !!localStorage.getItem('spotify_token');
+  const spotifyPiConnected = !!integrationHealth.spotify?.connected;
+  const spotifyClientSaved = !!S.spotifyClientId || !!integrationHealth.spotify?.clientConfigured;
+  const spotifyText = spotifyBrowserConnected ? '✓ Connected' : (spotifyPiConnected ? 'Connected on Pi' : (spotifyClientSaved ? 'Client ID saved, reconnect account' : 'Not connected'));
+  const spotifyKind = (spotifyBrowserConnected || spotifyPiConnected) ? 'ok' : (spotifyClientSaved ? 'warn' : 'neutral');
+  setSettingsSubStatus('spotify-status', spotifyText, spotifyKind);
+  const spotifyBtn = document.getElementById('spotify-connect-btn');
+  if (spotifyBtn) spotifyBtn.textContent = (spotifyBrowserConnected || spotifyPiConnected) ? '🔄 Reconnect' : '🔌 Connect Spotify';
+
+  const discordTokenSaved = !!S.discordToken || !!S.discordTokenConfigured || !!integrationHealth.discord?.configured;
+  const discordChannelSaved = !!S.discordChannelId;
+  setSettingsSubStatus('discord-enabled-status', S.discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', S.discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
+  setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on Pi' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on Pi: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
+
+  const googleConnected = !!S.googleConnected || !!integrationHealth.google?.connected;
+  const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
+  const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured;
+  setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on Pi: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
+  setSettingsSubStatus('google-client-id-status', googleClientSaved ? 'Saved on Pi' : 'Not configured', googleClientSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('google-secret-status', googleSecretSaved ? 'Saved on Pi' : 'Not configured', googleSecretSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('google-auth-status', googleConnected ? 'Connected' : (googleClientSaved ? 'Client saved, not connected' : 'Not connected'), googleConnected ? 'ok' : (googleClientSaved ? 'warn' : 'neutral'));
+  setSettingsSubStatus('sheet-id-status', S.sheetId ? 'Saved on Pi' : 'Not configured; optional legacy sync', S.sheetId ? 'ok' : 'neutral');
+  const serviceAccountEl = document.getElementById('sa-upload-status');
+  if (serviceAccountEl && !/^Uploading|Reading/i.test(serviceAccountEl.textContent || '')) {
+    if (integrationHealth.google?.serviceAccountConfigured) {
+      serviceAccountEl.textContent = '✓ Service account saved on Pi';
+      serviceAccountEl.style.color = 'rgba(52,211,153,0.9)';
+    } else if (!serviceAccountEl.textContent || serviceAccountEl.textContent === 'No file uploaded') {
+      serviceAccountEl.textContent = 'No file uploaded';
+      serviceAccountEl.style.color = 'rgba(226,232,240,0.4)';
+    }
+  }
+
+  setSettingsSubStatus('tides-station-status', S.tidesStation ? 'Saved on Pi: ' + S.tidesStation : 'Not configured; optional widget', S.tidesStation ? 'ok' : 'neutral');
+}
+
+async function refreshIntegrationHealth() {
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/health', { timeoutMs: 3000 }, 'Integration health');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    integrationHealth = await r.json();
+    if (integrationHealth.google?.connected) S.googleConnected = true;
+  } catch(e) {
+    integrationHealth = {};
+  }
+  renderIntegrationStatus();
+}
+
 function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-orkey', S.openrouterKey || '', { allowBlank });
   setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_URL, { allowBlank });
@@ -1696,6 +1773,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   const hgSel = document.getElementById('set-hue-group');
   if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
   applySavedSecretPlaceholders();
+  renderIntegrationStatus();
 }
 
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
@@ -1949,6 +2027,7 @@ async function handleSpotifyCallback() {
     const btnEl = document.getElementById('spotify-connect-btn');
     if (statusEl) statusEl.textContent = '✓ Connected';
     if (btnEl) btnEl.textContent = '🔄 Reconnect';
+    renderIntegrationStatus();
     if (spotifyPollInterval) clearInterval(spotifyPollInterval);
     spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000);
     fetchSpotifyNowPlaying();
@@ -2109,11 +2188,10 @@ function toggleSettings() {
     switchSettingsTab('look');
     toggleDiscordFields(!!S.discordEnabled);
 
-    const hasToken = localStorage.getItem('spotify_token');
-    document.getElementById('spotify-status').textContent = hasToken ? '✓ Connected' : 'Not connected';
-    document.getElementById('spotify-connect-btn').textContent = hasToken ? '🔄 Reconnect' : '🔌 Connect Spotify';
     const rdEl = document.getElementById('spotify-redirect-display');
     if (rdEl) rdEl.textContent = getSpotifyRedirectUri();
+    renderIntegrationStatus();
+    refreshIntegrationHealth();
 
     const customSrc = localStorage.getItem('caro_custom_avatar');
     const nameEl = document.getElementById('avatar-upload-name');
@@ -2170,6 +2248,7 @@ function toggleSettings() {
           });
         }
         checkGoogleStatus();
+        refreshIntegrationHealth();
       })
       .catch(() => {});
     setTimeout(() => { const first = document.querySelector('#settings-modal button, #settings-modal input, #settings-modal select'); if (first) first.focus(); }, 50);
@@ -2256,7 +2335,7 @@ function setDiscordTestStatus(text, isError = false) {
 async function testDiscordConnection() {
   const enabled = !!document.getElementById('set-discord-enabled')?.checked;
   const token = (document.getElementById('set-discord-token')?.value || '').trim();
-  const channelId = (document.getElementById('set-discord-channel')?.value || '').trim();
+  const channelId = (document.getElementById('set-discord-channel')?.value || S.discordChannelId || '').trim();
   if (!enabled) { setDiscordTestStatus('Enable Discord first', true); return; }
   if (!channelId) { setDiscordTestStatus('Paste the channel ID first', true); return; }
   if (token && !looksLikeDiscordBotToken(token)) {
@@ -2268,6 +2347,11 @@ async function testDiscordConnection() {
     const payload = { discordEnabled: enabled, discordChannelId: channelId };
     if (token) payload.discordToken = token;
     await postSettingsToNodeRed(payload, NODE_RED_TIMEOUT_MS);
+    S.discordEnabled = enabled;
+    S.discordChannelId = channelId;
+    if (token) S.discordToken = token;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    renderIntegrationStatus();
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/discord-test', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Discord test');
     const data = await r.json();
     if (data.ok) {
@@ -2746,6 +2830,8 @@ async function handleServiceAccountUpload(event) {
         timeoutMs: NODE_RED_TIMEOUT_MS
       }, 'Upload service account');
       statusEl.textContent = resp.ok ? ('✓ ' + file.name) : ('✗ HTTP ' + resp.status);
+      if (resp.ok) integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { serviceAccountConfigured: true });
+      renderIntegrationStatus();
     } catch(err) {
       statusEl.textContent = '✗ Upload failed — check Pi connection';
     }
@@ -2848,6 +2934,7 @@ async function refreshGoogleStatus() {
     if (!data.invalidClient && data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
     if (data.redirectUri) S.googleRedirectUri = normalizeGoogleRedirectUri(data.redirectUri);
     localStorage.setItem('caro_settings', JSON.stringify(S));
+    renderIntegrationStatus();
     return data;
   } catch(e) {
     if (statusEl) { statusEl.textContent = 'Node-RED offline'; statusEl.style.color = 'rgba(226,232,240,0.3)'; }
@@ -2991,6 +3078,8 @@ async function submitPastedServiceAccount() {
       timeoutMs: NODE_RED_TIMEOUT_MS
     }, 'Upload service account');
     statusEl.textContent = resp.ok ? '✓ Service account saved' : ('✗ HTTP ' + resp.status);
+    if (resp.ok) integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { serviceAccountConfigured: true });
+    renderIntegrationStatus();
   } catch(err) {
     statusEl.textContent = '✗ Upload failed — check Pi connection';
   }
@@ -3125,9 +3214,13 @@ async function saveSettings() {
   S.timeFormat = document.getElementById('set-time-format')?.value || '12';
   S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
   S.location = document.getElementById('set-location').value.trim();
-  S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
+  const calendarIdVal = document.getElementById('set-calendar-id').value.trim();
+  if (calendarIdVal || !S.calendarId) S.calendarId = calendarIdVal || 'primary';
   const sheetInp = document.getElementById('set-sheet-id');
-  if (sheetInp) S.sheetId = sheetInp.value.trim();
+  if (sheetInp) {
+    const sheetVal = sheetInp.value.trim();
+    if (sheetVal || !S.sheetId) S.sheetId = sheetVal;
+  }
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
   const discordTokenVal = document.getElementById('set-discord-token').value.trim();
   if (S.discordEnabled && discordTokenVal && !looksLikeDiscordBotToken(discordTokenVal)) {
@@ -3139,13 +3232,20 @@ async function saveSettings() {
   }
   if (discordTokenVal) S.discordToken = discordTokenVal;
   else if (!S.discordTokenConfigured) delete S.discordToken;
-  S.discordChannelId = document.getElementById('set-discord-channel').value.trim();
+  const discordChannelVal = document.getElementById('set-discord-channel').value.trim();
+  if (discordChannelVal || !S.discordChannelId) S.discordChannelId = discordChannelVal;
   S.zipCode = newZip;
   S.zipcode = newZip;
   const tsInp = document.getElementById('set-tides-station');
-  if (tsInp) S.tidesStation = tsInp.value.trim();
+  if (tsInp) {
+    const tidesVal = tsInp.value.trim();
+    if (tidesVal || !S.tidesStation) S.tidesStation = tidesVal;
+  }
   const gcidInp = document.getElementById('set-google-client-id');
-  if (gcidInp) S.googleClientId = gcidInp.value.trim();
+  if (gcidInp) {
+    const googleClientIdVal = gcidInp.value.trim();
+    if (googleClientIdVal || !S.googleClientId) S.googleClientId = googleClientIdVal;
+  }
   const gcsecInp = document.getElementById('set-google-client-secret');
   if (gcsecInp && gcsecInp.value.trim()) S.googleClientSecret = gcsecInp.value.trim();
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
@@ -3156,6 +3256,7 @@ async function saveSettings() {
 
   // Persist to localStorage immediately — never block the save on Node-RED being reachable
   localStorage.setItem('caro_settings', JSON.stringify(S));
+  renderIntegrationStatus();
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
@@ -4320,6 +4421,7 @@ async function refreshSpotifyToken() {
     const btnEl = document.getElementById('spotify-connect-btn');
     if (statusEl) statusEl.textContent = 'Not connected';
     if (btnEl) btnEl.textContent = '🔌 Connect Spotify';
+    renderIntegrationStatus();
 
     return false;
   }
