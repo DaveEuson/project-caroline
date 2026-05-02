@@ -71,6 +71,8 @@ The installer asks for your name, timezone, location, and whether to install Oll
 | `llama3.2:1b` | Advanced / slow | Works on an 8GB Pi, but a one-word reply can still take ~20-30 seconds. |
 | `gemma2:2b` / larger | Desktop or patient Pi users | Expect slow replies, heat, and sustained CPU load. |
 
+You can also run Ollama on another computer and use the Pi only as the kiosk. In **Settings → AI Model**, set **AI provider** to **Ollama** and set **Ollama URL** to the other machine, for example `http://192.168.1.50:11434`. On that computer, Ollama must listen on the network, usually by setting `OLLAMA_HOST=0.0.0.0:11434`, and your firewall must allow the Pi to reach port `11434`. Keep this on your LAN or VPN; do not expose Ollama directly to the public internet.
+
 The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
 Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work.
@@ -245,7 +247,7 @@ Use this if you want custom streams in the video widget.
 | Frontend | Single HTML file |
 | Backend | Node-RED (bare-metal systemd, no Docker) |
 | Web server | nginx (serves HTML on port 8080) |
-| AI (local) | Ollama on localhost:11434 |
+| AI (local/remote) | Ollama on `localhost:11434` or another LAN computer |
 | AI (cloud) | OpenRouter API |
 | Display | Firefox, kiosk mode, 1280×800 |
 
@@ -256,7 +258,7 @@ Use this if you want custom streams in the video widget.
 ```
 Browser
   ├── HTTP GET (port 8080) ──────► nginx ──► index.html
-  └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (local)
+  └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (Pi or LAN server)
                                             └──► OpenRouter (cloud)
 ```
 

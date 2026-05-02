@@ -853,7 +853,7 @@
             <div><div class="settings-label">AI provider</div><div class="settings-sub">Where responses come from</div></div>
             <select class="settings-select" id="set-ai-provider" onchange="onProviderChange(this.value)">
               <option value="openrouter">OpenRouter (cloud)</option>
-              <option value="ollama">Ollama (local / Pi)</option>
+              <option value="ollama">Ollama (local / remote)</option>
             </select>
           </div>
           <div id="openrouter-model-row" style="margin-top:14px">
@@ -870,8 +870,8 @@
           </div>
           <div id="ollama-rows" style="display:none">
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Ollama URL</div><div class="settings-sub">Local Ollama server</div></div>
-              <input class="settings-input" id="set-ollama-url" type="text" placeholder="http://localhost:11434" style="width:180px"/>
+              <div><div class="settings-label">Ollama URL</div><div class="settings-sub">Pi or LAN server</div></div>
+              <input class="settings-input" id="set-ollama-url" type="text" placeholder="http://192.168.1.50:11434" style="width:180px"/>
             </div>
             <!-- Recommended models collapsible -->
             <div style="margin-top:14px">
@@ -921,6 +921,7 @@
             <!-- Pull new model -->
             <div style="margin-top:12px">
               <div class="settings-label" style="margin-bottom:6px">Pull a new model</div>
+              <div class="settings-sub" style="margin-bottom:6px">Uses the Ollama URL above</div>
               <div class="input-detect-row">
                 <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. qwen2.5:0.5b" style="width:160px"/>
                 <button type="button" class="detect-btn" id="ollama-pull-btn" onclick="pullOllamaModel()">⬇ Pull</button>
@@ -2444,8 +2445,9 @@ const OLLAMA_RECOMMENDED = new Set(['qwen2.5:0.5b','tinyllama']);
 let _cachedOllamaModels = null;
 
 async function fetchDirectOllamaTags() {
-  const host = getPiHost();
-  const directUrl = 'http://' + host + ':11434/api/tags';
+  let base = (S.ollamaUrl || 'http://localhost:11434').trim();
+  if (!/^https?:\/\//i.test(base)) base = 'http://' + base;
+  const directUrl = base.replace(/\/+$/, '') + '/api/tags';
   const r = await fetchJsonWithTimeout(directUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Direct Ollama tags');
   if (!r.ok) throw new Error('HTTP ' + r.status + ' from ' + directUrl);
   return r.json();

@@ -274,7 +274,7 @@ if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo ""
 fi
 
-read -p "  Install Ollama for free local AI? (y/N): " INSTALL_OLLAMA </dev/tty
+read -p "  Install Ollama on this Pi? (y/N): " INSTALL_OLLAMA </dev/tty
 INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
 echo ""
 
@@ -291,7 +291,7 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
 else
   AI_PROVIDER="openrouter"
   OLLAMA_MODEL="qwen2.5:0.5b"
-  echo -e "${DIM}  Cloud mode selected. Add your OpenRouter key in Caroline's settings after install.${RESET}"
+  echo -e "${DIM}  Skipping Pi Ollama. Use OpenRouter, or point Settings → Ollama URL at another computer later.${RESET}"
 fi
 echo ""
 
