@@ -254,13 +254,40 @@ echo -e "${GREEN}  ✓ System dependencies online${RESET}"
 # ── NODE.JS ──────────────────────────────────────────────────
 echo -e "${YELLOW}  ► Checking Node.js runtime...${RESET}"
 
-if ! command -v node &> /dev/null; then
-  echo -e "${DIM}    Node.js not found — installing via NodeSource...${RESET}"
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 2>/dev/null
-  sudo apt-get install -y nodejs 2>/dev/null || {
-    echo -e "${RED}  ✗ Node.js install failed. Try manually: sudo apt-get install -y nodejs${RESET}"
+install_node_from_apt() {
+  echo -e "${DIM}    Installing Node.js from OS package repositories...${RESET}"
+  sudo apt-get install -y nodejs npm 2>/tmp/caroline-node-apt.log || {
+    echo -e "${RED}  ✗ Node.js apt install failed. Check: cat /tmp/caroline-node-apt.log${RESET}"
     exit 1
   }
+}
+
+if ! command -v node &> /dev/null; then
+  ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
+  if [[ "$ARCH" == "i386" || "$ARCH" == "i686" ]]; then
+    echo -e "${YELLOW}  ⚠ i386 VM detected. NodeSource does not publish Node 20 for i386.${RESET}"
+    echo -e "${DIM}    Falling back to Raspberry Pi OS/Debian packages.${RESET}"
+    install_node_from_apt
+  else
+    echo -e "${DIM}    Node.js not found — installing via NodeSource...${RESET}"
+    if curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/tmp/caroline-nodesource.log 2>&1; then
+      sudo apt-get install -y nodejs 2>/tmp/caroline-node-apt.log || {
+        echo -e "${YELLOW}  ⚠ NodeSource package install failed — falling back to OS packages.${RESET}"
+        install_node_from_apt
+      }
+    else
+      echo -e "${YELLOW}  ⚠ NodeSource setup failed — falling back to OS packages.${RESET}"
+      echo -e "${DIM}    Log: cat /tmp/caroline-nodesource.log${RESET}"
+      install_node_from_apt
+    fi
+  fi
+fi
+NODE_MAJOR=$(node -p "parseInt(process.versions.node.split('.')[0], 10)" 2>/dev/null || echo 0)
+if [ "$NODE_MAJOR" -lt 18 ]; then
+  echo -e "${RED}  ✗ Node.js $(node --version 2>/dev/null || echo unknown) is too old. Node-RED 4.x needs Node.js 18+.${RESET}"
+  echo -e "${DIM}    On i386, use Raspberry Pi OS Bookworm/Debian 12+ so apt provides Node.js 18.${RESET}"
+  echo -e "${DIM}    Or run a 64-bit VM/real Pi for the closest supported environment.${RESET}"
+  exit 1
 fi
 echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 
