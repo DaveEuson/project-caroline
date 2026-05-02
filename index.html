@@ -1608,9 +1608,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:0.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: FEATURE_DEFAULTS };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:0.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
+let serverSettingsLoaded = false;
 S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
@@ -1630,6 +1631,12 @@ let integrationHealth = {};
 function mergeServerSettings(d, options = {}) {
   if (!d || !Object.keys(d).length) return false;
   const skip = options.skip || new Set();
+  const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
+  if (d.installId && localInstallId && localInstallId !== d.installId) {
+    localStorage.removeItem('caro_onboarded');
+    localStorage.removeItem('caroline_configured');
+    localStorage.removeItem('caro_first_greeted');
+  }
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
@@ -1645,6 +1652,7 @@ function mergeServerSettings(d, options = {}) {
   });
   S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
+  if (S.installId) localStorage.setItem('caro_install_id', S.installId);
   localStorage.setItem('caro_settings', JSON.stringify(S));
   return true;
 }
@@ -1791,15 +1799,16 @@ async function syncSettingsFromServer() {
     if (!r.ok) {
       // Server returned error — likely fresh install with no settings file yet
       localStorage.removeItem('caro_onboarded');
-      return;
+      return false;
     }
     const d = await r.json();
     // Empty response means fresh Node-RED install — force onboarding regardless of localStorage
     if (!d || !Object.keys(d).length) {
       localStorage.removeItem('caro_onboarded');
-      return;
+      return false;
     }
     mergeServerSettings(d);
+    serverSettingsLoaded = true;
     if (d.setupComplete !== true) {
       localStorage.removeItem('caro_onboarded');
       localStorage.removeItem('caroline_configured');
@@ -1812,8 +1821,10 @@ async function syncSettingsFromServer() {
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
     fetchWeather();
+    return true;
   } catch(e) {
     console.warn('[Caroline] /admin/get-settings failed:', e);
+    return false;
   } finally {
     settingsHydrated = true;
   }
@@ -2088,7 +2099,7 @@ function nudgeAiMoodForInteraction(weight = 1) {
     localStorage.setItem('caro_settings', JSON.stringify(S));
     renderMoods();
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'settings_update', aiMood: S.aiMood, userMood: S.userMood, setupComplete: true }));
+      ws.send(JSON.stringify({ type: 'settings_update', aiMood: S.aiMood, userMood: S.userMood }));
     }
   }
 }
@@ -2103,7 +2114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMoods();
       localStorage.setItem('caro_settings', JSON.stringify(S));
       if (ws && ws.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify({ type: 'settings_update', userMood: S.userMood, aiMood: S.aiMood, setupComplete: true }));
+        ws.send(JSON.stringify({ type: 'settings_update', userMood: S.userMood, aiMood: S.aiMood }));
     });
   }
 });
@@ -3145,9 +3156,10 @@ async function detectLocationFromZip(btn) {
 
 async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
   const endpoint = httpBase() + '/admin/save-settings';
+  const setupComplete = extra.setupComplete === true || (S.setupComplete === true && localStorage.getItem('caro_onboarded') === 'true');
   const payload = Object.assign({}, S, extra, {
     zipCode: S.zipcode || S.zipCode || '',
-    setupComplete: true
+    setupComplete
   });
   console.log('[Caroline] POST settings to', endpoint, payload);
   try {
@@ -3882,6 +3894,7 @@ setTimeout(() => pollSystemResources(), 3000);
 let ws;
 let wsReconnectTimer = null;
 let wsConnectSeq = 0;
+let onboardingStarted = false;
 const pill=document.getElementById('conn-pill');
 function connectWS(){
   wsConnectSeq += 1;
@@ -3902,12 +3915,15 @@ function connectWS(){
     // Bootstrap Node-RED flow context with current settings (handles fresh NR restart).
     // Only send keys that are actually set in localStorage — empty values must never
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
-    if(settingsHydrated) (()=>{
+    if(settingsHydrated && serverSettingsLoaded) (()=>{
       const _syncKeys=['aiName','userName','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       ws.send(JSON.stringify(_payload));
     })();
+    syncSettingsFromServer().then(() => {
+      if (shouldRunOnboarding() && !onboardingStarted) startBootSequence();
+    });
   };
   ws.onmessage = (e) => {
   if (seq !== wsConnectSeq) return;
@@ -5041,6 +5057,7 @@ function _onbSetDeep(path,val){ const p=path.split('.'); let o=onbState; while(p
 function _onbGetDeep(path){ const p=path.split('.'); let o=onbState; for(const k of p){ o=o?.[k]; } return o; }
 
 function startBootSequence(){
+  onboardingStarted = true;
   const overlay = document.getElementById('onboarding-overlay');
   if(!overlay) return;
   overlay.classList.add('show');
@@ -5439,7 +5456,7 @@ updateSettingsStatus();
 syncSettingsFromServer().then(() => {
   testNodeRedUrl();
   fetchWeather();
-  if(shouldRunOnboarding()){ startBootSequence(); } else { maybeReturningGreeting(); }
+  if(shouldRunOnboarding() && !onboardingStarted){ startBootSequence(); } else { maybeReturningGreeting(); }
 });
 
 /* ── ON-SCREEN KEYBOARD ────────────────────────────────────────── */

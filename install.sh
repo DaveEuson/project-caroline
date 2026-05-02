@@ -742,6 +742,7 @@ echo -e "${YELLOW}  ► Writing settings...${RESET}"
 # paired devices, OAuth clients, and user preferences survive reruns.
 PI_IP=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP" ] || PI_IP="localhost"
+INSTALL_ID="$(date +%s)-$(hostname)-$RANDOM"
 DEFAULT_SETTINGS_PATH=$(mktemp)
 MERGED_SETTINGS_PATH=$(mktemp)
 jq -n \
@@ -753,8 +754,10 @@ jq -n \
   --arg provider     "$AI_PROVIDER" \
   --arg ollamaModel  "$OLLAMA_MODEL" \
   --arg nrUrl        "http://${PI_IP}:${NODE_RED_PORT}" \
+  --arg installId    "$INSTALL_ID" \
   --argjson kiosk    "$([ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ] && echo true || echo false)" \
   '{
+    installId:       $installId,
     userName:        $name,
     aiName:          "Caroline",
     userMood:        7,
@@ -797,6 +800,8 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     .[0] as $defaults | .[1] as $existing |
     ($defaults * $existing)
     | if ($existing.setupComplete == null) then .setupComplete = true else . end
+    | if ((($existing.installId // "") == "") and (($existing.onboardingModules // null) == null) and ($existing.setupComplete == true))
+      then .setupComplete = false else . end
     | if (($defaults.aiProvider == "ollama")
           and ((($existing.ollamaModel // "") == "")
                or ($existing.ollamaModel == "gemma2:2b")
