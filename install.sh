@@ -533,9 +533,12 @@ echo -e "${GREEN}  ✓ Web server ready on ${KIOSK_PORT}; HTTPS proxy ready on $
 echo -e "${YELLOW}  ► Writing settings...${RESET}"
 
 # jq writes valid JSON regardless of special characters in user input.
-# API key fields are written empty — configure them in Caroline's GUI.
+# On upgrades, merge defaults under the existing settings file so credentials,
+# paired devices, OAuth clients, and user preferences survive reruns.
 PI_IP=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP" ] || PI_IP="localhost"
+DEFAULT_SETTINGS_PATH=$(mktemp)
+MERGED_SETTINGS_PATH=$(mktemp)
 jq -n \
   --arg name         "$USER_NAME" \
   --arg tz           "${TIMEZONE:-America/New_York}" \
@@ -579,7 +582,22 @@ jq -n \
     googleConnected: false,
     discordToken:    "",
     kioskMode:       $kiosk
-  }' > "$SETTINGS_PATH"
+  }' > "$DEFAULT_SETTINGS_PATH"
+
+if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
+  SETTINGS_BACKUP="$SETTINGS_PATH.bak.$(date +%Y%m%d-%H%M%S)"
+  cp -p "$SETTINGS_PATH" "$SETTINGS_BACKUP" 2>/dev/null || true
+  jq -s '
+    .[0] * .[1]
+    | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
+    | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
+  ' "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
+  mv "$MERGED_SETTINGS_PATH" "$SETTINGS_PATH"
+  echo -e "${DIM}    Existing settings preserved; backup: ${SETTINGS_BACKUP}${RESET}"
+else
+  mv "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH"
+fi
+rm -f "$DEFAULT_SETTINGS_PATH" "$MERGED_SETTINGS_PATH"
 protect_secret_files
 
 echo -e "${GREEN}  ✓ Settings saved${RESET}"
