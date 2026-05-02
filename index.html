@@ -1018,6 +1018,13 @@
               <div><div class="settings-label">Channel ID</div><div class="settings-sub">Right-click channel → Copy ID</div></div>
               <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
             </div>
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Connection test</div><div class="settings-sub">Sends one test message</div></div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                <button type="button" onclick="testDiscordConnection()" style="background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.45);border-radius:10px;padding:6px 14px;color:#a5b4fc;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Test Discord</button>
+                <span id="discord-test-status" style="font-size:9px;color:rgba(226,232,240,0.45);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;"></span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="settings-section">
@@ -1027,23 +1034,14 @@
             <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:200px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Optional legacy Sheets sync</div></div>
-            <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
-          </div>
-          <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Google OAuth Client ID</div><div class="settings-sub">Used for Calendar</div></div>
+            <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub">Desktop app client from Google Cloud</div></div>
             <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Google OAuth Secret</div><div class="settings-sub">Optional for desktop clients</div></div>
-            <input class="settings-input" id="set-google-client-secret" type="password" placeholder="client secret" style="width:200px"/>
-          </div>
-          <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">OAuth Client JSON</div><div class="settings-sub">Import the downloaded Google OAuth client file</div></div>
+            <div><div class="settings-label">OAuth JSON</div><div class="settings-sub">Shortcut: imports client ID and secret</div></div>
             <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
               <input type="file" id="google-client-json-input" accept=".json,application/json" style="display:none" onchange="handleGoogleClientJsonUpload(event)"/>
               <button type="button" onclick="document.getElementById('google-client-json-input').click()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Import OAuth JSON</button>
-              <button type="button" onclick="handleGoogleClientJsonPaste()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.28);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Paste OAuth JSON</button>
               <span id="google-client-json-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:240px;"></span>
             </div>
           </div>
@@ -1056,14 +1054,29 @@
               <span id="google-device-status" style="font-size:9px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;text-align:right;max-width:280px;word-break:break-word;"></span>
             </div>
           </div>
-          <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
-            <div><div class="settings-label">Finish Sign-In</div><div class="settings-sub">Paste the final Google URL or code if the browser gets stuck</div></div>
-            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste callback URL or code" style="width:260px"/>
-              <button id="google-manual-callback-btn" type="button" onclick="handleGoogleManualCallback()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Finish Google Sign-In</button>
-              <span id="google-manual-callback-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;"></span>
+          <details style="margin-top:12px">
+            <summary style="cursor:pointer;color:rgba(226,232,240,0.45);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Advanced Google options</summary>
+            <div class="settings-row" style="margin-top:10px">
+              <div><div class="settings-label">OAuth Secret</div><div class="settings-sub">Usually imported from JSON</div></div>
+              <input class="settings-input" id="set-google-client-secret" type="password" placeholder="client secret" style="width:200px"/>
             </div>
-          </div>
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub">Legacy Sheets sync only</div></div>
+              <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
+            </div>
+            <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Paste OAuth JSON</div><div class="settings-sub">Same as importing the file</div></div>
+              <button type="button" onclick="handleGoogleClientJsonPaste()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.28);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Paste OAuth JSON</button>
+            </div>
+            <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
+              <div><div class="settings-label">Finish Sign-In</div><div class="settings-sub">Use only if the browser gets stuck</div></div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste callback URL or code" style="width:260px"/>
+                <button id="google-manual-callback-btn" type="button" onclick="handleGoogleManualCallback()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Finish Google Sign-In</button>
+                <span id="google-manual-callback-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;"></span>
+              </div>
+            </div>
+          </details>
           <details style="margin-top:12px">
             <summary style="cursor:pointer;color:rgba(226,232,240,0.45);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Advanced service account fallback</summary>
             <div class="settings-row" style="margin-top:10px">
@@ -1881,6 +1894,25 @@ function renderMoods() {
   if (aiFill)  aiFill.style.width  = Math.round((S.aiMood - 1) * 10) + '%';
   if (aiLabel) aiLabel.textContent = (S.aiName || 'Caroline') + ' mood';
 }
+function nudgeAiMoodForInteraction(weight = 1) {
+  let moodFloat = parseFloat(localStorage.getItem('caroline_ai_mood_float') || '');
+  if (!Number.isFinite(moodFloat)) moodFloat = clampMood(S.aiMood);
+  const userMood = clampMood(S.userMood);
+  const ceiling = userMood <= 3 ? 8.0 : (userMood <= 5 ? 8.8 : 10.0);
+  const bump = (userMood <= 3 ? 0.05 : (userMood <= 5 ? 0.08 : 0.14)) * weight;
+  const floor = userMood <= 3 ? 6.0 : 5.0;
+  moodFloat = Math.min(ceiling, Math.max(floor, moodFloat + bump));
+  localStorage.setItem('caroline_ai_mood_float', String(moodFloat));
+  const nextMood = clampMood(moodFloat);
+  if (nextMood !== S.aiMood) {
+    S.aiMood = nextMood;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    renderMoods();
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'settings_update', aiMood: S.aiMood, userMood: S.userMood, setupComplete: true }));
+    }
+  }
+}
 document.addEventListener('DOMContentLoaded', () => {
   S.userMood = clampMood(S.userMood);
   S.aiMood   = clampMood(S.aiMood);
@@ -2075,6 +2107,8 @@ function toggleSettings() {
         });
         const grEl = document.getElementById('google-redirect-uri');
         if (grEl) grEl.textContent = S.googleRedirectUri;
+        const discordTokenEl = document.getElementById('set-discord-token');
+        if (discordTokenEl && d.discordTokenConfigured && !discordTokenEl.value) discordTokenEl.placeholder = 'Bot token saved on Pi';
         // Re-apply feature checkboxes from server-authoritative S.features
         if (S.features && Object.keys(S.features).length) {
           ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
@@ -2150,6 +2184,50 @@ function selectSwatch(i) {
 function toggleDiscordFields(enabled) {
   const el = document.getElementById('discord-fields');
   if (el) el.classList.toggle('open', enabled);
+}
+
+function looksLikeDiscordBotToken(token) {
+  const t = String(token || '').trim().replace(/^Bot\s+/i, '');
+  if (!t) return true;
+  if (/^\d{16,22}$/.test(t)) return false; // usually an app/channel/user ID, not a bot token
+  return t.length >= 45;
+}
+
+function setDiscordTestStatus(text, isError = false) {
+  const el = document.getElementById('discord-test-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = isError ? 'rgba(248,113,113,0.9)' : 'rgba(165,180,252,0.9)';
+}
+
+async function testDiscordConnection() {
+  const enabled = !!document.getElementById('set-discord-enabled')?.checked;
+  const token = (document.getElementById('set-discord-token')?.value || '').trim();
+  const channelId = (document.getElementById('set-discord-channel')?.value || '').trim();
+  if (!enabled) { setDiscordTestStatus('Enable Discord first', true); return; }
+  if (!channelId) { setDiscordTestStatus('Paste the channel ID first', true); return; }
+  if (token && !looksLikeDiscordBotToken(token)) {
+    setDiscordTestStatus('That looks like an ID, not a bot token', true);
+    return;
+  }
+  setDiscordTestStatus('Testing...');
+  try {
+    const payload = { discordEnabled: enabled, discordChannelId: channelId };
+    if (token) payload.discordToken = token;
+    await postSettingsToNodeRed(payload, NODE_RED_TIMEOUT_MS);
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/discord-test', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Discord test');
+    const data = await r.json();
+    if (data.ok) {
+      setDiscordTestStatus('Discord test sent');
+      return;
+    }
+    const status = Number(data.discordStatus || 0);
+    if (status === 401) setDiscordTestStatus('Unauthorized: paste the bot token, not the app/client ID', true);
+    else if (status === 403) setDiscordTestStatus('Forbidden: bot lacks channel permission', true);
+    else setDiscordTestStatus(data.error || ('Discord failed: HTTP ' + (status || r.status)), true);
+  } catch (err) {
+    setDiscordTestStatus(err.message || 'Discord test failed', true);
+  }
 }
 
 // ── PROVIDER SWITCHER ──────────────────────────
@@ -2982,7 +3060,16 @@ async function saveSettings() {
   const sheetInp = document.getElementById('set-sheet-id');
   if (sheetInp) S.sheetId = sheetInp.value.trim();
   S.discordEnabled = document.getElementById('set-discord-enabled').checked;
-  S.discordToken = document.getElementById('set-discord-token').value.trim();
+  const discordTokenVal = document.getElementById('set-discord-token').value.trim();
+  if (S.discordEnabled && discordTokenVal && !looksLikeDiscordBotToken(discordTokenVal)) {
+    setDiscordTestStatus('That looks like an ID, not a bot token', true);
+    if (fb) { fb.textContent = 'Discord token looks wrong'; fb.classList.add('show', 'error'); }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
+    document.getElementById('set-discord-token').focus();
+    return;
+  }
+  if (discordTokenVal) S.discordToken = discordTokenVal;
+  else delete S.discordToken;
   S.discordChannelId = document.getElementById('set-discord-channel').value.trim();
   S.zipCode = newZip;
   S.zipcode = newZip;
@@ -3447,17 +3534,16 @@ const HOWTO_CONTENT = {
   },
   calendar: {
     title:'GOOGLE CALENDAR + TASKS',
-    html:`<h4>What it does</h4><p>Reads your upcoming events and syncs your task list with Google Sheets.</p>
+    html:`<h4>What it does</h4><p>Reads your upcoming events and can create calendar events from chat. Tasks are stored locally; the old Sheets sync is optional.</p>
 <h4>Step-by-step</h4><ol>
 <li>Go to <code>console.cloud.google.com</code> → create a new project</li>
-<li>Search for and enable: <strong>Google Calendar API</strong> and <strong>Google Sheets API</strong></li>
-<li>Go to <strong>IAM &amp; Admin → Service Accounts</strong> → <strong>Create Service Account</strong></li>
-<li>Give it any name, skip optional steps, click <strong>Done</strong></li>
-<li>Click the service account → <strong>Keys</strong> tab → <strong>Add Key → JSON</strong></li>
-<li>Download the JSON file — upload it in the setup wizard</li>
-<li>Share your Google Calendar and task Sheet with the service account email</li>
+<li>Enable the <strong>Google Calendar API</strong></li>
+<li>Create an OAuth Client ID with application type <strong>Desktop app</strong></li>
+<li>Download the OAuth JSON and import it in Caroline Settings → Google</li>
+<li>Click <strong>Connect Google</strong> or <strong>Use Phone Code</strong></li>
+<li>Leave Calendar ID as <code>primary</code> unless you want a specific shared calendar</li>
 </ol>
-<div class="howto-note">📋 Full guide with screenshots available on the project GitHub.</div>`
+<div class="howto-note">Google Sheets and service-account JSON are legacy fallback options; most installs do not need them.</div>`
   },
   weather: {
     title:'WEATHER WIDGET',
@@ -3627,6 +3713,7 @@ function connectWS(){
         renderMoods();
         t = t.replace(/\[SET_AI_MOOD:\d+\]/gi, '').trim();
       }
+      nudgeAiMoodForInteraction(1);
       playBeep(600);
       addMessage(t, 'caroline', 'display');
       speak(t);
@@ -3742,12 +3829,13 @@ function sendMessage(){
     return;
   }
   addMessage(t,'user','display'); showTyping();
+  nudgeAiMoodForInteraction(0.5);
   _trackSend(t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
   if(ws&&ws.readyState===WebSocket.OPEN){
     const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
     if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
-    ws.send(JSON.stringify({type:'user_message', content:t, context: ctx}));
+    ws.send(JSON.stringify({type:'user_message', content:t, userMood:S.userMood, aiMood:S.aiMood, context: ctx}));
   } else {
     clog('err', 'Send failed — WebSocket not connected');
     addMessage('⚡ No connection to home base. Reconnecting…', 'caroline', 'display');

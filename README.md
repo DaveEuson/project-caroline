@@ -27,7 +27,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Cyberpunk UI** — Ambient kiosk interface served on port 8080
 - **Robust Backend** — Node-RED on port 1880 as a bare-metal system service
 - **Persistent Memory** — AI chat with memory across sessions
-- **Productivity** — Creates calendar events and manages Google Tasks via chat
+- **Productivity** — Creates calendar events and manages a local task list via chat
 - **Proactive AI** — Caroline checks in four times a day with lightweight context
 - **Local & Cloud AI** — Ollama (llama3.2, phi3:mini, gemma2:2b) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
@@ -48,7 +48,7 @@ The installer asks for your name, timezone, location, and whether to install Oll
 
 After install, open **Settings** in Caroline:
 
-- **Google:** create an OAuth client, paste the Client ID, then use **Connect Google** for Calendar and Google Tasks. The old service-account JSON upload is kept only as an advanced fallback.
+- **Google:** create a Desktop OAuth client, import its OAuth JSON or paste the Client ID, then use **Connect Google** for Calendar. The old Sheets/service-account path is kept only as an advanced fallback.
 - **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (e.g. `http://localhost:8080/`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 
