@@ -454,18 +454,16 @@ OLLAMA_ENV_EOF
   spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
   if wait "$PULL_PID"; then
     echo -e "${GREEN}  ✓ Model ${OLLAMA_MODEL} locked and loaded${RESET}"
-    echo -e "${YELLOW}  ► Warming ${OLLAMA_MODEL} into memory briefly...${RESET}"
-    if timeout 45s ollama run "$OLLAMA_MODEL" "hello" >/tmp/caroline-ollama-warmup.log 2>&1; then
-      echo -e "${GREEN}  ✓ Model warm-up complete${RESET}"
-    else
-      echo -e "${YELLOW}  ⚠ Model warm-up timed out — continuing install.${RESET}"
-      echo -e "${DIM}    First local AI reply may be slow. Log: cat /tmp/caroline-ollama-warmup.log${RESET}"
-    fi
+    echo -e "${YELLOW}  ► Starting ${OLLAMA_MODEL} warm-up in the background...${RESET}"
+    (timeout 45s ollama run "$OLLAMA_MODEL" "hello" >/tmp/caroline-ollama-warmup.log 2>&1 || true) &
+    echo -e "${DIM}    Continuing install. First local AI reply may still be slow.${RESET}"
   else
     echo -e "${YELLOW}  ⚠ Model pull failed — run 'ollama pull ${OLLAMA_MODEL}' manually after install${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-pull.log${RESET}"
   fi
+  echo -e "${GREEN}  ✓ Ollama setup complete${RESET}"
 fi
+true
 
 # ── DATA DIRECTORY ───────────────────────────────────────────
 echo -e "${YELLOW}  ► Initializing memory banks at ${CAROLINE_DIR}...${RESET}"
