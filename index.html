@@ -4452,11 +4452,50 @@ function renderTodos() {
   });
 }
 
+function completionCommentForTask(taskText) {
+  const text = String(taskText || '').trim();
+  const lower = text.toLowerCase();
+  const clean = text.replace(/[.!?]+$/g, '');
+  const niceTask = clean || 'that task';
+  const starters = ['Ah', 'Oh nice', 'There we go', 'Hey, look at that'];
+  let line;
+  if (/\b(dog|walked?|walking|puppy|pup)\b/.test(lower)) {
+    line = `Oh, I see you handled ${niceTask}. That is genuinely good. Nice work.`;
+  } else if (/\b(email|reply|inbox|message|sent|send)\b/.test(lower)) {
+    line = `Ah, you got ${niceTask} done. Excellent. Future-you is already grateful.`;
+  } else if (/\b(call|phone|voicemail|text)\b/.test(lower)) {
+    line = `Nice, ${niceTask} is off the list. Communication gate cleared.`;
+  } else if (/\b(trash|dishes|laundry|clean|vacuum|tidy)\b/.test(lower)) {
+    line = `Oh good, ${niceTask} is handled. Tiny domestic victory, honestly powerful.`;
+  } else if (/\b(pay|bill|bank|invoice|tax)\b/.test(lower)) {
+    line = `Good, ${niceTask} is done. Financial side quest complete.`;
+  } else {
+    const starter = starters[Math.floor(Math.random() * starters.length)];
+    const endings = [
+      'You are doing great.',
+      'That counts. Momentum is real.',
+      'Awesome. One less thing orbiting your head.',
+      'Clean work. The list is lighter now.'
+    ];
+    line = `${starter}, ${niceTask} is done. ${endings[Math.floor(Math.random() * endings.length)]}`;
+  }
+  return line;
+}
+
+function announceTodoCompletion(taskText) {
+  const msg = completionCommentForTask(taskText);
+  setTimeout(() => {
+    addMessage(msg, 'caroline', 'display');
+    if (voiceEnabled) speak(msg);
+  }, 180);
+}
+
 function toggleTodoItem(idx) {
   if (!todos[idx]) return;
   const taskText = todos[idx].text;
   todos.splice(idx, 1);
   saveTodos(); renderTodos(); playBeep(900);
+  announceTodoCompletion(taskText);
   if (ws && ws.readyState === 1) {
     ws.send(JSON.stringify({ type: 'task_complete', task: taskText }));
   }
