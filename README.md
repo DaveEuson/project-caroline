@@ -36,9 +36,31 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 
 ---
 
+## System Requirements
+
+Recommended release target:
+
+- Raspberry Pi 4 or 5 with 4GB+ RAM
+- Raspberry Pi OS Desktop 64-bit
+- 32GB+ microSD card recommended
+- 16GB microSD card minimum if you skip local AI/Ollama and keep the install lean
+- 64GB+ microSD card recommended if you install Ollama/local models or plan to keep lots of local data
+- Internet access during install
+- SSH or Raspberry Pi Connect configured before kiosk testing
+
+Alternate supported target:
+
+- 64-bit Ubuntu/Debian/Linux desktop or VM
+- `x86_64` / `amd64` is fine
+- Node.js 18+ must be available through NodeSource or the OS package repositories
+
+Avoid 32-bit `i386` VM images for this release. NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages.
+
+Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the services and web UI, but it is not the recommended path for the dedicated fullscreen display experience.
+
+---
+
 ## Installation
-- Recommended: Raspberry Pi 4 or 5 (4GB+) running Raspberry Pi OS Desktop 64-bit
-- Also supported: 64-bit Ubuntu/Debian/Linux desktop or VM
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
@@ -46,7 +68,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 
 The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
-Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work. Avoid 32-bit `i386` VM images: NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages. If you do use `i386`, the installer can only continue when `apt` offers Node.js 18 or newer.
+Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work.
 
 On desktop Raspberry Pi OS, the installer also creates two desktop shortcuts:
 
@@ -210,14 +232,6 @@ Use this if you want custom streams in the video widget.
 2. Add a channel name and icon.
 3. Paste a direct HLS `.m3u8` URL or a YouTube video ID.
 4. Save and select the channel in the kiosk.
-
-### Requirements
-
-- Recommended: Raspberry Pi 4 or 5 (4GB+) running Raspberry Pi OS Desktop 64-bit
-- Alternate: 64-bit Ubuntu/Debian/Linux desktop or VM
-- Firefox in kiosk mode via the labwc Wayland compositor
-
----
 
 ## Stack
 
