@@ -51,7 +51,6 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t-hex1); box-shadow: 0 0 8px var(--t-hex1); animation: blink 2s ease-in-out infinite; transition: all 0.5s ease; }
   .topbar-name { font-size: 18px; font-weight: 600; letter-spacing: 0.05em; color: #f8fafc; }
   .topbar-version { font-size: 9px; color: rgba(var(--t-rgb1),0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; margin-left: 2px; align-self: flex-end; margin-bottom: 3px; }
-  .topbar-sub { font-size: 14px; color: rgba(148,163,184,0.6); font-family: 'JetBrains Mono', monospace; }
   .conn-pill { background: rgba(var(--t-rgb1), 0.1); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; transition: all 0.5s ease; white-space: nowrap; }
   .conn-pill.ai-ok { color:#34d399; border-color:rgba(52,211,153,0.35); background:rgba(52,211,153,0.09); }
   .conn-pill.ai-warn { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.09); }
@@ -1119,6 +1118,20 @@
             <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
             <input class="settings-input" id="set-timezone" type="text" placeholder="America/Los_Angeles" style="width:220px"/>
           </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Time format</div><div class="settings-sub">Clock and widget times</div></div>
+            <select class="settings-select" id="set-time-format" style="width:140px">
+              <option value="12">12-hour</option>
+              <option value="24">24-hour</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Temperature</div><div class="settings-sub">Weather and Pi health</div></div>
+            <select class="settings-select" id="set-temperature-unit" style="width:140px">
+              <option value="fahrenheit">Fahrenheit</option>
+              <option value="celsius">Celsius</option>
+            </select>
+          </div>
         </div>
         <div class="settings-section">
           <h3>Modules — enable / disable features</h3>
@@ -1287,7 +1300,6 @@
   <div class="dot"></div>
   <span class="topbar-name" id="topbar-name">Caroline</span>
   <span class="topbar-version">v0.2</span>
-  <span class="topbar-sub">AI companion</span>
   <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
   <span class="net-pill" id="model-pill" title="Active AI model">-- --</span>
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
@@ -1592,7 +1604,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
+const DEFAULTS = { avatar: 0, theme: 0, uiFont: 'Nunito', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3.2', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', features: FEATURE_DEFAULTS };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
@@ -2022,6 +2034,10 @@ function toggleSettings() {
     document.getElementById('set-huekey').value = S.hueKey || '';
     document.getElementById('set-spotify-id').value = S.spotifyClientId || '';
     document.getElementById('set-timezone').value = S.timezone || '';
+    const timeFormatEl = document.getElementById('set-time-format');
+    if (timeFormatEl) timeFormatEl.value = S.timeFormat || '12';
+    const tempUnitEl = document.getElementById('set-temperature-unit');
+    if (tempUnitEl) tempUnitEl.value = S.temperatureUnit || 'fahrenheit';
     document.getElementById('set-location').value = S.location || S.cityName || '';
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
@@ -2094,7 +2110,8 @@ function toggleSettings() {
           'set-orkey': S.openrouterKey, 'set-spotify-id': S.spotifyClientId,
           'set-nodered-url': S.nodeRedUrl, 'set-calendar-id': S.calendarId,
           'set-discord-token': S.discordToken, 'set-discord-channel': S.discordChannelId,
-          'set-timezone': S.timezone, 'set-location': S.location || S.cityName,
+          'set-timezone': S.timezone, 'set-time-format': S.timeFormat,
+          'set-temperature-unit': S.temperatureUnit, 'set-location': S.location || S.cityName,
           'set-zip': S.zipcode || S.zipCode, 'set-ainame': S.aiName,
           'set-tides-station': S.tidesStation, 'set-google-client-id': S.googleClientId,
           'set-google-client-secret': S.googleClientSecret, 'set-sheet-id': S.sheetId,
@@ -3055,6 +3072,8 @@ async function saveSettings() {
   HUE_GROUP = S.hueGroup || '4';
   S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
   S.timezone = document.getElementById('set-timezone').value.trim();
+  S.timeFormat = document.getElementById('set-time-format')?.value || '12';
+  S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
   S.location = document.getElementById('set-location').value.trim();
   S.calendarId = document.getElementById('set-calendar-id').value.trim() || 'primary';
   const sheetInp = document.getElementById('set-sheet-id');
@@ -3090,7 +3109,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiName: S.aiName, userName: S.userName, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
+    ws.send(JSON.stringify({ type: 'settings_update', aiName: S.aiName, userName: S.userName, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
   }
 
   let nrSaveOk = false;
@@ -3137,6 +3156,8 @@ async function saveSettings() {
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
+  updateClock();
+  fetchWeather();
   updateAiConfigIndicator();
 
   fb.classList.remove('error');
@@ -3395,7 +3416,11 @@ setInterval(()=>{ idleTimer++; if(idleTimer>idleLimit && !document.body.classLis
 
 // ── CLOCK ─────────────────────────────────────
 function getTimeIcon(h){ if(h>=5&&h<8)return'🌅'; if(h>=8&&h<12)return'☀️'; if(h>=12&&h<17)return'🌤️'; if(h>=17&&h<20)return'🌆'; if(h>=20&&h<23)return'🌙'; return'✨'; }
-function updateClock(){ const n=new Date(); const t=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('clock').textContent=t; const ti=document.getElementById('time-icon'); if(ti) ti.innerHTML=getTimeIcon(n.getHours()); const it=document.getElementById('idle-clock-time'); const id=document.getElementById('idle-clock-date'); if(it) it.textContent=t; if(id) id.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase(); }
+function uses24hTime(){ return String(S.timeFormat || '12') === '24'; }
+function formatDisplayTime(date, hourStyle='2-digit'){ const is24=uses24hTime(); return date.toLocaleTimeString(is24?'en-GB':'en-US',{hour:hourStyle,minute:'2-digit',hour12:!is24}); }
+function temperatureUnit(){ return S.temperatureUnit === 'celsius' ? 'celsius' : 'fahrenheit'; }
+function temperatureSuffix(){ return temperatureUnit() === 'celsius' ? '°C' : '°F'; }
+function updateClock(){ const n=new Date(); const t=formatDisplayTime(n); document.getElementById('clock').textContent=t; const ti=document.getElementById('time-icon'); if(ti) ti.innerHTML=getTimeIcon(n.getHours()); const it=document.getElementById('idle-clock-time'); const id=document.getElementById('idle-clock-date'); if(it) it.textContent=t; if(id) id.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase(); }
 updateClock(); setInterval(updateClock,1000);
 
 // ── TTS ───────────────────────────────────────
@@ -3684,7 +3709,7 @@ function connectWS(){
     // Only send keys that are actually set in localStorage — empty values must never
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     (()=>{
-      const _syncKeys=['aiName','userName','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','features'];
+      const _syncKeys=['aiName','userName','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','features'];
       const _payload={type:'settings_update',setupComplete:true};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       ws.send(JSON.stringify(_payload));
@@ -3865,7 +3890,8 @@ function updateCpuTemp(tempF, tempC) {
   const desc = document.getElementById('cpu-temp-desc');
   const fill = document.getElementById('cpu-temp-fill');
   if (!val) return;
-  val.textContent = tempF.toFixed(1) + '°F';
+  const displayTemp = temperatureUnit() === 'celsius' ? tempC : tempF;
+  val.textContent = displayTemp.toFixed(1) + temperatureSuffix();
   val.className = tempC < 50 ? 'cool' : tempC < 70 ? 'warm' : 'hot';
   desc.textContent = tempC < 50 ? 'Cool' : tempC < 70 ? 'Warm' : 'Hot!';
   desc.style.color = tempC < 50 ? 'rgba(52,211,153,0.6)' : tempC < 70 ? 'rgba(251,191,36,0.6)' : 'rgba(248,113,113,0.6)';
@@ -3911,15 +3937,16 @@ async function fetchWeather(){
     }
     const lat=S.lat,lng=S.lng;
     console.log('[Caroline] Fetching weather for', { zip:S.zipcode||S.zipCode||'', lat, lng, city:S.cityName||S.location||'' });
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&forecast_days=6&timezone=auto', { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
+    const tempUnit = temperatureUnit();
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit='+tempUnit+'&forecast_days=6&timezone=auto', { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
     if(!r.ok) throw new Error('Open-Meteo HTTP '+r.status);
     const d=await r.json();
     const code=d.current.weathercode;
     document.getElementById('weather-icon').innerHTML=WMO[code]||'🌤️';
-    document.getElementById('weather-temp').textContent=Math.round(d.current.temperature_2m)+'°F';
+    document.getElementById('weather-temp').textContent=Math.round(d.current.temperature_2m)+temperatureSuffix();
     document.getElementById('weather-desc').textContent=WMO_D[code]||'Clear';
     document.getElementById('weather-city-label').textContent=S.cityName||S.location||'';
-    if(d.daily.sunrise && d.daily.sunrise[0]){ const rise=new Date(d.daily.sunrise[0]); const set=new Date(d.daily.sunset[0]); document.getElementById('sunrise-time').textContent=rise.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); document.getElementById('sunset-time').textContent=set.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
+    if(d.daily.sunrise && d.daily.sunrise[0]){ const rise=new Date(d.daily.sunrise[0]); const set=new Date(d.daily.sunset[0]); document.getElementById('sunrise-time').textContent=formatDisplayTime(rise); document.getElementById('sunset-time').textContent=formatDisplayTime(set); }
     const fc=document.getElementById('forecast'); fc.innerHTML=''; for(let i=1;i<6;i++){ const dt=new Date(d.daily.time[i]+'T12:00:00'); const el=document.createElement('div'); el.className='fc-day'; el.innerHTML='<div class="fc-name">'+DAYS[dt.getDay()]+'</div><div class="fc-icon">'+(WMO[d.daily.weathercode[i]]||'🌤️')+'</div><div class="fc-hi">'+Math.round(d.daily.temperature_2m_max[i])+'°</div><div class="fc-lo">'+Math.round(d.daily.temperature_2m_min[i])+'°</div>'; fc.appendChild(el); }
   }catch(e){
     console.error('[Caroline] Weather failed:', e);
@@ -3942,14 +3969,14 @@ async function fetchTides(){
       row.innerHTML='';
       upcoming.forEach(p=>{
         const dt=new Date(p.t);
-        const timeStr=dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+        const timeStr=formatDisplayTime(dt,'numeric');
         const item=document.createElement('div'); item.className='tide-item';
         item.innerHTML='<div class="tide-type">'+(p.type==='H'?'HIGH':'LOW')+'</div><div class="tide-time">'+timeStr+'</div><div class="tide-ht">'+parseFloat(p.v).toFixed(1)+' ft</div>';
         row.appendChild(item);
       });
     }
     const bs=document.getElementById('bs-tides');
-    if(bs&&upcoming.length) bs.textContent=(upcoming[0].type==='H'?'↑':'↓')+' '+new Date(upcoming[0].t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    if(bs&&upcoming.length) bs.textContent=(upcoming[0].type==='H'?'↑':'↓')+' '+formatDisplayTime(new Date(upcoming[0].t),'numeric');
   } catch(e){ clog('err','Tides: '+e.message); }
 }
 
@@ -4407,7 +4434,7 @@ function renderTodos() {
     div.className = 'todo-item' + (todo.done ? ' done' : '') + (todo.autoDone ? ' auto-done' : '');
     div.onclick = () => toggleTodoItem(realIdx);
     const tag = todo.tag ? `<span class="todo-tag ${todo.tag}">${todo.tag}</span>` : '';
-    const meta = todo.autoDone ? '<span class="todo-tag auto">✓ auto-completed</span>' : todo.doneAt ? `completed ${new Date(todo.doneAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}` : '';
+    const meta = todo.autoDone ? '<span class="todo-tag auto">✓ auto-completed</span>' : todo.doneAt ? `completed ${formatDisplayTime(new Date(todo.doneAt))}` : '';
     div.innerHTML = `<div class="todo-check"><span class="todo-check-icon">✓</span></div><div style="flex:1"><div class="todo-text">${todo.text}</div><div class="todo-meta">${tag}${meta}</div></div>`;
     body.appendChild(div);
   });

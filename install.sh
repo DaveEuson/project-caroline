@@ -552,6 +552,8 @@ jq -n \
     userMood:        7,
     aiMood:          7,
     timezone:        $tz,
+    timeFormat:      "12",
+    temperatureUnit: "fahrenheit",
     location:        $loc,
     zipcode:         $zip,
     zipCode:         $zip,
