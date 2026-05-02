@@ -37,8 +37,8 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 ---
 
 ## Installation
-- Raspberry Pi 4 or 5 (4GB+ recommended)
-- Raspberry Pi OS Desktop 64-bit *(Ubuntu 22.04+ also supported)*
+- Recommended: Raspberry Pi 4 or 5 (4GB+) running Raspberry Pi OS Desktop 64-bit
+- Also supported: 64-bit Ubuntu/Debian/Linux desktop or VM
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
@@ -46,7 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 
 The installer asks for your name, timezone, location, and whether to install Ollama. The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
-VM note: Caroline is built for Raspberry Pi/Linux, but it is not ARM-only. A 64-bit `amd64` Linux VM is fine for QA. Avoid 32-bit `i386` VM images: NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages. If you do use `i386`, the installer can only continue when `apt` offers Node.js 18 or newer.
+Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work. Avoid 32-bit `i386` VM images: NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages. If you do use `i386`, the installer can only continue when `apt` offers Node.js 18 or newer.
 
 On desktop Raspberry Pi OS, the installer also creates two desktop shortcuts:
 
@@ -213,8 +213,8 @@ Use this if you want custom streams in the video widget.
 
 ### Requirements
 
-- Raspberry Pi 4 or 5 (4GB+ recommended)
-- Raspberry Pi OS Desktop 64-bit *(Ubuntu 22.04+ also supported)*
+- Recommended: Raspberry Pi 4 or 5 (4GB+) running Raspberry Pi OS Desktop 64-bit
+- Alternate: 64-bit Ubuntu/Debian/Linux desktop or VM
 - Firefox in kiosk mode via the labwc Wayland compositor
 
 ---

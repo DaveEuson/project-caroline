@@ -197,7 +197,7 @@ OS_ID=$(. /etc/os-release 2>/dev/null && echo "$ID" || echo "unknown")
 OS_VER=$(. /etc/os-release 2>/dev/null && echo "$VERSION_CODENAME" || echo "unknown")
 if [[ "$OS_ID" != "raspbian" && "$OS_ID" != "debian" && "$OS_ID" != "ubuntu" ]]; then
   echo -e "${YELLOW}  ⚠ Unrecognized OS: ${OS_ID} ${OS_VER}${RESET}"
-  echo -e "${DIM}  Caroline is tested on Raspberry Pi OS and Ubuntu 22.04+.${RESET}"
+  echo -e "${DIM}  Caroline is designed for Raspberry Pi OS, with 64-bit Ubuntu/Debian/Linux as an alternate path.${RESET}"
   echo -e "${DIM}  Continuing anyway — things may break.${RESET}"
   echo ""
 fi
@@ -309,7 +309,7 @@ install_node_from_apt() {
   _candidate_major=$(node_major_from_version "$_candidate")
   if [ "$_candidate_major" -lt 18 ]; then
     echo -e "${RED}  ✗ This OS repository offers Node.js ${_candidate:-unknown}, but Node-RED 4.x needs Node.js 18+.${RESET}"
-    echo -e "${DIM}    Use a 64-bit Raspberry Pi OS/Ubuntu/Debian VM, or a real Pi running Raspberry Pi OS 64-bit.${RESET}"
+    echo -e "${DIM}    Use a real Pi running Raspberry Pi OS 64-bit, or a 64-bit Ubuntu/Debian/Linux VM or desktop.${RESET}"
     echo -e "${DIM}    32-bit i386 VM images often only provide old Node.js packages and are not a reliable QA target.${RESET}"
     exit 1
   fi
@@ -351,7 +351,7 @@ if [ "$NODE_MAJOR" -lt 18 ]; then
   NODE_MAJOR=$(node -p "parseInt(process.versions.node.split('.')[0], 10)" 2>/dev/null || echo 0)
   if [ "$NODE_MAJOR" -lt 18 ]; then
     echo -e "${RED}  ✗ Node.js $(node --version 2>/dev/null || echo unknown) is too old. Node-RED 4.x needs Node.js 18+.${RESET}"
-    echo -e "${DIM}    For QA, use a 64-bit VM or real Pi for the closest supported environment.${RESET}"
+    echo -e "${DIM}    Use a real Pi running Raspberry Pi OS 64-bit, or a 64-bit Ubuntu/Debian/Linux VM or desktop.${RESET}"
     exit 1
   fi
 fi
