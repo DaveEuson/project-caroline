@@ -261,8 +261,9 @@ echo ""
 
 echo -e "${MAGENTA}  // NEURAL CORE SELECTION${RESET}"
 echo ""
-echo -e "${DIM}  Ollama = local AI, private and free, but slower on Pi. No API key.${RESET}"
+echo -e "${DIM}  Ollama = local AI, private and free. On Pi, model choice matters a lot.${RESET}"
 echo -e "${DIM}  OpenRouter = cloud AI (Claude Haiku). Costs ~\$0.05/month. Needs a key.${RESET}"
+echo -e "${DIM}  Pi recommendation: qwen2.5:0.5b. It is small enough to feel usable.${RESET}"
 echo ""
 
 # Warn if RAM is low
@@ -281,7 +282,8 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
   OLLAMA_MODEL="qwen2.5:0.5b"
   echo -e "${DIM}  Pulling qwen2.5:0.5b by default for Pi-friendly local chat.${RESET}"
-  echo -e "${DIM}  (Options: qwen2.5:0.5b, tinyllama, gemma2:2b, phi3:mini, llama3.2)${RESET}"
+  echo -e "${DIM}  tinyllama is the alternate small model. Larger models may take 20-60s per reply on Pi.${RESET}"
+  echo -e "${DIM}  (Recommended: qwen2.5:0.5b or tinyllama — advanced users can type another Ollama tag.)${RESET}"
   read -p "  Model [qwen2.5:0.5b]: " OLLAMA_MODEL_INPUT </dev/tty
   OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-qwen2.5:0.5b}"
   echo ""
@@ -805,7 +807,8 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | if (($defaults.aiProvider == "ollama")
           and ((($existing.ollamaModel // "") == "")
                or ($existing.ollamaModel == "gemma2:2b")
-               or ($existing.ollamaModel == "llama3.2")))
+               or ($existing.ollamaModel == "llama3.2")
+               or ($existing.ollamaModel == "llama3.2:1b")))
       then .ollamaModel = $defaults.ollamaModel else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end

@@ -62,7 +62,14 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, timezone, location, and whether to install Ollama. For Raspberry Pi installs, the default local model is `qwen2.5:0.5b` because it is much smaller and more realistic on Pi hardware. Bigger models can give better replies, but they may pin the CPU and feel stuck on smaller boards.
+The installer asks for your name, timezone, location, and whether to install Ollama. For Raspberry Pi installs, the default local model is `qwen2.5:0.5b` because it is much smaller and more realistic on Pi hardware. `tinyllama` is the alternate small model. Bigger models can give better replies, but they may pin the CPU and feel stuck on smaller boards.
+
+| Local model | Pi recommendation | Notes |
+|---|---|---|
+| `qwen2.5:0.5b` | Best default | Smallest practical Caroline model; use this first. |
+| `tinyllama` | Good fallback | Also small and usually responsive. |
+| `llama3.2:1b` | Advanced / slow | Works on an 8GB Pi, but a one-word reply can still take ~20-30 seconds. |
+| `gemma2:2b` / larger | Desktop or patient Pi users | Expect slow replies, heat, and sustained CPU load. |
 
 The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 

@@ -891,10 +891,10 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr class="rec-table-row"><td>qwen2.5:0.5b</td><td>398 MB</td><td>⚡⚡⚡⚡</td><td>Pi-safe chat</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:0.5b')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>tinyllama</td><td>638 MB</td><td>⚡⚡⚡</td><td>Fast simple chat</td><td><button type="button" class="detect-btn" onclick="startPull('tinyllama')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡⚡</td><td>Better replies, slower</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>llama3.2</td><td>2.0 GB</td><td>⚡</td><td>Stronger Pi / desktop</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>qwen2.5:0.5b</td><td>398 MB</td><td>⚡⚡⚡⚡</td><td>Pi default</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:0.5b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>tinyllama</td><td>638 MB</td><td>⚡⚡⚡</td><td>Pi alternate</td><td><button type="button" class="detect-btn" onclick="startPull('tinyllama')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>llama3.2:1b</td><td>1.3 GB</td><td>⚡</td><td>Works, but slow on Pi</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2:1b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡</td><td>Desktop / patient Pi</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2440,7 +2440,7 @@ function updateAiConfigIndicator(provider) {
   }
 }
 
-const OLLAMA_RECOMMENDED = new Set(['qwen2.5:0.5b','tinyllama','gemma2:2b','phi3:mini','llama3.2']);
+const OLLAMA_RECOMMENDED = new Set(['qwen2.5:0.5b','tinyllama']);
 let _cachedOllamaModels = null;
 
 async function fetchDirectOllamaTags() {
