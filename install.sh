@@ -20,6 +20,19 @@ DIM='\033[2m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+CAT_NOTES=(
+  "ฅ^•ﻌ•^ฅ  Cat supervisor online."
+  "(=^･ω･^=)  Paws on keyboard. Somehow still shipping."
+  "/ᐠ｡ꞈ｡ᐟ\\  Caroline approves this tiny ritual."
+  "🐾  Quiet paws, clean install."
+  "₍^. .^₎⟆  Tail flick detected; continuing."
+  "😺  A small cat has inspected the cables."
+)
+
+cat_note() {
+  local idx=$((RANDOM % ${#CAT_NOTES[@]}))
+  echo -e "${DIM}  ${CAT_NOTES[$idx]}${RESET}"
+}
 
 # ── SPINNER ───────────────────────────────────────────────────
 spin() {
@@ -41,6 +54,7 @@ phase() {
   echo -e "${CYAN}  ╔══════════════════════════════════════════════════════════╗${RESET}"
   echo -e "${CYAN}  ║  ${MAGENTA}$1${CYAN}$(printf '%*s' $((55 - ${#1})) '')║${RESET}"
   echo -e "${CYAN}  ╚══════════════════════════════════════════════════════════╝${RESET}"
+  cat_note
   echo ""
 }
 
@@ -186,6 +200,9 @@ echo -e "${CYAN}              |__/                                              
 echo ""
 echo -e "${BOLD}${CYAN}  Project: Caroline${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
 echo -e "${DIM}  Your personal AI sidekick with a tiny neon pulse.${RESET}"
+echo -e "${DIM}"'        /\_/\ '"${RESET}"
+echo -e "${DIM}"'       ( o.o )  Caroline likes cats. The installer has accepted this.'"${RESET}"
+echo -e "${DIM}"'        > ^ <  '"${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -207,6 +224,7 @@ echo -e "${BOLD}  Booting Project: Caroline for the first time.${RESET}"
 echo -e "${DIM}  A few questions before the time gate opens.${RESET}"
 echo -e "${DIM}  API keys and integrations are configured in her GUI after install.${RESET}"
 echo -e "${DIM}  Press Enter to skip any field.${RESET}"
+cat_note
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -272,6 +290,7 @@ sleep 1
 phase "PHASE 1 — ESTABLISHING UPLINK"
 
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
+echo -e "${DIM}    Caroline bats the package list into place. 🐾${RESET}"
 sudo apt-get update -q >/tmp/caroline-apt-update.log 2>&1 || {
   echo -e "${RED}  ✗ apt-get update failed. Is the network up?${RESET}"
   echo -e "${DIM}    Log: cat /tmp/caroline-apt-update.log${RESET}"
@@ -287,6 +306,7 @@ echo -e "${GREEN}  ✓ System dependencies online${RESET}"
 
 # ── NODE.JS ──────────────────────────────────────────────────
 echo -e "${YELLOW}  ► Checking Node.js runtime...${RESET}"
+cat_note
 
 node_major_from_version() {
   local _version="${1:-0}"
@@ -364,6 +384,7 @@ echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 phase "PHASE 2 — WEAVING THE NEURAL WEB"
 
 echo -e "${YELLOW}  ► Installing Node-RED (this takes 1-3 minutes)...${RESET}"
+echo -e "${DIM}    If it pauses, Caroline is probably sitting on the build logs.${RESET}"
 sudo npm install -g --unsafe-perm node-red >/tmp/caroline-npm.log 2>&1 &
 NODERED_PID=$!
 spin "$NODERED_PID" "Installing Node-RED..."
@@ -449,6 +470,7 @@ OLLAMA_ENV_EOF
   fi
 
   echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL} — this is her brain. Worth the wait.${RESET}"
+  echo -e "${DIM}    Cat nap window opened. Large models move at sleepy-cat speed.${RESET}"
   ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
   PULL_PID=$!
   spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
@@ -467,6 +489,7 @@ true
 
 # ── DATA DIRECTORY ───────────────────────────────────────────
 echo -e "${YELLOW}  ► Initializing memory banks at ${CAROLINE_DIR}...${RESET}"
+echo -e "${DIM}    Tiny pawprints reserved for memories and settings.${RESET}"
 
 mkdir -p "$CAROLINE_DIR"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR"
@@ -556,6 +579,7 @@ echo -e "${DIM}  ℹ Google Calendar connects from Caroline Settings after insta
 
 # ── IMPORT NODE-RED FLOWS ────────────────────────────────────
 echo -e "${YELLOW}  ► Importing Node-RED flows...${RESET}"
+cat_note
 
 # Merge optional flow modules into main flows
 FLOWS_FILE="$CAROLINE_DIR/flows.json"
@@ -771,6 +795,7 @@ echo -e "${GREEN}  ✓ Settings saved${RESET}"
 phase "PHASE 6 — WIRING AUTOSTART"
 
 echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
+echo -e "${DIM}    Autostart collar fitted. She should come back after reboot.${RESET}"
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   CAROLINE_AFTER="network-online.target ollama.service"
@@ -824,6 +849,7 @@ echo -e "${GREEN}  ✓ Caroline service enabled${RESET}"
 # flows.json is pre-copied to $CAROLINE_DIR and flowFile is set in settings.js,
 # so Node-RED loads it from disk on first boot — no HTTP API deploy needed.
 echo -e "${YELLOW}  ► Waiting for Node-RED to start...${RESET}"
+echo -e "${DIM}    Listening for a purr from port ${NODE_RED_PORT}.${RESET}"
 
 NR_READY=false
 for i in $(seq 1 45); do
@@ -846,6 +872,7 @@ FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
 WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
 
 echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
+echo -e "${DIM}    Leaving two pawprints on the desktop.${RESET}"
 if command -v startx &> /dev/null || command -v labwc &> /dev/null || [ -d "$REAL_HOME/Desktop" ]; then
   if ensure_browser; then
     configure_firefox_profile "$FIREFOX_PROFILE_DIR"
