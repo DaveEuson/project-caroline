@@ -42,9 +42,9 @@ Recommended release target:
 
 - Raspberry Pi 4 or 5 with 4GB+ RAM
 - Raspberry Pi OS Desktop 64-bit
-- 32GB+ microSD card recommended
-- 16GB microSD card minimum if you skip local AI/Ollama and keep the install lean
-- 64GB+ microSD card recommended if you install Ollama/local models or plan to keep lots of local data
+- Storage: 32GB+ microSD card recommended
+- Storage: 16GB microSD card minimum if you skip local AI/Ollama and keep the install lean
+- Storage: 64GB+ microSD card recommended if you install Ollama/local models or plan to keep lots of local data
 - Internet access during install
 - SSH or Raspberry Pi Connect configured before kiosk testing
 
