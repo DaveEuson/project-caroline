@@ -1614,6 +1614,90 @@ S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEF
 handleSpotifyCallback(); // handle ?code= redirect from Spotify OAuth
 localStorage.setItem('caro_settings', JSON.stringify(S));
 
+const SAVED_SECRET_FIELDS = {
+  openrouterKey: { id: 'set-orkey', placeholder: 'OpenRouter key saved on Pi' },
+  hueKey: { id: 'set-huekey', placeholder: 'Hue API key saved on Pi' },
+  discordToken: { id: 'set-discord-token', placeholder: 'Bot token saved on Pi' },
+  googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on Pi' }
+};
+
+function mergeServerSettings(d, options = {}) {
+  if (!d || !Object.keys(d).length) return false;
+  const skip = options.skip || new Set();
+  if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
+  if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
+  if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
+  if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
+  Object.keys(d).forEach(k => {
+    if (skip.has(k)) return;
+    const v = d[k];
+    if (k.endsWith('Configured')) {
+      S[k] = !!v;
+    } else if (v !== undefined && v !== null && v !== '') {
+      S[k] = v;
+    }
+  });
+  S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  return true;
+}
+
+function setInputValue(id, value, options = {}) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const val = value == null ? '' : String(value);
+  if (val !== '' || options.allowBlank) el.value = val;
+}
+
+function applySavedSecretPlaceholders() {
+  Object.entries(SAVED_SECRET_FIELDS).forEach(([key, cfg]) => {
+    const el = document.getElementById(cfg.id);
+    if (!el) return;
+    const saved = !!S[key + 'Configured'] || !!S[key];
+    if (saved) {
+      el.placeholder = cfg.placeholder;
+      el.dataset.savedOnPi = 'true';
+    } else {
+      delete el.dataset.savedOnPi;
+    }
+  });
+}
+
+function applySettingsToForm({ allowBlank = false } = {}) {
+  setInputValue('set-orkey', S.openrouterKey || '', { allowBlank });
+  setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_URL, { allowBlank });
+  setInputValue('set-hueip', S.hueIp || '', { allowBlank });
+  setInputValue('set-huekey', S.hueKey || '', { allowBlank });
+  setInputValue('set-spotify-id', S.spotifyClientId || '', { allowBlank });
+  setInputValue('set-timezone', S.timezone || '', { allowBlank });
+  setInputValue('set-location', S.location || S.cityName || '', { allowBlank });
+  setInputValue('set-zip', S.zipcode || S.zipCode || '', { allowBlank });
+  setInputValue('set-ainame', S.aiName || 'Caroline', { allowBlank });
+  setInputValue('set-calendar-id', S.calendarId || 'primary', { allowBlank });
+  setInputValue('set-sheet-id', S.sheetId || '', { allowBlank });
+  setInputValue('set-discord-token', S.discordToken || '', { allowBlank });
+  setInputValue('set-discord-channel', S.discordChannelId || '', { allowBlank });
+  setInputValue('set-tides-station', S.tidesStation || '', { allowBlank });
+  setInputValue('set-google-client-id', S.googleClientId || '', { allowBlank });
+  setInputValue('set-google-client-secret', S.googleClientSecret || '', { allowBlank });
+  setInputValue('set-username', S.userName || '', { allowBlank });
+  setInputValue('set-ollama-url', S.ollamaUrl || 'http://localhost:11434', { allowBlank });
+  setInputValue('set-ollama-model', S.ollamaModel || 'llama3.2', { allowBlank });
+  setInputValue('set-ainame-sys', S.aiName || 'Caroline', { allowBlank });
+  const timeFormatEl = document.getElementById('set-time-format');
+  if (timeFormatEl) timeFormatEl.value = S.timeFormat || '12';
+  const tempUnitEl = document.getElementById('set-temperature-unit');
+  if (tempUnitEl) tempUnitEl.value = S.temperatureUnit || 'fahrenheit';
+  const discordEnabledEl = document.getElementById('set-discord-enabled');
+  if (discordEnabledEl) discordEnabledEl.checked = !!S.discordEnabled;
+  const grEl = document.getElementById('google-redirect-uri');
+  if (grEl) grEl.textContent = S.googleRedirectUri;
+  const hgSel = document.getElementById('set-hue-group');
+  if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
+  applySavedSecretPlaceholders();
+}
+
 // Pull installer-written settings from Node-RED on first run, and detect fresh installs.
 // Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
 async function syncSettingsFromServer() {
@@ -1632,17 +1716,7 @@ async function syncSettingsFromServer() {
       localStorage.removeItem('caro_onboarded');
       return;
     }
-    if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
-    if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
-    if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
-    Object.keys(d).forEach(k => {
-      if (S[k] === undefined || S[k] === null || S[k] === '' || k === 'timezone' || k === 'location' || k === 'nodeRedUrl') {
-        S[k] = d[k];
-      }
-    });
-    S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
-    S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
-    localStorage.setItem('caro_settings', JSON.stringify(S));
+    mergeServerSettings(d);
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
     updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
@@ -2029,25 +2103,10 @@ function toggleSettings() {
     document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
     document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
     setTimeout(testNodeRedUrl, 80);
-    document.getElementById('set-orkey').value = S.openrouterKey || '';
-    document.getElementById('set-hueip').value = S.hueIp || '';
-    document.getElementById('set-huekey').value = S.hueKey || '';
-    document.getElementById('set-spotify-id').value = S.spotifyClientId || '';
-    document.getElementById('set-timezone').value = S.timezone || '';
-    const timeFormatEl = document.getElementById('set-time-format');
-    if (timeFormatEl) timeFormatEl.value = S.timeFormat || '12';
-    const tempUnitEl = document.getElementById('set-temperature-unit');
-    if (tempUnitEl) tempUnitEl.value = S.temperatureUnit || 'fahrenheit';
-    document.getElementById('set-location').value = S.location || S.cityName || '';
+    applySettingsToForm({ allowBlank: true });
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
     switchSettingsTab('look');
-    document.getElementById('set-calendar-id').value = S.calendarId || 'primary';
-    const sheetEl = document.getElementById('set-sheet-id');
-    if (sheetEl) sheetEl.value = S.sheetId || '';
-    document.getElementById('set-discord-enabled').checked = !!S.discordEnabled;
-    document.getElementById('set-discord-token').value = S.discordToken || '';
-    document.getElementById('set-discord-channel').value = S.discordChannelId || '';
     toggleDiscordFields(!!S.discordEnabled);
 
     const hasToken = localStorage.getItem('spotify_token');
@@ -2100,32 +2159,9 @@ function toggleSettings() {
       .then(d => {
         if (!d || !Object.keys(d).length) return;
         const UI_ONLY = new Set(['theme','uiFont','avatar','idleTimeout','defaultChannel','autoTheme']);
-        if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
-        Object.keys(d).forEach(k => { if (!UI_ONLY.has(k)) S[k] = d[k]; });
-        S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
-        S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
-        localStorage.setItem('caro_settings', JSON.stringify(S));
-        const refresh = {
-          'set-hueip': S.hueIp, 'set-huekey': S.hueKey,
-          'set-orkey': S.openrouterKey, 'set-spotify-id': S.spotifyClientId,
-          'set-nodered-url': S.nodeRedUrl, 'set-calendar-id': S.calendarId,
-          'set-discord-token': S.discordToken, 'set-discord-channel': S.discordChannelId,
-          'set-timezone': S.timezone, 'set-time-format': S.timeFormat,
-          'set-temperature-unit': S.temperatureUnit, 'set-location': S.location || S.cityName,
-          'set-zip': S.zipcode || S.zipCode, 'set-ainame': S.aiName,
-          'set-tides-station': S.tidesStation, 'set-google-client-id': S.googleClientId,
-          'set-google-client-secret': S.googleClientSecret, 'set-sheet-id': S.sheetId,
-          'set-username': S.userName, 'set-ollama-url': S.ollamaUrl,
-          'set-ollama-model': S.ollamaModel, 'set-ainame-sys': S.aiName
-        };
-        Object.entries(refresh).forEach(([id, val]) => {
-          const el = document.getElementById(id);
-          if (el && val != null && val !== '') el.value = val;
-        });
-        const grEl = document.getElementById('google-redirect-uri');
-        if (grEl) grEl.textContent = S.googleRedirectUri;
-        const discordTokenEl = document.getElementById('set-discord-token');
-        if (discordTokenEl && d.discordTokenConfigured && !discordTokenEl.value) discordTokenEl.placeholder = 'Bot token saved on Pi';
+        mergeServerSettings(d, { skip: UI_ONLY });
+        applySettingsToForm();
+        toggleDiscordFields(!!S.discordEnabled);
         // Re-apply feature checkboxes from server-authoritative S.features
         if (S.features && Object.keys(S.features).length) {
           ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
@@ -2286,7 +2322,7 @@ function updateAiConfigIndicator(provider) {
   const pill = document.getElementById('ai-config-pill');
   if (!pill) return;
   const selected = provider || S.aiProvider || 'openrouter';
-  const needsKey = selected !== 'ollama' && !(S.openrouterKey || '').trim();
+  const needsKey = selected !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured;
   pill.classList.toggle('show', needsKey);
   const mPill = document.getElementById('model-pill');
   if (mPill) {
@@ -2565,8 +2601,13 @@ async function testAiConnection(btn) {
     } else {
       const key = (document.getElementById('set-orkey') || {}).value?.trim() || S.openrouterKey;
       if (!key) {
-        result.textContent = '✗ No OpenRouter key configured';
-        result.style.color = '#f87171';
+        if (S.openrouterKeyConfigured) {
+          result.textContent = '✓ OpenRouter key saved on Pi';
+          result.style.color = 'rgba(52,211,153,0.9)';
+        } else {
+          result.textContent = '✗ No OpenRouter key configured';
+          result.style.color = '#f87171';
+        }
       } else {
         const r = await fetch('https://openrouter.ai/api/v1/models', {
           headers: { 'Authorization': 'Bearer ' + key },
@@ -2614,6 +2655,8 @@ async function detectHueBridge(btn) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     if (d.ip) {
+      S.hueIp = d.ip;
+      localStorage.setItem('caro_settings', JSON.stringify(S));
       document.getElementById('set-hueip').value = d.ip;
       if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + d.ip; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
     } else {
@@ -2645,6 +2688,10 @@ async function pairHueBridge(btn) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     if (d.username) {
+      S.hueIp = ip;
+      S.hueKey = d.username;
+      S.hueKeyConfigured = true;
+      localStorage.setItem('caro_settings', JSON.stringify(S));
       document.getElementById('set-huekey').value = d.username;
       if (statusEl) { statusEl.textContent = '✓ Paired! Key saved — hit Save Settings'; statusEl.style.color = 'rgba(52,211,153,0.9)'; }
     } else {
@@ -3041,7 +3088,7 @@ async function saveSettings() {
   const orkeyVal = document.getElementById('set-orkey').value.trim();
   const orkeyErr = document.getElementById('orkey-error');
   const selectedProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
-  if (selectedProvider === 'openrouter' && !orkeyVal) {
+  if (selectedProvider === 'openrouter' && !orkeyVal && !S.openrouterKey && !S.openrouterKeyConfigured) {
     if (orkeyErr) { orkeyErr.textContent = 'OpenRouter key is required when using OpenRouter'; orkeyErr.style.display = 'block'; }
     document.getElementById('set-orkey').focus();
     return;
@@ -3065,12 +3112,15 @@ async function saveSettings() {
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
   S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'llama3.2').trim();
-  S.hueIp = document.getElementById('set-hueip').value.trim();
-  S.hueKey = document.getElementById('set-huekey').value.trim();
+  const hueIpVal = document.getElementById('set-hueip').value.trim();
+  const hueKeyVal = document.getElementById('set-huekey').value.trim();
+  if (hueIpVal || !S.hueIp) S.hueIp = hueIpVal;
+  if (hueKeyVal) S.hueKey = hueKeyVal;
   const hgEl = document.getElementById('set-hue-group');
   if (hgEl && hgEl.value) { S.hueGroup = hgEl.value; S.hueGroupName = hgEl.options[hgEl.selectedIndex]?.text || ''; }
   HUE_GROUP = S.hueGroup || '4';
-  S.spotifyClientId = document.getElementById('set-spotify-id').value.trim();
+  const spotifyClientIdVal = document.getElementById('set-spotify-id').value.trim();
+  if (spotifyClientIdVal || !S.spotifyClientId) S.spotifyClientId = spotifyClientIdVal;
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.timeFormat = document.getElementById('set-time-format')?.value || '12';
   S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
@@ -3088,7 +3138,7 @@ async function saveSettings() {
     return;
   }
   if (discordTokenVal) S.discordToken = discordTokenVal;
-  else delete S.discordToken;
+  else if (!S.discordTokenConfigured) delete S.discordToken;
   S.discordChannelId = document.getElementById('set-discord-channel').value.trim();
   S.zipCode = newZip;
   S.zipcode = newZip;
@@ -3097,7 +3147,7 @@ async function saveSettings() {
   const gcidInp = document.getElementById('set-google-client-id');
   if (gcidInp) S.googleClientId = gcidInp.value.trim();
   const gcsecInp = document.getElementById('set-google-client-secret');
-  if (gcsecInp) S.googleClientSecret = gcsecInp.value.trim();
+  if (gcsecInp && gcsecInp.value.trim()) S.googleClientSecret = gcsecInp.value.trim();
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   const unInp = document.getElementById('set-username');
   if (unInp && unInp.value.trim()) S.userName = unInp.value.trim();
@@ -3859,7 +3909,7 @@ function sendMessage(){
     setTimeout(()=>{ addMessage(reply,'caroline','display'); speak(reply); }, 400);
     return;
   }
-  if ((S.aiProvider || 'openrouter') !== 'ollama' && !(S.openrouterKey || '').trim()) {
+  if ((S.aiProvider || 'openrouter') !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) {
     addMessage(t,'user','display');
     addMessage('I need an OpenRouter API key to respond. Add it in Settings -> AI Model.', 'caroline', 'display');
     updateAiConfigIndicator();
@@ -5236,7 +5286,7 @@ function updateSettingsStatus(){
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
   if(ps) ps.textContent=bits.length?bits.join(' · '):'No personality profile yet';
-  [['aiCore','AI Core',(S.aiProvider === 'ollama') || !!S.openrouterKey],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&S.hueKey)]].forEach(([id,label,on])=>{
+  [['aiCore','AI Core',(S.aiProvider === 'ollama') || !!S.openrouterKey || !!S.openrouterKeyConfigured],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&(S.hueKey||S.hueKeyConfigured))]].forEach(([id,label,on])=>{
     const el=document.getElementById('status-'+id);
     if(!el) return;
     el.classList.toggle('online',on);
