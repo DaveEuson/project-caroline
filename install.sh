@@ -263,14 +263,14 @@ echo -e "${MAGENTA}  // NEURAL CORE SELECTION${RESET}"
 echo ""
 echo -e "${DIM}  Ollama = local AI, private and free. On Pi, model choice matters a lot.${RESET}"
 echo -e "${DIM}  OpenRouter = cloud AI (Claude Haiku). Costs ~\$0.05/month. Needs a key.${RESET}"
-echo -e "${DIM}  Pi recommendation: qwen2.5:0.5b. It is small enough to feel usable.${RESET}"
+echo -e "${DIM}  Pi recommendation: smollm2:360m. Tested around 2s for a tiny reply on Pi.${RESET}"
 echo ""
 
 # Warn if RAM is low
 TOTAL_RAM_MB=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
 if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo -e "${YELLOW}  ⚠ ${TOTAL_RAM_MB}MB RAM detected. Ollama runs better with 4GB+.${RESET}"
-  echo -e "${DIM}    qwen2.5:0.5b is the safest local default on smaller Pi installs.${RESET}"
+  echo -e "${DIM}    smollm2:360m is the safest local default on smaller Pi installs.${RESET}"
   echo ""
 fi
 
@@ -280,17 +280,17 @@ echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  OLLAMA_MODEL="qwen2.5:0.5b"
-  echo -e "${DIM}  Pulling qwen2.5:0.5b by default for Pi-friendly local chat.${RESET}"
+  OLLAMA_MODEL="smollm2:360m"
+  echo -e "${DIM}  Pulling smollm2:360m by default for Pi-friendly local chat.${RESET}"
   echo -e "${DIM}  tinyllama is the alternate small model. Larger models may take 20-60s per reply on Pi.${RESET}"
-  echo -e "${DIM}  (Recommended: qwen2.5:0.5b or tinyllama — advanced users can type another Ollama tag.)${RESET}"
-  read -p "  Model [qwen2.5:0.5b]: " OLLAMA_MODEL_INPUT </dev/tty
-  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-qwen2.5:0.5b}"
+  echo -e "${DIM}  (Recommended: smollm2:360m or tinyllama — advanced users can type another Ollama tag.)${RESET}"
+  read -p "  Model [smollm2:360m]: " OLLAMA_MODEL_INPUT </dev/tty
+  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-smollm2:360m}"
   echo ""
   echo -e "${DIM}  Good. ${OLLAMA_MODEL} is her brain. Worth the wait.${RESET}"
 else
   AI_PROVIDER="openrouter"
-  OLLAMA_MODEL="qwen2.5:0.5b"
+  OLLAMA_MODEL="smollm2:360m"
   echo -e "${DIM}  Skipping Pi Ollama. Use OpenRouter, or point Settings → Ollama URL at another computer later.${RESET}"
 fi
 echo ""
@@ -808,7 +808,8 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
           and ((($existing.ollamaModel // "") == "")
                or ($existing.ollamaModel == "gemma2:2b")
                or ($existing.ollamaModel == "llama3.2")
-               or ($existing.ollamaModel == "llama3.2:1b")))
+               or ($existing.ollamaModel == "llama3.2:1b")
+               or ($existing.ollamaModel == "qwen2.5:0.5b")))
       then .ollamaModel = $defaults.ollamaModel else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
