@@ -280,9 +280,11 @@ Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on 
 
 While the initial setup gives your sidekick a baseline vibe, you can deeply customize their brain in the Settings panel. If you use another AI regularly (like ChatGPT or Claude), it already knows your exact communication style.
 
-Copy and paste this prompt into your existing AI to generate a highly tailored personality:
+Copy and paste this prompt into your existing AI to generate a highly tailored profile:
 
-> *"I am setting up an open-source, local digital sidekick kiosk called Project: Caroline. Since you already know my workflow, communication style, and personality, I want you to write its core Personality Prompt. Based on what you know about me, write a 1-2 paragraph instruction that dictates this new AI's tone, its role in helping me manage my day (e.g., drill sergeant, sarcastic helper, or collaborative co-pilot), and how verbose it should be. The dynamic must remain strictly platonic — playful banter is fine, but it should act like a reliable assistant or sidekick, never a romantic partner. Keep the output formatting-free (no markdown). Do not include functional commands, just the persona."*
+> *"I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write a concise user profile I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, and any recurring patterns worth remembering. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk."*
+
+Paste the result into **Settings → System → User profile prompt**. The boot sequence keeps Caroline's own style in **Caroline style prompt**, while the profile prompt tells Caroline how to support you.
 
 ---
 
