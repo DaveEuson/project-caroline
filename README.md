@@ -169,8 +169,10 @@ Use this for calendar context and calendar event creation.
 5. Create an OAuth client of type **Desktop app**.
 6. Download the OAuth JSON.
 7. In Caroline, open **Settings → Connect → Google**.
-8. Import the OAuth JSON, or paste the Client ID.
+8. Import or paste the OAuth JSON.
 9. Click **Connect Google** and finish the browser sign-in.
+
+This setup is free for normal Caroline calendar use and does not require paid Google Cloud billing.
 
 The Calendar ID can usually stay `primary`.
 
