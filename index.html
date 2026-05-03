@@ -343,6 +343,11 @@
   .ch-list-icon { font-size:14px; flex-shrink:0; }
   #sun-row { display:flex; justify-content:space-between; margin-top:5px; font-size:11px; color:rgba(226,232,240,0.5); font-family:'JetBrains Mono',monospace; }
   .news-header { font-size: 10px; color: rgba(226,232,240,0.4); text-transform: uppercase; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; padding-bottom: 4px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); margin-bottom: 8px; }
+  .widget-header-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .widget-refresh-btn { width:22px; height:20px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(var(--t-rgb1),0.22); border-radius:7px; background:rgba(var(--t-rgb1),0.06); color:rgba(var(--t-rgb1),0.8); cursor:pointer; font-size:12px; transition:background 0.2s, color 0.2s, transform 0.2s; flex-shrink:0; }
+  .widget-refresh-btn:hover { background:rgba(var(--t-rgb1),0.14); color:var(--t-hex1); }
+  .widget-refresh-btn:active { transform:scale(0.92); }
+  .widget-refresh-btn.loading i { animation:spin 0.9s linear infinite; }
   #news-list { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 2px; }
   .news-item { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; gap: 5px; align-items: flex-start; cursor: pointer; transition: background 0.2s; border-radius: 4px; }
   .news-item:hover { background: rgba(var(--t-rgb1),0.05); }
@@ -411,6 +416,7 @@
   @keyframes speakBounce { 0%{transform:scale(1)} 100%{transform:scale(1.02)} }
   @keyframes micPulse { 0%,100%{box-shadow:0 0 15px rgba(var(--t-rgb2),0.5)} 50%{box-shadow:0 0 30px rgba(var(--t-rgb2),0.8)} }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
@@ -1581,7 +1587,7 @@
         </div>
       </div>
       <div id="widget-calendar">
-      <div class="news-header">📅 Next Meeting</div>
+      <div class="news-header widget-header-row"><span>📅 Next Meeting</span><button id="calendar-refresh-btn" class="widget-refresh-btn" onclick="refreshCalendarWidget()" title="Refresh calendar"><i class="ti ti-refresh"></i></button></div>
       <div style="padding:4px 0 8px; border-bottom:1px solid rgba(var(--t-rgb1),0.08); margin-bottom:6px;">
         <div id="cal-title" style="font-size:10px;color:#f8fafc;line-height:1.4;">No events today</div>
         <div id="cal-time" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:2px;"></div>
@@ -4921,6 +4927,26 @@ function updateCalendar(event) {
   if (!title) return;
   if (!event) { title.textContent = 'No events today'; if (time) time.textContent = ''; } 
   else { title.textContent = event.title; if (time) time.textContent = event.start + (event.end ? ' – ' + event.end : ''); checkCalendarForTodos(event); }
+}
+
+async function refreshCalendarWidget() {
+  const btn = document.getElementById('calendar-refresh-btn');
+  const title = document.getElementById('cal-title');
+  const previousTitle = title ? title.textContent : '';
+  if (btn) btn.classList.add('loading');
+  if (title) title.textContent = 'Refreshing...';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/calendar/refresh', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Calendar refresh');
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || data.ok === false) throw new Error(data.error || 'Calendar refresh failed');
+    updateCalendar(data.event || null);
+    playBeep(900);
+  } catch(e) {
+    console.warn('[Caroline] calendar refresh failed:', e);
+    if (title) title.textContent = previousTitle || 'Calendar refresh failed';
+  } finally {
+    if (btn) btn.classList.remove('loading');
+  }
 }
 
 // ── BOTTOM BAR ────────────────────────────────

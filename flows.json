@@ -5110,5 +5110,148 @@
         "caro-ollama-ps-req"
       ]
     ]
+  },
+  {
+    "id": "caro-calendar-refresh-in",
+    "type": "http in",
+    "z": "26e3d3bcd90eddc0",
+    "name": "GET /admin/calendar/refresh",
+    "url": "/admin/calendar/refresh",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 210,
+    "y": 1700,
+    "wires": [
+      [
+        "caro-calendar-refresh-token-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-calendar-refresh-token-fn",
+    "type": "function",
+    "z": "26e3d3bcd90eddc0",
+    "name": "Calendar Refresh Token",
+    "func": "const AUTH_PATH = '/home/davee/caroline/google_oauth.json';\nconst SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nfunction fail(error, status) {\n  msg.statusCode = status || 400;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error };\n  return [null, msg];\n}\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nlet settings = {};\ntry { if (fs.existsSync(SETTINGS_PATH)) settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\nlet auth = {};\ntry { if (fs.existsSync(AUTH_PATH)) auth = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); } catch(e) {}\nconst refreshToken = String(auth.refresh_token || '').trim();\nconst clientId = String(auth.client_id || getShared('googleClientId', settings.googleClientId || '') || '').trim();\nconst clientSecret = String(auth.client_secret || getShared('googleClientSecret', settings.googleClientSecret || '') || '').trim();\nif (!refreshToken) return fail('Connect Google first, then refresh the calendar.');\nif (!clientId || !clientSecret) return fail('Import or paste the Desktop OAuth JSON first so Caroline has the Client ID and secret.');\nmsg.googleCalendarId = getShared('calendarId', settings.calendarId || 'primary') || 'primary';\nmsg.payload = new URLSearchParams({\n  client_id: clientId,\n  client_secret: clientSecret,\n  grant_type: 'refresh_token',\n  refresh_token: refreshToken\n}).toString();\nmsg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\nmsg.method = 'POST';\nmsg.url = 'https://oauth2.googleapis.com/token';\nreturn [msg, null];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 1700,
+    "wires": [
+      [
+        "caro-calendar-refresh-token-http"
+      ],
+      [
+        "caro-calendar-refresh-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-calendar-refresh-token-http",
+    "type": "http request",
+    "z": "26e3d3bcd90eddc0",
+    "name": "Refresh Google Token",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 740,
+    "y": 1680,
+    "wires": [
+      [
+        "caro-calendar-refresh-events-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-calendar-refresh-events-fn",
+    "type": "function",
+    "z": "26e3d3bcd90eddc0",
+    "name": "Build Calendar Refresh Request",
+    "func": "const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload || '{}') : (msg.payload || {});\nif (!body.access_token) {\n  msg.statusCode = 500;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: body.error_description || body.error || 'Google did not return an access token.' };\n  return [null, msg];\n}\nconst now = new Date();\nconst end = new Date(now.getTime() + 24 * 60 * 60 * 1000);\nconst calendarId = encodeURIComponent(msg.googleCalendarId || flow.get('calendarId') || global.get('calendarId') || 'primary');\nconst timeMin = encodeURIComponent(now.toISOString());\nconst timeMax = encodeURIComponent(end.toISOString());\nmsg.headers = { 'Authorization': 'Bearer ' + body.access_token };\nmsg.method = 'GET';\nmsg.url = 'https://www.googleapis.com/calendar/v3/calendars/' + calendarId + '/events?timeMin=' + timeMin + '&timeMax=' + timeMax + '&singleEvents=true&orderBy=startTime&maxResults=5';\nmsg.payload = '';\nreturn [msg, null];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1010,
+    "y": 1680,
+    "wires": [
+      [
+        "caro-calendar-refresh-events-http"
+      ],
+      [
+        "caro-calendar-refresh-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-calendar-refresh-events-http",
+    "type": "http request",
+    "z": "26e3d3bcd90eddc0",
+    "name": "Fetch Calendar Events",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 1280,
+    "y": 1680,
+    "wires": [
+      [
+        "caro-calendar-refresh-format-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-calendar-refresh-format-fn",
+    "type": "function",
+    "z": "26e3d3bcd90eddc0",
+    "name": "Format Calendar Refresh",
+    "func": "const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload || '{}') : (msg.payload || {});\nif (body.error) {\n  msg.statusCode = 500;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: body.error.message || body.error_description || 'Google calendar refresh failed.' };\n  return [null, msg];\n}\nconst items = (body.items || []).filter(e => e.status !== 'cancelled');\nconst next = items[0] || null;\nfunction formatTime(dateObj) {\n  if (!dateObj) return '';\n  if (dateObj.date) return 'All day';\n  const d = new Date(dateObj.dateTime);\n  const is24 = String(flow.get('timeFormat') || '12') === '24';\n  return d.toLocaleTimeString(is24 ? 'en-GB' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: !is24, timeZone: flow.get('timezone') || 'America/Los_Angeles' });\n}\nconst event = next ? {\n  title: next.summary || 'Untitled',\n  start: formatTime(next.start),\n  end: formatTime(next.end),\n  description: next.description || ''\n} : null;\nconst update = { type: 'calendar_update', event };\nconst wsMsg = { payload: JSON.stringify(update) };\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, event };\nreturn [wsMsg, msg];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1530,
+    "y": 1680,
+    "wires": [
+      [
+        "bad2805f769f7005"
+      ],
+      [
+        "caro-calendar-refresh-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-calendar-refresh-res",
+    "type": "http response",
+    "z": "26e3d3bcd90eddc0",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 1780,
+    "y": 1720,
+    "wires": []
   }
 ]
