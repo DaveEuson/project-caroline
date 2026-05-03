@@ -1658,6 +1658,16 @@ function parseFeatureBool(value, fallback) {
   return fallback;
 }
 
+function parseSettingBool(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  const s = String(value).trim().toLowerCase();
+  if (['true','1','yes','y','on','enabled'].includes(s)) return true;
+  if (['false','0','no','n','off','disabled'].includes(s)) return false;
+  return fallback;
+}
+
 function normalizeFeatureState(features, { repairAllOff = true } = {}) {
   let src = features;
   if (typeof src === 'string') {
@@ -1685,6 +1695,9 @@ function syncFeatureCheckboxes() {
 
 S.features = normalizeFeatureState(S.features);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
+S.discordEnabled = parseSettingBool(S.discordEnabled);
+S.googleConnected = parseSettingBool(S.googleConnected);
+S.calendarId = normalizeCalendarIdInput(S.calendarId);
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
@@ -1712,6 +1725,9 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
   if (d.features) d.features = normalizeFeatureState(d.features);
+  ['discordEnabled','googleConnected','setupComplete','autoTheme','ttsEnabled','voiceMuted'].forEach(k => {
+    if (Object.prototype.hasOwnProperty.call(d, k)) d[k] = parseSettingBool(d[k]);
+  });
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
   if (localOnboardingComplete && serverLooksPreOnboarding) {
@@ -1728,6 +1744,7 @@ function mergeServerSettings(d, options = {}) {
   });
   S.features = normalizeFeatureState(S.features);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
+  S.calendarId = normalizeCalendarIdInput(S.calendarId);
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
   localStorage.setItem('caro_settings', JSON.stringify(S));
   return true;
@@ -1816,7 +1833,9 @@ function renderIntegrationStatus() {
 
   const discordTokenSaved = !!S.discordToken || !!S.discordTokenConfigured || !!integrationHealth.discord?.configured;
   const discordChannelSaved = !!S.discordChannelId;
-  setSettingsSubStatus('discord-enabled-status', S.discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', S.discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
+  const discordEnabled = integrationHealth.discord ? parseSettingBool(integrationHealth.discord.enabled) : parseSettingBool(S.discordEnabled);
+  if (integrationHealth.discord) S.discordEnabled = discordEnabled;
+  setSettingsSubStatus('discord-enabled-status', discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
   setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on Pi' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on Pi: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
 
@@ -1848,6 +1867,7 @@ async function refreshIntegrationHealth() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     integrationHealth = await r.json();
     if (integrationHealth.google) S.googleConnected = !!integrationHealth.google.connected;
+    if (integrationHealth.discord) S.discordEnabled = parseSettingBool(integrationHealth.discord.enabled, parseSettingBool(S.discordEnabled));
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
     if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
     if (integrationHealth.ollamaModel) S.ollamaModel = integrationHealth.ollamaModel;
@@ -1896,7 +1916,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   const tempUnitEl = document.getElementById('set-temperature-unit');
   if (tempUnitEl) tempUnitEl.value = S.temperatureUnit || 'fahrenheit';
   const discordEnabledEl = document.getElementById('set-discord-enabled');
-  if (discordEnabledEl) discordEnabledEl.checked = !!S.discordEnabled;
+  if (discordEnabledEl) discordEnabledEl.checked = parseSettingBool(S.discordEnabled);
   const grEl = document.getElementById('google-redirect-uri');
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const hgSel = document.getElementById('set-hue-group');
@@ -2594,7 +2614,7 @@ function toggleSettings() {
     const frBanner = document.getElementById('settings-first-run-banner');
     if (frBanner) frBanner.style.display = !localStorage.getItem('caroline_configured') ? 'block' : 'none';
     switchSettingsTab('look');
-    toggleDiscordFields(!!S.discordEnabled);
+    toggleDiscordFields(parseSettingBool(S.discordEnabled));
 
     updateSpotifyRedirectDisplay();
     renderIntegrationStatus();
@@ -2648,7 +2668,7 @@ function toggleSettings() {
         const UI_ONLY = new Set(['theme','uiFont','avatar','idleTimeout','defaultChannel','autoTheme']);
         mergeServerSettings(d, { skip: UI_ONLY });
         applySettingsToForm();
-        toggleDiscordFields(!!S.discordEnabled);
+        toggleDiscordFields(parseSettingBool(S.discordEnabled));
         // Re-apply feature checkboxes from server-authoritative S.features
         syncFeatureCheckboxes();
         checkGoogleStatus();
@@ -2743,8 +2763,10 @@ function selectSwatch(i) {
 }
 
 function toggleDiscordFields(enabled) {
+  S.discordEnabled = parseSettingBool(enabled);
   const el = document.getElementById('discord-fields');
   if (el) el.classList.toggle('open', enabled);
+  renderIntegrationStatus();
 }
 
 function looksLikeDiscordBotToken(token) {
@@ -3452,12 +3474,16 @@ function selectGoogleCalendarFromList() {
     statusEl.textContent = 'Selected: ' + label.replace(/\s+\([^)]*\)$/, '');
     statusEl.style.color = 'rgba(52,211,153,0.9)';
   }
-  postSettingsToNodeRed({ calendarId: value }, 5000).catch(e => console.warn('[Caroline] calendar selection save failed:', e));
+  postSettingsToNodeRed({ calendarId: normalizeCalendarIdInput(value) }, 5000).catch(e => console.warn('[Caroline] calendar selection save failed:', e));
 }
 
 function looksLikeGoogleCalendarId(value) {
   const v = String(value || '').trim();
   return !v || v === 'primary' || v.includes('@') || v.includes('#');
+}
+function normalizeCalendarIdInput(value) {
+  const v = String(value || '').trim();
+  return looksLikeGoogleCalendarId(v) ? (v || 'primary') : 'primary';
 }
 function validateCalendarIdInput() {
   const input = document.getElementById('set-calendar-id');
@@ -3821,7 +3847,15 @@ async function saveSettings() {
   S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
   S.location = document.getElementById('set-location').value.trim();
   const calendarIdVal = document.getElementById('set-calendar-id').value.trim();
-  if (calendarIdVal || !S.calendarId) S.calendarId = calendarIdVal || 'primary';
+  if (calendarIdVal || !S.calendarId) {
+    S.calendarId = normalizeCalendarIdInput(calendarIdVal);
+    const calEl = document.getElementById('set-calendar-id');
+    if (calEl) calEl.value = S.calendarId;
+    if (calendarIdVal && calendarIdVal !== S.calendarId) {
+      setSettingsSubStatus('google-calendar-status', 'Calendar names like "' + calendarIdVal + '" are not IDs; using primary', 'warn');
+      showSettingsFeedback('Calendar name was changed to primary; use Load Calendars to choose by name', true);
+    }
+  }
   const sheetInp = document.getElementById('set-sheet-id');
   if (sheetInp) {
     const sheetVal = sheetInp.value.trim();
