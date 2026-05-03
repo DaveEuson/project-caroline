@@ -2023,6 +2023,11 @@ function httpBase(port) {
 }
 
 function getSpotifyServerRedirectUri() {
+  const configuredIp = String((S && (S.piIp || S.hostIp)) || '').trim();
+  const piHost = configuredIp || getPiHost();
+  if (piHost && !['localhost', '127.0.0.1', '::1', '[::1]'].includes(piHost.toLowerCase())) {
+    return 'https://' + piHost + ':' + CADDY_PORT + '/spotify/callback';
+  }
   return getNodeRedUrl() + '/spotify/callback';
 }
 
