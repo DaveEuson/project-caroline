@@ -264,7 +264,7 @@ Browser
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses a PKCE OAuth popup through Node-RED at `/spotify/callback`, so the kiosk stays in place and no HTTPS proxy is required.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and an HTTPS proxy on port 8443 for OAuth callbacks. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses a PKCE OAuth popup through `/spotify/callback`, so the kiosk stays in place while Spotify redirects back to the Pi.
 
 ---
 

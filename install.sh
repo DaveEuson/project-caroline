@@ -777,6 +777,7 @@ jq -n \
   --arg model        "$AI_MODEL" \
   --arg provider     "$AI_PROVIDER" \
   --arg ollamaModel  "$OLLAMA_MODEL" \
+  --arg piIp         "$PI_IP" \
   --arg nrUrl        "http://${PI_IP}:${NODE_RED_PORT}" \
   --arg installId    "$INSTALL_ID" \
   --argjson kiosk    "$([ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ] && echo true || echo false)" \
@@ -792,6 +793,7 @@ jq -n \
     location:        $loc,
     zipcode:         $zip,
     zipCode:         $zip,
+    piIp:            $piIp,
     nodeRedUrl:      $nrUrl,
     uiFont:          "Inter",
     uiScale:         "large",
@@ -837,6 +839,8 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
       then .ollamaModel = $defaults.ollamaModel else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
+    | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
+    | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
   ' "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
   mv "$MERGED_SETTINGS_PATH" "$SETTINGS_PATH"
   echo -e "${DIM}    Existing settings preserved; backup: ${SETTINGS_BACKUP}${RESET}"
