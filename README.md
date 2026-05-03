@@ -195,7 +195,7 @@ Use this for Spotify account connection/control.
 3. In Caroline, open **Settings → Connect → Spotify** and copy the redirect URI shown there.
 4. In Spotify, add that exact redirect URI under **Edit Settings → Redirect URIs**.
 5. Copy the Spotify Client ID into Caroline.
-6. Click **Connect Spotify** and finish sign-in.
+6. Click **Connect Spotify**. Caroline shows a small Spotify login panel with the exact redirect URI and a login link, so the kiosk stays on Caroline while you finish sign-in.
 
 The redirect URI must match exactly, including trailing slash.
 
