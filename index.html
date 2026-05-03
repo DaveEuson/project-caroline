@@ -3492,6 +3492,8 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
   });
   const preserveBlankKeys = new Set([
     'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret',
+    'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
+    'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId',
     'hueIp', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',
     'googleClientId', 'googleRedirectUri', 'discordChannelId', 'sheetId'
   ]);
