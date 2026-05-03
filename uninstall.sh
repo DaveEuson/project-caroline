@@ -37,6 +37,20 @@ REAL_HOME=$(eval echo "~$REAL_USER")
 CAROLINE_DIR="$REAL_HOME/caroline"
 CLONE_DIR="$REAL_HOME/project-caroline"
 DESKTOP_DIR="$REAL_HOME/Desktop"
+
+remove_caroline_path() {
+  local _target="$1"
+  case "$_target" in
+    "$CAROLINE_DIR"|"$CLONE_DIR"|"$REAL_HOME/.mozilla/firefox/caroline-kiosk"|"$REAL_HOME/.mozilla/firefox/caroline-window")
+      sudo rm -rf -- "$_target"
+      ;;
+    *)
+      echo -e "${RED}  ✗ Refusing to remove unexpected path: ${_target}${RESET}"
+      exit 1
+      ;;
+  esac
+}
+
 if [ -f "$REAL_HOME/.config/user-dirs.dirs" ]; then
   XDG_DESKTOP=$(grep '^XDG_DESKTOP_DIR=' "$REAL_HOME/.config/user-dirs.dirs" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')
   XDG_DESKTOP="${XDG_DESKTOP/#\$HOME/$REAL_HOME}"
@@ -92,12 +106,12 @@ if [ "$KEEP_DATA" = "true" ]; then
   echo -e "${YELLOW}  ► Keeping ${CAROLINE_DIR} because --keep-data was set.${RESET}"
 else
   echo -e "${YELLOW}  ► Removing Caroline app data and source clone...${RESET}"
-  rm -rf "$CAROLINE_DIR"
-  rm -rf "$CLONE_DIR"
+  remove_caroline_path "$CAROLINE_DIR"
+  remove_caroline_path "$CLONE_DIR"
 fi
 
-rm -rf "$REAL_HOME/.mozilla/firefox/caroline-kiosk"
-rm -rf "$REAL_HOME/.mozilla/firefox/caroline-window"
+remove_caroline_path "$REAL_HOME/.mozilla/firefox/caroline-kiosk"
+remove_caroline_path "$REAL_HOME/.mozilla/firefox/caroline-window"
 
 echo ""
 echo -e "${GREEN}  ✓ Caroline uninstall complete${RESET}"

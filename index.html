@@ -850,7 +850,7 @@
         <div class="settings-section">
           <h3>AI Model</h3>
           <div class="settings-row">
-            <div><div class="settings-label">AI provider</div><div class="settings-sub">Where responses come from</div></div>
+            <div><div class="settings-label">AI provider</div><div class="settings-sub">OpenRouter recommended on Pi</div></div>
             <select class="settings-select" id="set-ai-provider" onchange="onProviderChange(this.value)">
               <option value="openrouter">OpenRouter (cloud)</option>
               <option value="ollama">Ollama (local / remote)</option>
@@ -870,7 +870,7 @@
           </div>
           <div id="ollama-rows" style="display:none">
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Ollama URL</div><div class="settings-sub">Pi or LAN server</div></div>
+              <div><div class="settings-label">Ollama URL</div><div class="settings-sub">Experimental local fallback</div></div>
               <input class="settings-input" id="set-ollama-url" type="text" placeholder="http://192.168.1.50:11434" style="width:180px"/>
             </div>
             <!-- Recommended models collapsible -->
@@ -891,9 +891,9 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr class="rec-table-row"><td>smollm2:360m</td><td>725 MB</td><td>⚡⚡⚡⚡⚡</td><td>Pi default</td><td><button type="button" class="detect-btn" onclick="startPull('smollm2:360m')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>tinyllama</td><td>638 MB</td><td>⚡⚡⚡</td><td>Pi alternate</td><td><button type="button" class="detect-btn" onclick="startPull('tinyllama')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>qwen2.5:0.5b</td><td>398 MB</td><td>⚡⚡</td><td>Small alternate</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:0.5b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma3:1b</td><td>~815 MB</td><td>⚡⚡⚡</td><td>Best Pi-local chat</td><td><button type="button" class="detect-btn" onclick="startPull('gemma3:1b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>qwen3:0.6b</td><td>523 MB</td><td>⚡⚡⚡⚡</td><td>Speed fallback</td><td><button type="button" class="detect-btn" onclick="startPull('qwen3:0.6b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>smollm2:360m</td><td>725 MB</td><td>⚡⚡⚡⚡⚡</td><td>Tiny emergency</td><td><button type="button" class="detect-btn" onclick="startPull('smollm2:360m')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>llama3.2:1b</td><td>1.3 GB</td><td>⚡</td><td>Works, but slow on Pi</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2:1b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡</td><td>Desktop / patient Pi</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
                   </tbody>
@@ -924,7 +924,7 @@
               <div class="settings-label" style="margin-bottom:6px">Pull a new model</div>
               <div class="settings-sub" style="margin-bottom:6px">Uses the Ollama URL above</div>
               <div class="input-detect-row">
-                <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. smollm2:360m" style="width:160px"/>
+                <input class="settings-input" id="ollama-pull-name" type="text" placeholder="e.g. gemma3:1b" style="width:160px"/>
                 <button type="button" class="detect-btn" id="ollama-pull-btn" onclick="pullOllamaModel()">⬇ Pull</button>
               </div>
               <div id="ollama-pull-status" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:5px;display:none;"></div>
@@ -939,11 +939,39 @@
           </div>
         </div>
         <div class="settings-section">
+          <h3>Personality</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Boot sequence</div><div class="settings-sub">Run the first-meeting wizard again anytime</div></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="settings-boot-btn" type="button" onclick="restartWizard()">⚡ Run Boot Sequence</button>
+              <button class="settings-boot-btn" type="button" onclick="resetPersonality()" style="color:rgba(251,191,36,0.8);border-color:rgba(251,191,36,0.3);" title="Clear saved personality and rerun wizard">↺ Reset Personality</button>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
+            <div><div class="settings-label">AI custom memory</div><div class="settings-sub" id="personality-status">No setup memory yet</div></div>
+            <div id="module-status-stack" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <div class="settings-status-chip" id="status-aiCore"><span class="mini-dot"></span><span>AI Core offline</span></div>
+              <div class="settings-status-chip" id="status-spotify"><span class="mini-dot"></span><span>Spotify offline</span></div>
+              <div class="settings-status-chip" id="status-hue"><span class="mini-dot"></span><span>Hue offline</span></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+            <div><div class="settings-label">Setup memory prompt</div><div class="settings-sub">Generated from the boot questions; what Caroline learned about you</div></div>
+            <textarea id="personalityPrompt" class="settings-input" style="width:100%;min-height:90px;resize:vertical;line-height:1.5;font-size:12px;" placeholder="Run the boot sequence to generate Caroline's setup memory prompt."></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;">
+              <div><div class="settings-label">Imported memory prompt</div><div class="settings-sub">Paste a profile from another AI that already knows you</div></div>
+              <button class="settings-boot-btn" type="button" onclick="copyProfileRequest()">Copy Ask</button>
+            </div>
+            <textarea id="userProfilePrompt" class="settings-input" style="width:100%;min-height:110px;resize:vertical;line-height:1.5;font-size:12px;" placeholder="Import a prompt/profile here: how you work, how to support you, communication preferences, recurring patterns, and anything another AI knows that Caroline should remember."></textarea>
+            <button class="settings-boot-btn" type="button" onclick="syncPersonalityToBrain()">⟳ Save Memory Prompts</button>
+          </div>
+        </div>
+        <div class="settings-section">
           <h3>Connection</h3>
           <div class="settings-row">
             <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">http://ip:1880</div></div>
             <div class="input-detect-row">
-              <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px"/>
+              <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px" oninput="updateSpotifyRedirectDisplay()"/>
               <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
               <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
             </div>
@@ -1001,7 +1029,7 @@
           <div style="margin-top:10px;padding:8px 10px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(var(--t-rgb1),0.1);">
             <div style="font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this as a Redirect URI in your Spotify app:</div>
             <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
-            <div style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;margin-top:4px;">Dashboard → Your App → Edit → Redirect URIs</div>
+            <div style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;margin-top:4px;">Dashboard → Your App → Edit → Redirect URIs. Use the 32-character Client ID, not the secret.</div>
           </div>
         </div>
         <div class="settings-section">
@@ -1030,6 +1058,13 @@
         </div>
         <div class="settings-section">
           <h3>Google</h3>
+          <div style="margin-bottom:12px;padding:10px 12px;background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.22);border-radius:8px;color:rgba(226,232,240,0.75);font-size:11px;line-height:1.5;">
+            <div class="settings-label" style="margin-bottom:5px;color:#8ab4f8;">Fast path</div>
+            <div>1. In Google Cloud, enable Calendar API and create an OAuth Client ID as a <strong>Desktop app</strong>.</div>
+            <div>2. Download the OAuth JSON, then use <strong>Import OAuth JSON</strong> here.</div>
+            <div>3. Click <strong>Connect Google</strong>. If the Pi browser is awkward, use <strong>Use Phone Code</strong>.</div>
+            <button type="button" onclick="showHowTo('calendar')" style="margin-top:8px;background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:5px 12px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Open full guide</button>
+          </div>
           <div class="settings-row">
             <div><div class="settings-label">Calendar ID</div><div class="settings-sub" id="google-calendar-status">Usually your Gmail address</div></div>
             <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:200px"/>
@@ -1185,29 +1220,8 @@
         <div class="settings-section">
           <h3>Onboarding &amp; Personality</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Boot sequence</div><div class="settings-sub">Run the first-meeting wizard again anytime</div></div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <button class="settings-boot-btn" type="button" onclick="restartWizard()">⚡ Run Boot Sequence</button>
-              <button class="settings-boot-btn" type="button" onclick="resetPersonality()" style="color:rgba(251,191,36,0.8);border-color:rgba(251,191,36,0.3);" title="Clear saved personality and rerun wizard">↺ Reset Personality</button>
-            </div>
-          </div>
-          <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
-            <div><div class="settings-label">Personality memory</div><div class="settings-sub" id="personality-status">No personality profile yet</div></div>
-            <div id="module-status-stack" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <div class="settings-status-chip" id="status-aiCore"><span class="mini-dot"></span><span>AI Core offline</span></div>
-              <div class="settings-status-chip" id="status-spotify"><span class="mini-dot"></span><span>Spotify offline</span></div>
-              <div class="settings-status-chip" id="status-hue"><span class="mini-dot"></span><span>Hue offline</span></div>
-            </div>
-          </div>
-          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
-            <div><div class="settings-label">Caroline style prompt</div><div class="settings-sub">Generated by boot sequence; edits layer on top of her core personality</div></div>
-            <textarea id="personalityPrompt" class="settings-input" style="width:100%;min-height:90px;resize:vertical;line-height:1.5;font-size:12px;" placeholder="Run the boot sequence to generate Caroline's style prompt."></textarea>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;">
-              <div><div class="settings-label">User profile prompt</div><div class="settings-sub">Paste a profile from another AI that already knows you</div></div>
-              <button class="settings-boot-btn" type="button" onclick="copyProfileRequest()">Copy Ask</button>
-            </div>
-            <textarea id="userProfilePrompt" class="settings-input" style="width:100%;min-height:110px;resize:vertical;line-height:1.5;font-size:12px;" placeholder="Paste a short profile here: your workflow, communication style, energy patterns, support needs, and what Caroline should remember about helping you."></textarea>
-            <button class="settings-boot-btn" type="button" onclick="syncPersonalityToBrain()">⟳ Sync to Brain</button>
+            <div><div class="settings-label">Personality editor</div><div class="settings-sub">Moved to Settings → AI so it is next to the model controls</div></div>
+            <button class="settings-boot-btn" type="button" onclick="switchSettingsTab('ai')">Open AI Tab</button>
           </div>
         </div>
         <div class="settings-section">
@@ -1316,7 +1330,7 @@
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
   <span class="net-pill" id="resource-pill" title="Pi CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
-  <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI Model">AI KEY NEEDED</span>
+  <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI">AI KEY NEEDED</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
   <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
@@ -1492,7 +1506,7 @@
             <line x1="15" y1="48" x2="85" y2="48" stroke="var(--t-hex1)" stroke-width="0.5" opacity="0.3"/>
           </svg>
           <img id="av-custom" src="" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
-          <img id="av-sleeping" src="assets/Careoline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-sleeping" src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -1615,7 +1629,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434', ollamaModel: 'smollm2:360m', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: FEATURE_DEFAULTS };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -1648,6 +1662,11 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
   if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
+  const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
+  const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
+  if (localOnboardingComplete && serverLooksPreOnboarding) {
+    ['setupComplete','features','onboardingModules','personalityPrompt','userProfilePrompt'].forEach(k => skip.add(k));
+  }
   Object.keys(d).forEach(k => {
     if (skip.has(k)) return;
     const v = d[k];
@@ -1700,7 +1719,7 @@ function setSettingsSubStatus(id, text, kind = 'neutral') {
 
 function renderIntegrationStatus() {
   const openrouterSaved = !!S.openrouterKey || !!S.openrouterKeyConfigured || !!integrationHealth.openrouter?.configured;
-  const usingOllama = (S.aiProvider || 'ollama') === 'ollama';
+  const usingOllama = (S.aiProvider || 'openrouter') === 'ollama';
   setSettingsSubStatus(
     'openrouter-key-status',
     usingOllama ? (openrouterSaved ? 'Saved on Pi, currently using Ollama' : 'Optional while using Ollama') : (openrouterSaved ? 'Saved on Pi' : 'Required for Cloud mode'),
@@ -1762,6 +1781,11 @@ async function refreshIntegrationHealth() {
 }
 
 function applySettingsToForm({ allowBlank = false } = {}) {
+  const provider = S.aiProvider || 'openrouter';
+  const providerEl = document.getElementById('set-ai-provider');
+  if (providerEl) providerEl.value = provider;
+  const modelEl = document.getElementById('set-model');
+  if (modelEl) modelEl.value = S.aiModel || 'anthropic/claude-haiku-4.5';
   setInputValue('set-orkey', S.openrouterKey || '', { allowBlank });
   setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_URL, { allowBlank });
   setInputValue('set-hueip', S.hueIp || '', { allowBlank });
@@ -1780,7 +1804,9 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-google-client-secret', S.googleClientSecret || '', { allowBlank });
   setInputValue('set-username', S.userName || '', { allowBlank });
   setInputValue('set-ollama-url', S.ollamaUrl || 'http://localhost:11434', { allowBlank });
-  setInputValue('set-ollama-model', S.ollamaModel || 'smollm2:360m', { allowBlank });
+  setInputValue('set-ollama-model', S.ollamaModel || 'gemma3:1b', { allowBlank });
+  onProviderChange(provider);
+  if (provider === 'ollama') setTimeout(fetchOllamaModels, 100);
   setInputValue('set-ainame-sys', S.aiName || 'Caroline', { allowBlank });
   const timeFormatEl = document.getElementById('set-time-format');
   if (timeFormatEl) timeFormatEl.value = S.timeFormat || '12';
@@ -1792,6 +1818,12 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const hgSel = document.getElementById('set-hue-group');
   if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
+  const featureState = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
+    const el = document.getElementById('feat-' + k);
+    if (el) el.checked = featureState[k] !== false;
+  });
+  updateFeatWarnings();
   applySavedSecretPlaceholders();
   renderIntegrationStatus();
 }
@@ -1814,9 +1846,18 @@ async function syncSettingsFromServer() {
       localStorage.removeItem('caro_onboarded');
       return false;
     }
+    const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
     mergeServerSettings(d);
     serverSettingsLoaded = true;
-    if (d.setupComplete !== true) {
+    if (d.setupComplete !== true && localOnboardingComplete) {
+      postSettingsToNodeRed({
+        setupComplete: true,
+        features: S.features,
+        onboardingModules: S.onboardingModules,
+        personalityPrompt: S.personalityPrompt,
+        userProfilePrompt: S.userProfilePrompt
+      }, 5000).catch(e => console.warn('[Caroline] stale server settings repair failed:', e));
+    } else if (d.setupComplete !== true) {
       localStorage.removeItem('caro_onboarded');
       localStorage.removeItem('caroline_configured');
       localStorage.removeItem('caro_first_greeted');
@@ -1924,6 +1965,10 @@ function importBackup(input) {
 let pendingSwatch = S.theme;
 let spotifyToken = localStorage.getItem('spotify_token') || '';
 let spotifyPollInterval = null;
+let spotifyAuthPopup = null;
+let spotifyAuthPopupTimer = null;
+let googleAuthPopup = null;
+let googleAuthPopupTimer = null;
 
 function getNodeRedUrl() {
   const fieldUrl = (document.getElementById('set-nodered-url')?.value || '').trim();
@@ -1951,6 +1996,15 @@ const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callbac
 function httpBase(port) {
   if (!port || port === NODE_RED_PORT) return getNodeRedUrl();
   return 'http://' + getPiHost() + ':' + port;
+}
+
+function getSpotifyServerRedirectUri() {
+  return getNodeRedUrl() + '/spotify/callback';
+}
+
+function updateSpotifyRedirectDisplay() {
+  const rdEl = document.getElementById('spotify-redirect-display');
+  if (rdEl) rdEl.textContent = getSpotifyServerRedirectUri();
 }
 
 function httpsBase(port) {
@@ -2007,6 +2061,16 @@ function requestPiRestart() {
 function getSpotifyRedirectUri() {
   return window.location.origin + window.location.pathname;
 }
+function normalizeSpotifyClientId(raw) {
+  const text = String(raw || '').trim();
+  if (/^[0-9a-f]{32}$/i.test(text)) return text.toLowerCase();
+  const match = text.match(/\b[0-9a-f]{32}\b/i);
+  return match ? match[0].toLowerCase() : text;
+}
+function shortIdSuffix(id) {
+  const text = String(id || '').trim();
+  return text ? text.slice(-4) : '----';
+}
 function _generateCodeVerifier(len = 128) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
   const arr = new Uint8Array(len);
@@ -2019,20 +2083,58 @@ async function _generateCodeChallenge(verifier) {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 async function handleSpotifyAuth() {
-  const clientId = document.getElementById('set-spotify-id').value.trim();
+  const inputEl = document.getElementById('set-spotify-id');
+  const clientId = normalizeSpotifyClientId(inputEl?.value || '');
+  const statusEl = document.getElementById('spotify-status');
+  const btnEl = document.getElementById('spotify-connect-btn');
   if (!clientId) { alert('Enter a Spotify Client ID first.'); return; }
+  if (!/^[0-9a-f]{32}$/i.test(clientId)) {
+    if (statusEl) {
+      statusEl.textContent = 'Client ID should be 32 hex characters';
+      statusEl.style.color = '#fb7185';
+    }
+    alert('That does not look like a Spotify Client ID. Paste the 32-character Client ID from your Spotify Developer app, not the client secret or the text "client_id".');
+    return;
+  }
+  if (inputEl) inputEl.value = clientId;
   S.spotifyClientId = clientId;
   localStorage.setItem('caro_settings', JSON.stringify(S));
-  const verifier = _generateCodeVerifier();
-  sessionStorage.setItem('spotify_code_verifier', verifier);
-  const challenge = await _generateCodeChallenge(verifier);
-  const params = new URLSearchParams({
-    client_id: clientId, response_type: 'code',
-    redirect_uri: getSpotifyRedirectUri(),
-    scope: 'user-read-playback-state user-modify-playback-state streaming user-read-currently-playing',
-    code_challenge_method: 'S256', code_challenge: challenge,
-  });
-  window.location.href = 'https://accounts.spotify.com/authorize?' + params;
+  if (statusEl) {
+    statusEl.textContent = 'Opening Spotify popup with Client ID ending ' + shortIdSuffix(clientId);
+    statusEl.style.color = '';
+  }
+  if (btnEl) btnEl.textContent = 'Waiting for Spotify...';
+
+  const authUrl = httpBase() + '/spotify/start?' + new URLSearchParams({ clientId }).toString();
+  if (spotifyAuthPopup && !spotifyAuthPopup.closed) spotifyAuthPopup.close();
+  spotifyAuthPopup = window.open(
+    authUrl,
+    'caroline_spotify_auth',
+    'popup,width=540,height=760,menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes'
+  );
+
+  if (!spotifyAuthPopup) {
+    if (statusEl) {
+      statusEl.textContent = 'Popup blocked - allow popups for Caroline';
+      statusEl.style.color = '#fbbf24';
+    }
+    if (btnEl) btnEl.textContent = '🔌 Connect Spotify';
+    return;
+  }
+
+  if (spotifyAuthPopupTimer) clearInterval(spotifyAuthPopupTimer);
+  const startedAt = Date.now();
+  spotifyAuthPopupTimer = setInterval(() => {
+    if (!spotifyAuthPopup || !spotifyAuthPopup.closed) return;
+    clearInterval(spotifyAuthPopupTimer);
+    spotifyAuthPopupTimer = null;
+    if (statusEl && !spotifyToken) {
+      const seconds = Math.round((Date.now() - startedAt) / 1000);
+      statusEl.textContent = seconds < 8 ? 'Spotify popup closed' : 'Spotify not connected yet';
+    }
+    if (btnEl && !spotifyToken) btnEl.textContent = '🔌 Connect Spotify';
+    refreshIntegrationHealth();
+  }, 800);
 }
 async function handleSpotifyCallback() {
   const params = new URLSearchParams(window.location.search);
@@ -2058,10 +2160,15 @@ async function handleSpotifyCallback() {
     if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
     localStorage.setItem('spotify_token_expires', Date.now() + data.expires_in * 1000);
     sessionStorage.removeItem('spotify_code_verifier');
+    if (window.opener) {
+      window.opener.postMessage({ type: 'caroline_spotify_connected' }, window.location.origin);
+      window.close();
+      return;
+    }
     window.history.replaceState({}, document.title, window.location.pathname);
     const statusEl = document.getElementById('spotify-status');
     const btnEl = document.getElementById('spotify-connect-btn');
-    if (statusEl) statusEl.textContent = '✓ Connected';
+    if (statusEl) { statusEl.textContent = '✓ Connected'; statusEl.style.color = ''; }
     if (btnEl) btnEl.textContent = '🔄 Reconnect';
     renderIntegrationStatus();
     if (spotifyPollInterval) clearInterval(spotifyPollInterval);
@@ -2070,6 +2177,37 @@ async function handleSpotifyCallback() {
     clog('info', 'Spotify connected via PKCE');
   } catch(e) { console.error('Spotify callback error:', e); }
 }
+
+window.addEventListener('message', async (event) => {
+  const type = event && event.data && event.data.type;
+  if (type !== 'caroline_spotify_connected' && type !== 'caroline_spotify_error') return;
+  if (spotifyAuthPopupTimer) {
+    clearInterval(spotifyAuthPopupTimer);
+    spotifyAuthPopupTimer = null;
+  }
+  if (spotifyAuthPopup && !spotifyAuthPopup.closed) spotifyAuthPopup.close();
+
+  const statusEl = document.getElementById('spotify-status');
+  const btnEl = document.getElementById('spotify-connect-btn');
+  if (type === 'caroline_spotify_error') {
+    if (statusEl) {
+      statusEl.textContent = event.data.message || 'Spotify connection failed';
+      statusEl.style.color = '#fb7185';
+    }
+    if (btnEl) btnEl.textContent = '🔌 Connect Spotify';
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.textContent = '✓ Connected';
+    statusEl.style.color = '';
+  }
+  if (btnEl) btnEl.textContent = '🔄 Reconnect';
+  await refreshSpotifyToken();
+  renderIntegrationStatus();
+  refreshIntegrationHealth();
+  fetchSpotifyNowPlaying();
+});
 
 // ── MOOD ──────────────────────────────────────
 function clampMood(v) { return Math.max(1, Math.min(11, Math.round(Number(v) || 7))); }
@@ -2172,10 +2310,10 @@ function updateFeatWarnings() {
   if (!box) return;
   box.innerHTML = '';
   const warn = (msg) => { const d = document.createElement('div'); d.className = 'feat-warning'; d.textContent = msg; box.appendChild(d); };
-  if (f.hue && !S.hueIp)     warn('⚠️ Hue enabled — set Bridge IP in API & Network');
+  if (f.hue && !S.hueIp)     warn('⚠️ Hue enabled — set Bridge IP in Settings -> Connect');
   if (f.spotify) {
      const hasToken = localStorage.getItem('spotify_token');
-     if (!hasToken) warn('ℹ️ Spotify enabled — connect account in API & Network');
+     if (!hasToken) warn('ℹ️ Spotify enabled — connect account in Settings -> Connect');
   }
   if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Node-RED URL set to receive events');
 }
@@ -2224,8 +2362,7 @@ function toggleSettings() {
     switchSettingsTab('look');
     toggleDiscordFields(!!S.discordEnabled);
 
-    const rdEl = document.getElementById('spotify-redirect-display');
-    if (rdEl) rdEl.textContent = getSpotifyRedirectUri();
+    updateSpotifyRedirectDisplay();
     renderIntegrationStatus();
     refreshIntegrationHealth();
 
@@ -2248,7 +2385,7 @@ function toggleSettings() {
     const ollamaUrlEl = document.getElementById('set-ollama-url');
     if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
     const ollamaModelEl = document.getElementById('set-ollama-model');
-    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'smollm2:360m';
+    if (ollamaModelEl) ollamaModelEl.value = S.ollamaModel || 'gemma3:1b';
     if ((S.aiProvider || 'openrouter') === 'ollama') setTimeout(fetchOllamaModels, 100);
     const hgSel = document.getElementById('set-hue-group');
     if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
@@ -2453,7 +2590,7 @@ function updateAiConfigIndicator(provider) {
   }
 }
 
-const OLLAMA_RECOMMENDED = new Set(['smollm2:360m','tinyllama']);
+const OLLAMA_RECOMMENDED = new Set(['gemma3:1b','qwen3:0.6b','smollm2:360m']);
 let _cachedOllamaModels = null;
 
 async function fetchDirectOllamaTags() {
@@ -2618,7 +2755,7 @@ async function startPull(model) {
 }
 
 async function loadOllamaModel() {
-  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'smollm2:360m';
+  const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'gemma3:1b';
   const statusEl = document.getElementById('ollama-load-status');
   const btn = document.getElementById('ollama-load-btn');
   if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'Loading ' + model + '...'; }
@@ -2692,7 +2829,7 @@ function resetPersonality() {
   restartWizard();
 }
 
-const PROFILE_REQUEST_PROMPT = "I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write a concise user profile I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, and any recurring patterns worth remembering. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk.";
+const PROFILE_REQUEST_PROMPT = "I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write an imported memory prompt I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, recurring patterns worth remembering, and how to support me without being generic. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk.";
 
 async function copyProfileRequest() {
   try {
@@ -2790,24 +2927,46 @@ async function testAiConnection(btn) {
   }
 }
 
+async function probeHueBridgeIp(ip) {
+  const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-probe?ip=' + encodeURIComponent(ip), { timeoutMs: 3500 }, 'Hue probe');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function saveHueBridgeIp(ip, details = {}) {
+  S.hueIp = ip;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  const ipEl = document.getElementById('set-hueip');
+  if (ipEl) ipEl.value = ip;
+  renderIntegrationStatus();
+  return details.name ? ' at ' + ip + ' (' + details.name + ')' : ' at ' + ip;
+}
+
 async function detectHueBridge(btn) {
   const statusEl = document.getElementById('hue-pair-status');
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   if (statusEl) { statusEl.style.display = 'none'; }
   try {
+    const manualIp = (document.getElementById('set-hueip')?.value || '').trim();
+    if (manualIp) {
+      const probed = await probeHueBridgeIp(manualIp);
+      if (!probed.ok) throw new Error(probed.error || 'No Hue bridge at ' + manualIp);
+      const label = saveHueBridgeIp(manualIp, probed);
+      if (statusEl) { statusEl.textContent = '✓ Bridge confirmed' + label; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
+      return;
+    }
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-discover', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Hue discover');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     if (d.ip) {
-      S.hueIp = d.ip;
-      localStorage.setItem('caro_settings', JSON.stringify(S));
-      document.getElementById('set-hueip').value = d.ip;
-      if (statusEl) { statusEl.textContent = '✓ Bridge found at ' + d.ip; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
+      const probed = await probeHueBridgeIp(d.ip).catch(() => ({ ok: true }));
+      const label = saveHueBridgeIp(d.ip, probed);
+      if (statusEl) { statusEl.textContent = '✓ Bridge found' + label; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
     } else {
-      throw new Error('No bridge found');
+      throw new Error(d.error || 'No bridge found');
     }
   } catch(e) {
-    if (statusEl) { statusEl.textContent = '✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network' : 'Discovery failed — enter IP manually'); statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+    if (statusEl) { statusEl.textContent = '✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network — enter the bridge IP manually' : e.message); statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Detect'; }
   }
@@ -3005,6 +3164,7 @@ async function refreshGoogleStatus() {
 
 async function handleGoogleAuth() {
   const statusEl = document.getElementById('google-auth-status');
+  const btn = document.getElementById('google-connect-btn');
   const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
   const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
   const redirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
@@ -3017,12 +3177,37 @@ async function handleGoogleAuth() {
   try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: redirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
   const params = new URLSearchParams({ clientId, redirectUri });
   if (statusEl) statusEl.textContent = 'Waiting for Google... paste URL below if it stalls';
-  window.open(httpBase() + '/admin/google/auth?' + params.toString(), '_blank', 'width=520,height=720');
+  if (btn) btn.textContent = 'Waiting for Google...';
+  if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
+  googleAuthPopup = window.open(httpBase() + '/admin/google/auth?' + params.toString(), 'caroline_google_auth', 'popup,width=540,height=760,menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes');
+  if (!googleAuthPopup) {
+    if (statusEl) statusEl.textContent = 'Popup blocked - allow popups or use Phone Code';
+    if (btn) btn.textContent = 'Connect Google';
+    return;
+  }
+  if (googleAuthPopupTimer) clearInterval(googleAuthPopupTimer);
+  googleAuthPopupTimer = setInterval(() => {
+    if (!googleAuthPopup || !googleAuthPopup.closed) return;
+    clearInterval(googleAuthPopupTimer);
+    googleAuthPopupTimer = null;
+    if (!S.googleConnected && statusEl) statusEl.textContent = 'Google popup closed - use Phone Code if it got stuck';
+    if (!S.googleConnected && btn) btn.textContent = 'Connect Google';
+    refreshGoogleStatus();
+  }, 900);
   let tries = 0;
   const timer = setInterval(async () => {
     tries++;
     const data = await refreshGoogleStatus();
-    if ((data && data.connected) || tries > 60) clearInterval(timer);
+    if (data && data.connected) {
+      if (googleAuthPopupTimer) clearInterval(googleAuthPopupTimer);
+      googleAuthPopupTimer = null;
+      if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
+      clearInterval(timer);
+    } else if (tries > 60) {
+      if (statusEl) statusEl.textContent = 'Google sign-in timed out - try Phone Code';
+      if (btn) btn.textContent = 'Connect Google';
+      clearInterval(timer);
+    }
   }, 2000);
 }
 
@@ -3261,7 +3446,7 @@ async function saveSettings() {
   if (orkeyVal) S.openrouterKey = orkeyVal; // never clear key by switching providers
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
-  S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'smollm2:360m').trim();
+  S.ollamaModel = ((document.getElementById('set-ollama-model') || {}).value || 'gemma3:1b').trim();
   const hueIpVal = document.getElementById('set-hueip').value.trim();
   const hueKeyVal = document.getElementById('set-huekey').value.trim();
   if (hueIpVal || !S.hueIp) S.hueIp = hueIpVal;
@@ -3789,20 +3974,20 @@ const HOWTO_CONTENT = {
 <li>Copy the <strong>Client ID</strong> from your app settings</li>
 <li>In Caroline Settings → Connect → paste the Client ID → click <strong>Connect Spotify</strong></li>
 </ol>
-<div class="howto-note">No HTTPS proxy or extra server needed — Spotify OAuth runs entirely in the browser.</div>`
+<div class="howto-note">No HTTPS proxy needed. Caroline opens Spotify in a popup and returns through Node-RED at port 1880, so the kiosk stays put.</div>`
   },
   hue: {
     title:'PHILIPS HUE LIGHTS',
     html:`<h4>What it does</h4><p>Controls your Hue lights and scenes from Caroline.</p>
 <h4>Step-by-step</h4><ol>
 <li>Open the Hue app → <strong>Settings → My Hue System</strong> → find your bridge IP address</li>
-<li>Open a browser and go to <code>http://[bridge-ip]/debug/clip.html</code></li>
-<li>In the URL field type <code>/api</code>, in the body type <code>{"devicetype":"caroline"}</code></li>
+<li>Enter that IP in Caroline Settings → Connect → Hue Bridge IP</li>
+<li>Click <strong>Detect</strong> to confirm Caroline can reach the bridge</li>
 <li><strong>Press the physical button</strong> on top of your Hue bridge</li>
-<li>Click <strong>POST</strong> — copy the <code>username</code> from the response — that's your API key</li>
-<li>Enter the Bridge IP and API Key in Caroline Settings</li>
+<li>Click <strong>Sync</strong> within 30 seconds; Caroline saves the API key for you</li>
+<li>Click <strong>Detect</strong> next to Hue Group, choose a group, then Save & Apply</li>
 </ol>
-<div class="howto-note">The bridge button step must be done within 30 seconds of clicking POST.</div>`
+<div class="howto-note">If auto-detect fails, manual IP entry is normal. Hue discovery can be flaky across routers and VLANs.</div>`
   },
   calendar: {
     title:'GOOGLE CALENDAR + TASKS',
@@ -3811,7 +3996,7 @@ const HOWTO_CONTENT = {
 <li>Go to <code>console.cloud.google.com</code> → create a new project</li>
 <li>Enable the <strong>Google Calendar API</strong></li>
 <li>Create an OAuth Client ID with application type <strong>Desktop app</strong></li>
-<li>Download the OAuth JSON and import it in Caroline Settings → Google</li>
+<li>Download the OAuth JSON and import it in Caroline Settings → Connect → Google</li>
 <li>Click <strong>Connect Google</strong> or <strong>Use Phone Code</strong></li>
 <li>Leave Calendar ID as <code>primary</code> unless you want a specific shared calendar</li>
 </ol>
@@ -4026,7 +4211,7 @@ function connectWS(){
 
       const statusEl = document.getElementById('spotify-status');
       const btnEl = document.getElementById('spotify-connect-btn');
-      if (statusEl) statusEl.textContent = '✓ Connected';
+      if (statusEl) { statusEl.textContent = '✓ Connected'; statusEl.style.color = ''; }
       if (btnEl) btnEl.textContent = '🔄 Reconnect';
 
       showSpotifyIdle('Connected');
@@ -4095,7 +4280,7 @@ function sendMessage(){
   }
   if ((S.aiProvider || 'openrouter') !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) {
     addMessage(t,'user','display');
-    addMessage('I need an OpenRouter API key to respond. Add it in Settings -> AI Model.', 'caroline', 'display');
+    addMessage('I need an OpenRouter API key to respond. Add it in Settings -> AI.', 'caroline', 'display');
     updateAiConfigIndicator();
     return;
   }
@@ -4490,7 +4675,7 @@ async function refreshSpotifyToken() {
 
     const statusEl = document.getElementById('spotify-status');
     const btnEl = document.getElementById('spotify-connect-btn');
-    if (statusEl) statusEl.textContent = '✓ Connected';
+    if (statusEl) { statusEl.textContent = '✓ Connected'; statusEl.style.color = ''; }
     if (btnEl) btnEl.textContent = '🔄 Reconnect';
 
     return true;
@@ -4502,7 +4687,7 @@ async function refreshSpotifyToken() {
 
     const statusEl = document.getElementById('spotify-status');
     const btnEl = document.getElementById('spotify-connect-btn');
-    if (statusEl) statusEl.textContent = 'Not connected';
+    if (statusEl) { statusEl.textContent = 'Not connected'; statusEl.style.color = ''; }
     if (btnEl) btnEl.textContent = '🔌 Connect Spotify';
     renderIntegrationStatus();
 
@@ -4978,6 +5163,26 @@ const ONB_WIDGETS = [
   { id:'memes',    title:'Memes',          desc:'Optional chaos tile. Completely skippable.', defaultOn:false }
 ];
 
+function onboardingHomeBaseUrl() {
+  let url = (S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL;
+  url = String(url || '').trim();
+  if (!url) url = DEFAULT_NODE_RED_URL;
+  if (!/^https?:\/\//i.test(url)) url = 'http://' + url.replace(/\/+$/, '') + ':1880';
+  return url.replace(/\/+$/, '');
+}
+
+function onboardingHomeBaseHost() {
+  try { return new URL(onboardingHomeBaseUrl()).hostname; }
+  catch(e) { return window.location.hostname || 'localhost'; }
+}
+
+function onboardingHomeBasePrompt() {
+  const url = onboardingHomeBaseUrl();
+  const host = onboardingHomeBaseHost();
+  const guess = host && host !== 'localhost' && host !== '127.0.0.1' ? host + ' (' + url + ')' : url;
+  return 'I think my home base is ' + guess + '. If that looks right, press Enter. If you do not know, press Enter too.';
+}
+
 const ONB_QUESTIONS = [
   { id:'identity-user', type:'text',  save:'config.userName',
     prompt:"What should I call you?",
@@ -4993,9 +5198,9 @@ const ONB_QUESTIONS = [
     prompt:"What timezone are we in?", placeholder:'America/Los_Angeles',
     defaultValue:() => S.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || '' },
   { id:'identity-host', type:'text',  save:'config.host',
-    prompt:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1') ? "I already know where home base is — detected as "+h+". Confirm or change it below." : "Where should I look for home base? Give me your Pi hostname or IP."; })(),
-    placeholder: window.location.hostname || '192.168.x.x',
-    defaultValue:(()=>{ const h=window.location.hostname; return (h&&h!=='localhost'&&h!=='127.0.0.1')?h:''; })() },
+    prompt:onboardingHomeBasePrompt,
+    placeholder: onboardingHomeBaseUrl,
+    defaultValue:onboardingHomeBaseUrl },
   { id:'workstyle', type:'chips', save:'personality.workstyle', prompt:'How do you work best?', options:[
     { label:'Deep focus — one thing at a time', value:'deep',     reply:'Got it. I\'ll guard the focus lane.' },
     { label:'Juggling many things at once',      value:'juggler',  reply:'Multitasking mode noted. I\'ll keep the signal clean.' },
@@ -5052,9 +5257,13 @@ function _onbSavePersonality(){ localStorage.setItem('caroline_personality', JSO
 function _onbBuildPrompt() {
   const p = onbState.personality;
   const parts = [];
-  const name = S.userName || 'the user';
-  parts.push(`You are ${S.aiName||'Caroline'}, a personal AI companion for ${name}.`);
-  parts.push('Your baseline personality is geeky, cat-friendly, and lightly anime/game/music-reference fluent. You can make playful nerdy references, including an occasional cat emoji, classic JRPG/anime energy, and electronic music vibes, but do not assume the user shares every fandom. Keep references subtle, accessible, and in service of the conversation.');
+  const name = S.userName || onbState.config.userName || 'the user';
+  const aiName = S.aiName || onbState.config.aiName || 'Caroline';
+  parts.push(`SETUP MEMORY PROMPT: This was generated from ${aiName}'s first boot questions. Use it as durable context about the user, not as a transcript.`);
+  parts.push(`Identity: the user's preferred name is ${name}. The assistant's configured name is ${aiName}.`);
+  if (S.location || onbState.config.location) parts.push(`Location context: ${S.location || onbState.config.location}.`);
+  if (S.timezone || onbState.config.timezone) parts.push(`Timezone context: ${S.timezone || onbState.config.timezone}.`);
+  parts.push(`${aiName}'s baseline personality is geeky, cat-friendly, and lightly anime/game/music-reference fluent. Playful references, occasional cat energy, classic JRPG/anime flavor, and electronic music vibes are welcome, but keep them subtle, accessible, and in service of the conversation.`);
   if (p.workstyle === 'deep')     parts.push('They work best in deep focus — avoid interrupting trains of thought.');
   else if (p.workstyle === 'juggler')  parts.push('They juggle many things at once — concise context switches are helpful.');
   else if (p.workstyle === 'sprints') parts.push('They work in sprints with breaks — respect their rhythm.');
@@ -5069,7 +5278,7 @@ function _onbBuildPrompt() {
   else if (p.vibe === 'calm') parts.push('They value calm, steady energy.');
   if (p.tone === 'hype')    parts.push('Use high energy and enthusiasm when encouraging them.');
   else if (p.tone === 'gentle') parts.push('Be warm and gentle when giving encouragement.');
-  parts.push('The dynamic must remain strictly platonic. You are a reliable sidekick and assistant. Keep responses free of markdown formatting.');
+  parts.push('The dynamic must remain strictly platonic. Be a reliable sidekick and assistant. Keep responses free of markdown formatting unless the user asks otherwise.');
   return parts.join(' ');
 }
 function _onbLoadConfig(){
@@ -5534,7 +5743,15 @@ function updateSettingsStatus(){
   if(p.comms) bits.push(p.comms+' comms');
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
-  if(ps) ps.textContent=bits.length?bits.join(' · '):'No personality profile yet';
+  if(ps) {
+    const hasSetup = !!(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt'));
+    const hasImported = !!(S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt'));
+    const labels = [];
+    if (hasSetup) labels.push('setup memory saved');
+    if (hasImported) labels.push('imported memory saved');
+    if (!labels.length && bits.length) labels.push(bits.join(' · '));
+    ps.textContent = labels.length ? labels.join(' · ') : 'No AI custom memory yet';
+  }
   [['aiCore','AI Core',(S.aiProvider === 'ollama') || !!S.openrouterKey || !!S.openrouterKeyConfigured],['spotify','Spotify',!!(S.features?.spotify&&S.spotifyClientId)],['hue','Hue',!!(S.features?.hue&&S.hueIp&&(S.hueKey||S.hueKeyConfigured))]].forEach(([id,label,on])=>{
     const el=document.getElementById('status-'+id);
     if(!el) return;

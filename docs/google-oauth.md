@@ -33,7 +33,7 @@ If the JSON says `"type": "service_account"`, or the client ID is only a long nu
 ## Connect It In Caroline
 
 1. Open Caroline.
-2. Go to **Settings > Google**.
+2. Go to **Settings > Connect > Google**.
 3. Use **Import OAuth JSON** and select the Desktop app JSON you downloaded.
 4. Click **Connect Google**.
 5. Sign in with the same Google account you added as a test user.
@@ -43,7 +43,7 @@ If the JSON says `"type": "service_account"`, or the client ID is only a long nu
 
 If the Pi is running in kiosk mode and you cannot see a browser address bar, use **Use Phone Code** instead of hunting for a callback URL.
 
-1. In **Settings > Google**, import the OAuth JSON first.
+1. In **Settings > Connect > Google**, import the OAuth JSON first.
 2. Click **Use Phone Code**.
 3. Caroline will show a short code and a Google verification URL.
 4. On your phone or laptop, open the URL, usually `https://www.google.com/device`.

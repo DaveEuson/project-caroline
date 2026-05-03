@@ -224,7 +224,7 @@ echo -e "${CYAN} |_|   |_|  \\___// |\\___|\\___|\\__|    \\____\\__,_|_|  \\___
 echo -e "${CYAN}              |__/                                                        ${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}  Project: Caroline${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
-echo -e "${DIM}  Your personal AI sidekick with a tiny neon pulse.${RESET}"
+echo -e "${DIM}  A pocket-size companion terminal with a tiny neon pulse.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -243,59 +243,68 @@ fi
 
 # ── INTRO ────────────────────────────────────────────────────
 echo -e "${BOLD}  Booting Project: Caroline for the first time.${RESET}"
-echo -e "${DIM}  A few questions before the time gate opens.${RESET}"
-echo -e "${DIM}  API keys and integrations are configured in her GUI after install.${RESET}"
+echo -e "${DIM}  Prologue: a quiet terminal wakes at the edge of the world map.${RESET}"
+echo -e "${DIM}  A few system choices before the save point lights up.${RESET}"
+echo -e "${DIM}  Location, widgets, API keys, integrations, and personality are configured in her GUI after install.${RESET}"
 echo -e "${DIM}  Press Enter to skip any field.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
 
 # ── USER INPUT ───────────────────────────────────────────────
-echo -e "${MAGENTA}  // IDENTITY MATRIX${RESET}"
+echo -e "${MAGENTA}  // PARTY REGISTRY${RESET}"
 echo ""
 read -p "  Your name: " USER_NAME </dev/tty
-read -p "  Your timezone (e.g. America/Los_Angeles): " TIMEZONE </dev/tty
-read -p "  Your location (e.g. Portland, OR): " LOCATION </dev/tty
-read -p "  ZIP code for weather (optional): " ZIP_CODE </dev/tty
+TIMEZONE="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
+[ -n "$TIMEZONE" ] || TIMEZONE="America/Los_Angeles"
+LOCATION=""
+ZIP_CODE=""
+echo -e "${DIM}  Location, timezone, and weather ZIP happen in Caroline's first-boot setup.${RESET}"
 echo ""
 
-echo -e "${MAGENTA}  // NEURAL CORE SELECTION${RESET}"
+echo -e "${MAGENTA}  // CORE CRYSTAL SELECTION${RESET}"
 echo ""
-echo -e "${DIM}  Ollama = local AI, private and free. On Pi, model choice matters a lot.${RESET}"
-echo -e "${DIM}  OpenRouter = cloud AI (Claude Haiku). Costs ~\$0.05/month. Needs a key.${RESET}"
-echo -e "${DIM}  Pi recommendation: smollm2:360m. Tested around 2s for a tiny reply on Pi.${RESET}"
+echo -e "${DIM}  OpenRouter = recommended. Fast, coherent, and usually costs pennies per month.${RESET}"
+echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but Pi CPU will spike and replies can be rough.${RESET}"
+echo -e "${DIM}  Pi note: tiny local models are best for demos/offline mode, not the polished Caroline experience.${RESET}"
+echo ""
+echo -e "${DIM}  Local model options you can type if you install Ollama:${RESET}"
+echo -e "${DIM}    gemma3:1b     default; friendliest Pi-local replies, still slower than cloud.${RESET}"
+echo -e "${DIM}    qwen3:0.6b    faster/smaller; good when Gemma feels too heavy.${RESET}"
+echo -e "${DIM}    smollm2:360m  tiny emergency fallback; fast, but lower quality.${RESET}"
+echo -e "${DIM}    tinyllama     legacy fallback; small, but more likely to wander.${RESET}"
 echo ""
 
 # Warn if RAM is low
 TOTAL_RAM_MB=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
 if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo -e "${YELLOW}  ⚠ ${TOTAL_RAM_MB}MB RAM detected. Ollama runs better with 4GB+.${RESET}"
-  echo -e "${DIM}    smollm2:360m is the safest local default on smaller Pi installs.${RESET}"
+  echo -e "${DIM}    Use OpenRouter for normal chat; local Ollama may feel slow or wander.${RESET}"
   echo ""
 fi
 
-read -p "  Install Ollama on this Pi? (y/N): " INSTALL_OLLAMA </dev/tty
+read -p "  Install experimental local Ollama fallback on this Pi? (y/N): " INSTALL_OLLAMA </dev/tty
 INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
 echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  OLLAMA_MODEL="smollm2:360m"
-  echo -e "${DIM}  Pulling smollm2:360m by default for Pi-friendly local chat.${RESET}"
-  echo -e "${DIM}  tinyllama is the alternate small model. Larger models may take 20-60s per reply on Pi.${RESET}"
-  echo -e "${DIM}  (Recommended: smollm2:360m or tinyllama — advanced users can type another Ollama tag.)${RESET}"
-  read -p "  Model [smollm2:360m]: " OLLAMA_MODEL_INPUT </dev/tty
-  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-smollm2:360m}"
+  OLLAMA_MODEL="gemma3:1b"
+  echo -e "${DIM}  Default: gemma3:1b. Friendlier and more coherent in Pi testing.${RESET}"
+  echo -e "${DIM}  Alternatives: qwen3:0.6b for speed, smollm2:360m for smallest download.${RESET}"
+  echo -e "${DIM}  OpenRouter is still recommended for the polished Caroline experience.${RESET}"
+  read -p "  Model [gemma3:1b]: " OLLAMA_MODEL_INPUT </dev/tty
+  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-gemma3:1b}"
   echo ""
-  echo -e "${DIM}  Good. ${OLLAMA_MODEL} is her brain. Worth the wait.${RESET}"
+  echo -e "${DIM}  Good. ${OLLAMA_MODEL} is the little crystal in the hilt. Worth the wait.${RESET}"
 else
   AI_PROVIDER="openrouter"
-  OLLAMA_MODEL="smollm2:360m"
-  echo -e "${DIM}  Skipping Pi Ollama. Use OpenRouter, or point Settings → Ollama URL at another computer later.${RESET}"
+  OLLAMA_MODEL="gemma3:1b"
+  echo -e "${DIM}  Skipping Pi Ollama. OpenRouter can carry the spellbook, or Settings can point Ollama at another computer later.${RESET}"
 fi
 echo ""
 
-echo -e "${MAGENTA}  // DISPLAY MODE${RESET}"
+echo -e "${MAGENTA}  // CAMPFIRE DISPLAY MODE${RESET}"
 echo ""
 echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated Pi display.${RESET}"
 echo -e "${DIM}  Skip this if you're just testing, or if you don't have a desktop environment.${RESET}"
@@ -305,12 +314,12 @@ echo ""
 
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}  Acknowledged. Preparing the local core at ~/caroline/...${RESET}"
+echo -e "${BOLD}  Acknowledged. Save point warming at ~/caroline/...${RESET}"
 echo ""
 sleep 1
 
 # ── DEPENDENCIES ─────────────────────────────────────────────
-phase "PHASE 1 — ESTABLISHING UPLINK"
+phase "CHAPTER 1 — OPENING THE GATE"
 
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
 sudo apt-get update -q >/tmp/caroline-apt-update.log 2>&1 || {
@@ -402,7 +411,7 @@ fi
 echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 
 # ── NODE-RED ─────────────────────────────────────────────────
-phase "PHASE 2 — WEAVING THE NEURAL WEB"
+phase "CHAPTER 2 — WIRING THE RELAY"
 
 echo -e "${YELLOW}  ► Installing Node-RED (this takes 1-3 minutes)...${RESET}"
 sudo npm install -g --unsafe-perm node-red >/tmp/caroline-npm.log 2>&1 &
@@ -423,7 +432,7 @@ echo -e "${YELLOW}  ► Calibrating personality matrix...${RESET}"
 
 mkdir -p "$CAROLINE_DIR"
 
-# Write a minimal settings.js that enables require() in function nodes.
+# Write a minimal settings.js that enables imported modules in Function nodes.
 # Single-quoted heredoc delimiter prevents shell expansion of the JS content.
 cat > "$CAROLINE_DIR/settings.js" << 'SETTINGS_EOF'
 module.exports = {
@@ -432,6 +441,7 @@ module.exports = {
     flowFile: 'flows.json',
     httpRequestTimeout: 120000,
     httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE,OPTIONS" },
+    functionExternalModules: true,
     functionGlobalContext: {
         fs:     require('fs'),
         crypto: require('crypto'),
@@ -448,7 +458,7 @@ echo -e "${GREEN}  ✓ Node-RED configured${RESET}"
 
 # ── OLLAMA (optional) ────────────────────────────────────────
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
-  phase "PHASE 3 — INSTALLING NEURAL CORE (OLLAMA)"
+  phase "CHAPTER 3 — SETTING THE CORE CRYSTAL"
 
   echo -e "${YELLOW}  ► Installing Ollama...${RESET}"
   if ! command -v ollama &> /dev/null; then
@@ -524,10 +534,10 @@ mkdir -p "$CAROLINE_DIR"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR"
 
 echo -e "${GREEN}  ✓ Memory banks online${RESET}"
-echo -e "${DIM}    Time gate stable; crystal bus humming.${RESET}"
+echo -e "${DIM}    Save crystal lit; local memory is ready.${RESET}"
 
 # ── CAROLINE FILES ───────────────────────────────────────────
-phase "PHASE 4 — DEPLOYING CAROLINE'S PAYLOAD"
+phase "CHAPTER 4 — UNPACKING THE SATCHEL"
 
 mkdir -p "$CAROLINE_DIR"
 
@@ -549,7 +559,7 @@ else
 fi
 
 echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
-echo -e "${DIM}    Robot manners module: polite.${RESET}"
+echo -e "${DIM}    Companion manners module: polite.${RESET}"
 
 # Existing installs may contain a .git directory with ownership left over from
 # older installer runs. The runtime directory does not need Git metadata, so
@@ -588,10 +598,12 @@ if [ ! -f "$CAROLINE_DIR/index.html" ] || [ ! -f "$CAROLINE_DIR/flows.json" ]; t
 fi
 
 echo -e "${GREEN}  ✓ Caroline payload ready${RESET}"
-echo -e "${DIM}    Chronal sweep clean; pilot sync stable.${RESET}"
+echo -e "${DIM}    Inventory sorted; no mystery key items left behind.${RESET}"
 
 # ── GOOGLE OAUTH TOKEN STORE ─────────────────────────────────
-touch "$CAROLINE_DIR/google_oauth.json"
+if [ ! -s "$CAROLINE_DIR/google_oauth.json" ] || ! jq empty "$CAROLINE_DIR/google_oauth.json" >/dev/null 2>&1; then
+  printf '{}\n' > "$CAROLINE_DIR/google_oauth.json"
+fi
 chmod 600 "$CAROLINE_DIR/google_oauth.json"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/google_oauth.json"
 if [ ! -f "$CAROLINE_DIR/caroline_tasks.json" ]; then
@@ -658,7 +670,7 @@ pip3 install edge-tts 2>/dev/null || true
 echo -e "${GREEN}  ✓ edge-tts installed (or skipped)${RESET}"
 
 # ── NGINX (serve kiosk on port 8080) ─────────────────────────
-phase "PHASE 5 — ACTIVATING INTERFACE"
+phase "CHAPTER 5 — LIGHTING THE WINDOW"
 
 echo -e "${YELLOW}  ► Deploying kiosk interface on port ${KIOSK_PORT}...${RESET}"
 
@@ -819,7 +831,9 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
                or ($existing.ollamaModel == "gemma2:2b")
                or ($existing.ollamaModel == "llama3.2")
                or ($existing.ollamaModel == "llama3.2:1b")
-               or ($existing.ollamaModel == "qwen2.5:0.5b")))
+               or ($existing.ollamaModel == "qwen2.5:0.5b")
+               or ($existing.ollamaModel == "smollm2:360m")
+               or ($existing.ollamaModel == "tinyllama")))
       then .ollamaModel = $defaults.ollamaModel else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
@@ -835,7 +849,7 @@ protect_secret_files
 echo -e "${GREEN}  ✓ Settings saved${RESET}"
 
 # ── SYSTEMD SERVICE ──────────────────────────────────────────
-phase "PHASE 6 — WIRING AUTOSTART"
+phase "CHAPTER 6 — INSCRIBING AUTOSTART"
 
 echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 
@@ -1018,13 +1032,13 @@ fi
 unset _svc _svc_ok
 
 # ── DONE ─────────────────────────────────────────────────────
-phase "SHE'S ONLINE"
+phase "SAVE POINT REACHED"
 PI_IP_FINAL=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP_FINAL" ] || PI_IP_FINAL="localhost"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}  She's online. Soft signal, steady co-pilot energy.${RESET}"
+echo -e "${BOLD}${GREEN}  Caroline joined the party. Soft signal, steady co-pilot energy.${RESET}"
 echo ""
 echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
@@ -1048,13 +1062,13 @@ echo -e "${CYAN}  ├───────────────────�
 if [ "$AI_PROVIDER" = "openrouter" ]; then
 echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add in Caroline Settings > AI"
 fi
-echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Integrations (optional)"
-echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Integrations (optional)"
-echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings > Integrations > Connect Google"
-echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > Integrations"
+echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Connect (optional)"
+echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Connect (optional)"
+echo -e "${CYAN}  │${RESET}  ${DIM}Google OAuth${RESET}         — Settings > Connect > Connect Google"
+echo -e "${CYAN}  │${RESET}  ${DIM}Hue Bridge IP/key${RESET}    — Settings > Connect"
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
-echo -e "${MAGENTA}  Reboot to bring her fully online; the signal is green.${RESET}"
+echo -e "${MAGENTA}  Reboot to load the next scene; the save point is green.${RESET}"
 echo ""
 echo -e "${BOLD}  sudo reboot${RESET}"
 echo ""

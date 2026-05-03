@@ -29,7 +29,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Persistent Memory** — AI chat with memory across sessions
 - **Productivity** — Creates calendar events and manages a local task list via chat
 - **Proactive AI** — Caroline checks in four times a day with lightweight context
-- **Local & Cloud AI** — Ollama (smollm2:360m, tinyllama, llama3.2:1b, gemma2:2b) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
+- **Local & Cloud AI** — Ollama (gemma3:1b, qwen3:0.6b, smollm2:360m) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
 - **Smart Home** — Philips Hue control
 - **OAuth Integrations** — Google and Spotify connect from the GUI; no JSON key upload required for normal setup
@@ -62,17 +62,18 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, timezone, location, and whether to install Ollama. On first launch, Caroline walks through identity, personality, dashboard widget choices, and optional integrations. For Raspberry Pi installs, the default local model is `smollm2:360m` because it is small and responsive on Pi hardware; an 8GB Pi test returned a one-word reply in about 2 seconds. `tinyllama` is the alternate small model. Bigger models can give better replies, but they may pin the CPU and feel stuck on smaller boards.
+The installer asks for your name, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. For Raspberry Pi installs, **OpenRouter is the recommended chat provider**. Local Ollama on a Pi is best treated as an experimental/offline fallback: it is private and free, but it can pin the CPU, take 20-60 seconds, and small models may answer oddly.
 
 | Local model | Pi recommendation | Notes |
 |---|---|---|
-| `smollm2:360m` | Best default | Fastest tested Pi model; use this first. |
-| `tinyllama` | Good fallback | Also small and usually responsive. |
-| `qwen2.5:0.5b` | Optional small model | Small download, but may not feel as responsive as `smollm2:360m`. |
-| `llama3.2:1b` | Advanced / slow | Works on an 8GB Pi, but a one-word reply can still take ~20-30 seconds. |
+| `gemma3:1b` | Best local fallback | Friendlier and more coherent in Pi testing; still much slower than OpenRouter. |
+| `qwen3:0.6b` | Speed fallback | Smaller/faster candidate when Gemma feels heavy. |
+| `smollm2:360m` | Tiny emergency fallback | Fastest tiny model tested, but quality is limited. |
+| `tinyllama` | Legacy fallback | Also small; can be unpredictable. |
+| `llama3.2:1b` | Advanced / slow | Works on an 8GB Pi, but replies can take ~20-60 seconds. |
 | `gemma2:2b` / larger | Desktop or patient Pi users | Expect slow replies, heat, and sustained CPU load. |
 
-You can also run Ollama on another computer and use the Pi only as the kiosk. In **Settings → AI Model**, set **AI provider** to **Ollama** and set **Ollama URL** to the other machine, for example `http://192.168.1.50:11434`. On that computer, Ollama must listen on the network, usually by setting `OLLAMA_HOST=0.0.0.0:11434`, and your firewall must allow the Pi to reach port `11434`. Keep this on your LAN or VPN; do not expose Ollama directly to the public internet.
+You can also run Ollama on another computer and use the Pi only as the kiosk. In **Settings -> AI**, set **AI provider** to **Ollama** and set **Ollama URL** to the other machine, for example `http://192.168.1.50:11434`. On that computer, Ollama must listen on the network, usually by setting `OLLAMA_HOST=0.0.0.0:11434`, and your firewall must allow the Pi to reach port `11434`. Keep this on your LAN or VPN; do not expose Ollama directly to the public internet.
 
 The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
 
@@ -100,7 +101,7 @@ Your API keys, Hue pairing, Discord token, Google/Spotify credentials, local tas
 To remove Caroline from a Pi and start fresh:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | sudo bash
 ```
 
 The uninstaller asks you to type `UNINSTALL CAROLINE` before it removes anything. It removes Caroline services, nginx site config, desktop launchers, kiosk autostart entries, Firefox Caroline profiles, `~/caroline`, and `~/project-caroline`. Shared packages such as Node.js, Node-RED, nginx, Firefox, and Ollama are left installed in case other projects use them.
@@ -108,7 +109,7 @@ The uninstaller asks you to type `UNINSTALL CAROLINE` before it removes anything
 For automated QA on a disposable VM:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash -s -- --yes
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | sudo bash -s -- --yes
 ```
 
 Use `--keep-data` if you only want to remove services and launchers while preserving `~/caroline`.
@@ -116,7 +117,7 @@ Use `--keep-data` if you only want to remove services and launchers while preser
 After install, open **Settings** in Caroline:
 
 - **Google:** create a Desktop OAuth client, import its OAuth JSON or paste the Client ID, then use **Connect Google** for Calendar. The old Sheets/service-account path is kept only as an advanced fallback.
-- **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (e.g. `http://localhost:8080/`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
+- **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (e.g. `http://localhost:1880/spotify/callback`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 - **Display preferences:** Settings → Widgets controls 12/24-hour time and Fahrenheit/Celsius for weather and Pi health.
 
@@ -153,7 +154,7 @@ Use this if you want Claude/other cloud models instead of local Ollama.
 
 1. Create an account at [openrouter.ai](https://openrouter.ai/).
 2. Create an API key.
-3. In Caroline, open **Settings → AI Model**.
+3. In Caroline, open **Settings -> AI**.
 4. Choose **OpenRouter**, paste the key, and pick the model.
 5. Save, then check that the top bar no longer says the AI key is needed.
 
@@ -263,7 +264,7 @@ Browser
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses the browser-native PKCE OAuth flow — no HTTPS proxy required.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses a PKCE OAuth popup through Node-RED at `/spotify/callback`, so the kiosk stays in place and no HTTPS proxy is required.
 
 ---
 
@@ -285,7 +286,7 @@ Copy and paste this prompt into your existing AI to generate a highly tailored p
 
 > *"I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write a concise user profile I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, and any recurring patterns worth remembering. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk."*
 
-Paste the result into **Settings → System → User profile prompt**. The boot sequence keeps Caroline's own style in **Caroline style prompt**, while the profile prompt tells Caroline how to support you.
+Paste the result into **Settings -> AI -> Personality -> Imported memory prompt**. The boot sequence writes Caroline's setup answers into **Setup memory prompt**, while the imported memory prompt tells Caroline how to support you based on what another AI already knows.
 
 ---
 
