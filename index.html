@@ -1884,6 +1884,10 @@ async function syncSettingsFromServer() {
       localStorage.setItem('caro_settings', JSON.stringify(S));
     }
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+    const rebuiltPrompt = getSetupMemoryPrompt();
+    if (rebuiltPrompt && !d.personalityPrompt) {
+      postSettingsToNodeRed({ personalityPrompt: rebuiltPrompt }, 5000).catch(e => console.warn('[Caroline] setup memory repair failed:', e));
+    }
     updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
@@ -2492,7 +2496,7 @@ function toggleSettings() {
     const hgSel = document.getElementById('set-hue-group');
     if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
     const pTa = document.getElementById('personalityPrompt');
-    if (pTa) pTa.value = S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '';
+    if (pTa) pTa.value = getSetupMemoryPrompt();
     const profileTa = document.getElementById('userProfilePrompt');
     if (profileTa) profileTa.value = S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt') || '';
     const tsEl = document.getElementById('set-tides-station');
@@ -2956,6 +2960,22 @@ function resetPersonality() {
   restartWizard();
 }
 
+function getSetupMemoryPrompt() {
+  const stored = String(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '').trim();
+  if (stored) return stored;
+  if (typeof _onbBuildPrompt !== 'function') return '';
+  const p = typeof _onbLoadPersonality === 'function' ? _onbLoadPersonality() : {};
+  if (!p || !Object.keys(p).length) return '';
+  if (typeof onbState === 'object' && onbState) onbState.personality = p;
+  const rebuilt = _onbBuildPrompt();
+  if (rebuilt) {
+    S.personalityPrompt = rebuilt;
+    localStorage.setItem('caroline_personality_prompt', rebuilt);
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+  }
+  return rebuilt;
+}
+
 const PROFILE_REQUEST_PROMPT = "I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write an imported memory prompt I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, recurring patterns worth remembering, and how to support me without being generic. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk.";
 
 async function copyProfileRequest() {
@@ -2971,8 +2991,9 @@ async function copyProfileRequest() {
 async function syncPersonalityToBrain() {
   const ta = document.getElementById('personalityPrompt');
   const profileTa = document.getElementById('userProfilePrompt');
-  S.personalityPrompt = ta ? ta.value.trim() : '';
+  S.personalityPrompt = (ta ? ta.value.trim() : '') || getSetupMemoryPrompt();
   S.userProfilePrompt = profileTa ? profileTa.value.trim() : '';
+  if (ta && S.personalityPrompt) ta.value = S.personalityPrompt;
   localStorage.setItem('caroline_personality_prompt', S.personalityPrompt);
   localStorage.setItem('caroline_user_profile_prompt', S.userProfilePrompt);
   localStorage.setItem('caro_settings', JSON.stringify(S));
@@ -3621,8 +3642,9 @@ async function saveSettings() {
   if (ainSysInp && ainSysInp.value.trim()) { S.aiName = ainSysInp.value.trim(); document.getElementById('topbar-name').textContent = S.aiName; }
   const personalityInp = document.getElementById('personalityPrompt');
   const profileInp = document.getElementById('userProfilePrompt');
-  S.personalityPrompt = personalityInp ? personalityInp.value.trim() : (S.personalityPrompt || '');
+  S.personalityPrompt = (personalityInp ? personalityInp.value.trim() : '') || getSetupMemoryPrompt();
   S.userProfilePrompt = profileInp ? profileInp.value.trim() : (S.userProfilePrompt || '');
+  if (personalityInp && S.personalityPrompt) personalityInp.value = S.personalityPrompt;
   localStorage.setItem('caroline_personality_prompt', S.personalityPrompt);
   localStorage.setItem('caroline_user_profile_prompt', S.userProfilePrompt);
 
@@ -5943,7 +5965,7 @@ function updateSettingsStatus(){
   if(p.tone) bits.push(p.tone);
   const ps=document.getElementById('personality-status');
   if(ps) {
-    const hasSetup = !!(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt'));
+    const hasSetup = !!getSetupMemoryPrompt();
     const hasImported = !!(S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt'));
     const labels = [];
     if (hasSetup) labels.push('setup memory saved');
