@@ -778,8 +778,7 @@
     "y": 540,
     "wires": [
       [
-        "caro-calendar-token-guard",
-        "caro-action-calendar-ws"
+        "caro-calendar-token-guard"
       ],
       [
         "8e39103808d737b4"
@@ -905,8 +904,8 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Log Calendar Result",
-    "func": "const status = Number(msg.statusCode || 0);\nconst payload = msg.payload || {};\nif (status >= 200 && status < 300 && payload.id) {\n  node.warn('Calendar create OK: ' + (payload.summary || '(untitled)') + ' ' + (payload.htmlLink || payload.id));\n} else {\n  node.warn('Calendar create failed: HTTP ' + status + ' ' + JSON.stringify(payload).slice(0, 500));\n}\nreturn msg;",
-    "outputs": 1,
+    "func": "const status = Number(msg.statusCode || 0);\nconst payload = msg.payload || {};\nconst ev = msg.calAction || {};\nfunction fmt(ev) {\n  if (!ev.time) return 'All day';\n  const parts = String(ev.time || '').split(':').map(Number);\n  const d = new Date();\n  d.setHours(parts[0] || 0, parts[1] || 0, 0, 0);\n  const is24 = String(flow.get('timeFormat') || '12') === '24';\n  return d.toLocaleTimeString(is24 ? 'en-GB' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: !is24 });\n}\nif (status >= 200 && status < 300 && payload.id) {\n  node.warn('Calendar create OK: ' + (payload.summary || '(untitled)') + ' ' + (payload.htmlLink || payload.id));\n  const wsMsg = {\n    payload: JSON.stringify({\n      type: 'calendar_update',\n      event: {\n        title: payload.summary || ev.title || 'Untitled',\n        start: fmt(ev),\n        end: '',\n        description: payload.description || ''\n      }\n    })\n  };\n  return [wsMsg, msg];\n}\nconst detail = JSON.stringify(payload).slice(0, 500);\nnode.warn('Calendar create failed: HTTP ' + status + ' ' + detail);\nconst rawMessage = payload.error && (payload.error.message || payload.error.status) || detail || ('HTTP ' + status);\nlet friendly = 'I could not save that to Google Calendar.';\nif (status === 404 || /not found/i.test(rawMessage)) {\n  friendly = 'I could not find that Google calendar. In Settings > Connect, set Calendar ID to primary or use Load Calendars to choose one.';\n} else if (status === 403 || /forbidden|insufficient|permission|read.?only/i.test(rawMessage)) {\n  friendly = 'Google would not let me write to that calendar. Use Load Calendars and pick one marked writable.';\n} else if (status === 401 || /invalid credentials|unauthorized/i.test(rawMessage)) {\n  friendly = 'Google Calendar needs to reconnect before I can save events.';\n}\nreturn [{ payload: JSON.stringify({ type: 'reply', content: friendly }) }, msg];",
+    "outputs": 2,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -915,6 +914,9 @@
     "x": 2440,
     "y": 520,
     "wires": [
+      [
+        "bad2805f769f7005"
+      ],
       [
         "1c53516e70e43692"
       ]

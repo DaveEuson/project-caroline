@@ -1075,7 +1075,7 @@
           <div class="settings-row">
             <div><div class="settings-label">Calendar ID</div><div class="settings-sub" id="google-calendar-status">Usually your Gmail address</div></div>
             <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:260px"/>
+              <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" oninput="validateCalendarIdInput()" style="width:260px"/>
               <select id="google-calendar-select" class="settings-input" onchange="selectGoogleCalendarFromList()" style="display:none;width:260px">
                 <option value="">Load calendars first</option>
               </select>
@@ -1826,6 +1826,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-zip', S.zipcode || S.zipCode || '', { allowBlank });
   setInputValue('set-ainame', S.aiName || 'Caroline', { allowBlank });
   setInputValue('set-calendar-id', S.calendarId || 'primary', { allowBlank });
+  validateCalendarIdInput();
   setInputValue('set-sheet-id', S.sheetId || '', { allowBlank });
   setInputValue('set-discord-token', S.discordToken || '', { allowBlank });
   setInputValue('set-discord-channel', S.discordChannelId || '', { allowBlank });
@@ -3406,6 +3407,25 @@ function selectGoogleCalendarFromList() {
     statusEl.style.color = 'rgba(52,211,153,0.9)';
   }
   postSettingsToNodeRed({ calendarId: value }, 5000).catch(e => console.warn('[Caroline] calendar selection save failed:', e));
+}
+
+function looksLikeGoogleCalendarId(value) {
+  const v = String(value || '').trim();
+  return !v || v === 'primary' || v.includes('@') || v.includes('#');
+}
+function validateCalendarIdInput() {
+  const input = document.getElementById('set-calendar-id');
+  const statusEl = document.getElementById('google-calendar-status');
+  const v = (input?.value || '').trim();
+  if (!statusEl || !v) return true;
+  if (!looksLikeGoogleCalendarId(v)) {
+    statusEl.textContent = 'Use primary or Load Calendars; names like "' + v + '" are not Google calendar IDs';
+    statusEl.style.color = '#fbbf24';
+    return false;
+  }
+  statusEl.textContent = v === 'primary' ? 'Writes to your primary calendar' : 'Looks like a calendar ID';
+  statusEl.style.color = 'rgba(52,211,153,0.9)';
+  return true;
 }
 
 async function loadGoogleCalendars() {
