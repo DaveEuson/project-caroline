@@ -1768,7 +1768,7 @@ function renderIntegrationStatus() {
   setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on Pi' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on Pi: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
 
-  const googleConnected = !!S.googleConnected || !!integrationHealth.google?.connected;
+  const googleConnected = integrationHealth.google ? !!integrationHealth.google.connected : !!S.googleConnected;
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
   const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured;
   setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on Pi: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
@@ -1795,7 +1795,7 @@ async function refreshIntegrationHealth() {
     const r = await fetchJsonWithTimeout(httpBase() + '/health', { timeoutMs: 3000 }, 'Integration health');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     integrationHealth = await r.json();
-    if (integrationHealth.google?.connected) S.googleConnected = true;
+    if (integrationHealth.google) S.googleConnected = !!integrationHealth.google.connected;
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
     if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
     if (integrationHealth.ollamaModel) S.ollamaModel = integrationHealth.ollamaModel;
