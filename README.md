@@ -116,7 +116,7 @@ Use `--keep-data` if you only want to remove services and launchers while preser
 
 After install, open **Settings** in Caroline:
 
-- **Google:** create a Desktop OAuth client, import its OAuth JSON or paste the Client ID, then use **Connect Google** for Calendar. The old Sheets/service-account path is kept only as an advanced fallback.
+- **Google:** create a Desktop OAuth client, then import or paste the OAuth JSON before using **Connect Google** for Calendar. Client ID alone is not enough because Caroline also needs the client secret from that JSON. The old Sheets/service-account path is kept only as an advanced fallback.
 - **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (usually `https://<pi-ip>:8443/spotify/callback`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 - **Display preferences:** Settings → Widgets controls 12/24-hour time and Fahrenheit/Celsius for weather and Pi health.

@@ -771,7 +771,7 @@ DEFAULT_SETTINGS_PATH=$(mktemp)
 MERGED_SETTINGS_PATH=$(mktemp)
 jq -n \
   --arg name         "$USER_NAME" \
-  --arg tz           "${TIMEZONE:-America/New_York}" \
+  --arg tz           "${TIMEZONE:-}" \
   --arg loc          "$LOCATION" \
   --arg zip          "$ZIP_CODE" \
   --arg model        "$AI_MODEL" \

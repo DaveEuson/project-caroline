@@ -34,7 +34,7 @@ If the JSON says `"type": "service_account"`, or the client ID is only a long nu
 
 1. Open Caroline.
 2. Go to **Settings > Connect > Google**.
-3. Use **Import OAuth JSON** and select the Desktop app JSON you downloaded.
+3. Use **Import OAuth JSON** or **Paste OAuth JSON** with the Desktop app JSON you downloaded.
 4. Click **Connect Google**.
 5. Sign in with the same Google account you added as a test user.
 6. If Google redirects to a localhost/error page in a remote browser, copy the full URL from the address bar and paste it into **Finish Google Sign-In** in Caroline.
