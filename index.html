@@ -1767,6 +1767,21 @@ function setSettingsSubStatus(id, text, kind = 'neutral') {
   el.style.color = colors[kind] || colors.neutral;
 }
 
+function markGoogleDisconnected(message = 'Reconnect Google to load calendars') {
+  S.googleConnected = false;
+  integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: false });
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  renderIntegrationStatus();
+  setSettingsSubStatus('google-auth-status', message, 'warn');
+  const legacyStatusEl = document.getElementById('google-oauth-status');
+  if (legacyStatusEl) {
+    legacyStatusEl.textContent = message;
+    legacyStatusEl.style.color = 'rgba(251,191,36,0.9)';
+  }
+  const btn = document.getElementById('google-connect-btn');
+  if (btn) btn.textContent = 'Connect Google';
+}
+
 function renderIntegrationStatus() {
   const openrouterSaved = !!S.openrouterKey || !!S.openrouterKeyConfigured || !!integrationHealth.openrouter?.configured;
   const usingOllama = (S.aiProvider || 'openrouter') === 'ollama';
@@ -3377,6 +3392,7 @@ async function refreshGoogleStatus() {
     const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/status', { timeoutMs: 3000 }, 'Google status');
     const data = await resp.json();
     S.googleConnected = !!data.connected;
+    integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: !!data.connected });
     if (data.invalidClient) {
       S.googleClientId = '';
       S.googleClientSecret = '';
@@ -3471,7 +3487,16 @@ async function loadGoogleCalendars() {
     }
     selectGoogleCalendarFromList();
   } catch(e) {
-    if (statusEl) { statusEl.textContent = 'Calendar list failed: ' + (e.message || 'connect Google first'); statusEl.style.color = '#f87171'; }
+    const message = e.message || 'connect Google first';
+    if (/connect google first/i.test(message)) {
+      markGoogleDisconnected('Reconnect Google to load calendars');
+    }
+    if (statusEl) {
+      statusEl.textContent = /connect google first/i.test(message)
+        ? 'Calendar list failed: reconnect Google, then load calendars'
+        : 'Calendar list failed: ' + message;
+      statusEl.style.color = '#f87171';
+    }
   }
 }
 
@@ -3492,6 +3517,8 @@ async function handleGoogleAuth() {
   S.googleClientId = clientId;
   S.googleClientSecret = clientSecret;
   S.googleRedirectUri = redirectUri;
+  S.googleConnected = false;
+  integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: false });
   localStorage.setItem('caro_settings', JSON.stringify(S));
   try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: redirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
   const params = new URLSearchParams({ clientId, redirectUri });
