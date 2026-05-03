@@ -1062,7 +1062,7 @@
             <div class="settings-label" style="margin-bottom:5px;color:#8ab4f8;">Fast path</div>
             <div style="margin-bottom:5px;color:#c4d7ff;">This setup is free for Caroline's calendar use; no paid Google Cloud billing is needed.</div>
             <div>1. In Google Cloud, enable Calendar API and create an OAuth Client ID as a <strong>Desktop app</strong>.</div>
-            <div>2. Download the OAuth JSON, then use <strong>Import OAuth JSON</strong> or <strong>Paste OAuth JSON</strong> here.</div>
+            <div>2. Download the OAuth JSON, then use <strong>Import OAuth JSON</strong> or <strong>Paste OAuth JSON</strong> here. The JSON has both the Client ID and secret.</div>
             <div>3. Click <strong>Connect Google</strong>. If the Pi browser is awkward, use <strong>Use Phone Code</strong>.</div>
             <button type="button" onclick="showHowTo('calendar')" style="margin-top:8px;background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:5px 12px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Open full guide</button>
           </div>
@@ -1075,10 +1075,13 @@
             <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">OAuth JSON</div><div class="settings-sub">Shortcut: imports client ID and secret</div></div>
+            <div><div class="settings-label">OAuth JSON</div><div class="settings-sub">Required: imports Client ID and secret</div></div>
             <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
               <input type="file" id="google-client-json-input" accept=".json,application/json" style="display:none" onchange="handleGoogleClientJsonUpload(event)"/>
-              <button type="button" onclick="document.getElementById('google-client-json-input').click()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Import OAuth JSON</button>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('google-client-json-input').click()" style="background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Import OAuth JSON</button>
+                <button type="button" onclick="handleGoogleClientJsonPaste()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.28);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Paste OAuth JSON</button>
+              </div>
               <span id="google-client-json-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:240px;"></span>
             </div>
           </div>
@@ -1102,10 +1105,6 @@
               <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
             </div>
             <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Paste OAuth JSON</div><div class="settings-sub">Same as importing the file</div></div>
-              <button type="button" onclick="handleGoogleClientJsonPaste()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.28);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Paste OAuth JSON</button>
-            </div>
-            <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
               <div><div class="settings-label">Finish Sign-In</div><div class="settings-sub">Use only if the browser gets stuck</div></div>
               <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
                 <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste callback URL or code" style="width:260px"/>
@@ -3384,6 +3383,12 @@ async function handleGoogleAuth() {
   const redirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   if (!clientId) { if (statusEl) statusEl.textContent = 'Enter OAuth Client ID first'; return; }
   if (!isGoogleOAuthClientId(clientId)) { if (statusEl) statusEl.textContent = 'Import a Desktop app OAuth JSON first'; return; }
+  if (!clientSecret) {
+    if (statusEl) statusEl.textContent = 'Paste or import the OAuth JSON first - Client ID alone is not enough';
+    const jsonStatus = document.getElementById('google-client-json-status');
+    if (jsonStatus) jsonStatus.textContent = 'OAuth JSON is needed because it contains the client secret';
+    return;
+  }
   S.googleClientId = clientId;
   S.googleClientSecret = clientSecret;
   S.googleRedirectUri = redirectUri;
@@ -3433,6 +3438,11 @@ async function handleGoogleDeviceAuth() {
   const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
   if (!clientId) { if (statusEl) statusEl.textContent = 'Import OAuth JSON first'; return; }
   if (!isGoogleOAuthClientId(clientId)) { if (statusEl) statusEl.textContent = 'Import a valid OAuth JSON first'; return; }
+  if (!clientSecret) {
+    if (statusEl) statusEl.textContent = 'Paste or import the OAuth JSON first - Client ID alone is not enough';
+    if (deviceEl) deviceEl.textContent = 'The Desktop OAuth JSON includes the secret Caroline needs to finish sign-in.';
+    return;
+  }
   S.googleClientId = clientId;
   S.googleClientSecret = clientSecret;
   S.googleRedirectUri = GOOGLE_LOOPBACK_REDIRECT_URI;
