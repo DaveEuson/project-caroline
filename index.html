@@ -1,6 +1,6 @@
 <!--
   Project: Caroline — Personal AI Kiosk
-  Version: 0.2.0-dev
+  Version: 0.3.0-dev
   MIT License
 
   Copyright (c) 2024 Dave Euson
@@ -614,6 +614,12 @@
   #settings-log { font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(226,232,240,0.55); max-height:130px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; background:rgba(0,0,0,0.25); border-radius:8px; padding:8px 10px; }
   #settings-log::-webkit-scrollbar { width:2px; }
   #settings-log::-webkit-scrollbar-thumb { background:rgba(var(--t-rgb1),0.2); border-radius:2px; }
+  .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .about-card { background:rgba(var(--t-rgb1),0.04); border:1px solid rgba(var(--t-rgb1),0.14); border-radius:8px; padding:10px 12px; min-width:0; }
+  .about-card .k { font-size:9px; color:rgba(226,232,240,0.38); font-family:'JetBrains Mono',monospace; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:5px; }
+  .about-card .v { font-size:13px; color:#e2e8f0; overflow-wrap:anywhere; }
+  .about-card.full { grid-column:1 / -1; }
+  @media (max-width: 540px) { .about-grid { grid-template-columns:1fr; } .about-card.full { grid-column:auto; } }
   .log-entry { display:flex; gap:8px; }
   .log-ts { color:rgba(var(--t-rgb1),0.4); flex-shrink:0; }
   .log-type-ws   { color:#4ade80; }
@@ -769,6 +775,7 @@
       <button class="stab" data-tab="connect" onclick="switchSettingsTab('connect')">Connect</button>
       <button class="stab" data-tab="widgets" onclick="switchSettingsTab('widgets')">Widgets</button>
       <button class="stab" data-tab="system" onclick="switchSettingsTab('system')">System</button>
+      <button class="stab" data-tab="about" onclick="switchSettingsTab('about')">About</button>
     </div>
     <div id="settings-body">
       <div id="settings-first-run-banner" style="display:none;background:rgba(var(--t-rgb1),0.08);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:12px;padding:14px 18px;margin-bottom:6px;">
@@ -1286,6 +1293,35 @@
           <button class="clear-history-btn" style="margin-top:8px;border-color:rgba(226,232,240,0.15);color:rgba(226,232,240,0.4);" onclick="_clog=[];renderSettingsLog()">Clear log</button>
         </div>
       </div>
+
+      <!-- ── TAB: ABOUT ── -->
+      <div class="stab-panel" id="stab-about" hidden>
+        <div class="settings-section">
+          <h3>Build</h3>
+          <div class="about-grid">
+            <div class="about-card"><div class="k">Version</div><div class="v" id="about-version">--</div></div>
+            <div class="about-card"><div class="k">Build</div><div class="v" id="about-build">--</div></div>
+            <div class="about-card"><div class="k">Installed</div><div class="v" id="about-installed">--</div></div>
+            <div class="about-card"><div class="k">Source</div><div class="v" id="about-source">--</div></div>
+            <div class="about-card full"><div class="k">Runtime</div><div class="v" id="about-runtime">--</div></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <button class="settings-boot-btn" type="button" onclick="refreshBuildInfo()">⟳ Refresh Build</button>
+            <button class="settings-boot-btn" type="button" onclick="copyBuildInfo()">Copy Build</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>About Me</h3>
+          <div class="about-grid">
+            <div class="about-card"><div class="k">You</div><div class="v" id="about-user">--</div></div>
+            <div class="about-card"><div class="k">AI Name</div><div class="v" id="about-ai">--</div></div>
+            <div class="about-card"><div class="k">Home</div><div class="v" id="about-home">--</div></div>
+            <div class="about-card"><div class="k">AI Provider</div><div class="v" id="about-provider">--</div></div>
+            <div class="about-card full"><div class="k">Memory</div><div class="v" id="about-memory">--</div></div>
+            <div class="about-card full"><div class="k">Widgets</div><div class="v" id="about-widgets">--</div></div>
+          </div>
+        </div>
+      </div>
       <div class="settings-footer">
         <button class="clear-history-btn" onclick="clearHistory()">🗑 Clear chat log</button>
         <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="resetChannels()">↺ Reset channels</button>
@@ -1336,7 +1372,7 @@
 <div id="topbar">
   <div class="dot"></div>
   <span class="topbar-name" id="topbar-name">Caroline</span>
-  <span class="topbar-version">v0.2</span>
+  <span class="topbar-version">v0.3.0-dev</span>
   <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
   <span class="net-pill" id="model-pill" title="Active AI model">-- --</span>
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
@@ -1632,10 +1668,13 @@
 // ── SPOTIFY OAUTH (PKCE) ──────────────────────
 
 // ── VERSION ───────────────────────────────────
-const VERSION = '0.2.0-dev';
+const VERSION = '0.3.0-dev';
+const BUILD_FALLBACK = 'local-dev';
+let buildInfo = { version: VERSION, commit: BUILD_FALLBACK, branch: '', installedAt: '', source: 'local file' };
 document.addEventListener('DOMContentLoaded', () => {
   const vEl = document.querySelector('.topbar-version');
   if (vEl) vEl.textContent = 'v' + VERSION;
+  refreshBuildInfo({ quiet: true });
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
@@ -1999,6 +2038,62 @@ function renderSettingsLog() {
   ).join('');
 }
 
+async function refreshBuildInfo(options = {}) {
+  try {
+    const r = await fetch('caroline_build.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) buildInfo = Object.assign({}, buildInfo, await r.json());
+  } catch(e) {
+    if (!options.quiet) showSettingsFeedback('Build manifest not found yet', true);
+  }
+  updateAboutPanel();
+  return buildInfo;
+}
+
+function shortBuildLabel(info = buildInfo) {
+  const commit = String(info.commit || info.gitCommit || BUILD_FALLBACK).trim();
+  const branch = String(info.branch || '').trim();
+  return commit + (branch ? ' / ' + branch : '');
+}
+
+function updateAboutPanel() {
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value || '--';
+  };
+  const enabledWidgets = FEATURE_KEYS.filter(k => (S.features || FEATURE_DEFAULTS)[k] !== false);
+  const setupMemory = getSetupMemoryPrompt();
+  const importedMemory = S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt') || '';
+  const installedVersion = String(buildInfo.version || '').trim();
+  set('about-version', 'UI v' + VERSION + (installedVersion && installedVersion !== VERSION ? ' · install v' + installedVersion : ''));
+  set('about-build', shortBuildLabel());
+  set('about-installed', buildInfo.installedAt ? new Date(buildInfo.installedAt).toLocaleString() : 'not installed by script');
+  set('about-source', buildInfo.repo || buildInfo.source || window.location.href);
+  set('about-runtime', (S.nodeRedUrl || DEFAULT_NODE_RED_URL) + ' · ' + (navigator.userAgent || '').replace(/\s+/g, ' ').slice(0, 120));
+  set('about-user', S.userName || 'not set');
+  set('about-ai', S.aiName || 'Caroline');
+  set('about-home', [S.cityName || S.location || '', S.timezone || ''].filter(Boolean).join(' · ') || 'not set');
+  set('about-provider', (S.aiProvider || 'openrouter') + ' · ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'gemma3:1b') : (S.aiModel || 'anthropic/claude-haiku-4.5')));
+  set('about-memory', (setupMemory ? 'setup memory saved' : 'setup memory empty') + ' · ' + (importedMemory ? 'imported profile saved' : 'no imported profile'));
+  set('about-widgets', enabledWidgets.length + '/' + FEATURE_KEYS.length + ' enabled: ' + enabledWidgets.join(', '));
+}
+
+async function copyBuildInfo() {
+  const text = [
+    'Project Caroline',
+    'Version: v' + VERSION,
+    'Build: ' + shortBuildLabel(),
+    'Installed: ' + (buildInfo.installedAt || 'not installed by script'),
+    'Node-RED: ' + (S.nodeRedUrl || DEFAULT_NODE_RED_URL),
+    'AI: ' + (S.aiProvider || 'openrouter') + ' / ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || '') : (S.aiModel || ''))
+  ].join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    showSettingsFeedback('Build copied');
+  } catch(e) {
+    showSettingsFeedback('Copy failed: ' + e.message, true);
+  }
+}
+
 // ── USAGE TRACKING ────────────────────────────
 let _usage = JSON.parse(localStorage.getItem('caro_usage') || '{"msgs":0,"inChars":0,"outChars":0}');
 function _trackSend(text) { _usage.msgs++; _usage.inChars += text.length; localStorage.setItem('caro_usage', JSON.stringify(_usage)); }
@@ -2026,6 +2121,7 @@ function renderUsageStats() {
 function exportBackup() {
   const data = {
     version: VERSION,
+    build: buildInfo,
     exported: new Date().toISOString(),
     settings: JSON.parse(localStorage.getItem('caro_settings') || '{}'),
     chatLog: JSON.parse(localStorage.getItem('caro_log') || '[]'),
@@ -2630,6 +2726,8 @@ function toggleSettings() {
     updateFeatWarnings();
     renderUsageStats();
     renderSettingsLog();
+    updateAboutPanel();
+    refreshBuildInfo({ quiet: true });
     const runtimeProvider = integrationHealth.aiProvider || S.aiProvider || 'openrouter';
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
     if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
@@ -2762,6 +2860,10 @@ function switchSettingsTab(tab) {
       syncFeatureCheckboxes();
       updateFeatWarnings();
     });
+  }
+  if (tab === 'about') {
+    updateAboutPanel();
+    refreshBuildInfo({ quiet: true });
   }
 }
 

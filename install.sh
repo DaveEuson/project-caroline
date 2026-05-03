@@ -44,7 +44,7 @@ phase() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="0.2.0"
+CAROLINE_VERSION="0.3.0-dev"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
@@ -578,6 +578,21 @@ for _json in "$CAROLINE_DIR/flows.json" "$CAROLINE_DIR/caroline-agent-loop.json"
   sed -i "s#/home/davee/caroline#${CAROLINE_DIR_SED}#g" "$_json"
 done
 unset _json CAROLINE_DIR_SED
+
+BUILD_COMMIT="$(git -C "$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+BUILD_BRANCH="$(git -C "$CLONE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+BUILD_REPO="$(git -C "$CLONE_DIR" config --get remote.origin.url 2>/dev/null || echo https://github.com/DaveEuson/project-caroline.git)"
+BUILD_INSTALLED_AT="$(date -Iseconds)"
+jq -n \
+  --arg version "$CAROLINE_VERSION" \
+  --arg commit "$BUILD_COMMIT" \
+  --arg branch "$BUILD_BRANCH" \
+  --arg repo "$BUILD_REPO" \
+  --arg installedAt "$BUILD_INSTALLED_AT" \
+  --arg hostname "$(hostname)" \
+  '{ version: $version, commit: $commit, branch: $branch, repo: $repo, installedAt: $installedAt, hostname: $hostname }' \
+  > "$CAROLINE_DIR/caroline_build.json"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_build.json"
 
 # Flatten avatar GIFs to root — skip any placeholder stub (43 bytes); only copy files > 1 KB
 for _gif in "$CAROLINE_DIR/assets/"*.gif; do
