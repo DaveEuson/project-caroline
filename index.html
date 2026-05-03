@@ -1767,6 +1767,15 @@ function setSettingsSubStatus(id, text, kind = 'neutral') {
   el.style.color = colors[kind] || colors.neutral;
 }
 
+function showSettingsFeedback(text, isError = false) {
+  const fb = document.getElementById('settings-feedback');
+  if (!fb) return;
+  fb.textContent = text;
+  fb.classList.toggle('error', !!isError);
+  fb.classList.add('show');
+  setTimeout(() => fb.classList.remove('show'), 2600);
+}
+
 function markGoogleDisconnected(message = 'Reconnect Google to load calendars') {
   S.googleConnected = false;
   integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: false });
@@ -2032,7 +2041,7 @@ function importBackup(input) {
       if (data.usage)        localStorage.setItem('caro_usage', JSON.stringify(data.usage));
       clog('info', 'Backup imported — reloading');
       setTimeout(() => location.reload(), 800);
-    } catch (err) { alert('Import failed: ' + err.message); }
+    } catch (err) { showSettingsFeedback('Import failed: ' + err.message, true); }
   };
   reader.readAsText(file);
 }
@@ -2328,13 +2337,20 @@ async function handleSpotifyAuth(event) {
   const clientId = normalizeSpotifyClientId(inputEl?.value || '');
   const statusEl = document.getElementById('spotify-status');
   const btnEl = document.getElementById('spotify-connect-btn');
-  if (!clientId) { alert('Enter a Spotify Client ID first.'); return false; }
+  if (!clientId) {
+    if (statusEl) {
+      statusEl.textContent = 'Enter a Spotify Client ID first';
+      statusEl.style.color = '#fb7185';
+    }
+    showSettingsFeedback('Enter a Spotify Client ID first', true);
+    return false;
+  }
   if (!/^[0-9a-f]{32}$/i.test(clientId)) {
     if (statusEl) {
       statusEl.textContent = 'Client ID should be 32 hex characters';
       statusEl.style.color = '#fb7185';
     }
-    alert('That does not look like a Spotify Client ID. Paste the 32-character Client ID from your Spotify Developer app, not the client secret or the text "client_id".');
+    showSettingsFeedback('Spotify Client ID should be 32 hex characters', true);
     return false;
   }
   if (inputEl) inputEl.value = clientId;
@@ -3088,10 +3104,11 @@ const PROFILE_REQUEST_PROMPT = "I am setting up an open-source digital sidekick 
 async function copyProfileRequest() {
   try {
     await navigator.clipboard.writeText(PROFILE_REQUEST_PROMPT);
-    const fb = document.getElementById('settings-feedback');
-    if (fb) { fb.textContent = 'Profile ask copied'; fb.classList.add('show'); setTimeout(() => fb.classList.remove('show'), 2000); }
+    showSettingsFeedback('Profile ask copied');
   } catch(e) {
-    alert(PROFILE_REQUEST_PROMPT);
+    const profileTa = document.getElementById('userProfilePrompt');
+    if (profileTa) profileTa.value = PROFILE_REQUEST_PROMPT;
+    showSettingsFeedback('Clipboard blocked; prompt placed in the profile box', true);
   }
 }
 
@@ -3108,8 +3125,7 @@ async function syncPersonalityToBrain() {
     ws.send(JSON.stringify({ type: 'settings_update', personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt }));
   }
   try { await postSettingsToNodeRed({ personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt }, 5000); } catch(e) {}
-  const fb = document.getElementById('settings-feedback');
-  if (fb) { fb.textContent = 'Personality synced'; fb.classList.add('show'); setTimeout(() => fb.classList.remove('show'), 2000); }
+  showSettingsFeedback('Personality synced');
 }
 
 async function testAiConnection(btn) {
@@ -4106,7 +4122,10 @@ function renderChannelList() {
   });
 }
 
-function addCustomChannel() { alert('Media channels are curated in the media panel settings.'); }
+function addCustomChannel() {
+  clog('info', 'Media channels are curated in the media panel settings.');
+  showSettingsFeedback('Media channels are curated in settings');
+}
 function resetChannels() { localStorage.removeItem('caro_channels'); renderChannelList(); loadMediaChannel(0); playBeep(900); }
 
 document.addEventListener('DOMContentLoaded', () => { renderChannelList(); loadMediaChannel(S.defaultChannel || 0); });
@@ -6071,7 +6090,10 @@ function renderChatStep(){
               if(saEl) saEl.innerHTML='<span style="color:#4ade80;font-size:11px;">✓ '+f.name+' — will upload on finish</span>';
               card.querySelector('.caro-toggle').classList.add('active');
               renderChatStep();
-            } catch(err){ alert('Invalid service account file: '+err.message); }
+            } catch(err){
+              const saEl=document.getElementById('sa-status');
+              if(saEl) saEl.innerHTML='<span style="color:#fb7185;font-size:11px;">Invalid service account file: '+spotifyHtmlEscape(err.message||'invalid JSON')+'</span>';
+            }
           };
           reader.readAsText(f);
         };
