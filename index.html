@@ -2755,6 +2755,14 @@ function closeMemeOverlay() {
 function switchSettingsTab(tab) {
   document.querySelectorAll('.stab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.stab-panel').forEach(p => { p.hidden = p.id !== 'stab-' + tab; });
+  if (tab === 'widgets') {
+    syncFeatureCheckboxes();
+    updateFeatWarnings();
+    requestAnimationFrame(() => {
+      syncFeatureCheckboxes();
+      updateFeatWarnings();
+    });
+  }
 }
 
 function selectSwatch(i) {
@@ -3940,6 +3948,9 @@ async function saveSettings() {
     const el = document.getElementById('feat-'+k);
     if (el) S.features[k] = el.checked;
   });
+  S.features = normalizeFeatureState(S.features);
+  syncFeatureCheckboxes();
+  updateFeatWarnings();
 
   // Refresh localStorage after zip lookup + feature toggles updated S
   localStorage.setItem('caro_settings', JSON.stringify(S));
