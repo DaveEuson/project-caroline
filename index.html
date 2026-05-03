@@ -1640,19 +1640,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
+const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS);
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
 const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
 
+function parseFeatureBool(value, fallback) {
+  if (value === true || value === false) return value;
+  if (value === 1 || value === 0) return !!value;
+  if (typeof value === 'string') {
+    const s = value.trim().toLowerCase();
+    if (['true','1','yes','on','enabled'].includes(s)) return true;
+    if (['false','0','no','off','disabled'].includes(s)) return false;
+  }
+  return fallback;
+}
+
 function normalizeFeatureState(features, { repairAllOff = true } = {}) {
-  const known = Object.keys(FEATURE_DEFAULTS);
-  const src = (features && typeof features === 'object') ? features : {};
-  const hasKnown = known.some(k => Object.prototype.hasOwnProperty.call(src, k));
-  const anyEnabled = known.some(k => src[k] === true);
-  if (!hasKnown || (repairAllOff && !anyEnabled)) return Object.assign({}, FEATURE_DEFAULTS);
-  return Object.assign({}, FEATURE_DEFAULTS, src);
+  let src = features;
+  if (typeof src === 'string') {
+    try { src = JSON.parse(src); } catch(e) { src = {}; }
+  }
+  if (!src || typeof src !== 'object' || Array.isArray(src)) src = {};
+  const hasKnown = FEATURE_KEYS.some(k => Object.prototype.hasOwnProperty.call(src, k));
+  if (!hasKnown) return Object.assign({}, FEATURE_DEFAULTS);
+  const out = Object.assign({}, FEATURE_DEFAULTS);
+  FEATURE_KEYS.forEach(k => { out[k] = parseFeatureBool(src[k], out[k]); });
+  const anyEnabled = FEATURE_KEYS.some(k => out[k] === true);
+  if (repairAllOff && !anyEnabled) return Object.assign({}, FEATURE_DEFAULTS);
+  return out;
+}
+
+function syncFeatureCheckboxes() {
+  const featureState = normalizeFeatureState(S.features);
+  S.features = featureState;
+  FEATURE_KEYS.forEach(k => {
+    const el = document.getElementById('feat-' + k);
+    if (el) el.checked = featureState[k] !== false;
+  });
+  return featureState;
 }
 
 S.features = normalizeFeatureState(S.features);
@@ -1849,12 +1877,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const hgSel = document.getElementById('set-hue-group');
   if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
-  const featureState = normalizeFeatureState(S.features);
-  S.features = featureState;
-  ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
-    const el = document.getElementById('feat-' + k);
-    if (el) el.checked = featureState[k] !== false;
-  });
+  syncFeatureCheckboxes();
   updateFeatWarnings();
   applySavedSecretPlaceholders();
   renderIntegrationStatus();
@@ -2552,11 +2575,7 @@ function toggleSettings() {
     pendingSwatch = S.theme;
     for(let i=0;i<3;i++) document.getElementById('swatch-'+i).classList.toggle('active', i===pendingSwatch);
     // Populate feature checkboxes
-    const f = S.features || FEATURE_DEFAULTS;
-    ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
-      const el = document.getElementById('feat-'+k);
-      if (el) el.checked = f[k] !== false;
-    });
+    syncFeatureCheckboxes();
     updateFeatWarnings();
     renderUsageStats();
     renderSettingsLog();
@@ -2600,12 +2619,7 @@ function toggleSettings() {
         applySettingsToForm();
         toggleDiscordFields(!!S.discordEnabled);
         // Re-apply feature checkboxes from server-authoritative S.features
-        if (S.features && Object.keys(S.features).length) {
-          ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
-            const el = document.getElementById('feat-' + k);
-            if (el) el.checked = S.features[k] !== false;
-          });
-        }
+        syncFeatureCheckboxes();
         checkGoogleStatus();
         refreshIntegrationHealth();
       })
@@ -3845,7 +3859,7 @@ async function saveSettings() {
 
   // Save feature toggles
   if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
-  ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
+  FEATURE_KEYS.forEach(k => {
     const el = document.getElementById('feat-'+k);
     if (el) S.features[k] = el.checked;
   });
