@@ -1852,21 +1852,6 @@ function showSettingsFeedback(text, isError = false) {
   setTimeout(() => fb.classList.remove('show'), 2600);
 }
 
-function markGoogleDisconnected(message = 'Reconnect Google to load calendars') {
-  S.googleConnected = false;
-  integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: false });
-  localStorage.setItem('caro_settings', JSON.stringify(S));
-  renderIntegrationStatus();
-  setSettingsSubStatus('google-auth-status', message, 'warn');
-  const legacyStatusEl = document.getElementById('google-oauth-status');
-  if (legacyStatusEl) {
-    legacyStatusEl.textContent = message;
-    legacyStatusEl.style.color = 'rgba(251,191,36,0.9)';
-  }
-  const btn = document.getElementById('google-connect-btn');
-  if (btn) btn.textContent = 'Connect Google';
-}
-
 function renderIntegrationStatus() {
   const openrouterSaved = !!S.openrouterKey || !!S.openrouterKeyConfigured || !!integrationHealth.openrouter?.configured;
   const usingOllama = (S.aiProvider || 'openrouter') === 'ollama';
@@ -1900,7 +1885,7 @@ function renderIntegrationStatus() {
 
   const googleConnected = integrationHealth.google ? parseSettingBool(integrationHealth.google.connected) : parseSettingBool(S.googleConnected);
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
-  const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured;
+  const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured || !!integrationHealth.google?.hasClientSecret;
   setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on Pi: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
   setSettingsSubStatus('google-client-id-status', googleClientSaved ? 'Saved on Pi' : 'Not configured', googleClientSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('google-secret-status', googleSecretSaved ? 'Saved on Pi' : 'Not configured', googleSecretSaved ? 'ok' : 'neutral');
@@ -3500,6 +3485,7 @@ function extractGoogleOAuthClientConfig(json) {
   const clientSecret = String(cfg?.client_secret || '').trim();
   if (!clientId) throw new Error('OAuth client_id was not found');
   if (!isGoogleOAuthClientId(clientId)) throw new Error('Use an OAuth client ID ending in .apps.googleusercontent.com');
+  if (!clientSecret) throw new Error('OAuth client_secret was not found. Download the full Desktop app OAuth JSON, not just the Client ID.');
   return { clientId, clientSecret, clientType };
 }
 
@@ -3568,8 +3554,17 @@ async function refreshGoogleStatus() {
   try {
     const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/status', { timeoutMs: 3000 }, 'Google status');
     const data = await resp.json();
-    S.googleConnected = parseSettingBool(data.connected);
-    integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: parseSettingBool(data.connected) });
+    const connected = parseSettingBool(data.connected);
+    const hasRefreshToken = parseSettingBool(data.hasRefreshToken);
+    const hasClientSecret = parseSettingBool(data.hasClientSecret);
+    S.googleConnected = connected;
+    if (hasClientSecret) S.googleClientSecretConfigured = true;
+    integrationHealth.google = Object.assign({}, integrationHealth.google || {}, {
+      connected,
+      hasRefreshToken,
+      hasClientSecret,
+      clientConfigured: parseSettingBool(data.clientConfigured)
+    });
     if (data.invalidClient) {
       S.googleClientId = '';
       S.googleClientSecret = '';
@@ -3578,11 +3573,17 @@ async function refreshGoogleStatus() {
       if (idEl) idEl.value = '';
       if (secretEl) secretEl.value = '';
     }
-    const text = parseSettingBool(data.connected) ? 'Connected' : (data.invalidClient ? 'Import Desktop OAuth JSON' : 'Not connected');
-    const color = parseSettingBool(data.connected) ? 'rgba(52,211,153,0.9)' : 'rgba(226,232,240,0.4)';
+    const text = connected
+      ? 'Connected'
+      : (data.invalidClient
+        ? 'Import Desktop OAuth JSON'
+        : (hasRefreshToken && !hasClientSecret
+          ? 'OAuth JSON missing client secret'
+          : 'Not connected'));
+    const color = connected ? 'rgba(52,211,153,0.9)' : (hasRefreshToken && !hasClientSecret ? '#fbbf24' : 'rgba(226,232,240,0.4)');
     if (statusEl) { statusEl.textContent = text; statusEl.style.color = color; }
     if (legacyStatusEl) { legacyStatusEl.textContent = text; legacyStatusEl.style.color = color; }
-    if (btn) btn.textContent = parseSettingBool(data.connected) ? 'Reconnect Google' : 'Connect Google';
+    if (btn) btn.textContent = connected ? 'Reconnect Google' : 'Connect Google';
     if (!data.invalidClient && data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
     if (data.redirectUri) S.googleRedirectUri = normalizeGoogleRedirectUri(data.redirectUri);
     localStorage.setItem('caro_settings', JSON.stringify(S));
@@ -3669,15 +3670,13 @@ async function loadGoogleCalendars() {
     selectGoogleCalendarFromList();
   } catch(e) {
     const message = e.message || 'connect Google first';
-    if (/connect google first/i.test(message)) {
-      markGoogleDisconnected('Reconnect Google to load calendars');
-    }
     if (statusEl) {
-      statusEl.textContent = /connect google first/i.test(message)
+      statusEl.textContent = /connect google first|google token missing|reconnect google/i.test(message)
         ? 'Calendar list failed: reconnect Google, then load calendars'
         : 'Calendar list failed: ' + message;
       statusEl.style.color = '#f87171';
     }
+    if (/connect google first|google token missing|reconnect google/i.test(message)) refreshGoogleStatus();
   }
 }
 
