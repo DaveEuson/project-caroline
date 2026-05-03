@@ -4086,6 +4086,7 @@ let idleTimer=0, idleLimit=S.idleTimeout;
 function enterIdleMode() {
   const h = new Date().getHours();
   const isNight = h >= 20 || h < 8;
+  seedIdleRecent();
   document.body.classList.toggle('idle-night', isNight);
   document.body.classList.toggle('idle-day', !isNight);
   document.body.classList.add('idle-mode');
@@ -4144,7 +4145,52 @@ window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
 voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; if(!voiceEnabled){stopSpeaking();voiceBtn.innerHTML='🔇';voiceBtn.classList.add('muted');voiceStatus.textContent='● VOICE MUTED';}else{voiceBtn.innerHTML='🔊';voiceBtn.classList.remove('muted');voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND';} resetIdle(); };
 
 // ── CHAT HISTORY ──────────────────────────────
-let chatLog = JSON.parse(localStorage.getItem('caro_log') || '[]');
+function cleanDisplayText(text) {
+  return String(text || '')
+    .replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/gi, '')
+    .replace(/\[ACTION:[^\]]*\]/gi, '')
+    .replace(/```(?:json)?\s*[\s\S]*?"type"\s*:\s*"(?:calendar|add_task|complete_task|hue|remember)"[\s\S]*?```/gi, '')
+    .replace(/\{[\s\S]*?"type"\s*:\s*"(?:calendar|add_task|complete_task|hue|remember)"[\s\S]*?\}/gi, '')
+    .replace(/```(?:json)?|```/gi, '')
+    .replace(/\[SET_(?:USER|AI)_MOOD:\d+\]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function hasLeakedActionText(text) {
+  return /\[ACTION|```|"\s*type\s*"|\btype\s*:\s*['"]?(?:calendar|add_task|complete_task|hue|remember)\b/i.test(String(text || ''));
+}
+function idleFallbackGreeting() {
+  const h = new Date().getHours();
+  const n = S.userName ? ', ' + S.userName : '';
+  if (h >= 5 && h < 12) return 'Good morning' + n + '! Uplink active. What are we working on?';
+  if (h >= 12 && h < 17) return 'Good afternoon' + n + '! Uplink active. What are we working on?';
+  if (h >= 17 && h < 21) return 'Good evening' + n + '! Uplink active. What are we working on?';
+  return 'Uplink active. What are we working on?';
+}
+function updateIdleRecentText(text) {
+  const idleText = document.getElementById('idle-recent-text');
+  if (!idleText) return;
+  const clean = cleanDisplayText(text);
+  if (!clean || hasLeakedActionText(clean)) return;
+  idleText.textContent = clean.length > 160 ? clean.slice(0, 157) + '…' : clean;
+}
+function seedIdleRecent() {
+  const latest = [...chatLog].reverse().find(e => e.role !== 'dave' && cleanDisplayText(e.text) && !hasLeakedActionText(e.text));
+  updateIdleRecentText(latest ? latest.text : idleFallbackGreeting());
+}
+function loadCleanChatLog() {
+  let raw = [];
+  try { raw = JSON.parse(localStorage.getItem('caro_log') || '[]'); } catch(e) { raw = []; }
+  let changed = false;
+  const clean = (Array.isArray(raw) ? raw : []).map(e => {
+    const next = Object.assign({}, e, { text: cleanDisplayText(e && e.text) });
+    if (!next.text || hasLeakedActionText(e && e.text)) changed = true;
+    return next;
+  }).filter(e => e.text && !hasLeakedActionText(e.text));
+  if (changed) localStorage.setItem('caro_log', JSON.stringify(clean));
+  return clean;
+}
+let chatLog = loadCleanChatLog();
 function toggleHistory(){
   const p=document.getElementById('history-panel'), b=document.getElementById('hist-btn');
   if(!p) return;
@@ -4334,6 +4380,8 @@ function scrollChatToBottom() {
   if (history) history.scrollTop = history.scrollHeight;
 }
 function addMessage(text, role, source){
+  text = cleanDisplayText(text);
+  if (!text) return;
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing');
   clearTimeout(_typingTimeout); _typingTimeout = null;
   typing.classList.remove('show'); box.classList.remove('hidden'); resetIdle();
@@ -4350,8 +4398,7 @@ function addMessage(text, role, source){
   setTimeout(() => { updateBottomChat(); scrollChatToBottom(); }, 100);
   clearTimeout(subtitleTimeout); subtitleTimeout=setTimeout(()=>box.classList.add('hidden'),15000);
   if (role !== 'user') {
-    const idleText = document.getElementById('idle-recent-text');
-    if (idleText) idleText.textContent = text.length > 160 ? text.slice(0, 157) + '…' : text;
+    updateIdleRecentText(text);
   }
 }
 function showTyping(){
