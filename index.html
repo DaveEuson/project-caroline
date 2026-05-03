@@ -1680,6 +1680,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── SETTINGS & CONFIG (hoisted) ────────────────
 const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS);
+const BOOLEAN_DEFAULTS = {
+  autoTheme: false,
+  ttsEnabled: false,
+  voiceMuted: true,
+  googleConnected: false,
+  discordEnabled: false,
+  setupComplete: false,
+  highContrastText: true,
+  reduceMonoLabels: true,
+  kioskMode: false
+};
+const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
 const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '4', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
@@ -1705,6 +1717,16 @@ function parseSettingBool(value, fallback = false) {
   if (['true','1','yes','y','on','enabled'].includes(s)) return true;
   if (['false','0','no','n','off','disabled'].includes(s)) return false;
   return fallback;
+}
+
+function normalizeSettingsBooleans(target, { fillDefaults = true } = {}) {
+  if (!target || typeof target !== 'object') return target;
+  BOOLEAN_KEYS.forEach(k => {
+    if (fillDefaults || Object.prototype.hasOwnProperty.call(target, k)) {
+      target[k] = parseSettingBool(target[k], BOOLEAN_DEFAULTS[k]);
+    }
+  });
+  return target;
 }
 
 function normalizeFeatureState(features, { repairAllOff = true } = {}) {
@@ -1734,8 +1756,7 @@ function syncFeatureCheckboxes() {
 
 S.features = normalizeFeatureState(S.features);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
-S.discordEnabled = parseSettingBool(S.discordEnabled);
-S.googleConnected = parseSettingBool(S.googleConnected);
+normalizeSettingsBooleans(S);
 S.calendarId = normalizeCalendarIdInput(S.calendarId);
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
@@ -1764,9 +1785,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
   if (d.features) d.features = normalizeFeatureState(d.features);
-  ['discordEnabled','googleConnected','setupComplete','autoTheme','ttsEnabled','voiceMuted'].forEach(k => {
-    if (Object.prototype.hasOwnProperty.call(d, k)) d[k] = parseSettingBool(d[k]);
-  });
+  normalizeSettingsBooleans(d);
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
   if (localOnboardingComplete && serverLooksPreOnboarding) {
@@ -1782,6 +1801,7 @@ function mergeServerSettings(d, options = {}) {
     }
   });
   S.features = normalizeFeatureState(S.features);
+  normalizeSettingsBooleans(S);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.calendarId = normalizeCalendarIdInput(S.calendarId);
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
@@ -1878,7 +1898,7 @@ function renderIntegrationStatus() {
   setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on Pi' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on Pi: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
 
-  const googleConnected = integrationHealth.google ? !!integrationHealth.google.connected : !!S.googleConnected;
+  const googleConnected = integrationHealth.google ? parseSettingBool(integrationHealth.google.connected) : parseSettingBool(S.googleConnected);
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
   const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured;
   setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on Pi: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
@@ -1905,7 +1925,7 @@ async function refreshIntegrationHealth() {
     const r = await fetchJsonWithTimeout(httpBase() + '/health', { timeoutMs: 3000 }, 'Integration health');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     integrationHealth = await r.json();
-    if (integrationHealth.google) S.googleConnected = !!integrationHealth.google.connected;
+    if (integrationHealth.google) S.googleConnected = parseSettingBool(integrationHealth.google.connected, parseSettingBool(S.googleConnected));
     if (integrationHealth.discord) S.discordEnabled = parseSettingBool(integrationHealth.discord.enabled, parseSettingBool(S.discordEnabled));
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
     if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
@@ -1956,6 +1976,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (tempUnitEl) tempUnitEl.value = S.temperatureUnit || 'fahrenheit';
   const discordEnabledEl = document.getElementById('set-discord-enabled');
   if (discordEnabledEl) discordEnabledEl.checked = parseSettingBool(S.discordEnabled);
+  const autoThemeEl = document.getElementById('set-auto-theme');
+  if (autoThemeEl) autoThemeEl.checked = parseSettingBool(S.autoTheme);
   const grEl = document.getElementById('google-redirect-uri');
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const hgSel = document.getElementById('set-hue-group');
@@ -2119,11 +2141,14 @@ function renderUsageStats() {
 
 // ── BACKUP EXPORT / IMPORT ────────────────────
 function exportBackup() {
+  const exportedSettings = Object.assign({}, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
+  if (exportedSettings.features) exportedSettings.features = normalizeFeatureState(exportedSettings.features);
+  normalizeSettingsBooleans(exportedSettings);
   const data = {
     version: VERSION,
     build: buildInfo,
     exported: new Date().toISOString(),
-    settings: JSON.parse(localStorage.getItem('caro_settings') || '{}'),
+    settings: exportedSettings,
     chatLog: JSON.parse(localStorage.getItem('caro_log') || '[]'),
     todos: JSON.parse(localStorage.getItem('caro_todos') || '[]'),
     personality: JSON.parse(localStorage.getItem('caroline_personality') || '{}'),
@@ -2147,7 +2172,11 @@ function importBackup(input) {
       const data = JSON.parse(ev.target.result);
       if (!data.settings) throw new Error('Not a valid Caroline backup');
       if (!confirm('Import backup from ' + (data.exported || 'unknown date') + '? This will overwrite current settings.')) return;
-      if (data.settings)     localStorage.setItem('caro_settings', JSON.stringify(data.settings));
+      if (data.settings) {
+        data.settings.features = normalizeFeatureState(data.settings.features);
+        normalizeSettingsBooleans(data.settings);
+        localStorage.setItem('caro_settings', JSON.stringify(data.settings));
+      }
       if (data.chatLog)      localStorage.setItem('caro_log', JSON.stringify(data.chatLog));
       if (data.todos)        localStorage.setItem('caro_todos', JSON.stringify(data.todos));
       if (data.personality)  localStorage.setItem('caroline_personality', JSON.stringify(data.personality));
@@ -2701,7 +2730,7 @@ function toggleSettings() {
     document.getElementById('set-idle').value = S.idleTimeout;
     if (S.defaultChannel >= videoChannels.length) S.defaultChannel = 0;
     document.getElementById('set-channel').value = S.defaultChannel;
-    document.getElementById('set-auto-theme').checked = S.autoTheme;
+    document.getElementById('set-auto-theme').checked = parseSettingBool(S.autoTheme, BOOLEAN_DEFAULTS.autoTheme);
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
     document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
     document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
@@ -3539,8 +3568,8 @@ async function refreshGoogleStatus() {
   try {
     const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/status', { timeoutMs: 3000 }, 'Google status');
     const data = await resp.json();
-    S.googleConnected = !!data.connected;
-    integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: !!data.connected });
+    S.googleConnected = parseSettingBool(data.connected);
+    integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { connected: parseSettingBool(data.connected) });
     if (data.invalidClient) {
       S.googleClientId = '';
       S.googleClientSecret = '';
@@ -3549,11 +3578,11 @@ async function refreshGoogleStatus() {
       if (idEl) idEl.value = '';
       if (secretEl) secretEl.value = '';
     }
-    const text = data.connected ? 'Connected' : (data.invalidClient ? 'Import Desktop OAuth JSON' : 'Not connected');
-    const color = data.connected ? 'rgba(52,211,153,0.9)' : 'rgba(226,232,240,0.4)';
+    const text = parseSettingBool(data.connected) ? 'Connected' : (data.invalidClient ? 'Import Desktop OAuth JSON' : 'Not connected');
+    const color = parseSettingBool(data.connected) ? 'rgba(52,211,153,0.9)' : 'rgba(226,232,240,0.4)';
     if (statusEl) { statusEl.textContent = text; statusEl.style.color = color; }
     if (legacyStatusEl) { legacyStatusEl.textContent = text; legacyStatusEl.style.color = color; }
-    if (btn) btn.textContent = data.connected ? 'Reconnect Google' : 'Connect Google';
+    if (btn) btn.textContent = parseSettingBool(data.connected) ? 'Reconnect Google' : 'Connect Google';
     if (!data.invalidClient && data.clientId && !S.googleClientId) S.googleClientId = data.clientId;
     if (data.redirectUri) S.googleRedirectUri = normalizeGoogleRedirectUri(data.redirectUri);
     localStorage.setItem('caro_settings', JSON.stringify(S));
@@ -3688,15 +3717,15 @@ async function handleGoogleAuth() {
     if (!googleAuthPopup || !googleAuthPopup.closed) return;
     clearInterval(googleAuthPopupTimer);
     googleAuthPopupTimer = null;
-    if (!S.googleConnected && statusEl) statusEl.textContent = 'Google popup closed - use Phone Code if it got stuck';
-    if (!S.googleConnected && btn) btn.textContent = 'Connect Google';
+    if (!parseSettingBool(S.googleConnected) && statusEl) statusEl.textContent = 'Google popup closed - use Phone Code if it got stuck';
+    if (!parseSettingBool(S.googleConnected) && btn) btn.textContent = 'Connect Google';
     refreshGoogleStatus();
   }, 900);
   let tries = 0;
   const timer = setInterval(async () => {
     tries++;
     const data = await refreshGoogleStatus();
-    if (data && data.connected) {
+    if (data && parseSettingBool(data.connected)) {
       if (googleAuthPopupTimer) clearInterval(googleAuthPopupTimer);
       googleAuthPopupTimer = null;
       if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
@@ -3761,7 +3790,7 @@ async function pollGoogleDeviceAuth(statusEl, deviceEl) {
       timeoutMs: NODE_RED_TIMEOUT_MS
     }, 'Poll Google device sign-in');
     const data = await resp.json();
-    if (data.connected) {
+    if (parseSettingBool(data.connected)) {
       if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
       googleDevicePollTimer = null;
       if (statusEl) statusEl.textContent = 'Connected';
@@ -3866,6 +3895,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
     zipCode: S.zipcode || S.zipCode || '',
     setupComplete
   });
+  normalizeSettingsBooleans(payload);
   const preserveBlankKeys = new Set([
     'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret',
     'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
@@ -4018,7 +4048,9 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, setupComplete: true }));
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, features: S.features, setupComplete: true };
+    normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
+    ws.send(JSON.stringify(wsSettings));
   }
 
   let nrSaveOk = false;
@@ -4703,9 +4735,11 @@ function connectWS(){
     // Only send keys that are actually set in localStorage — empty values must never
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','features'];
+      normalizeSettingsBooleans(S);
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','highContrastText','reduceMonoLabels','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
+      normalizeSettingsBooleans(_payload, { fillDefaults: false });
       ws.send(JSON.stringify(_payload));
     })();
     syncSettingsFromServer().then(() => refreshPiNetworkIdentity()).then(() => {
