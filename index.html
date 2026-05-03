@@ -1633,7 +1633,17 @@ const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode:
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
-S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+
+function normalizeFeatureState(features, { repairAllOff = true } = {}) {
+  const known = Object.keys(FEATURE_DEFAULTS);
+  const src = (features && typeof features === 'object') ? features : {};
+  const hasKnown = known.some(k => Object.prototype.hasOwnProperty.call(src, k));
+  const anyEnabled = known.some(k => src[k] === true);
+  if (!hasKnown || (repairAllOff && !anyEnabled)) return Object.assign({}, FEATURE_DEFAULTS);
+  return Object.assign({}, FEATURE_DEFAULTS, src);
+}
+
+S.features = normalizeFeatureState(S.features);
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
@@ -1661,7 +1671,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
-  if (d.features) d.features = Object.assign({}, FEATURE_DEFAULTS, d.features);
+  if (d.features) d.features = normalizeFeatureState(d.features);
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
   if (localOnboardingComplete && serverLooksPreOnboarding) {
@@ -1676,7 +1686,7 @@ function mergeServerSettings(d, options = {}) {
       S[k] = v;
     }
   });
-  S.features = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  S.features = normalizeFeatureState(S.features);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
   localStorage.setItem('caro_settings', JSON.stringify(S));
@@ -1826,7 +1836,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const hgSel = document.getElementById('set-hue-group');
   if (hgSel) { hgSel.innerHTML = `<option value="${S.hueGroup||'4'}">${S.hueGroupName||('Group '+(S.hueGroup||'4'))}</option>`; hgSel.value = S.hueGroup || '4'; }
-  const featureState = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  const featureState = normalizeFeatureState(S.features);
+  S.features = featureState;
   ['weather','datetime','radio','hue','spotify','calendar','news','video','pomodoro','tides','mood','memes'].forEach(k => {
     const el = document.getElementById('feat-' + k);
     if (el) el.checked = featureState[k] !== false;
@@ -2278,7 +2289,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── FEATURE TOGGLES ───────────────────────────
 function applyFeatures() {
-  const f = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
+  const f = normalizeFeatureState(S.features);
   S.features = f;
   const show = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
 
@@ -2313,7 +2324,8 @@ function previewFeature(key, val) {
 }
 
 function updateFeatWarnings() {
-  const f = S.features || FEATURE_DEFAULTS;
+  const f = normalizeFeatureState(S.features);
+  S.features = f;
   const box = document.getElementById('feat-warnings');
   if (!box) return;
   box.innerHTML = '';
@@ -3400,6 +3412,15 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
     zipCode: S.zipcode || S.zipCode || '',
     setupComplete
   });
+  const preserveBlankKeys = new Set([
+    'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret',
+    'hueIp', 'hueGroup', 'hueGroupName', 'tidesStation', 'spotifyClientId',
+    'googleClientId', 'googleRedirectUri', 'discordChannelId', 'sheetId'
+  ]);
+  Object.keys(payload).forEach(k => {
+    if (preserveBlankKeys.has(k) && String(payload[k] ?? '').trim() === '') delete payload[k];
+  });
+  payload.features = normalizeFeatureState(payload.features);
   console.log('[Caroline] POST settings to', endpoint, payload);
   try {
     const resp = await fetch(endpoint, {
@@ -3526,6 +3547,7 @@ async function saveSettings() {
   localStorage.setItem('caroline_user_profile_prompt', S.userProfilePrompt);
 
   // Persist to localStorage immediately — never block the save on Node-RED being reachable
+  S.features = normalizeFeatureState(S.features);
   localStorage.setItem('caro_settings', JSON.stringify(S));
   renderIntegrationStatus();
 
