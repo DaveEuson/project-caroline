@@ -4917,6 +4917,144 @@
     "wires": []
   },
   {
+    "id": "caro-google-calendars-in",
+    "type": "http in",
+    "z": "e9526774295cef13",
+    "name": "GET /admin/google/calendars",
+    "url": "/admin/google/calendars",
+    "method": "get",
+    "upload": false,
+    "wires": [
+      [
+        "caro-google-calendars-token-fn"
+      ]
+    ],
+    "x": 180,
+    "y": 1640,
+    "swaggerDoc": ""
+  },
+  {
+    "id": "caro-google-calendars-token-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Google Calendar List Token",
+    "func": "const AUTH_PATH = '/home/davee/caroline/google_oauth.json';\nconst SETTINGS_PATH = '/home/davee/caroline/caroline_settings.json';\nfunction fail(error, status) {\n  msg.statusCode = status || 400;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error };\n  return [null, msg];\n}\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  return (fv !== undefined && fv !== null && fv !== '') ? fv : fallback;\n}\nlet settings = {};\ntry { if (fs.existsSync(SETTINGS_PATH)) settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')); } catch(e) {}\nlet auth = {};\ntry { if (fs.existsSync(AUTH_PATH)) auth = JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); } catch(e) {}\nconst refreshToken = String(auth.refresh_token || '').trim();\nconst clientId = String(auth.client_id || getShared('googleClientId', settings.googleClientId || '') || '').trim();\nconst clientSecret = String(auth.client_secret || getShared('googleClientSecret', settings.googleClientSecret || '') || '').trim();\nif (!refreshToken) return fail('Connect Google first, then load calendars.');\nif (!clientId || !clientSecret) return fail('Import or paste the Desktop OAuth JSON first so Caroline has the Client ID and secret.');\nmsg.googleCalendarId = getShared('calendarId', settings.calendarId || 'primary') || 'primary';\nmsg.payload = new URLSearchParams({\n  client_id: clientId,\n  client_secret: clientSecret,\n  grant_type: 'refresh_token',\n  refresh_token: refreshToken\n}).toString();\nmsg.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };\nmsg.method = 'POST';\nmsg.url = 'https://oauth2.googleapis.com/token';\nreturn [msg, null];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 450,
+    "y": 1640,
+    "wires": [
+      [
+        "caro-google-calendars-token-http"
+      ],
+      [
+        "caro-google-calendars-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-calendars-token-http",
+    "type": "http request",
+    "z": "e9526774295cef13",
+    "name": "Refresh Google Token",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "senderr": false,
+    "x": 710,
+    "y": 1620,
+    "wires": [
+      [
+        "caro-google-calendars-list-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-calendars-list-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Build Calendar List Request",
+    "func": "const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload || '{}') : (msg.payload || {});\nif (!body.access_token) {\n  msg.statusCode = 500;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: body.error_description || body.error || 'Google did not return an access token.' };\n  return [null, msg];\n}\nmsg.headers = { 'Authorization': 'Bearer ' + body.access_token };\nmsg.method = 'GET';\nmsg.url = 'https://www.googleapis.com/calendar/v3/users/me/calendarList?showHidden=true&maxResults=250';\nmsg.payload = '';\nreturn [msg, null];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 960,
+    "y": 1620,
+    "wires": [
+      [
+        "caro-google-calendars-list-http"
+      ],
+      [
+        "caro-google-calendars-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-calendars-list-http",
+    "type": "http request",
+    "z": "e9526774295cef13",
+    "name": "Fetch Google Calendars",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "authType": "",
+    "senderr": false,
+    "x": 1210,
+    "y": 1620,
+    "wires": [
+      [
+        "caro-google-calendars-format-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-calendars-format-fn",
+    "type": "function",
+    "z": "e9526774295cef13",
+    "name": "Format Calendar List",
+    "func": "const body = typeof msg.payload === 'string' ? JSON.parse(msg.payload || '{}') : (msg.payload || {});\nif (body.error) {\n  msg.statusCode = 500;\n  msg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\n  msg.payload = { ok: false, error: body.error.message || body.error_description || 'Google calendar list failed.' };\n  return msg;\n}\nconst selected = msg.googleCalendarId || flow.get('calendarId') || global.get('calendarId') || 'primary';\nconst calendars = (body.items || []).map(c => {\n  const role = c.accessRole || '';\n  const writable = role === 'owner' || role === 'writer';\n  return {\n    id: c.id || '',\n    summary: c.summaryOverride || c.summary || c.id || 'Untitled calendar',\n    primary: !!c.primary,\n    accessRole: role,\n    writable,\n    selected: (c.id || '') === selected || (selected === 'primary' && !!c.primary),\n    backgroundColor: c.backgroundColor || ''\n  };\n}).sort((a, b) => Number(b.primary) - Number(a.primary) || Number(b.writable) - Number(a.writable) || a.summary.localeCompare(b.summary));\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, selected, calendars };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1450,
+    "y": 1620,
+    "wires": [
+      [
+        "caro-google-calendars-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-google-calendars-res",
+    "type": "http response",
+    "z": "e9526774295cef13",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 1700,
+    "y": 1640,
+    "wires": []
+  },
+  {
     "id": "caro-ollama-status-url",
     "type": "function",
     "z": "1497b6d50e1369f5",

@@ -174,7 +174,7 @@ Use this for calendar context and calendar event creation.
 
 This setup is free for normal Caroline calendar use and does not require paid Google Cloud billing.
 
-The Calendar ID can usually stay `primary`.
+The Calendar ID can usually stay `primary`. After Google is connected, use **Load Calendars** in Settings to pick a specific writable calendar by name.
 
 #### Google Sheets Legacy Sync
 

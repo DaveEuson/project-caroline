@@ -1068,7 +1068,13 @@
           </div>
           <div class="settings-row">
             <div><div class="settings-label">Calendar ID</div><div class="settings-sub" id="google-calendar-status">Usually your Gmail address</div></div>
-            <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:200px"/>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" style="width:260px"/>
+              <select id="google-calendar-select" class="settings-input" onchange="selectGoogleCalendarFromList()" style="display:none;width:260px">
+                <option value="">Load calendars first</option>
+              </select>
+              <button type="button" onclick="loadGoogleCalendars()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.32);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Load Calendars</button>
+            </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub" id="google-client-id-status">Desktop app client from Google Cloud</div></div>
@@ -3375,6 +3381,60 @@ async function refreshGoogleStatus() {
   }
 }
 
+function selectGoogleCalendarFromList() {
+  const sel = document.getElementById('google-calendar-select');
+  const input = document.getElementById('set-calendar-id');
+  const statusEl = document.getElementById('google-calendar-status');
+  const value = (sel?.value || '').trim();
+  if (!value) return;
+  if (sel.options[sel.selectedIndex]?.disabled) {
+    if (statusEl) { statusEl.textContent = 'That calendar is read-only'; statusEl.style.color = '#fbbf24'; }
+    return;
+  }
+  S.calendarId = value;
+  if (input) input.value = value;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  if (statusEl) {
+    const label = sel.options[sel.selectedIndex]?.text || value;
+    statusEl.textContent = 'Selected: ' + label.replace(/\s+\([^)]*\)$/, '');
+    statusEl.style.color = 'rgba(52,211,153,0.9)';
+  }
+  postSettingsToNodeRed({ calendarId: value }, 5000).catch(e => console.warn('[Caroline] calendar selection save failed:', e));
+}
+
+async function loadGoogleCalendars() {
+  const statusEl = document.getElementById('google-calendar-status');
+  const sel = document.getElementById('google-calendar-select');
+  if (statusEl) { statusEl.textContent = 'Loading calendars...'; statusEl.style.color = 'rgba(226,232,240,0.55)'; }
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/calendars', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Google calendars');
+    const data = await resp.json();
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    const calendars = Array.isArray(data.calendars) ? data.calendars : [];
+    if (!calendars.length) throw new Error('No calendars returned');
+    if (sel) {
+      sel.innerHTML = calendars.map(cal => {
+        const id = spotifyHtmlEscape(cal.id || '');
+        const name = spotifyHtmlEscape(cal.summary || cal.id || 'Untitled calendar');
+        const role = spotifyHtmlEscape(cal.accessRole || '');
+        const primary = cal.primary ? ' - primary' : '';
+        const disabled = cal.writable ? '' : ' disabled';
+        const selected = cal.writable && (cal.id === S.calendarId || (!S.calendarId && cal.primary)) ? ' selected' : '';
+        return `<option value="${id}"${selected}${disabled}>${name}${primary} (${role || 'unknown'})${cal.writable ? '' : ' - read only'}</option>`;
+      }).join('');
+      sel.style.display = '';
+    }
+    const writeableCount = calendars.filter(c => c.writable).length;
+    if (statusEl) {
+      statusEl.textContent = 'Loaded ' + calendars.length + ' calendars' + (writeableCount ? '' : ' - none writable');
+      statusEl.style.color = writeableCount ? 'rgba(52,211,153,0.9)' : '#fbbf24';
+    }
+    selectGoogleCalendarFromList();
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = 'Calendar list failed: ' + (e.message || 'connect Google first'); statusEl.style.color = '#f87171'; }
+  }
+}
+
 async function handleGoogleAuth() {
   const statusEl = document.getElementById('google-auth-status');
   const btn = document.getElementById('google-connect-btn');
@@ -4219,7 +4279,7 @@ const HOWTO_CONTENT = {
 <li>Create an OAuth Client ID with application type <strong>Desktop app</strong></li>
 <li>Download the OAuth JSON and import or paste it in Caroline Settings -> Connect -> Google</li>
 <li>Click <strong>Connect Google</strong> or <strong>Use Phone Code</strong></li>
-<li>Leave Calendar ID as <code>primary</code> unless you want a specific shared calendar</li>
+<li>Leave Calendar ID as <code>primary</code>, or use <strong>Load Calendars</strong> to choose a writable calendar by name</li>
 </ol>
 <div class="howto-note">This Calendar API + Desktop OAuth setup is free for normal Caroline use and does not require paid Google Cloud billing. Google Sheets and service-account JSON are legacy fallback options; most installs do not need them.</div>`
   },
