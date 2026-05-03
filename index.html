@@ -1774,9 +1774,17 @@ async function refreshIntegrationHealth() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     integrationHealth = await r.json();
     if (integrationHealth.google?.connected) S.googleConnected = true;
+    if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
+    if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
+    if (integrationHealth.ollamaModel) S.ollamaModel = integrationHealth.ollamaModel;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
   } catch(e) {
     integrationHealth = {};
   }
+  if (document.getElementById('settings-overlay')?.classList.contains('show')) {
+    applySettingsToForm({ allowBlank: true });
+  }
+  updateAiConfigIndicator();
   renderIntegrationStatus();
 }
 
@@ -2380,8 +2388,12 @@ function toggleSettings() {
     updateFeatWarnings();
     renderUsageStats();
     renderSettingsLog();
+    const runtimeProvider = integrationHealth.aiProvider || S.aiProvider || 'openrouter';
+    if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
+    if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
+    if (integrationHealth.ollamaModel) S.ollamaModel = integrationHealth.ollamaModel;
     const providerEl = document.getElementById('set-ai-provider');
-    if (providerEl) { providerEl.value = S.aiProvider || 'openrouter'; onProviderChange(providerEl.value); }
+    if (providerEl) { providerEl.value = runtimeProvider; onProviderChange(providerEl.value); }
     const ollamaUrlEl = document.getElementById('set-ollama-url');
     if (ollamaUrlEl) ollamaUrlEl.value = S.ollamaUrl || 'http://localhost:11434';
     const ollamaModelEl = document.getElementById('set-ollama-model');
