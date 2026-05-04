@@ -1528,12 +1528,10 @@
             <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
             <select class="settings-select" id="set-channel">
               <option value="0">NHK World</option>
-              <option value="1">Lofi Girl</option>
-              <option value="2">Al Jazeera</option>
-              <option value="3">DW English</option>
-              <option value="4">France 24</option>
-              <option value="5">NASA Live</option>
-              <option value="6">Jazz BGM</option>
+              <option value="1">Al Jazeera</option>
+              <option value="2">DW English</option>
+              <option value="3">France 24</option>
+              <option value="4">NASA TV</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -4928,12 +4926,10 @@ function changeAvatar(dir) {
 // ── VIDEO CHANNELS ────────────────────────────
 const MEDIA_CHANNELS = [
   { icon:'🇯🇵', name:'NHK World',         genre:'News / Japan',       type:'hls', src:'https://master.nhkworld.jp/nhkworld-tv/playlist/live.m3u8' },
-  { icon:'🌸', name:'Lofi Girl',         genre:'Music / Study',      type:'youtube', id:'jfKfPfyJRdk' },
   { icon:'🌍', name:'Al Jazeera',        genre:'News / Live',        type:'hls', src:'https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8' },
   { icon:'📰', name:'DW English',        genre:'News / Live',        type:'hls', src:'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
   { icon:'🇫🇷', name:'France 24',        genre:'News / Live',        type:'hls', src:'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_900.m3u8' },
-  { icon:'🚀', name:'NASA Live',         genre:'Space / Science',    type:'youtube', id:'21X5lGlDOfg' },
-  { icon:'🎷', name:'Jazz BGM',          genre:'Music / Jazz',       type:'youtube', id:'Dx5qFachd3A' }
+  { icon:'🚀', name:'NASA TV',           genre:'Space / Science',    type:'hls', src:'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8' }
 ];
 let mediaChannelIndex = 0;
 let mediaMuted = true;
