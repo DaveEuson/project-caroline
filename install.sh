@@ -815,6 +815,9 @@ jq -n \
     uiDensity:       "comfortable",
     highContrastText: true,
     reduceMonoLabels: true,
+    defaultChannel:  1,
+    ttsEnabled:      false,
+    voiceMuted:      true,
     aiModel:         $model,
     aiProvider:      $provider,
     ollamaUrl:       "http://localhost:11434",
@@ -822,6 +825,8 @@ jq -n \
     openrouterKey:   "",
     hueIp:           "",
     hueKey:          "",
+    hueGroup:        "",
+    hueGroupName:    "",
     calendarId:      "primary",
     sheetId:         "",
     spotifyClientId: "",
@@ -852,6 +857,10 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
                or ($existing.ollamaModel == "smollm2:360m")
                or ($existing.ollamaModel == "tinyllama")))
       then .ollamaModel = $defaults.ollamaModel else . end
+    | if (($defaults.aiProvider == "ollama")
+          and (((.openrouterKey // "") == "")
+               and ((($existing.aiProvider // "") == "") or ($existing.aiProvider == "openrouter"))))
+      then .aiProvider = "ollama" else . end
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
     | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
