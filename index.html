@@ -134,9 +134,14 @@
   .hist-msg { max-width: 82%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
   .hist-msg.caroline { align-self: flex-start; background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.2); color: #e2e8f0; border-radius: 4px 12px 12px 12px; }
   .hist-msg.dave { align-self: flex-end; background: rgba(var(--t-rgb2),0.12); border: 1px solid rgba(var(--t-rgb2),0.25); color: #f8fafc; border-radius: 12px 4px 12px 12px; }
+  .hist-msg.has-like { position:relative; padding-right:44px; }
   .hist-sender { font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; opacity: 0.6; }
   .hist-msg.caroline .hist-sender { color: var(--t-hex1); }
   .hist-msg.dave .hist-sender { color: var(--t-hex2); }
+  .message-like { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; border:1px solid rgba(var(--t-rgb1),0.18); background:rgba(255,255,255,0.035); color:rgba(226,232,240,0.58); cursor:pointer; font-size:14px; line-height:1; transition:transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, opacity 0.16s ease; opacity:0.72; }
+  .message-like:hover { opacity:1; transform:translateY(-1px) scale(1.04); background:rgba(var(--t-rgb1),0.10); border-color:rgba(var(--t-rgb1),0.34); }
+  .message-like.liked { opacity:1; background:rgba(34,197,94,0.14); border-color:rgba(74,222,128,0.45); color:#bbf7d0; box-shadow:0 0 14px rgba(74,222,128,0.16); }
+  .hist-msg .message-like { position:absolute; right:9px; bottom:9px; }
   .hist-empty { text-align: center; color: rgba(226,232,240,0.25); font-size: 13px; font-family: 'JetBrains Mono', monospace; margin-top: 40px; }
   #history-panel { position:absolute; right:18px; top:52px; width:min(420px, calc(100vw - 36px)); max-height:70vh; display:none; flex-direction:column; gap:10px; padding:14px; z-index:760; background:rgba(5,5,10,0.96); border:1px solid rgba(var(--t-rgb1),0.24); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.45); backdrop-filter:blur(18px); }
   #history-panel.open { display:flex; }
@@ -280,6 +285,7 @@
   #interaction-zone { width: 100%; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px; position: relative; transition: opacity 1.5s ease, transform 1.5s ease; }
   #subtitle-box { position: absolute; bottom: 85px; background: rgba(5,5,10,0.85); border: 1px solid rgba(var(--t-rgb2), 0.3); border-radius: 16px; padding: 14px 20px; width: 95%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; pointer-events: none; }
   #subtitle-box.hidden { opacity: 0; transform: translateY(15px); }
+  #subtitle-box.has-like { pointer-events:auto; padding-bottom:32px; }
   #subtitle-box.proactive { pointer-events: auto; border-color: rgba(251,191,36,0.45); box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 18px rgba(251,191,36,0.12); }
   #subtitle-box.proactive #subtitle-sender { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.5); }
   #subtitle-dismiss { display:none; position:absolute; top:8px; right:10px; background:none; border:none; color:rgba(var(--t-rgb1),0.35); cursor:pointer; font-size:16px; padding:2px 5px; line-height:1; transition:color 0.2s; }
@@ -287,6 +293,8 @@
   #subtitle-box.proactive #subtitle-dismiss { display:block; }
   #subtitle-sender { font-size: 13px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; margin-bottom: 6px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; text-shadow: 0 0 8px rgba(var(--t-rgb1), 0.4); }
   #subtitle-text { font-size: 20px; color: #f8fafc; line-height: 1.4; }
+  #subtitle-like { display:none; position:absolute; right:12px; bottom:8px; }
+  #subtitle-box.has-like #subtitle-like { display:inline-flex; }
   .typing-indicator { display: none; gap: 5px; align-items: center; justify-content: center; padding: 5px 0; }
   .typing-indicator.show { display: flex; }
   .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--t-hex1); animation: typingBounce 1.2s ease-in-out infinite; box-shadow: 0 0 8px rgba(var(--t-rgb1), 0.5); }
@@ -431,6 +439,8 @@
   .bc-msg { font-size: 14px; line-height: 1.4; padding: 5px 10px; border-radius: 8px; max-width: 90%; }
   .bc-msg.caroline { align-self: flex-start; background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.15); color: #e2e8f0; border-radius: 3px 8px 8px 8px; }
   .bc-msg.dave { align-self: flex-end; background: rgba(var(--t-rgb2),0.1); border: 1px solid rgba(var(--t-rgb2),0.2); color: #f8fafc; border-radius: 8px 3px 8px 8px; }
+  .bc-msg.has-like { position:relative; padding-right:39px; }
+  .bc-msg .message-like { position:absolute; right:6px; bottom:6px; width:25px; height:25px; font-size:13px; }
   .bc-sender { font-size: 11px; font-family: 'JetBrains Mono', monospace; opacity: 0.5; margin-bottom: 2px; }
   .bc-msg.caroline .bc-sender { color: var(--t-hex1); }
   .bc-msg.dave .bc-sender { color: var(--t-hex2); }
@@ -1599,6 +1609,7 @@
         <button id="subtitle-dismiss" aria-label="Dismiss" onclick="this.closest('#subtitle-box').classList.add('hidden')">✕</button>
         <div id="subtitle-sender">CAROLINE</div>
         <div id="subtitle-text"></div>
+        <button id="subtitle-like" class="message-like" type="button" aria-label="Thumbs up this message" aria-pressed="false" title="Thumbs up">👍</button>
         <div class="typing-indicator" id="typing">
           <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
         </div>
@@ -4393,6 +4404,42 @@ function seedIdleRecent() {
   const latest = [...chatLog].reverse().find(e => e.role !== 'dave' && cleanDisplayText(e.text) && !hasLeakedActionText(e.text));
   updateIdleRecentText(latest ? latest.text : idleFallbackGreeting());
 }
+let _chatEntrySeq = 0;
+function nextChatEntryId() {
+  _chatEntrySeq += 1;
+  return 'msg-' + Date.now().toString(36) + '-' + _chatEntrySeq.toString(36);
+}
+function saveChatLog() {
+  localStorage.setItem('caro_log', JSON.stringify(chatLog));
+}
+function toggleMessageLike(id, btn) {
+  const entry = chatLog.find(e => e && e.id === id);
+  const liked = entry ? !entry.liked : !btn.classList.contains('liked');
+  if (entry) {
+    entry.liked = liked;
+    saveChatLog();
+  }
+  btn.classList.toggle('liked', liked);
+  btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+  btn.title = liked ? 'Liked' : 'Thumbs up';
+  updateBottomChat();
+  const hp = document.getElementById('history-panel');
+  if (hp && hp.classList.contains('open')) renderHistory();
+}
+function buildMessageLikeButton(entry, extraClass) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'message-like' + (extraClass ? ' ' + extraClass : '') + (entry && entry.liked ? ' liked' : '');
+  btn.textContent = '👍';
+  btn.title = entry && entry.liked ? 'Liked' : 'Thumbs up';
+  btn.setAttribute('aria-label', 'Thumbs up this message');
+  btn.setAttribute('aria-pressed', entry && entry.liked ? 'true' : 'false');
+  btn.onclick = (ev) => {
+    ev.stopPropagation();
+    toggleMessageLike(entry.id, btn);
+  };
+  return btn;
+}
 function loadCleanChatLog() {
   let raw = [];
   try { raw = JSON.parse(localStorage.getItem('caro_log') || '[]'); } catch(e) { raw = []; }
@@ -4400,6 +4447,8 @@ function loadCleanChatLog() {
   const clean = (Array.isArray(raw) ? raw : []).map(e => {
     const next = Object.assign({}, e, { text: cleanDisplayText(e && e.text) });
     if (!next.text || hasLeakedActionText(e && e.text)) changed = true;
+    if (!next.id) { next.id = nextChatEntryId(); changed = true; }
+    next.liked = !!next.liked;
     return next;
   }).filter(e => e.text && !hasLeakedActionText(e.text));
   if (changed) localStorage.setItem('caro_log', JSON.stringify(clean));
@@ -4417,10 +4466,12 @@ function renderHistory(){
   const c=document.getElementById('history-messages'); if(!c) return; c.innerHTML='';
   if(!chatLog.length){ c.innerHTML='<div class="hist-empty">No messages yet — say something!</div>'; return; }
   chatLog.forEach(e=>{
-    const d=document.createElement('div'); d.className='hist-msg '+e.role;
+    const d=document.createElement('div'); d.className='hist-msg '+e.role+(e.role==='caroline'?' has-like':'');
     const senderEl=document.createElement('div'); senderEl.className='hist-sender'; senderEl.textContent=e.sender || '';
     const bodyEl=document.createElement('div'); bodyEl.textContent=e.text || '';
-    d.appendChild(senderEl); d.appendChild(bodyEl); c.appendChild(d);
+    d.appendChild(senderEl); d.appendChild(bodyEl);
+    if (e.role === 'caroline') d.appendChild(buildMessageLikeButton(e));
+    c.appendChild(d);
   });
 }
 function clearHistory(){
@@ -4597,7 +4648,7 @@ function scrollChatToBottom() {
 function addMessage(text, role, source){
   text = cleanDisplayText(text);
   if (!text) return;
-  const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing');
+  const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing'), subtitleLike=document.getElementById('subtitle-like');
   clearTimeout(_typingTimeout); _typingTimeout = null;
   typing.classList.remove('show'); box.classList.remove('hidden'); resetIdle();
   const userLabel = (S.userName || 'You').toUpperCase();
@@ -4607,9 +4658,18 @@ function addMessage(text, role, source){
     : (source === 'discord' ? aiLabel + ' (DISCORD)' : source === 'telegram' ? aiLabel + ' (TELEGRAM)' : source === 'proactive' ? aiLabel + ' // AMBIENT' : aiLabel);
   box.classList.toggle('proactive', source==='proactive');
   sender.textContent=label; content.textContent=text;
-  const entry={role:role==='user'?'dave':'caroline', sender:label, text};
+  const entry={id:nextChatEntryId(), role:role==='user'?'dave':'caroline', sender:label, text, liked:false};
+  box.classList.toggle('has-like', entry.role === 'caroline');
+  if (subtitleLike) {
+    subtitleLike.classList.remove('liked');
+    subtitleLike.setAttribute('aria-pressed', 'false');
+    subtitleLike.title = 'Thumbs up';
+    subtitleLike.onclick = entry.role === 'caroline'
+      ? (ev) => { ev.stopPropagation(); toggleMessageLike(entry.id, subtitleLike); }
+      : null;
+  }
   chatLog.push(entry); if(chatLog.length>60) chatLog.shift();
-  localStorage.setItem('caro_log', JSON.stringify(chatLog));
+  saveChatLog();
   const hp = document.getElementById('history-panel');
   if(hp && hp.classList.contains('open')){ renderHistory(); setTimeout(()=>{ const h=document.getElementById('history-messages'); if(h) h.scrollTop=99999; },30); }
   const scroll = document.getElementById('caro-chat-scroll');
@@ -4621,8 +4681,10 @@ function addMessage(text, role, source){
   }
 }
 function showTyping(){
-  const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text');
+  const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), subtitleLike=document.getElementById('subtitle-like');
   clearTimeout(subtitleTimeout); content.textContent=''; sender.textContent=(S.aiName||'Caroline').toUpperCase()+' IS THINKING...';
+  box.classList.remove('has-like');
+  if (subtitleLike) subtitleLike.onclick = null;
   box.classList.remove('hidden'); document.getElementById('typing').classList.add('show');
 }
 
@@ -5226,12 +5288,13 @@ function updateBottomChat() {
   container.innerHTML = '';
   log.slice(-6).forEach(entry => {
     const div = document.createElement('div');
-    div.className = 'bc-msg ' + entry.role;
+    div.className = 'bc-msg ' + entry.role + (entry.role === 'caroline' ? ' has-like' : '');
     const sender = document.createElement('div');
     sender.className = 'bc-sender';
     sender.textContent = entry.sender || '';
     div.appendChild(sender);
     div.appendChild(document.createTextNode(entry.text || ''));
+    if (entry.role === 'caroline') div.appendChild(buildMessageLikeButton(entry));
     container.appendChild(div);
   });
   container.scrollTop = container.scrollHeight;
