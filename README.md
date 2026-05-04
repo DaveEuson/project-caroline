@@ -309,6 +309,11 @@ v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░�
 ### Upcoming Feature Ideas
 
 - More Hue light profiles, including richer focus, calm, morning, evening, and cybercore ambience presets.
+- Discord direct-message mode as an alternative to channel relay. This is possible, but it needs extra setup for Discord user IDs, DM channel creation, shared-server/privacy handling, and clearer troubleshooting.
+- Multi-calendar Google reads so Caroline can summarize events across more than one selected calendar instead of only the configured primary calendar.
+- Calendar delete/cancel support, with safe confirmation before removing events from Google Calendar.
+- More curated default video channels that fit the early-90s anime/cybercore feel, especially official anime, cartoon, kaiju, science, and calm global-news sources.
+- Additional visual themes, including a brighter cybercore mode and darker terminal/archive variants.
 
 ---
 
