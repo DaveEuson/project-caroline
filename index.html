@@ -1076,7 +1076,7 @@
             <div style="margin-bottom:5px;color:#c4d7ff;">This setup is free for Caroline's calendar use; no paid Google Cloud billing is needed.</div>
             <div>1. In Google Cloud, enable Calendar API and create an OAuth Client ID as a <strong>Desktop app</strong>.</div>
             <div>2. Download the OAuth JSON, then use <strong>Import OAuth JSON</strong> or <strong>Paste OAuth JSON</strong> here. The JSON has both the Client ID and secret.</div>
-            <div>3. Click <strong>Connect Google</strong>. If the Pi browser is awkward, use <strong>Use Phone Code</strong>.</div>
+            <div>3. Click <strong>Connect Google</strong>. If Google lands on a localhost page in another browser, paste that final URL into <strong>Finish Google Sign-In</strong> below.</div>
             <button type="button" onclick="showHowTo('calendar')" style="margin-top:8px;background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:5px 12px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Open full guide</button>
           </div>
           <div class="settings-row">
@@ -1108,9 +1108,7 @@
             <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
             <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
               <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
-              <button id="google-device-btn" type="button" onclick="handleGoogleDeviceAuth()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.32);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Use Phone Code</button>
               <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
-              <span id="google-device-status" style="font-size:9px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;text-align:right;max-width:280px;word-break:break-word;"></span>
             </div>
           </div>
           <details style="margin-top:12px">
@@ -3705,7 +3703,7 @@ async function handleGoogleAuth() {
   if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
   googleAuthPopup = window.open(httpBase() + '/admin/google/auth?' + params.toString(), 'caroline_google_auth', 'popup,width=540,height=760,menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes');
   if (!googleAuthPopup) {
-    if (statusEl) statusEl.textContent = 'Popup blocked - allow popups or use Phone Code';
+    if (statusEl) statusEl.textContent = 'Popup blocked - allow popups, or open the login link in a normal browser';
     if (btn) btn.textContent = 'Connect Google';
     return;
   }
@@ -3714,7 +3712,7 @@ async function handleGoogleAuth() {
     if (!googleAuthPopup || !googleAuthPopup.closed) return;
     clearInterval(googleAuthPopupTimer);
     googleAuthPopupTimer = null;
-    if (!parseSettingBool(S.googleConnected) && statusEl) statusEl.textContent = 'Google popup closed - use Phone Code if it got stuck';
+    if (!parseSettingBool(S.googleConnected) && statusEl) statusEl.textContent = 'Google popup closed - paste the final callback URL below if it got stuck';
     if (!parseSettingBool(S.googleConnected) && btn) btn.textContent = 'Connect Google';
     refreshGoogleStatus();
   }, 900);
@@ -3728,86 +3726,11 @@ async function handleGoogleAuth() {
       if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
       clearInterval(timer);
     } else if (tries > 60) {
-      if (statusEl) statusEl.textContent = 'Google sign-in timed out - try Phone Code';
+      if (statusEl) statusEl.textContent = 'Google sign-in timed out - paste the final callback URL below';
       if (btn) btn.textContent = 'Connect Google';
       clearInterval(timer);
     }
   }, 2000);
-}
-
-let googleDevicePollTimer = null;
-async function handleGoogleDeviceAuth() {
-  const statusEl = document.getElementById('google-auth-status');
-  const deviceEl = document.getElementById('google-device-status');
-  const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
-  const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
-  if (!clientId) { if (statusEl) statusEl.textContent = 'Import OAuth JSON first'; return; }
-  if (!isGoogleOAuthClientId(clientId)) { if (statusEl) statusEl.textContent = 'Import a valid OAuth JSON first'; return; }
-  if (!clientSecret) {
-    if (statusEl) statusEl.textContent = 'Paste or import the OAuth JSON first - Client ID alone is not enough';
-    if (deviceEl) deviceEl.textContent = 'The Desktop OAuth JSON includes the secret Caroline needs to finish sign-in.';
-    return;
-  }
-  S.googleClientId = clientId;
-  S.googleClientSecret = clientSecret;
-  S.googleRedirectUri = GOOGLE_LOOPBACK_REDIRECT_URI;
-  localStorage.setItem('caro_settings', JSON.stringify(S));
-  try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: S.googleRedirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
-  if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
-  if (statusEl) statusEl.textContent = 'Starting phone sign-in...';
-  if (deviceEl) deviceEl.textContent = '';
-  try {
-    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId, clientSecret }),
-      timeoutMs: NODE_RED_TIMEOUT_MS
-    }, 'Start Google device sign-in');
-    const data = await resp.json();
-    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
-    const code = data.user_code || data.userCode || '';
-    const url = data.verification_url || data.verificationUri || 'https://www.google.com/device';
-    if (statusEl) statusEl.textContent = 'Waiting for phone approval...';
-    if (deviceEl) deviceEl.textContent = 'Go to ' + url + ' and enter ' + code;
-    const intervalMs = Math.max(5000, Number(data.interval || 5) * 1000);
-    googleDevicePollTimer = setInterval(() => pollGoogleDeviceAuth(statusEl, deviceEl), intervalMs);
-    pollGoogleDeviceAuth(statusEl, deviceEl);
-  } catch(err) {
-    if (statusEl) statusEl.textContent = 'Phone sign-in unavailable';
-    if (deviceEl) deviceEl.textContent = err.message || 'Try Connect Google instead';
-  }
-}
-
-async function pollGoogleDeviceAuth(statusEl, deviceEl) {
-  try {
-    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/poll', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-      timeoutMs: NODE_RED_TIMEOUT_MS
-    }, 'Poll Google device sign-in');
-    const data = await resp.json();
-    if (parseSettingBool(data.connected)) {
-      if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
-      googleDevicePollTimer = null;
-      if (statusEl) statusEl.textContent = 'Connected';
-      if (deviceEl) deviceEl.textContent = 'Google connected';
-      await refreshGoogleStatus();
-      return;
-    }
-    if (data.pending) {
-      if (statusEl) statusEl.textContent = 'Waiting for phone approval...';
-      return;
-    }
-    throw new Error(data.error || 'Google phone sign-in failed');
-  } catch(err) {
-    const msg = err.message || '';
-    if (/authorization_pending/i.test(msg)) return;
-    if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
-    googleDevicePollTimer = null;
-    if (statusEl) statusEl.textContent = 'Phone sign-in stopped';
-    if (deviceEl) deviceEl.textContent = msg || 'Start phone sign-in again';
-  }
 }
 
 async function handleGoogleManualCallback() {
@@ -4586,7 +4509,7 @@ const HOWTO_CONTENT = {
 <li>Enable the <strong>Google Calendar API</strong></li>
 <li>Create an OAuth Client ID with application type <strong>Desktop app</strong></li>
 <li>Download the OAuth JSON and import or paste it in Caroline Settings -> Connect -> Google</li>
-<li>Click <strong>Connect Google</strong> or <strong>Use Phone Code</strong></li>
+<li>Click <strong>Connect Google</strong>; if a remote browser lands on localhost, paste the final URL into <strong>Finish Google Sign-In</strong></li>
 <li>Leave Calendar ID as <code>primary</code>, or use <strong>Load Calendars</strong> to choose a writable calendar by name</li>
 </ol>
 <div class="howto-note">This Calendar API + Desktop OAuth setup is free for normal Caroline use and does not require paid Google Cloud billing. Google Sheets and service-account JSON are legacy fallback options; most installs do not need them.</div>`
@@ -4641,7 +4564,11 @@ function addMessage(text, role, source){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing');
   clearTimeout(_typingTimeout); _typingTimeout = null;
   typing.classList.remove('show'); box.classList.remove('hidden'); resetIdle();
-  const label = role==='user' ? (S.userName||'You').toUpperCase() : (source==='discord'?(S.userName||'You').toUpperCase()+' (DISCORD)':source==='telegram'?'TELEGRAM':source==='proactive'?(S.aiName||'Caroline').toUpperCase()+' // AMBIENT':(S.aiName||'Caroline').toUpperCase());
+  const userLabel = (S.userName || 'You').toUpperCase();
+  const aiLabel = (S.aiName || 'Caroline').toUpperCase();
+  const label = role === 'user'
+    ? (source === 'discord' ? userLabel + ' (DISCORD)' : source === 'telegram' ? userLabel + ' (TELEGRAM)' : userLabel)
+    : (source === 'discord' ? aiLabel + ' (DISCORD)' : source === 'telegram' ? aiLabel + ' (TELEGRAM)' : source === 'proactive' ? aiLabel + ' // AMBIENT' : aiLabel);
   box.classList.toggle('proactive', source==='proactive');
   sender.textContent=label; content.textContent=text;
   const entry={role:role==='user'?'dave':'caroline', sender:label, text};
@@ -4768,7 +4695,7 @@ function connectWS(){
       }
       nudgeAiMoodForInteraction(1);
       playBeep(600);
-      addMessage(t, 'caroline', 'display');
+      addMessage(t, 'caroline', d.source || 'display');
       speak(t);
       _trackRecv(t);
       clog('recv', t.length > 60 ? t.slice(0,60)+'…' : t);
@@ -5264,7 +5191,11 @@ function updateBottomChat() {
   log.slice(-6).forEach(entry => {
     const div = document.createElement('div');
     div.className = 'bc-msg ' + entry.role;
-    div.innerHTML = '<div class="bc-sender">' + entry.sender + '</div>' + entry.text;
+    const sender = document.createElement('div');
+    sender.className = 'bc-sender';
+    sender.textContent = entry.sender || '';
+    div.appendChild(sender);
+    div.appendChild(document.createTextNode(entry.text || ''));
     container.appendChild(div);
   });
   container.scrollTop = container.scrollHeight;

@@ -39,19 +39,6 @@ If the JSON says `"type": "service_account"`, or the client ID is only a long nu
 5. Sign in with the same Google account you added as a test user.
 6. If Google redirects to a localhost/error page in a remote browser, copy the full URL from the address bar and paste it into **Finish Google Sign-In** in Caroline.
 
-## Kiosk-Friendly Phone Code
-
-If the Pi is running in kiosk mode and you cannot see a browser address bar, use **Use Phone Code** instead of hunting for a callback URL.
-
-1. In **Settings > Connect > Google**, import the OAuth JSON first.
-2. Click **Use Phone Code**.
-3. Caroline will show a short code and a Google verification URL.
-4. On your phone or laptop, open the URL, usually `https://www.google.com/device`.
-5. Enter the code and approve access.
-6. Leave Caroline open. It will poll Google and switch to connected when approval is complete.
-
-If Google says the client cannot use the device flow, create another OAuth client with application type **TVs and Limited Input devices**, download that JSON, and import it in Caroline. This avoids callback URLs entirely.
-
 ## Kiosk vs Browser
 
 The Pi kiosk and a normal browser use the same setup screen. The only difference is where Google lands after consent:
@@ -59,12 +46,14 @@ The Pi kiosk and a normal browser use the same setup screen. The only difference
 - **Pi kiosk:** the loopback callback can complete directly on the Pi.
 - **Remote browser/laptop:** the browser may land on `127.0.0.1` on your laptop. Copy that final URL and paste it into **Finish Google Sign-In**.
 
+Do not use Google's TV/device-code OAuth flow for Caroline Calendar. Google limits that flow to a small set of scopes that does not include Calendar, so Caroline uses Desktop OAuth with the manual callback fallback instead.
+
 ## Troubleshooting
 
 - `redirect_uri_mismatch`: you probably used a Web Application client, service-account JSON, or an old invalid client. Create a new **Desktop app** OAuth client and import that JSON.
 - `Access blocked` / unverified app warning: make sure your Gmail account is listed as a test user, then continue through the advanced/testing prompt.
 - Caroline says `Import Desktop OAuth JSON`: the saved Google client ID is not a valid OAuth client ID ending in `.apps.googleusercontent.com`.
-- Kiosk mode hides the callback URL: use **Use Phone Code**.
+- Kiosk mode hides the callback URL: open Caroline in a normal browser for setup, or copy the final localhost URL from the browser that completed Google sign-in and paste it into **Finish Google Sign-In**.
 
 Google references:
 
