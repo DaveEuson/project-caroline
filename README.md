@@ -306,6 +306,10 @@ v1.0 — Hardware agnostic (Windows, Mac, tablet, cloud).            [░░░�
 v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░░░░░░░░░]
 ```
 
+### Upcoming Feature Ideas
+
+- More Hue light profiles, including richer focus, calm, morning, evening, and cybercore ambience presets.
+
 ---
 
 ## What Makes It Unique
