@@ -1710,6 +1710,7 @@
             <div style="display:flex;align-items:center;gap:6px;">
               <select class="settings-select" id="set-hue-group" style="width:160px;"><option value="">— hit Detect —</option></select>
               <button type="button" class="detect-btn" id="hue-group-fetch-btn" onclick="fetchHueGroups()">⟳ Detect</button>
+              <button type="button" class="detect-btn" id="hue-test-btn" onclick="testHueLights(this)">⚡ Test</button>
             </div>
           </div>
           <div id="hue-group-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
@@ -3939,6 +3940,65 @@ async function fetchHueGroups() {
     if (errEl) { errEl.textContent = 'Could not reach bridge — check IP and key'; errEl.style.display = 'block'; }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '⟳ Detect'; }
+  }
+}
+
+async function testHueLights(btn) {
+  const ip = (document.getElementById('set-hueip')?.value || '').trim() || S.hueIp;
+  const key = (document.getElementById('set-huekey')?.value || '').trim() || S.hueKey;
+  const groupEl = document.getElementById('set-hue-group');
+  const group = (groupEl?.value || S.hueGroup || '').trim();
+  const errEl = document.getElementById('hue-group-error');
+  const setStatus = (text, ok) => {
+    if (!errEl) return;
+    errEl.textContent = text;
+    errEl.style.color = ok ? 'rgba(52,211,153,0.9)' : '#fb7185';
+    errEl.style.display = 'block';
+  };
+  if (errEl) errEl.style.display = 'none';
+  if (!group) { setStatus('Select a Hue group first', false); return; }
+  const canUseSavedBridge = ws && ws.readyState === WebSocket.OPEN && (S.hueKeyConfigured || integrationHealth.hue?.configured || key);
+  if ((!ip || !key) && !canUseSavedBridge) { setStatus('Enter Bridge IP and API Key first', false); return; }
+
+  if (ip) S.hueIp = ip;
+  if (key) S.hueKey = key;
+  S.hueGroup = group;
+  S.hueGroupName = groupEl && groupEl.selectedIndex >= 0 ? (groupEl.options[groupEl.selectedIndex]?.text || '') : S.hueGroupName;
+  HUE_GROUP = group;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+
+  const pulse = { on:true, bri:254, sat:0, ct:153, effect:'none', transitiontime:3 };
+  const settle = { on:true, bri:130, ct:420, effect:'none', transitiontime:8 };
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  setStatus('Testing Hue group...', true);
+  try {
+    if (!ip || !key) throw new Error('Using saved Pi credentials');
+    const base = `http://${ip}/api/${key}/groups/${encodeURIComponent(group)}/action`;
+    const r = await fetch(base, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pulse),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    setTimeout(() => {
+      fetch(base, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settle)
+      }).catch(() => {});
+    }, 900);
+    setStatus('Hue test sent', true);
+  } catch(e) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      hueWS('/groups/' + group + '/action', 'PUT', pulse);
+      setTimeout(() => hueWS('/groups/' + group + '/action', 'PUT', settle), 900);
+      setStatus('Hue test sent through Caroline', true);
+    } else {
+      setStatus('Hue test failed - ' + e.message, false);
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡ Test'; }
   }
 }
 
