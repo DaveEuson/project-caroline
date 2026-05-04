@@ -1018,7 +1018,7 @@ jq -n \
     uiDensity:       "comfortable",
     highContrastText: true,
     reduceMonoLabels: true,
-    defaultChannel:  1,
+    defaultChannel:  0,
     ttsEnabled:      false,
     voiceMuted:      true,
     aiModel:         $model,
