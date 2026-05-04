@@ -556,6 +556,8 @@
   .caro-msg.ai::before { content:""; position:absolute; left:-7px; top:0; width:14px; height:14px; background:linear-gradient(135deg, rgba(var(--t-rgb1),0.14), rgba(var(--t-rgb1),0.08)); border-left:1px solid rgba(var(--t-rgb1),0.18); border-top:1px solid rgba(var(--t-rgb1),0.18); clip-path:polygon(100% 0, 0 0, 100% 100%); }
   .caro-msg.you { align-self:flex-end; background:linear-gradient(180deg, rgba(var(--t-rgb2),0.20), rgba(var(--t-rgb2),0.10)); border:1px solid rgba(var(--t-rgb2),0.22); border-radius:20px 6px 20px 20px; color:#f8fafc; }
   .caro-msg.you::before { content:""; position:absolute; right:-7px; top:0; width:14px; height:14px; background:linear-gradient(225deg, rgba(var(--t-rgb2),0.20), rgba(var(--t-rgb2),0.10)); border-right:1px solid rgba(var(--t-rgb2),0.22); border-top:1px solid rgba(var(--t-rgb2),0.22); clip-path:polygon(0 0, 100% 0, 0 100%); }
+  .caro-msg-text { white-space:pre-wrap; }
+  .caro-msg.ai.typing .caro-msg-text::after { content:""; display:inline-block; width:7px; height:1em; margin-left:2px; vertical-align:-0.12em; border-right:2px solid var(--t-hex1); animation:onbCaret 0.9s step-end infinite; opacity:.85; }
   .caro-who { font-size:11px; font-family:'JetBrains Mono',monospace; letter-spacing:.12em; margin-bottom:5px; opacity:.65; text-transform:uppercase; }
   .caro-msg.ai .caro-who { color:var(--t-hex1); }
   .caro-msg.you .caro-who { color:var(--t-hex2); }
@@ -5984,6 +5986,30 @@ function _onbChatTime(){
 function _onbTypingHtml(){
   return '<div class="caro-typing" aria-label="Caroline is typing"><span class="caro-typing-dot"></span><span class="caro-typing-dot"></span><span class="caro-typing-dot"></span></div>';
 }
+function _onbReducedMotion(){
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+function _onbTypeMs(text){
+  if (_onbReducedMotion()) return 0;
+  return Math.max(320, String(text || '').length * 22);
+}
+function _onbTypeInto(el, text, done){
+  const full = String(text || '');
+  if (_onbReducedMotion()) {
+    el.textContent = full;
+    if (done) done();
+    return;
+  }
+  let i = 0;
+  const tick = () => {
+    i += 1;
+    el.textContent = full.slice(0, i);
+    scrollChatToBottom();
+    if (i < full.length) _onbMsgTimers.push(setTimeout(tick, 22));
+    else if (done) done();
+  };
+  tick();
+}
 function _onbShouldSkipStep(q){
   if(!q) return false;
   if(q.id === 'identity-user') return !!(onbState.config.userName || S.userName);
@@ -6226,17 +6252,44 @@ function renderChatStep(){
   body.innerHTML = '';
   response.innerHTML = '';
 
+  let revealDelay = 80;
   msgs.forEach((m, i) => {
     const el = document.createElement('div');
     el.className = `caro-msg ${m.role==='ai'?'ai':'you'}`;
     const meta = m.role === 'you' ? 'sent ' + _onbChatTime() : _onbChatTime();
-    el.innerHTML = `<div class="caro-who">${m.role==='ai'?_aiLabel:'YOU'}</div>${String(m.text || '').replace(/\n/g,'<br>')}<div class="caro-msg-meta">${meta}</div>`;
+    const whoEl = document.createElement('div');
+    whoEl.className = 'caro-who';
+    whoEl.textContent = m.role === 'ai' ? _aiLabel : 'YOU';
+    const textEl = document.createElement('div');
+    textEl.className = 'caro-msg-text';
+    textEl.textContent = String(m.text || '');
+    const metaEl = document.createElement('div');
+    metaEl.className = 'caro-msg-meta';
+    metaEl.textContent = meta;
+    el.appendChild(whoEl);
+    el.appendChild(textEl);
+    el.appendChild(metaEl);
     if(i >= animateFrom){
+      const delay = revealDelay;
+      if (m.role === 'ai') {
+        textEl.textContent = '';
+        metaEl.style.opacity = '0';
+        revealDelay += _onbTypeMs(m.text) + 520;
+      } else {
+        revealDelay += 420;
+      }
       el.style.cssText += 'opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease;';
       _onbMsgTimers.push(setTimeout(()=>{
         el.style.opacity='1'; el.style.transform='translateY(0)';
+        if (m.role === 'ai') {
+          el.classList.add('typing');
+          _onbTypeInto(textEl, m.text, () => {
+            el.classList.remove('typing');
+            metaEl.style.opacity = '';
+          });
+        }
         scrollChatToBottom();
-      }, (i - animateFrom) * 2000 + 80));
+      }, delay));
     }
     body.appendChild(el);
     scrollChatToBottom();
@@ -6245,7 +6298,7 @@ function renderChatStep(){
   _onbAnimatedMsgCount = Math.max(_onbAnimatedMsgCount, msgs.length);
 
   // Show response area after last new message has animated in (or immediately if going back)
-  const responseDelay = newCount > 0 ? (newCount - 1) * 2000 + 600 : 0;
+  const responseDelay = newCount > 0 ? revealDelay + 120 : 0;
   if(responseDelay > 900 && q.type !== 'summary') {
     _onbMsgTimers.push(setTimeout(()=>{ response.innerHTML = _onbTypingHtml(); scrollChatToBottom(); }, responseDelay - 700));
   }
