@@ -509,6 +509,7 @@ else
   echo ""
   echo -e "${DIM}  Caroline can optionally send Dave anonymous project-health pings.${RESET}"
   echo -e "${DIM}  Never sent: chat prompts, memory, settings text, IP address, location, calendar data, OAuth tokens, or API keys.${RESET}"
+  echo -e "${DIM}  Your choice does not change any Caroline features or functionality.${RESET}"
   echo -e "${DIM}  Remote sending is disabled unless a release telemetry endpoint is configured.${RESET}"
   echo ""
   if ask_yes_no "Send an anonymous install/update count to the maintainer?" "n"; then

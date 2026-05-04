@@ -18,7 +18,7 @@ Project: Caroline is your portal to an ambient digital sidekick completely perso
 
 One of the core values of this project is that your information is safe. Caroline does not harvest personal information, chat prompts, memory, calendar data, OAuth tokens, API keys, location, ZIP code, or IP address.
 
-The installer includes a transparent privacy prompt for project-health telemetry. You can opt in to an anonymous install/update count, opt in separately to safe troubleshooting diagnostics, or decline remote telemetry entirely. If you decline, Caroline records that choice locally in `~/caroline/caroline_telemetry.jsonl`; it only sends a one-time anonymous opt-out count if you explicitly allow that too.
+The installer includes a transparent privacy prompt for project-health telemetry. You can opt in to an anonymous install/update count, opt in separately to safe troubleshooting diagnostics, or decline remote telemetry entirely. Your choice does not change any Caroline features or functionality. If you decline, Caroline records that choice locally in `~/caroline/caroline_telemetry.jsonl`; it only sends a one-time anonymous opt-out count if you explicitly allow that too.
 
 If you choose to run the AI in **Local** mode (via Ollama), your prompts, calendar events, and tasks never even leave your local network. Your data is yours.
 
