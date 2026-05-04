@@ -16,7 +16,9 @@ Project: Caroline is your portal to an ambient digital sidekick completely perso
 
 ## Privacy First
 
-One of the core values of this project is that your information is safe. There is no telemetry, no data harvesting, and no corporate oversight. Personal information is not collected.
+One of the core values of this project is that your information is safe. Caroline does not harvest personal information, chat prompts, memory, calendar data, OAuth tokens, API keys, location, ZIP code, or IP address.
+
+The installer includes a transparent privacy prompt for project-health telemetry. You can opt in to an anonymous install/update count, opt in separately to safe troubleshooting diagnostics, or decline remote telemetry entirely. If you decline, Caroline records that choice locally in `~/caroline/caroline_telemetry.jsonl`; it only sends a one-time anonymous opt-out count if you explicitly allow that too.
 
 If you choose to run the AI in **Local** mode (via Ollama), your prompts, calendar events, and tasks never even leave your local network. Your data is yours.
 
@@ -62,7 +64,9 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. For Raspberry Pi installs, **OpenRouter is the recommended chat provider**. Local Ollama on a Pi is best treated as an experimental/offline fallback: it is private and free, but it can pin the CPU, take 20-60 seconds, and small models may answer oddly.
+The installer asks for your name, privacy/telemetry choices, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. For Raspberry Pi installs, **OpenRouter is the recommended chat provider**. Local Ollama on a Pi is best treated as an experimental/offline fallback: it is private and free, but it can pin the CPU, take 20-60 seconds, and small models may answer oddly.
+
+Maintainer note: remote project-health pings are only attempted when `CAROLINE_TELEMETRY_ENDPOINT` is set for the installer environment. Without that endpoint, telemetry choices and events are still written locally but nothing is sent off-device.
 
 | Local model | Pi recommendation | Notes |
 |---|---|---|

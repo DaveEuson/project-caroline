@@ -43,12 +43,42 @@ phase() {
   echo ""
 }
 
+ask_yes_no() {
+  local prompt="$1"
+  local default="${2:-n}"
+  local answer
+  local suffix="(y/N)"
+  if [ "$default" = "y" ] || [ "$default" = "Y" ]; then
+    suffix="(Y/n)"
+  fi
+
+  if [ -r /dev/tty ]; then
+    read -p "  ${prompt} ${suffix}: " answer </dev/tty
+  else
+    answer=""
+  fi
+  answer="${answer:-$default}"
+
+  case "$answer" in
+    y|Y|yes|YES|Yes) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+bool_json() {
+  case "${1:-false}" in
+    true|TRUE|1|y|Y|yes|YES) printf 'true' ;;
+    *) printf 'false' ;;
+  esac
+}
+
 # ── CONFIG ───────────────────────────────────────────────────
 CAROLINE_VERSION="0.3.0-dev"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
 AI_MODEL="anthropic/claude-haiku-4.5"
+CAROLINE_TELEMETRY_ENDPOINT="${CAROLINE_TELEMETRY_ENDPOINT:-}"
 
 # Node-RED palette nodes required by Caroline
 PALETTE_NODES=(
@@ -61,11 +91,13 @@ REAL_USER=${SUDO_USER:-$USER}
 REAL_HOME=$(eval echo "~$REAL_USER")
 CAROLINE_DIR="$REAL_HOME/caroline"
 SETTINGS_PATH="$CAROLINE_DIR/caroline_settings.json"
+TELEMETRY_LOG_PATH="$CAROLINE_DIR/caroline_telemetry.jsonl"
 
 protect_secret_files() {
   local _secret
   for _secret in \
     "$CAROLINE_DIR/caroline_settings.json" \
+    "$CAROLINE_DIR/caroline_telemetry.jsonl" \
     "$CAROLINE_DIR/google_oauth.json" \
     "$CAROLINE_DIR/caroline_tasks.json" \
     "$CAROLINE_DIR/caroline_mind.json" \
@@ -182,6 +214,122 @@ EOF
 
   chmod +x "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER"
   chown "$REAL_USER:$REAL_USER" "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER" 2>/dev/null || true
+}
+
+safe_cmd_version() {
+  local _cmd="$1"
+  shift || true
+  if command -v "$_cmd" >/dev/null 2>&1; then
+    "$_cmd" "$@" 2>/dev/null | head -1 | tr -d '\r'
+  fi
+}
+
+caroline_device_model() {
+  if [ -r /proc/device-tree/model ]; then
+    tr -d '\0' < /proc/device-tree/model 2>/dev/null || true
+  fi
+}
+
+telemetry_emit() {
+  local _event="$1"
+  local _allow_remote="$2"
+  local _troubleshooting="$3"
+  local _install_id="$4"
+  local _payload_path
+  local _os_name
+  local _arch
+  local _device_model
+  local _node_version
+  local _npm_version
+  local _node_red_version
+  local _ollama_version
+  local _browser_version
+  local _opt_out_event
+
+  mkdir -p "$CAROLINE_DIR"
+  _payload_path=$(mktemp)
+  case "$_event" in
+    *_opt_out) _opt_out_event="true" ;;
+    *) _opt_out_event="false" ;;
+  esac
+  _os_name=$(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-$ID $VERSION_ID}" || echo "unknown")
+  _arch=$(uname -m 2>/dev/null || echo "unknown")
+  _device_model="$(caroline_device_model)"
+  _node_version="$(safe_cmd_version node --version)"
+  _npm_version="$(safe_cmd_version npm --version)"
+  _node_red_version="$(safe_cmd_version node-red --version)"
+  _ollama_version="$(safe_cmd_version ollama --version)"
+  if [ -n "${BROWSER_BIN:-}" ] && [ -x "$BROWSER_BIN" ]; then
+    _browser_version="$("$BROWSER_BIN" --version 2>/dev/null | head -1 | tr -d '\r' || true)"
+  else
+    _browser_version=""
+  fi
+
+  jq -n \
+    --arg schema "1" \
+    --arg event "$_event" \
+    --arg installId "$_install_id" \
+    --arg version "$CAROLINE_VERSION" \
+    --arg commit "${BUILD_COMMIT:-unknown}" \
+    --arg branch "${BUILD_BRANCH:-unknown}" \
+    --arg installedAt "${BUILD_INSTALLED_AT:-}" \
+    --arg os "$_os_name" \
+    --arg arch "$_arch" \
+    --arg deviceModel "$_device_model" \
+    --arg aiProvider "${AI_PROVIDER:-}" \
+    --arg ollamaModel "${OLLAMA_MODEL:-}" \
+    --arg nodeVersion "$_node_version" \
+    --arg npmVersion "$_npm_version" \
+    --arg nodeRedVersion "$_node_red_version" \
+    --arg ollamaVersion "$_ollama_version" \
+    --arg browserVersion "$_browser_version" \
+    --argjson optOutEvent "$_opt_out_event" \
+    --argjson kiosk "$(bool_json "$([ "${KIOSK_MODE:-N}" = "y" ] || [ "${KIOSK_MODE:-N}" = "Y" ] && echo true || echo false)")" \
+    --argjson troubleshooting "$(bool_json "$_troubleshooting")" \
+    '{
+      schema: $schema,
+      event: $event,
+      installId: $installId,
+      version: $version,
+      commit: $commit,
+      branch: $branch,
+      installedAt: $installedAt,
+      troubleshootingOptIn: $troubleshooting
+    }
+    + if $optOutEvent then {} else {
+      platform: {
+        os: $os,
+        arch: $arch,
+        deviceModel: $deviceModel
+      },
+      kioskMode: $kiosk,
+      aiProvider: $aiProvider,
+      ollamaModel: $ollamaModel
+    } end
+    + if ($troubleshooting and ($optOutEvent | not)) then {
+      diagnostics: {
+        node: $nodeVersion,
+        npm: $npmVersion,
+        nodeRed: $nodeRedVersion,
+        ollama: $ollamaVersion,
+        browser: $browserVersion
+      }
+    } else {} end' > "$_payload_path"
+
+  cat "$_payload_path" >> "$TELEMETRY_LOG_PATH" 2>/dev/null || true
+  printf '\n' >> "$TELEMETRY_LOG_PATH" 2>/dev/null || true
+  sudo chown "$REAL_USER":"$REAL_USER" "$TELEMETRY_LOG_PATH" 2>/dev/null || true
+  chmod 600 "$TELEMETRY_LOG_PATH" 2>/dev/null || true
+
+  if [ "$_allow_remote" = "true" ] && [ -n "$CAROLINE_TELEMETRY_ENDPOINT" ]; then
+    curl -fsS --max-time 5 \
+      -H "Content-Type: application/json" \
+      -X POST \
+      --data-binary @"$_payload_path" \
+      "$CAROLINE_TELEMETRY_ENDPOINT" >/dev/null 2>&1 || true
+  fi
+
+  rm -f "$_payload_path"
 }
 
 ensure_browser() {
@@ -334,6 +482,48 @@ sudo apt-get install -y -q curl git ca-certificates gnupg jq nginx python3-pip p
   exit 1
 }
 echo -e "${GREEN}  ✓ System dependencies online${RESET}"
+
+# ── PRIVACY / TELEMETRY CHOICE ──────────────────────────────
+TELEMETRY_INSTALL_COUNT="false"
+TELEMETRY_TROUBLESHOOTING="false"
+TELEMETRY_OPT_OUT_PING="false"
+TELEMETRY_PREF_SOURCE="prompt"
+
+if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
+  EXISTING_TELEMETRY_INSTALL=$(jq -r 'if (.telemetryInstallCount | type) == "boolean" then .telemetryInstallCount else empty end' "$SETTINGS_PATH" 2>/dev/null || true)
+  EXISTING_TELEMETRY_TROUBLESHOOTING=$(jq -r 'if (.telemetryTroubleshooting | type) == "boolean" then .telemetryTroubleshooting else empty end' "$SETTINGS_PATH" 2>/dev/null || true)
+  EXISTING_TELEMETRY_OPT_OUT=$(jq -r 'if (.telemetryOptOutPing | type) == "boolean" then .telemetryOptOutPing else empty end' "$SETTINGS_PATH" 2>/dev/null || true)
+  if [ -n "$EXISTING_TELEMETRY_INSTALL" ] && [ -n "$EXISTING_TELEMETRY_TROUBLESHOOTING" ]; then
+    TELEMETRY_INSTALL_COUNT="$EXISTING_TELEMETRY_INSTALL"
+    TELEMETRY_TROUBLESHOOTING="$EXISTING_TELEMETRY_TROUBLESHOOTING"
+    TELEMETRY_OPT_OUT_PING="${EXISTING_TELEMETRY_OPT_OUT:-false}"
+    TELEMETRY_PREF_SOURCE="existing"
+  fi
+fi
+
+if [ "$TELEMETRY_PREF_SOURCE" = "existing" ]; then
+  echo -e "${DIM}  Privacy choices preserved from existing settings.${RESET}"
+else
+  echo ""
+  echo -e "${MAGENTA}  // PRIVACY BEACON${RESET}"
+  echo ""
+  echo -e "${DIM}  Caroline can optionally send Dave anonymous project-health pings.${RESET}"
+  echo -e "${DIM}  Never sent: chat prompts, memory, settings text, IP address, location, calendar data, OAuth tokens, or API keys.${RESET}"
+  echo -e "${DIM}  Remote sending is disabled unless a release telemetry endpoint is configured.${RESET}"
+  echo ""
+  if ask_yes_no "Send an anonymous install/update count to the maintainer?" "n"; then
+    TELEMETRY_INSTALL_COUNT="true"
+  else
+    TELEMETRY_INSTALL_COUNT="false"
+    if ask_yes_no "Send one anonymous opt-out count instead?" "n"; then
+      TELEMETRY_OPT_OUT_PING="true"
+    fi
+  fi
+  if ask_yes_no "Opt in to safe troubleshooting diagnostics for future bug reports?" "n"; then
+    TELEMETRY_TROUBLESHOOTING="true"
+  fi
+  echo ""
+fi
 
 # ── NODE.JS ──────────────────────────────────────────────────
 echo -e "${YELLOW}  ► Checking Node.js runtime...${RESET}"
@@ -782,6 +972,10 @@ echo -e "${YELLOW}  ► Writing settings...${RESET}"
 PI_IP=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP" ] || PI_IP="localhost"
 INSTALL_ID="$(date +%s)-$(hostname)-$RANDOM"
+INSTALL_EVENT_TYPE="install"
+if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
+  INSTALL_EVENT_TYPE="upgrade"
+fi
 DEFAULT_SETTINGS_PATH=$(mktemp)
 MERGED_SETTINGS_PATH=$(mktemp)
 jq -n \
@@ -795,9 +989,17 @@ jq -n \
   --arg piIp         "$PI_IP" \
   --arg nrUrl        "http://${PI_IP}:${NODE_RED_PORT}" \
   --arg installId    "$INSTALL_ID" \
+  --argjson telemetryInstallCount "$(bool_json "$TELEMETRY_INSTALL_COUNT")" \
+  --argjson telemetryTroubleshooting "$(bool_json "$TELEMETRY_TROUBLESHOOTING")" \
+  --argjson telemetryOptOutPing "$(bool_json "$TELEMETRY_OPT_OUT_PING")" \
+  --argjson telemetryEndpointConfigured "$([ -n "$CAROLINE_TELEMETRY_ENDPOINT" ] && echo true || echo false)" \
   --argjson kiosk    "$([ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ] && echo true || echo false)" \
   '{
     installId:       $installId,
+    telemetryInstallCount: $telemetryInstallCount,
+    telemetryTroubleshooting: $telemetryTroubleshooting,
+    telemetryOptOutPing: $telemetryOptOutPing,
+    telemetryEndpointConfigured: $telemetryEndpointConfigured,
     userName:        $name,
     aiName:          "Caroline",
     userMood:        7,
@@ -865,6 +1067,7 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
     | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
     | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
+    | .telemetryEndpointConfigured = $defaults.telemetryEndpointConfigured
   ' "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
   mv "$MERGED_SETTINGS_PATH" "$SETTINGS_PATH"
   echo -e "${DIM}    Existing settings preserved; backup: ${SETTINGS_BACKUP}${RESET}"
@@ -875,6 +1078,23 @@ rm -f "$DEFAULT_SETTINGS_PATH" "$MERGED_SETTINGS_PATH"
 protect_secret_files
 
 echo -e "${GREEN}  ✓ Settings saved${RESET}"
+
+FINAL_INSTALL_ID=$(jq -r ".installId // \"$INSTALL_ID\"" "$SETTINGS_PATH" 2>/dev/null || echo "$INSTALL_ID")
+if [ "$TELEMETRY_INSTALL_COUNT" = "true" ]; then
+  telemetry_emit "$INSTALL_EVENT_TYPE" "true" "$TELEMETRY_TROUBLESHOOTING" "$FINAL_INSTALL_ID"
+  if [ -n "$CAROLINE_TELEMETRY_ENDPOINT" ]; then
+    echo -e "${GREEN}  ✓ Anonymous ${INSTALL_EVENT_TYPE} ping sent when network allows${RESET}"
+  else
+    echo -e "${DIM}    Anonymous ${INSTALL_EVENT_TYPE} ping logged locally; no remote endpoint configured.${RESET}"
+  fi
+else
+  telemetry_emit "${INSTALL_EVENT_TYPE}_opt_out" "$TELEMETRY_OPT_OUT_PING" "false" "$FINAL_INSTALL_ID"
+  if [ "$TELEMETRY_OPT_OUT_PING" = "true" ] && [ -n "$CAROLINE_TELEMETRY_ENDPOINT" ]; then
+    echo -e "${GREEN}  ✓ Anonymous opt-out ping sent when network allows${RESET}"
+  else
+    echo -e "${DIM}    Telemetry opt-out recorded locally on this device.${RESET}"
+  fi
+fi
 
 # ── SYSTEMD SERVICE ──────────────────────────────────────────
 phase "CHAPTER 6 — INSCRIBING AUTOSTART"
