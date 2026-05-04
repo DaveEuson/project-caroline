@@ -2425,6 +2425,7 @@ async function syncSettingsFromServer() {
     const wcl = document.getElementById('weather-city-label');
     if (wcl) wcl.textContent = S.cityName || S.location || '';
     fetchWeather();
+    fetchTides();
     return true;
   } catch(e) {
     console.warn('[Caroline] /admin/get-settings failed:', e);
@@ -4214,7 +4215,7 @@ async function detectLocationFromZip(btn) {
     if (locEl) locEl.value = found.location;
 
     const tzEl = document.getElementById('set-timezone');
-    if (tzEl) tzEl.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tzEl) tzEl.value = found.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const tidesEl = document.getElementById('set-tides-station');
     if (tidesEl && found.station && !tidesEl.value) tidesEl.value = found.station;
@@ -5403,6 +5404,9 @@ async function fetchWeather(){
 }
 
 // ── TIDES ─────────────────────────────────────
+const NOAA_TIDE_MAX_DISTANCE_KM = 160;
+let tideStationLookupPromise = null;
+
 function setTideFallback(label, detail) {
   const row = document.getElementById('tides-row');
   if (row) {
@@ -5418,9 +5422,88 @@ function setTideFallback(label, detail) {
   if (bs) bs.textContent = label;
 }
 
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = d => d * Math.PI / 180;
+  const r = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * r * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function findNearestNoaaTideStation(lat, lng) {
+  const userLat = Number(lat);
+  const userLng = Number(lng);
+  if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) return '';
+  const r = await fetch('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=waterlevels', { signal: AbortSignal.timeout(7000) });
+  if (!r.ok) throw new Error('NOAA stations HTTP ' + r.status);
+  const d = await r.json();
+  const stations = d.stations || [];
+  let nearest = null;
+  let nearestDist = Infinity;
+  for (const s of stations) {
+    const sLat = Number(s.lat);
+    const sLng = Number(s.lng);
+    if (!Number.isFinite(sLat) || !Number.isFinite(sLng)) continue;
+    const dist = distanceKm(userLat, userLng, sLat, sLng);
+    if (dist < nearestDist) { nearestDist = dist; nearest = s; }
+  }
+  return nearest && nearestDist <= NOAA_TIDE_MAX_DISTANCE_KM ? String(nearest.id || '') : '';
+}
+
+async function ensureTideStationFromLocation() {
+  if (S.tidesStation) return S.tidesStation;
+  if (tideStationLookupPromise) return tideStationLookupPromise;
+  tideStationLookupPromise = (async () => {
+    let station = '';
+    try {
+      let lat = Number(S.lat);
+      let lng = Number(S.lng);
+      const zip = String(S.zipcode || S.zipCode || '').trim();
+      if ((!Number.isFinite(lat) || !Number.isFinite(lng) || !lat || !lng) && /^\d{5}$/.test(zip)) {
+        const found = await _onbLookupZip(zip);
+        if (found) {
+          S.lat = found.lat || S.lat || 0;
+          S.lng = found.lng || S.lng || 0;
+          S.location = S.location || found.location || '';
+          S.cityName = S.cityName || found.location || '';
+          S.timezone = S.timezone || found.timezone || '';
+          station = found.station || '';
+          lat = Number(S.lat);
+          lng = Number(S.lng);
+        }
+      }
+      if (!station && Number.isFinite(lat) && Number.isFinite(lng) && lat && lng) {
+        station = await findNearestNoaaTideStation(lat, lng);
+      }
+      if (station) {
+        S.tidesStation = station;
+        localStorage.setItem('caro_settings', JSON.stringify(S));
+        const input = document.getElementById('set-tides-station');
+        if (input && !input.value) input.value = station;
+        renderIntegrationStatus();
+        postSettingsToNodeRed({ tidesStation: station, lat: S.lat, lng: S.lng, location: S.location, cityName: S.cityName }, 5000)
+          .catch(e => console.warn('[Caroline] tide station repair save failed:', e));
+      }
+      return station;
+    } catch(e) {
+      console.warn('[Caroline] tide station lookup failed:', e);
+      return '';
+    } finally {
+      tideStationLookupPromise = null;
+    }
+  })();
+  return tideStationLookupPromise;
+}
+
 async function fetchTides(){
   try {
-    const station = S.tidesStation || '';
+    let station = S.tidesStation || '';
+    if (!station) {
+      setTideFallback('FINDING', '-- ft');
+      station = await ensureTideStationFromLocation();
+    }
     if (!station) { setTideFallback('SET STATION', '-- ft'); return; }
     const start = new Date();
     const begin = start.getFullYear().toString() + String(start.getMonth()+1).padStart(2,'0') + String(start.getDate()).padStart(2,'0');
@@ -6463,21 +6546,7 @@ async function _onbLookupZip(zip) {
     } catch(e) {}
   }
   let station = '';
-  try {
-    const nr = await fetch('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=waterlevels', { signal: AbortSignal.timeout(7000) });
-    const nd = await nr.json();
-    const stations = nd.stations || [];
-    let nearest = null;
-    let nearestDist = Infinity;
-    for (const s of stations) {
-      const sLat = parseFloat(s.lat);
-      const sLng = parseFloat(s.lng);
-      if (!Number.isFinite(sLat) || !Number.isFinite(sLng)) continue;
-      const dist = Math.hypot(sLat - lat, sLng - lng);
-      if (dist < nearestDist) { nearestDist = dist; nearest = s; }
-    }
-    if (nearest && nearestDist < 3) station = String(nearest.id || '');
-  } catch(e) {}
+  try { station = await findNearestNoaaTideStation(lat, lng); } catch(e) {}
   return { city, state, country, location: city + ', ' + state, lat, lng, timezone, station };
 }
 
