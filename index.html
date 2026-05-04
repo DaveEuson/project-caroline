@@ -735,8 +735,7 @@
     --ova-red:#d45a62;
     --ova-shadow:0 18px 48px rgba(0,0,0,0.48), inset 0 0 0 1px rgba(255,255,255,0.025);
   }
-  html { background:var(--ova-bg0); }
-  body {
+  body.theme-ova {
     background:
       linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px) 0 0/42px 42px,
       linear-gradient(0deg, rgba(255,255,255,0.014) 1px, transparent 1px) 0 0/42px 42px,
@@ -745,7 +744,7 @@
       linear-gradient(135deg, #030509 0%, #070910 48%, #0c0710 100%);
     color:var(--ova-ink);
   }
-  body::before {
+  body.theme-ova::before {
     content:"";
     position:fixed;
     inset:0;
@@ -757,7 +756,7 @@
     mix-blend-mode:soft-light;
     opacity:.56;
   }
-  body::after {
+  body.theme-ova::after {
     content:"";
     position:fixed;
     inset:0;
@@ -768,22 +767,22 @@
       linear-gradient(90deg, rgba(255,60,70,0.018), transparent 28%, transparent 72%, rgba(72,220,230,0.018));
     box-shadow:inset 0 0 120px rgba(0,0,0,0.62);
   }
-  #particles, #corner-glow-tl, #corner-glow-br { display:none !important; }
-  #scanlines {
+  body.theme-ova #particles, body.theme-ova #corner-glow-tl, body.theme-ova #corner-glow-br { display:none !important; }
+  body.theme-ova #scanlines {
     z-index:10001;
     background:repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, rgba(0,0,0,0.05) 1px 3px, transparent 3px 5px);
     mix-blend-mode:overlay;
     opacity:.34;
   }
-  #crt-flicker { z-index:10000; animation:crtFlicker 0.18s infinite; }
+  body.theme-ova #crt-flicker { z-index:10000; animation:crtFlicker 0.18s infinite; }
 
-  #topbar {
+  body.theme-ova #topbar {
     height:42px;
     background:linear-gradient(180deg, rgba(18,23,32,0.98), rgba(6,8,12,0.98));
     border-bottom:1px solid rgba(100,200,183,0.22);
     box-shadow:0 2px 0 rgba(0,0,0,0.9), inset 0 -1px 0 rgba(255,255,255,0.035);
   }
-  #topbar::after {
+  body.theme-ova #topbar::after {
     content:"OVA-93 / SATELLITE OPS";
     position:absolute;
     left:50%;
@@ -794,44 +793,44 @@
     color:rgba(215,166,80,0.44);
     pointer-events:none;
   }
-  .dot {
+  body.theme-ova .dot {
     width:7px;
     height:7px;
     background:var(--ova-amber);
     box-shadow:0 0 10px rgba(215,166,80,0.74);
   }
-  .topbar-name {
+  body.theme-ova .topbar-name {
     color:#f3f0de;
     font-family:'JetBrains Mono',monospace;
     font-weight:400;
     letter-spacing:.08em;
     text-shadow:1px 0 rgba(122,215,210,0.18), -1px 0 rgba(182,75,104,0.16);
   }
-  .topbar-version { color:rgba(100,200,183,0.46); }
-  .conn-pill, .net-pill, .ai-config-pill, #settings-topbar-btn, #hist-btn, #restart-btn {
+  body.theme-ova .topbar-version { color:rgba(100,200,183,0.46); }
+  body.theme-ova .conn-pill, body.theme-ova .net-pill, body.theme-ova .ai-config-pill, body.theme-ova #settings-topbar-btn, body.theme-ova #hist-btn, body.theme-ova #restart-btn {
     border-radius:6px;
     background:linear-gradient(180deg, rgba(18,27,34,0.72), rgba(5,7,10,0.74));
     border-color:rgba(100,200,183,0.26);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.035);
   }
-  #restart-btn {
+  body.theme-ova #restart-btn {
     color:#e48186;
     border-color:rgba(212,90,98,0.34);
     background:rgba(48,14,20,0.52);
   }
-  .topbar-clock {
+  body.theme-ova .topbar-clock {
     color:#ebe6d5;
     text-shadow:0 0 8px rgba(215,166,80,0.12);
   }
 
-  #left, #news-panel, #bottom-bar {
+  body.theme-ova #left, body.theme-ova #news-panel, body.theme-ova #bottom-bar {
     background:linear-gradient(180deg, rgba(13,17,24,0.94), rgba(5,7,11,0.96));
     border-color:rgba(100,200,183,0.16);
     box-shadow:var(--ova-shadow);
     backdrop-filter:none;
   }
-  #left, #news-panel { position:relative; }
-  #left::before, #news-panel::before {
+  body.theme-ova #left, body.theme-ova #news-panel { position:relative; }
+  body.theme-ova #left::before, body.theme-ova #news-panel::before {
     position:absolute;
     top:8px;
     right:10px;
@@ -841,9 +840,9 @@
     letter-spacing:.18em;
     pointer-events:none;
   }
-  #left::before { content:"AUX MON"; }
-  #news-panel::before { content:"BROADCAST"; left:10px; right:auto; }
-  .widget, .about-card, .todo-item, .note-item, .ollama-card, .caro-avatar-card, .caro-module-card, .caro-summary-card {
+  body.theme-ova #left::before { content:"AUX MON"; }
+  body.theme-ova #news-panel::before { content:"BROADCAST"; left:10px; right:auto; }
+  body.theme-ova .widget, body.theme-ova .about-card, body.theme-ova .todo-item, body.theme-ova .note-item, body.theme-ova .ollama-card, body.theme-ova .caro-avatar-card, body.theme-ova .caro-module-card, body.theme-ova .caro-summary-card {
     position:relative;
     border-radius:6px;
     background:
@@ -852,7 +851,7 @@
     border:1px solid rgba(100,200,183,0.16);
     box-shadow:inset 3px 0 0 rgba(100,200,183,0.10), inset 0 1px 0 rgba(255,255,255,0.028);
   }
-  .widget::before, .about-card::before, .caro-avatar-card::before, .caro-module-card::before, .caro-summary-card::before {
+  body.theme-ova .widget::before, body.theme-ova .about-card::before, body.theme-ova .caro-avatar-card::before, body.theme-ova .caro-module-card::before, body.theme-ova .caro-summary-card::before {
     content:"";
     position:absolute;
     top:-1px;
@@ -863,62 +862,62 @@
     border-left:1px solid rgba(215,166,80,0.42);
     pointer-events:none;
   }
-  .widget-label, .news-header, #media-label, #spotify-label, #todo-title, .settings-section h3 {
+  body.theme-ova .widget-label, body.theme-ova .news-header, body.theme-ova #media-label, body.theme-ova #spotify-label, body.theme-ova #todo-title, body.theme-ova .settings-section h3 {
     color:rgba(215,166,80,0.52);
     letter-spacing:.24em;
     font-weight:400;
   }
-  .widget-label::after, .news-header::after {
+  body.theme-ova .widget-label::after, body.theme-ova .news-header::after {
     content:"";
     display:block;
     height:1px;
     margin-top:4px;
     background:linear-gradient(90deg, rgba(215,166,80,0.28), transparent);
   }
-  #weather-temp, #pomo-display, .mood-value, .tide-ht, .fc-name, .news-source, #date-text {
+  body.theme-ova #weather-temp, body.theme-ova #pomo-display, body.theme-ova .mood-value, body.theme-ova .tide-ht, body.theme-ova .fc-name, body.theme-ova .news-source, body.theme-ova #date-text {
     color:var(--ova-cyan);
     text-shadow:0 0 7px rgba(122,215,210,0.14);
   }
-  #weather-desc, .news-title, #radio-genre, .settings-sub, .mood-caption, .bc-msg, .hist-msg {
+  body.theme-ova #weather-desc, body.theme-ova .news-title, body.theme-ova #radio-genre, body.theme-ova .settings-sub, body.theme-ova .mood-caption, body.theme-ova .bc-msg, body.theme-ova .hist-msg {
     color:rgba(215,222,214,0.72);
   }
-  .quick-btn, .settings-boot-btn, .sys-btn, .detect-btn, #todo-add-btn, #todo-clear-btn, #todo-close, #modal-cancel, #modal-confirm, .caro-chat-btn, .media-nav-btn, .widget-refresh-btn {
+  body.theme-ova .quick-btn, body.theme-ova .settings-boot-btn, body.theme-ova .sys-btn, body.theme-ova .detect-btn, body.theme-ova #todo-add-btn, body.theme-ova #todo-clear-btn, body.theme-ova #todo-close, body.theme-ova #modal-cancel, body.theme-ova #modal-confirm, body.theme-ova .caro-chat-btn, body.theme-ova .media-nav-btn, body.theme-ova .widget-refresh-btn {
     border-radius:6px;
     background:linear-gradient(180deg, rgba(20,27,34,0.82), rgba(6,8,12,0.86));
     border:1px solid rgba(100,200,183,0.26);
     color:var(--ova-cyan);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 18px rgba(0,0,0,0.24);
   }
-  .quick-btn:hover, .settings-boot-btn:hover, .sys-btn:hover, .detect-btn:hover, .media-nav-btn:hover, .widget-refresh-btn:hover {
+  body.theme-ova .quick-btn:hover, body.theme-ova .settings-boot-btn:hover, body.theme-ova .sys-btn:hover, body.theme-ova .detect-btn:hover, body.theme-ova .media-nav-btn:hover, body.theme-ova .widget-refresh-btn:hover {
     background:linear-gradient(180deg, rgba(31,40,49,0.9), rgba(10,13,18,0.92));
     border-color:rgba(215,166,80,0.44);
     color:#f0d18b;
   }
-  .settings-save-btn, .caro-chat-btn.primary, #send-btn {
+  body.theme-ova .settings-save-btn, body.theme-ova .caro-chat-btn.primary, body.theme-ova #send-btn {
     background:linear-gradient(180deg, rgba(215,166,80,0.95), rgba(157,96,58,0.92));
     border:1px solid rgba(244,196,112,0.62);
     color:#120d09;
     box-shadow:0 0 18px rgba(215,166,80,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
   }
-  .settings-input, .settings-select, #msg-input, #todo-input, #note-input, .caro-answer-input, .caro-field input[type=text], .caro-field input[type=password] {
+  body.theme-ova .settings-input, body.theme-ova .settings-select, body.theme-ova #msg-input, body.theme-ova #todo-input, body.theme-ova #note-input, body.theme-ova .caro-answer-input, body.theme-ova .caro-field input[type=text], body.theme-ova .caro-field input[type=password] {
     border-radius:6px;
     background:rgba(3,5,8,0.74);
     border-color:rgba(100,200,183,0.22);
     color:#eee9d7;
     box-shadow:inset 0 2px 8px rgba(0,0,0,0.38);
   }
-  .settings-input:focus, .settings-select:focus, #msg-input:focus, .caro-answer-input:focus {
+  body.theme-ova .settings-input:focus, body.theme-ova .settings-select:focus, body.theme-ova #msg-input:focus, body.theme-ova .caro-answer-input:focus {
     border-color:rgba(215,166,80,0.58);
     box-shadow:0 0 0 2px rgba(215,166,80,0.09), inset 0 2px 8px rgba(0,0,0,0.38);
   }
 
-  #center {
+  body.theme-ova #center {
     background:
       linear-gradient(90deg, transparent 0 49.8%, rgba(100,200,183,0.04) 49.8% 50.2%, transparent 50.2%),
       radial-gradient(ellipse at center, rgba(122,215,210,0.05), transparent 44%);
   }
-  #avatar-outer { width:248px; height:248px; filter:drop-shadow(0 24px 34px rgba(0,0,0,0.45)); }
-  #avatar-outer::before {
+  body.theme-ova #avatar-outer { width:248px; height:248px; filter:drop-shadow(0 24px 34px rgba(0,0,0,0.45)); }
+  body.theme-ova #avatar-outer::before {
     content:"CAROLINE / VIDEO-LINK";
     position:absolute;
     left:8px;
@@ -927,7 +926,7 @@
     font:9px/1 'JetBrains Mono',monospace;
     letter-spacing:.18em;
   }
-  #avatar-outer::after {
+  body.theme-ova #avatar-outer::after {
     content:"";
     position:absolute;
     inset:-10px;
@@ -940,13 +939,13 @@
     z-index:3;
     opacity:.72;
   }
-  #avatar-wrap {
+  body.theme-ova #avatar-wrap {
     border-radius:18px;
     border:2px solid rgba(100,200,183,0.25);
     background:#05070b;
     box-shadow:inset 0 0 35px rgba(0,0,0,0.52), 0 0 24px rgba(100,200,183,0.08);
   }
-  #avatar-wrap::after {
+  body.theme-ova #avatar-wrap::after {
     content:"";
     position:absolute;
     inset:0;
@@ -958,49 +957,49 @@
     opacity:.32;
     z-index:5;
   }
-  img.avatar-svg { border-radius:14px; filter:saturate(.88) contrast(1.08) brightness(.96); }
-  .pulse-ring, .listen-ring { border-radius:18px; border-width:2px; }
+  body.theme-ova img.avatar-svg { border-radius:14px; filter:saturate(.88) contrast(1.08) brightness(.96); }
+  body.theme-ova .pulse-ring, body.theme-ova .listen-ring { border-radius:18px; border-width:2px; }
 
-  #subtitle-box, .bc-msg, .hist-msg, .caro-msg {
+  body.theme-ova #subtitle-box, body.theme-ova .bc-msg, body.theme-ova .hist-msg, body.theme-ova .caro-msg {
     border-radius:6px;
     background:linear-gradient(180deg, rgba(17,23,31,0.88), rgba(5,7,11,0.9));
     border-color:rgba(100,200,183,0.22);
     box-shadow:0 12px 34px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.026);
   }
-  #subtitle-box {
+  body.theme-ova #subtitle-box {
     border-color:rgba(182,75,104,0.34);
     background:linear-gradient(180deg, rgba(15,13,18,0.92), rgba(5,6,10,0.94));
   }
-  #subtitle-sender, .bc-msg.caroline .bc-sender, .hist-msg.caroline .hist-sender, .caro-msg.ai .caro-who {
+  body.theme-ova #subtitle-sender, body.theme-ova .bc-msg.caroline .bc-sender, body.theme-ova .hist-msg.caroline .hist-sender, body.theme-ova .caro-msg.ai .caro-who {
     color:var(--ova-cyan);
   }
-  .bc-msg.dave, .hist-msg.dave, .caro-msg.you {
+  body.theme-ova .bc-msg.dave, body.theme-ova .hist-msg.dave, body.theme-ova .caro-msg.you {
     background:linear-gradient(180deg, rgba(48,18,28,0.82), rgba(16,7,12,0.88));
     border-color:rgba(182,75,104,0.34);
   }
-  .bc-msg.dave .bc-sender, .hist-msg.dave .hist-sender, .caro-msg.you .caro-who {
+  body.theme-ova .bc-msg.dave .bc-sender, body.theme-ova .hist-msg.dave .hist-sender, body.theme-ova .caro-msg.you .caro-who {
     color:#d7788f;
   }
 
-  #settings-modal, #modal, #todo-panel, #history-panel, #howto-box, .caro-boot-shell, .caro-chat-shell, #media-panel, .media-frame-wrap {
+  body.theme-ova #settings-modal, body.theme-ova #modal, body.theme-ova #todo-panel, body.theme-ova #history-panel, body.theme-ova #howto-box, body.theme-ova .caro-boot-shell, body.theme-ova .caro-chat-shell, body.theme-ova #media-panel, body.theme-ova .media-frame-wrap {
     border-radius:8px;
     background:linear-gradient(180deg, rgba(14,18,25,0.98), rgba(5,7,11,0.98));
     border:1px solid rgba(100,200,183,0.22);
     box-shadow:var(--ova-shadow);
   }
-  #settings-header, #settings-tabs, #todo-header, #history-panel-head, #howto-header, .caro-chat-head, .caro-chat-footer, .caro-compose {
+  body.theme-ova #settings-header, body.theme-ova #settings-tabs, body.theme-ova #todo-header, body.theme-ova #history-panel-head, body.theme-ova #howto-header, body.theme-ova .caro-chat-head, body.theme-ova .caro-chat-footer, body.theme-ova .caro-compose {
     background:linear-gradient(180deg, rgba(23,29,37,0.72), rgba(7,10,14,0.74));
     border-color:rgba(100,200,183,0.13);
   }
-  .stab, .caro-chip, .theme-swatch, .message-like, .osk-key {
+  body.theme-ova .stab, body.theme-ova .caro-chip, body.theme-ova .theme-swatch, body.theme-ova .message-like, body.theme-ova .osk-key {
     border-radius:6px;
   }
-  .stab.active, .caro-chip:hover, .caro-chip.active, .ollama-card.active {
+  body.theme-ova .stab.active, body.theme-ova .caro-chip:hover, body.theme-ova .caro-chip.active, body.theme-ova .ollama-card.active {
     background:rgba(100,200,183,0.12);
     border-color:rgba(215,166,80,0.42);
     color:#f0d18b;
   }
-  #media-panel::before, .media-frame-wrap::before {
+  body.theme-ova #media-panel::before, body.theme-ova .media-frame-wrap::before {
     content:"";
     position:absolute;
     inset:0;
@@ -1010,39 +1009,39 @@
     opacity:.25;
     mix-blend-mode:screen;
   }
-  #bottom-bar {
+  body.theme-ova #bottom-bar {
     border-top:1px solid rgba(100,200,183,0.18);
     background:linear-gradient(180deg, rgba(8,11,16,0.96), rgba(3,5,8,0.98));
   }
-  #voice-status {
+  body.theme-ova #voice-status {
     color:rgba(215,166,80,0.48);
     letter-spacing:.14em;
   }
-  .touch-btn {
+  body.theme-ova .touch-btn {
     border-radius:50%;
     border:1px solid rgba(100,200,183,0.28) !important;
     background:radial-gradient(circle at 35% 25%, rgba(100,200,183,0.18), rgba(5,7,11,0.96)) !important;
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 24px rgba(0,0,0,0.32);
   }
-  #send-btn {
+  body.theme-ova #send-btn {
     border-radius:50%;
     color:#17080f;
   }
-  #voice-btn.muted {
+  body.theme-ova #voice-btn.muted {
     background:radial-gradient(circle at 35% 25%, rgba(127,139,139,0.16), rgba(5,7,11,0.96)) !important;
     color:rgba(215,222,214,0.36);
   }
   @media (max-width:1100px) {
-    #topbar::after { display:none; }
-    #avatar-outer { width:210px; height:210px; }
+    body.theme-ova #topbar::after { display:none; }
+    body.theme-ova #avatar-outer { width:210px; height:210px; }
   }
   @media (max-width:768px) {
-    #avatar-outer { width:180px; height:180px; }
-    #avatar-outer::before { display:none; }
+    body.theme-ova #avatar-outer { width:180px; height:180px; }
+    body.theme-ova #avatar-outer::before { display:none; }
   }
   @media (max-width:500px) {
-    #avatar-outer { width:140px; height:140px; }
-    body::after { box-shadow:inset 0 0 72px rgba(0,0,0,0.58); }
+    body.theme-ova #avatar-outer { width:140px; height:140px; }
+    body.theme-ova::after { box-shadow:inset 0 0 72px rgba(0,0,0,0.58); }
   }
 
   /* ACCESSIBILITY */
@@ -1200,9 +1199,10 @@
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Theme colour</div><div class="settings-sub">Primary accent</div></div>
             <div class="theme-swatches">
-              <div class="theme-swatch" id="swatch-0" style="background:linear-gradient(135deg,#64c8b7,#b64b68)" onclick="selectSwatch(0)" title="OVA Teal / Rose"></div>
-              <div class="theme-swatch" id="swatch-1" style="background:linear-gradient(135deg,#7fb49f,#2f7868)" onclick="selectSwatch(1)" title="Phosphor Green"></div>
-              <div class="theme-swatch" id="swatch-2" style="background:linear-gradient(135deg,#d7a650,#9d603a)" onclick="selectSwatch(2)" title="Amber Console"></div>
+              <div class="theme-swatch" id="swatch-0" style="background:linear-gradient(135deg,#22d3ee,#db2777)" onclick="selectSwatch(0)" title="Cyan / Magenta"></div>
+              <div class="theme-swatch" id="swatch-1" style="background:linear-gradient(135deg,#34d399,#059669)" onclick="selectSwatch(1)" title="Green"></div>
+              <div class="theme-swatch" id="swatch-2" style="background:linear-gradient(135deg,#fbbf24,#ea580c)" onclick="selectSwatch(2)" title="Amber"></div>
+              <div class="theme-swatch" id="swatch-3" style="background:linear-gradient(135deg,#64c8b7,#d7a650 48%,#b64b68)" onclick="selectSwatch(3)" title="OVA-93"></div>
             </div>
           </div>
         </div>
@@ -3141,7 +3141,10 @@ function toggleSettings() {
     const nameEl = document.getElementById('avatar-upload-name');
     if (nameEl) nameEl.textContent = customSrc ? '✓ Custom avatar loaded' : 'No file chosen';
     pendingSwatch = S.theme;
-    for(let i=0;i<3;i++) document.getElementById('swatch-'+i).classList.toggle('active', i===pendingSwatch);
+    for(let i=0;i<THEME_COUNT;i++) {
+      const swatch = document.getElementById('swatch-'+i);
+      if (swatch) swatch.classList.toggle('active', i===pendingSwatch);
+    }
     // Populate feature checkboxes
     syncFeatureCheckboxes();
     updateFeatWarnings();
@@ -3294,7 +3297,10 @@ function switchSettingsTab(tab) {
 
 function selectSwatch(i) {
   pendingSwatch = i;
-  for(let j=0;j<3;j++) document.getElementById('swatch-'+j).classList.toggle('active', j===i);
+  for(let j=0;j<THEME_COUNT;j++) {
+    const swatch = document.getElementById('swatch-'+j);
+    if (swatch) swatch.classList.toggle('active', j===i);
+  }
 }
 
 function toggleDiscordFields(enabled) {
@@ -4266,7 +4272,8 @@ async function saveSettings() {
   const newZip = document.getElementById('set-zip').value.trim();
   const oldZip = S.zipcode || S.zipCode || '';
   S.avatar = parseInt(document.getElementById('set-avatar').value);
-  S.theme = pendingSwatch;
+  const nextTheme = Number(pendingSwatch);
+  S.theme = Number.isInteger(nextTheme) && nextTheme >= 0 && nextTheme < THEME_COUNT ? nextTheme : DEFAULTS.theme;
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
   S.autoTheme = document.getElementById('set-auto-theme').checked;
@@ -4460,14 +4467,21 @@ async function saveSettings() {
 
 // ── COMPANIONS / THEMES ───────────────────────
 const companions = [
-  { id:'av-gif',     hex1:'#64c8b7', hex2:'#b64b68', rgb1:'100, 200, 183', rgb2:'182, 75, 104' },
-  { id:'av-crt',     hex1:'#7fb49f', hex2:'#2f7868', rgb1:'127, 180, 159', rgb2:'47, 120, 104' },
-  { id:'av-tux',     hex1:'#d7a650', hex2:'#9d603a', rgb1:'215, 166, 80',  rgb2:'157, 96, 58' },
-  { id:'av-cat',     hex1:'#9a8fc4', hex2:'#b64b68', rgb1:'154, 143, 196', rgb2:'182, 75, 104' },
-  { id:'av-ghost',   hex1:'#7ad7d2', hex2:'#c8d6c7', rgb1:'122, 215, 210', rgb2:'200, 214, 199' },
-  { id:'av-samurai', hex1:'#d45a62', hex2:'#d7a650', rgb1:'212, 90, 98',   rgb2:'215, 166, 80' },
-  { id:'av-custom',  hex1:'#64c8b7', hex2:'#b64b68', rgb1:'100, 200, 183', rgb2:'182, 75, 104' }
+  { id:'av-gif',     hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' },
+  { id:'av-crt',     hex1:'#34d399', hex2:'#059669', rgb1:'52, 211, 153',  rgb2:'5, 150, 105'  },
+  { id:'av-tux',     hex1:'#fbbf24', hex2:'#ea580c', rgb1:'251, 191, 36',  rgb2:'234, 88, 12'  },
+  { id:'av-cat',     hex1:'#a855f7', hex2:'#ec4899', rgb1:'168, 85, 247',  rgb2:'236, 72, 153' },
+  { id:'av-ghost',   hex1:'#67e8f9', hex2:'#a5f3fc', rgb1:'103, 232, 249', rgb2:'165, 243, 252' },
+  { id:'av-samurai', hex1:'#f43f5e', hex2:'#fb923c', rgb1:'244, 63, 94',   rgb2:'251, 146, 60' },
+  { id:'av-custom',  hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' }
 ];
+const THEME_PRESETS = [
+  { hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119', ova:false },
+  { hex1:'#34d399', hex2:'#059669', rgb1:'52, 211, 153',  rgb2:'5, 150, 105',  ova:false },
+  { hex1:'#fbbf24', hex2:'#ea580c', rgb1:'251, 191, 36',  rgb2:'234, 88, 12',  ova:false },
+  { hex1:'#64c8b7', hex2:'#b64b68', rgb1:'100, 200, 183', rgb2:'182, 75, 104', ova:true }
+];
+const THEME_COUNT = THEME_PRESETS.length;
 let currentAvatarIndex = S.avatar;
 
 const UI_FONT_STACKS = {
@@ -4491,9 +4505,12 @@ function applyFont(fontName) {
 }
 
 function applyTheme(idx) {
-  const t = companions[idx], r = document.documentElement;
+  const themeIdx = Number.isFinite(Number(idx)) ? Number(idx) : 0;
+  const t = THEME_PRESETS[themeIdx] || THEME_PRESETS[0];
+  const r = document.documentElement;
   r.style.setProperty('--t-hex1', t.hex1); r.style.setProperty('--t-hex2', t.hex2);
   r.style.setProperty('--t-rgb1', t.rgb1); r.style.setProperty('--t-rgb2', t.rgb2);
+  document.body.classList.toggle('theme-ova', !!t.ova);
   drawParticles();
 }
 
@@ -4512,6 +4529,7 @@ function applyAutoTheme() {
   const r = document.documentElement;
   r.style.setProperty('--t-hex1', t.hex1); r.style.setProperty('--t-hex2', t.hex2);
   r.style.setProperty('--t-rgb1', t.rgb1); r.style.setProperty('--t-rgb2', t.rgb2);
+  document.body.classList.remove('theme-ova');
   drawParticles();
 }
 setInterval(applyAutoTheme, 60000);
@@ -4534,7 +4552,7 @@ function changeAvatar(dir) {
   document.getElementById(companions[currentAvatarIndex].id).classList.add('hidden');
   currentAvatarIndex = (currentAvatarIndex + dir + companions.length) % companions.length;
   document.getElementById(companions[currentAvatarIndex].id).classList.remove('hidden');
-  applyTheme(currentAvatarIndex);
+  applyTheme(S.theme);
   resetIdle();
 }
 
