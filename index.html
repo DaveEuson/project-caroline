@@ -1849,7 +1849,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.installId && localInstallId && localInstallId !== d.installId) {
     clearBrowserInstallState('installId changed from ' + localInstallId + ' to ' + d.installId);
   } else if (serverLooksPreOnboarding && localOnboardingComplete) {
-    clearBrowserInstallState('server is fresh/pre-onboarding');
+    skip.add('setupComplete');
   }
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
@@ -2051,24 +2051,27 @@ function applySettingsToForm({ allowBlank = false } = {}) {
 // Returns a Promise — onboarding check MUST chain on this so caro_onboarded is cleared before we decide.
 async function syncSettingsFromServer() {
   try {
+    const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
     const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
     console.log('[Caroline] GET settings from', settingsUrl);
     const r = await fetchJsonWithTimeout(settingsUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'GET settings');
     if (!r.ok) {
-      // Server returned error — likely fresh install with no settings file yet
-      localStorage.removeItem('caro_onboarded');
       return false;
     }
     const d = await r.json();
-    // Empty response means fresh Node-RED install — force onboarding regardless of localStorage
     if (!d || !Object.keys(d).length) {
-      localStorage.removeItem('caro_onboarded');
+      if (!localOnboardingComplete) localStorage.removeItem('caro_onboarded');
       return false;
     }
-    const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
+    const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
+    const installChanged = !!(d.installId && localInstallId && localInstallId !== d.installId);
     mergeServerSettings(d);
     serverSettingsLoaded = true;
-    if (d.setupComplete !== true && localOnboardingComplete) {
+    if (d.setupComplete !== true && localOnboardingComplete && !installChanged) {
+      S.setupComplete = true;
+      localStorage.setItem('caro_onboarded', 'true');
+      localStorage.setItem('caroline_configured', 'true');
+      localStorage.setItem('caro_settings', JSON.stringify(S));
       postSettingsToNodeRed({
         setupComplete: true,
         features: S.features,
