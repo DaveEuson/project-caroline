@@ -5808,6 +5808,8 @@ let onbState = {
   personality: _onbLoadPersonality(),
   avatarId: localStorage.getItem('caroline_avatar_id') || 'pilot',
   personalityReplies: {},
+  aiNameReply: '',
+  zipReply: '',
   serviceAccountPending: null
 };
 let _chatBound = false;
@@ -5873,7 +5875,17 @@ function restartWizard(){
   startBootSequence();
 }
 function _onbTitleCase(v){ return String(v||'').replace(/\b\w/g,m=>m.toUpperCase()); }
-function _onbShouldSkipStep(q){ return q && q.id === 'identity-user' && !!(onbState.config.userName || S.userName); }
+function _onbPrompt(q){
+  if(!q) return '';
+  return String(typeof q.prompt === 'function' ? q.prompt() : (q.prompt || ''));
+}
+function _onbShouldSkipStep(q){
+  if(!q) return false;
+  if(q.id === 'identity-user') return !!(onbState.config.userName || S.userName);
+  if(q.id === 'identity-location') return !!(onbState.config.location || onbState.config.cityName || S.location || S.cityName);
+  if(q.id === 'identity-timezone') return !!(onbState.config.timezone || S.timezone);
+  return false;
+}
 function _onbAdvancePastSkips(){
   while(_onbShouldSkipStep(ONB_QUESTIONS[onbState.index]) && onbState.index < ONB_QUESTIONS.length-1) onbState.index++;
 }
@@ -5894,6 +5906,28 @@ async function _onbLookupZip(zip) {
   const country = d.country || 'USA';
   const lat = parseFloat(place.latitude);
   const lng = parseFloat(place.longitude);
+  const timezoneFallbackByState = {
+    AL:'America/Chicago', AK:'America/Anchorage', AZ:'America/Phoenix', AR:'America/Chicago', CA:'America/Los_Angeles',
+    CO:'America/Denver', CT:'America/New_York', DE:'America/New_York', DC:'America/New_York', FL:'America/New_York',
+    GA:'America/New_York', HI:'Pacific/Honolulu', IA:'America/Chicago', ID:'America/Boise', IL:'America/Chicago',
+    IN:'America/Indiana/Indianapolis', KS:'America/Chicago', KY:'America/New_York', LA:'America/Chicago',
+    MA:'America/New_York', MD:'America/New_York', ME:'America/New_York', MI:'America/Detroit', MN:'America/Chicago',
+    MO:'America/Chicago', MS:'America/Chicago', MT:'America/Denver', NC:'America/New_York', ND:'America/Chicago',
+    NE:'America/Chicago', NH:'America/New_York', NJ:'America/New_York', NM:'America/Denver', NV:'America/Los_Angeles',
+    NY:'America/New_York', OH:'America/New_York', OK:'America/Chicago', OR:'America/Los_Angeles', PA:'America/New_York',
+    RI:'America/New_York', SC:'America/New_York', SD:'America/Chicago', TN:'America/Chicago', TX:'America/Chicago',
+    UT:'America/Denver', VA:'America/New_York', VT:'America/New_York', WA:'America/Los_Angeles', WI:'America/Chicago',
+    WV:'America/New_York', WY:'America/Denver'
+  };
+  let timezone = timezoneFallbackByState[state] || '';
+  const splitTimezoneStates = { FL:1, ID:1, IN:1, KS:1, KY:1, MI:1, ND:1, NE:1, OR:1, SD:1, TN:1, TX:1 };
+  if (!timezone || splitTimezoneStates[state]) {
+    try {
+      const wr = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lng) + '&current=temperature_2m&forecast_days=1&timezone=auto', { signal: AbortSignal.timeout(7000) });
+      const wd = await wr.json();
+      if (wd && wd.timezone) timezone = wd.timezone;
+    } catch(e) {}
+  }
   let station = '';
   try {
     const nr = await fetch('https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=waterlevels', { signal: AbortSignal.timeout(7000) });
@@ -5910,13 +5944,15 @@ async function _onbLookupZip(zip) {
     }
     if (nearest && nearestDist < 3) station = String(nearest.id || '');
   } catch(e) {}
-  return { city, state, country, location: city + ', ' + state, lat, lng, station };
+  return { city, state, country, location: city + ', ' + state, lat, lng, timezone, station };
 }
 
 function startBootSequence(){
   onboardingStarted = true;
   onbState.config = _onbLoadConfig();
   onbState.personality = _onbLoadPersonality();
+  onbState.aiNameReply = '';
+  onbState.zipReply = '';
   onbState.avatarId = localStorage.getItem('caroline_avatar_id') || onbState.avatarId || 'pilot';
   const overlay = document.getElementById('onboarding-overlay');
   if(!overlay) return;
@@ -5993,18 +6029,22 @@ async function _commitTextStep(){
   const val = (input?.value || fallback || '').trim();
   if(!val) return;
   _onbSetDeep(q.save, val);
+  if (q.id === 'identity-ai') {
+    onbState.aiNameReply = "Oh, that's right - " + val + ". That's a nice name.";
+  }
   if (q.id === 'identity-zip') {
     onbState.zipReply = '';
     try {
       const found = await _onbLookupZip(val);
       if (found) {
-        if (!onbState.config.location) onbState.config.location = found.location;
+        onbState.config.location = found.location;
         onbState.config.cityName = found.location;
         onbState.config.lat = found.lat;
         onbState.config.lng = found.lng;
+        if (found.timezone) onbState.config.timezone = found.timezone;
         if (found.station) onbState.config.tidesStation = found.station;
         const place = found.location + ', ' + found.country;
-        onbState.zipReply = 'Oh, ' + place + ' - cool. I can use that for local context.';
+        onbState.zipReply = 'Oh, ' + place + ' - cool. I can use that for local context' + (found.timezone ? ' and set our timezone to ' + found.timezone + '.' : '.');
       }
     } catch(e) {
       onbState.zipReply = "I couldn't place that ZIP yet, but we can still set the city manually.";
@@ -6024,32 +6064,33 @@ function _onbTranscript(){
     const q=ONB_QUESTIONS[i];
     if(_onbShouldSkipStep(q)) continue;
     if(q.type==='text'){
-      msgs.push({role:'ai', text:q.prompt});
+      msgs.push({role:'ai', text:_onbPrompt(q)});
       const val=_onbGetDeep(q.save);
       if(val) msgs.push({role:'you', text:val});
+      if(q.id === 'identity-ai' && onbState.aiNameReply) msgs.push({role:'ai', text:onbState.aiNameReply});
       if(q.id === 'identity-zip' && onbState.zipReply) msgs.push({role:'ai', text:onbState.zipReply});
     } else if(q.type==='chips'){
-      msgs.push({role:'ai', text:q.prompt});
+      msgs.push({role:'ai', text:_onbPrompt(q)});
       const val=_onbGetDeep(q.save);
       const chosen=q.options.find(o=>o.value===val);
       if(val) msgs.push({role:'you', text:_onbTitleCase(chosen?.label||val)});
       if(onbState.personalityReplies[q.id]) msgs.push({role:'ai', text:onbState.personalityReplies[q.id]});
     } else if(q.type==='avatar'){
-      msgs.push({role:'ai', text:q.prompt});
+      msgs.push({role:'ai', text:_onbPrompt(q)});
       const a=ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
       msgs.push({role:'you', text:a.title});
       msgs.push({role:'ai', text:'Okay. '+a.title+' it is.'});
     } else if(q.type==='widgets'){
-      msgs.push({role:'ai', text:q.prompt});
+      msgs.push({role:'ai', text:_onbPrompt(q)});
       const on=ONB_WIDGETS.filter(w=>onbState.config.widgets?.[w.id] !== false).map(w=>w.title);
       msgs.push({role:'you', text:on.length?'Dashboard: '+on.join(', '):'Minimal dashboard only.'});
     } else if(q.type==='modules'){
-      msgs.push({role:'ai', text:q.prompt});
+      msgs.push({role:'ai', text:_onbPrompt(q)});
       const on=ONB_MODULES.filter(mod=>onbState.config.modules[mod.id]?.enabled).map(m=>m.title);
       msgs.push({role:'you', text:on.length?'Online: '+on.join(', '):'Keeping everything offline for now.'});
     }
   }
-  msgs.push({role:'ai', text:_onbCurrent().prompt});
+  msgs.push({role:'ai', text:_onbPrompt(_onbCurrent())});
   return msgs;
 }
 
@@ -6079,7 +6120,7 @@ function renderChatStep(){
   msgs.forEach((m, i) => {
     const el = document.createElement('div');
     el.className = `caro-msg ${m.role==='ai'?'ai':'you'}`;
-    el.innerHTML = `<div class="caro-who">${m.role==='ai'?_aiLabel:'YOU'}</div>${m.text.replace(/\n/g,'<br>')}`;
+    el.innerHTML = `<div class="caro-who">${m.role==='ai'?_aiLabel:'YOU'}</div>${String(m.text || '').replace(/\n/g,'<br>')}`;
     if(i >= animateFrom){
       el.style.cssText += 'opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease;';
       _onbMsgTimers.push(setTimeout(()=>{
