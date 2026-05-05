@@ -274,6 +274,18 @@ caroline_device_model() {
   fi
 }
 
+is_raspberry_pi() {
+  local _model
+  _model="$(caroline_device_model)"
+  if printf '%s' "$_model" | grep -qi 'Raspberry Pi'; then
+    return 0
+  fi
+  if [ -r /etc/os-release ] && grep -qi '^ID=raspbian' /etc/os-release; then
+    return 0
+  fi
+  return 1
+}
+
 telemetry_emit() {
   local _event="$1"
   local _allow_remote="$2"
@@ -1361,13 +1373,28 @@ echo -e "${CYAN}  │${RESET}  AI Core:     Cloud — OpenRouter (add key in set
 fi
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
-echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
-echo -e "${CYAN}  │  OPEN CAROLINE FROM A BROWSER                           │${RESET}"
-echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
-echo -e "${CYAN}  │${RESET}  On this device:      ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
-echo -e "${CYAN}  │${RESET}  From another device: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
-echo -e "${CYAN}  │${RESET}  If the IP changes:   run ${BOLD}hostname -I${RESET} on this host"
-echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
+if is_raspberry_pi; then
+  echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
+  echo -e "${CYAN}  │  OPEN CAROLINE ON THE PI                                │${RESET}"
+  echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
+  if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
+echo -e "${CYAN}  │${RESET}  Pi display:        reboot and kiosk opens automatically"
+  else
+echo -e "${CYAN}  │${RESET}  Pi display:        use the desktop shortcut or browser"
+  fi
+  echo -e "${CYAN}  │${RESET}  On this Pi:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  From another device: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  If the IP changes: run ${BOLD}hostname -I${RESET} on the Pi"
+  echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
+else
+  echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
+  echo -e "${CYAN}  │  OPEN CAROLINE FROM A BROWSER                           │${RESET}"
+  echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
+  echo -e "${CYAN}  │${RESET}  On this host:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  From client browser: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  If the IP changes:   run ${BOLD}hostname -I${RESET} on this host"
+  echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
+fi
 echo ""
 echo -e "${DIM}  To check her status anytime:${RESET}"
 echo -e "${BOLD}    sudo systemctl status caroline${RESET}"

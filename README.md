@@ -120,11 +120,11 @@ For VM testing or non-Pi installs, treat Caroline like a small home-server app:
 5. After reboot, find the VM IP with `hostname -I`.
 6. Open `http://<vm-ip>:8080/` from your normal desktop browser.
 
-At the end of install, Caroline prints both URLs:
+At the end of install, Caroline prints host-specific next steps. On a Raspberry Pi, it points to the Pi display/kiosk path and still shows browser fallback URLs. On an Ubuntu/server host, it points users to the client-browser URL:
 
 ```text
-On this device:      http://localhost:8080/
-From another device: http://<vm-ip>:8080/
+On this host:        http://localhost:8080/
+From client browser: http://<vm-ip>:8080/
 ```
 
 This mode tests the installer, nginx web UI, Node-RED backend, settings persistence, AI provider routing, integrations, update, and reboot paths. It does not test local fullscreen kiosk autostart, local browser microphone permissions, or VM display wake/sleep behavior.
