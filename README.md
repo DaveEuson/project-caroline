@@ -64,13 +64,13 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, privacy/telemetry choices, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. For Raspberry Pi installs, **OpenRouter is the recommended chat provider**. Local Ollama on a Pi is best treated as an experimental/offline fallback: it is private and free, but it can pin the CPU, take 20-60 seconds, and small models may answer oddly.
+The installer asks for your name, privacy/telemetry choices, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. Caroline supports both **local Ollama** and **OpenRouter** chat. Local Ollama is private, free, and works best with small models on Raspberry Pi hardware; first replies can take 20-60 seconds while the model warms up. OpenRouter remains the faster, more polished option when a cloud API key is available.
 
 Maintainer note: remote project-health pings are only attempted when `CAROLINE_TELEMETRY_ENDPOINT` is set for the installer environment. Without that endpoint, telemetry choices and events are still written locally but nothing is sent off-device.
 
 | Local model | Pi recommendation | Notes |
 |---|---|---|
-| `gemma3:1b` | Best local fallback | Friendlier and more coherent in Pi testing; still much slower than OpenRouter. |
+| `gemma3:1b` | Best local default | Friendlier and more coherent in Pi testing; still much slower than OpenRouter. |
 | `qwen3:0.6b` | Speed fallback | Smaller/faster candidate when Gemma feels heavy. |
 | `smollm2:360m` | Tiny emergency fallback | Fastest tiny model tested, but quality is limited. |
 | `tinyllama` | Legacy fallback | Also small; can be unpredictable. |
@@ -155,6 +155,8 @@ exit
 Use Bash commands after you are inside the Pi shell. PowerShell syntax such as `(Invoke-WebRequest ...).Content` only works from Windows PowerShell, not from the Pi terminal.
 
 ### QA Checklist
+
+For a full wipe/reinstall runbook, see [docs/clean-reinstall-qa.md](docs/clean-reinstall-qa.md).
 
 Before calling a release good, test these paths on a clean Pi or VM:
 

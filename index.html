@@ -209,12 +209,11 @@
   .quick-btn:active { background:rgba(var(--t-rgb1),0.25); transform:scale(0.95); }
   
   /* HUE BUTTON */
-  #hue-btn { width:52px; height:52px; border-radius:50%; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:20px; transition:all 0.3s ease; flex-shrink:0; -webkit-tap-highlight-color:transparent; }
-  #hue-btn.mode-off   { background:rgba(30,27,75,0.8); border:2px solid rgba(148,163,184,0.2); }
-  #hue-btn.mode-relax { background:linear-gradient(135deg,#f97316,#fb923c); border:2px solid #f97316; box-shadow:0 4px 25px rgba(249,115,22,0.5); }
-  #hue-btn.mode-alert { background:linear-gradient(135deg,#f8fafc,#e2e8f0); border:2px solid #f8fafc; box-shadow:0 4px 25px rgba(248,250,252,0.6); }
-  #hue-btn.mode-disco { background:linear-gradient(135deg,#a855f7,#ec4899); border:2px solid #a855f7; box-shadow:0 4px 25px rgba(168,85,247,0.5); animation:discoGlow 0.8s ease-in-out infinite alternate; }
-  @keyframes discoGlow { 0%{box-shadow:0 4px 25px rgba(168,85,247,0.5)} 100%{box-shadow:0 4px 35px rgba(236,72,153,0.8)} }
+  #hue-btn.mode-off { color: rgba(148,163,184,0.44); }
+  #hue-btn.mode-relax { background: rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.46); color: #ffd0a8; }
+  #hue-btn.mode-alert { background: rgba(248,250,252,0.12); border-color: rgba(248,250,252,0.44); color: #f8fafc; }
+  #hue-btn.mode-disco { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.44); color: #e9d5ff; animation:discoGlow 0.9s ease-in-out infinite alternate; }
+  @keyframes discoGlow { 0%{box-shadow:0 0 12px rgba(168,85,247,0.12)} 100%{box-shadow:0 0 16px rgba(236,72,153,0.20)} }
   .note-item { background:rgba(var(--t-rgb2),0.07); border:1px solid rgba(var(--t-rgb2),0.2); border-radius:10px; padding:10px 14px; font-size:12px; color:#e2e8f0; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .note-del { background:none; border:none; color:rgba(var(--t-rgb2),0.4); cursor:pointer; font-size:14px; flex-shrink:0; }
   .note-del:hover { color:var(--t-hex2); }
@@ -314,33 +313,33 @@
   #msg-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 32px; padding: 16px 20px; color: #f8fafc; caret-color: var(--t-hex1); font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 18px; outline: none; transition: all 0.3s ease; min-width: 0; }
   #msg-input:focus { border-color: rgba(var(--t-rgb1), 0.6); box-shadow: 0 0 15px rgba(var(--t-rgb1), 0.15); }
   #msg-input::placeholder { color: rgba(148,163,184,0.4); }
-  #msg-input.listening { border-color: rgba(var(--t-rgb2), 0.6); background: rgba(var(--t-rgb2), 0.05); }
+  #msg-input.listening { border-color: rgba(var(--t-rgb1), 0.62); background: rgba(var(--t-rgb1), 0.045); }
   
   /* TOUCH BUTTONS */
-  .touch-btn { width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: all 0.3s ease; -webkit-tap-highlight-color: transparent; }
-  #focus-btn { background: linear-gradient(135deg, rgba(var(--t-rgb1),0.1), transparent); border: 1.5px solid rgba(var(--t-rgb1), 0.4); color: var(--t-hex1); }
-  #focus-btn.active { background: var(--t-hex1); color: #05050a; box-shadow: 0 0 20px rgba(var(--t-rgb1), 0.6); }
-  #mic-btn { background: linear-gradient(135deg, rgba(var(--t-rgb1),0.1), transparent); border: 1.5px solid rgba(var(--t-rgb1), 0.4); color: var(--t-hex1); }
-  #mic-btn.listening { background: var(--t-hex2); border-color: var(--t-hex2); color: #fff; box-shadow: 0 0 20px rgba(var(--t-rgb2), 0.5); animation: micPulse 1s ease-in-out infinite; }
-  #stop-btn { display: none; background: linear-gradient(135deg, rgba(var(--t-rgb2),0.2), transparent); border: 1.5px solid rgba(var(--t-rgb2), 0.6); color: var(--t-hex2); font-size: 14px; }
+  .touch-btn { width: 46px; height: 46px; border-radius: 10px; border: 1px solid rgba(var(--t-rgb1), 0.26); background: rgba(4, 9, 14, 0.76); color: rgba(198, 246, 255, 0.76); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease; -webkit-tap-highlight-color: transparent; }
+  .touch-btn i { font-size: 21px; line-height: 1; stroke-width: 1.6; }
+  .touch-btn:hover { background: rgba(var(--t-rgb1),0.10); border-color: rgba(var(--t-rgb1),0.42); color: #dffbff; }
+  .touch-btn:active { transform: translateY(1px) scale(0.98); }
+  #focus-btn.active { background: rgba(var(--t-rgb1),0.18); border-color: rgba(var(--t-rgb1),0.58); color: #f8feff; box-shadow: 0 0 16px rgba(var(--t-rgb1), 0.14); }
+  #mic-btn.listening { background: rgba(var(--t-rgb2),0.18); border-color: rgba(var(--t-rgb2),0.58); color: #fff; box-shadow: 0 0 18px rgba(var(--t-rgb2), 0.22); animation: micPulse 1s ease-in-out infinite; }
+  #stop-btn { display: none; background: rgba(var(--t-rgb2),0.10); border-color: rgba(var(--t-rgb2), 0.38); color: rgba(255, 180, 210, 0.92); font-size: 14px; }
   #stop-btn.show { display: flex; }
-  #send-btn { background: linear-gradient(135deg, var(--t-hex2), rgba(var(--t-rgb2),0.4)); border: 1px solid var(--t-hex2); box-shadow: 0 4px 15px rgba(var(--t-rgb2), 0.4); color: white; font-size: 24px; }
-  #send-btn:active { transform: scale(0.92); }
-  #voice-btn { background: linear-gradient(135deg, rgba(var(--t-rgb1),0.3), rgba(var(--t-rgb1),0.1)); border: 1.5px solid var(--t-hex1); color: #fff; font-size: 24px; }
-  #voice-btn.muted { background: linear-gradient(135deg, #1e1b4b, #0f172a); border-color: rgba(148,163,184,0.2); color: rgba(148,163,184,0.4); }
-  #kbd-btn { background: linear-gradient(135deg, rgba(var(--t-rgb1),0.1), transparent); border: 1.5px solid rgba(var(--t-rgb1), 0.4); color: var(--t-hex1); }
-  #kbd-btn.active { background: var(--t-hex1); color: #05050a; box-shadow: 0 0 20px rgba(var(--t-rgb1), 0.6); }
+  #send-btn { background: rgba(var(--t-rgb1),0.14); border-color: rgba(var(--t-rgb1),0.50); color: #dffbff; font-size: 22px; box-shadow: 0 0 14px rgba(var(--t-rgb1), 0.10); }
+  #send-btn i { font-size: 22px; }
+  #voice-btn.muted { background: rgba(8,13,20,0.74); border-color: rgba(148,163,184,0.16); color: rgba(148,163,184,0.38); }
+  #voice-btn.muted i { color: rgba(248,113,113,0.56); }
+  #kbd-btn.active { background: rgba(var(--t-rgb1),0.18); border-color: rgba(var(--t-rgb1),0.58); color: #f8feff; box-shadow: 0 0 16px rgba(var(--t-rgb1), 0.14); }
 
   /* RIGHT PANEL */
-  #news-panel { width: 300px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
-  #video-section { flex-shrink: 0; padding: 10px 8px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
+  #news-panel { width: 312px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0 10px 0 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
+  #video-section { flex-shrink: 0; padding: 12px 0 10px 10px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
   #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #media-panel { width:100%; min-height:200px; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:radial-gradient(circle at 20% 0%, rgba(var(--t-rgb1),0.12), transparent 40%), rgba(0,0,0,0.26); position:relative; }
   .media-mode { display:none; height:100%; padding:9px; }
   .media-mode.active { display:block; }
-  .media-player-head { display:flex; align-items:center; gap:5px; margin-bottom:6px; min-width:0; }
-  #media-channel-label { flex:1; min-width:0; color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .media-player-head { display:grid; grid-template-columns:26px minmax(0,1fr) 26px; align-items:center; gap:7px; margin-bottom:7px; min-width:0; }
+  #media-channel-label { min-width:0; color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
   .media-nav-btn { width:24px; height:22px; display:grid; place-items:center; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:6px; background:rgba(0,0,0,0.18); color:var(--t-hex1); cursor:pointer; }
   .media-frame-wrap { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.24); background:#000; }
   #media-iframe, #media-video { width:100%; height:100%; border:0; display:none; background:#000; }
@@ -361,6 +360,8 @@
   .widget-refresh-btn:hover { background:rgba(var(--t-rgb1),0.14); color:var(--t-hex1); }
   .widget-refresh-btn:active { transform:scale(0.92); }
   .widget-refresh-btn.loading i { animation:spin 0.9s linear infinite; }
+  #news-section { overflow-y:auto; padding:0 0 0 10px; }
+  #news-panel .widget-close-btn { right:10px; }
   #news-list { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 2px; }
   .news-item { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; gap: 5px; align-items: flex-start; cursor: pointer; transition: background 0.2s; border-radius: 4px; }
   .news-item:hover { background: rgba(var(--t-rgb1),0.05); }
@@ -401,6 +402,7 @@
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
   body.idle-mode #avatar-outer { transform: scale(1.4) translateY(80px); }
+  body.idle-mode #avatar-outer::before { display:none; }
   #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
   body.idle-mode.idle-night #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
@@ -518,7 +520,7 @@
   .feat-toggle:hover { background:rgba(var(--t-rgb1),0.06); }
   .feat-toggle input[type=checkbox] { width:18px; height:18px; accent-color:var(--t-hex1); cursor:pointer; flex-shrink:0; }
   .feat-warning { font-size:11px; color:#fbbf24; font-family:'JetBrains Mono',monospace; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2); border-radius:8px; padding:5px 10px; }
-  #hue-warning { display:none; font-size:11px; color:#fbbf24; font-family:'JetBrains Mono',monospace; text-align:center; margin-top:2px; }
+  #hue-warning { display:flex; align-items:center; justify-content:center; width:18px; color:#fbbf24; font-size:16px; margin-left:-5px; }
   .bot-head rect.screen { fill: #064e3b; }
   .bot-head line { stroke: #047857; }
   .ava-state { fill: var(--t-hex1); }
@@ -1023,17 +1025,19 @@
     letter-spacing:.14em;
   }
   body.theme-ova .touch-btn {
-    border-radius:50%;
+    border-radius:10px;
     border:1px solid rgba(100,200,183,0.28) !important;
-    background:radial-gradient(circle at 35% 25%, rgba(100,200,183,0.18), rgba(5,7,11,0.96)) !important;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 24px rgba(0,0,0,0.32);
+    background:rgba(5,7,11,0.82) !important;
+    color:rgba(210,238,232,0.76);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
   }
   body.theme-ova #send-btn {
-    border-radius:50%;
-    color:#17080f;
+    background:rgba(100,200,183,0.14) !important;
+    border-color:rgba(100,200,183,0.46) !important;
+    color:#e8fff9;
   }
   body.theme-ova #voice-btn.muted {
-    background:radial-gradient(circle at 35% 25%, rgba(127,139,139,0.16), rgba(5,7,11,0.96)) !important;
+    background:rgba(5,7,11,0.82) !important;
     color:rgba(215,222,214,0.36);
   }
   @media (max-width:1100px) {
@@ -1092,15 +1096,8 @@
     box-shadow:0 2px 0 rgba(0,0,0,0.78), inset 0 -1px 0 rgba(255,255,255,0.05);
   }
   body.theme-cybercore #topbar::after {
-    content:"CYBERCORE / BROADCAST LINK";
-    position:absolute;
-    left:50%;
-    top:4px;
-    transform:translateX(-50%);
-    color:rgba(250,204,21,0.54);
-    font:9px/1 'JetBrains Mono',monospace;
-    letter-spacing:.2em;
-    pointer-events:none;
+    display:none;
+    content:"";
   }
   body.theme-cybercore .topbar-name {
     font-family:'JetBrains Mono',monospace;
@@ -1190,11 +1187,23 @@
     color:#fff2a6;
     background:linear-gradient(180deg, rgba(31,52,65,0.92), rgba(10,16,24,0.94));
   }
-  body.theme-cybercore .settings-save-btn, body.theme-cybercore .caro-chat-btn.primary, body.theme-cybercore #send-btn {
+  body.theme-cybercore .settings-save-btn, body.theme-cybercore .caro-chat-btn.primary {
     background:linear-gradient(180deg, #f0f36a, #22d3ee 58%, #0aa4bd);
     border:1px solid rgba(255,255,190,0.74);
     color:#041018;
     box-shadow:0 0 20px rgba(var(--t-rgb1),0.22), inset 0 1px 0 rgba(255,255,255,0.36);
+  }
+  body.theme-cybercore #send-btn {
+    background:linear-gradient(180deg, rgba(24,42,55,0.92), rgba(8,13,20,0.96)) !important;
+    border:1px solid rgba(var(--t-rgb1),0.44);
+    color:#7ef8ff;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.22), 0 0 14px rgba(var(--t-rgb1),0.12);
+  }
+  body.theme-cybercore .caro-chat-btn.primary {
+    background:linear-gradient(180deg, rgba(24,42,55,0.94), rgba(8,13,20,0.98));
+    border:1px solid rgba(var(--t-rgb1),0.46);
+    color:#7ef8ff;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.22), 0 0 14px rgba(var(--t-rgb1),0.12);
   }
   body.theme-cybercore .settings-input, body.theme-cybercore .settings-select, body.theme-cybercore #msg-input, body.theme-cybercore #todo-input, body.theme-cybercore #note-input, body.theme-cybercore .caro-answer-input, body.theme-cybercore .caro-field input[type=text], body.theme-cybercore .caro-field input[type=password] {
     border-radius:6px;
@@ -1204,8 +1213,8 @@
     box-shadow:inset 0 2px 8px rgba(0,0,0,0.30);
   }
   body.theme-cybercore .settings-input:focus, body.theme-cybercore .settings-select:focus, body.theme-cybercore #msg-input:focus, body.theme-cybercore .caro-answer-input:focus {
-    border-color:rgba(250,204,21,0.64);
-    box-shadow:0 0 0 2px rgba(250,204,21,0.11), inset 0 2px 8px rgba(0,0,0,0.30);
+    border-color:rgba(var(--t-rgb1),0.62);
+    box-shadow:0 0 0 2px rgba(var(--t-rgb1),0.10), inset 0 2px 8px rgba(0,0,0,0.30);
   }
   body.theme-cybercore #center {
     background:
@@ -1300,14 +1309,20 @@
     letter-spacing:.13em;
   }
   body.theme-cybercore .touch-btn {
-    border-radius:50%;
-    border:1px solid rgba(var(--t-rgb1),0.42) !important;
-    background:radial-gradient(circle at 35% 25%, rgba(var(--t-rgb1),0.26), rgba(8,13,20,0.96)) !important;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 24px rgba(0,0,0,0.28), 0 0 18px rgba(var(--t-rgb1),0.10);
+    border-radius:10px;
+    border:1px solid rgba(var(--t-rgb1),0.28) !important;
+    background:rgba(8,13,20,0.82) !important;
+    color:rgba(198,246,255,0.76);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
   }
-  body.theme-cybercore #send-btn { color:#061016; }
+  body.theme-cybercore #send-btn {
+    background:rgba(var(--t-rgb1),0.14) !important;
+    border-color:rgba(var(--t-rgb1),0.52) !important;
+    color:#dffbff;
+    box-shadow:0 0 14px rgba(var(--t-rgb1),0.10);
+  }
   body.theme-cybercore #voice-btn.muted {
-    background:radial-gradient(circle at 35% 25%, rgba(148,163,184,0.17), rgba(8,13,20,0.96)) !important;
+    background:rgba(8,13,20,0.76) !important;
     color:rgba(226,232,240,0.45);
   }
   body.theme-cybercore #onboarding-overlay {
@@ -1442,11 +1457,11 @@
 
 <div id="modal-overlay">
   <div id="modal">
-    <h3>Reboot Pi?</h3>
-    <p>This sends sudo reboot to the Raspberry Pi. The kiosk may show this screen until the Pi comes back online.</p>
+    <h3>Reboot Project: Caroline?</h3>
+    <p>This restarts the Caroline host device. The kiosk may show this screen until Project: Caroline comes back online.</p>
     <div class="modal-btns">
       <button id="modal-cancel">Cancel</button>
-      <button id="modal-confirm">Yes, Reboot Pi</button>
+      <button id="modal-confirm">Yes, Reboot Caroline</button>
     </div>
   </div>
 </div>
@@ -1532,11 +1547,11 @@
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Default channel</div><div class="settings-sub">On startup</div></div>
             <select class="settings-select" id="set-channel">
-              <option value="0">NHK World</option>
-              <option value="1">Al Jazeera</option>
-              <option value="2">DW English</option>
-              <option value="3">France 24</option>
-              <option value="4">NASA TV</option>
+              <option value="0">Al Jazeera</option>
+              <option value="1">DW English</option>
+              <option value="2">France 24</option>
+              <option value="3">NASA TV</option>
+              <option value="4">NHK World</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -1551,7 +1566,7 @@
         <div class="settings-section">
           <h3>AI Model</h3>
           <div class="settings-row">
-            <div><div class="settings-label">AI provider</div><div class="settings-sub">OpenRouter recommended on Pi</div></div>
+            <div><div class="settings-label">AI provider</div><div class="settings-sub">Local is private; cloud is faster</div></div>
             <select class="settings-select" id="set-ai-provider" onchange="onProviderChange(this.value)">
               <option value="openrouter">OpenRouter (cloud)</option>
               <option value="ollama">Ollama (local / remote)</option>
@@ -1847,15 +1862,15 @@
         <div class="settings-section">
           <h3>Location</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Zip code (US)</div><div class="settings-sub">Updates weather &amp; city name</div></div>
+            <div><div class="settings-label">Postal code / place</div><div class="settings-sub">US ZIP auto-detects; international users can enter a city</div></div>
             <div class="input-detect-row">
-              <input class="settings-input" id="set-zip" type="text" maxlength="5" placeholder="e.g. 90210" style="width:90px"/>
-              <button type="button" class="detect-btn" onclick="detectLocationFromZip(this)">🔍 Detect</button>
+              <input class="settings-input" id="set-zip" type="text" placeholder="90210 or Paris" style="width:140px"/>
+              <button type="button" class="detect-btn" onclick="detectLocationFromInput(this)">🔍 Detect</button>
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">City / Location</div><div class="settings-sub">Sent to AI for context</div></div>
-            <input class="settings-input" id="set-location" type="text" placeholder="City, State" style="width:220px"/>
+            <div><div class="settings-label">City / Location</div><div class="settings-sub">Used for weather and AI context</div></div>
+            <input class="settings-input" id="set-location" type="text" placeholder="City, Country" style="width:220px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Timezone</div><div class="settings-sub">IANA tz (e.g. America/LA)</div></div>
@@ -1965,6 +1980,10 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status">Copies the terminal command for the latest release</div></div>
+            <button class="sys-btn" onclick="showUpdateCommand(this)">⟳ Update</button>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Wipe all memory</div><div class="settings-sub">Delete settings, history &amp; personality — she won't be happy</div></div>
             <button class="sys-btn danger" id="factory-reset-btn" onclick="wipeMemory(this)">💀 Factory Reset</button>
           </div>
@@ -2010,7 +2029,9 @@
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
             <button class="settings-boot-btn" type="button" onclick="refreshBuildInfo()">⟳ Refresh Build</button>
             <button class="settings-boot-btn" type="button" onclick="copyBuildInfo()">Copy Build</button>
+            <button class="settings-boot-btn" type="button" onclick="copyIssueReportLink()">Copy Issue Link</button>
           </div>
+          <div id="issue-report-status" style="margin-top:8px;font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
         </div>
         <div class="settings-section">
           <h3>About Me</h3>
@@ -2027,7 +2048,7 @@
       <div class="settings-footer">
         <button class="clear-history-btn" onclick="clearHistory()">🗑 Clear chat log</button>
         <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="resetChannels()">↺ Reset channels</button>
-        <button class="clear-history-btn" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;" onclick="requestPiRestart()">⟳ Reboot Pi</button>
+        <button class="clear-history-btn" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;" onclick="requestPiRestart()">⟳ Reboot Project: Caroline</button>
         <span class="settings-feedback" id="settings-feedback">✓ Saved!</span>
         <button class="settings-save-btn" id="settings-save-btn" onclick="saveSettings()">Save &amp; Apply</button>
       </div>
@@ -2345,15 +2366,15 @@
     <div id="bottom-chat-msgs"><div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:8px;">Say something to Caroline...</div></div>
     <div id="voice-status" style="font-size:11px;color:rgba(var(--t-rgb1),0.4);font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;padding:4px 0 2px;flex-shrink:0;">● READY TO CHAT · ENTER TO SEND</div>
     <div id="input-row">
-      <button class="touch-btn" id="focus-btn" onclick="toggleFocusMode(); playBeep(900);" title="Focus Mode"><i class="ti ti-headphones"></i></button>
-      <button class="touch-btn" id="mic-btn" onclick="playBeep(800)"><i class="ti ti-microphone"></i></button>
-      <button class="touch-btn" id="stop-btn" onclick="playBeep(400)"><i class="ti ti-player-stop"></i></button>
+      <button class="touch-btn" id="focus-btn" onclick="toggleFocusMode(); playBeep(900);" title="Focus mode" aria-label="Focus mode"><i class="ti ti-headphones"></i></button>
+      <button class="touch-btn" id="mic-btn" onclick="playBeep(800)" title="Voice input" aria-label="Voice input"><i class="ti ti-microphone"></i></button>
+      <button class="touch-btn" id="stop-btn" onclick="playBeep(400)" title="Stop" aria-label="Stop"><i class="ti ti-player-stop"></i></button>
       <input id="msg-input" type="text" placeholder="Say something to Caroline..." autocomplete="off"/>
-      <button class="touch-btn" id="send-btn" onclick="playBeep(600); sendMessage();"><i class="ti ti-send"></i></button>
-      <button class="touch-btn" id="kbd-btn" onclick="toggleOsk()" title="On-screen keyboard"><i class="ti ti-keyboard"></i></button>
-      <button id="hue-btn" class="touch-btn mode-off" onclick="cycleHue()" title="Hue Lights"><span id="hue-icon"><i class="ti ti-bulb"></i></span></button>
-      <div id="hue-warning" title="Set Hue Bridge IP in Settings">⚠️</div>
-      <button class="touch-btn" id="voice-btn" onclick="playBeep(1200)"><i class="ti ti-volume"></i></button>
+      <button class="touch-btn" id="send-btn" onclick="playBeep(600); sendMessage();" title="Send message" aria-label="Send message"><i class="ti ti-send"></i></button>
+      <button class="touch-btn" id="kbd-btn" onclick="toggleOsk()" title="On-screen keyboard" aria-label="On-screen keyboard"><i class="ti ti-keyboard"></i></button>
+      <button id="hue-btn" class="touch-btn mode-off" onclick="cycleHue()" title="Hue lights" aria-label="Hue lights"><span id="hue-icon"><i class="ti ti-bulb-off"></i></span></button>
+      <div id="hue-warning" title="Set Hue Bridge IP in Settings"><i class="ti ti-alert-triangle"></i></div>
+      <button class="touch-btn" id="voice-btn" onclick="playBeep(1200)" title="Mute or unmute voice" aria-label="Mute or unmute voice"><i class="ti ti-volume"></i></button>
     </div>
   </div>
 
@@ -2840,6 +2861,64 @@ async function copyBuildInfo() {
   }
 }
 
+function buildIssueReportUrl() {
+  const enabledWidgets = FEATURE_KEYS.filter(k => S.features && S.features[k]);
+  const body = [
+    '## What happened?',
+    '',
+    '<!-- Tell us what broke or felt wrong. -->',
+    '',
+    '## What did you expect?',
+    '',
+    '<!-- What should Caroline have done instead? -->',
+    '',
+    '## Steps to reproduce',
+    '',
+    '1. ',
+    '2. ',
+    '3. ',
+    '',
+    '## Caroline diagnostics',
+    '',
+    '- Version: v' + VERSION,
+    '- Build: ' + shortBuildLabel(),
+    '- Installed: ' + (buildInfo.installedAt || 'not installed by script'),
+    '- Source: ' + (buildInfo.repo || buildInfo.source || 'unknown'),
+    '- AI provider: ' + (S.aiProvider || 'openrouter'),
+    '- AI model: ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'gemma3:1b') : (S.aiModel || 'anthropic/claude-haiku-4.5')),
+    '- Browser: ' + (navigator.userAgent || 'unknown').replace(/\s+/g, ' ').slice(0, 180),
+    '- Widgets enabled: ' + (enabledWidgets.length ? enabledWidgets.join(', ') : 'none'),
+    '',
+    '## Logs',
+    '',
+    '<!-- If you can, paste relevant lines from: sudo journalctl -u caroline --since today --no-pager -->',
+    '',
+    '## Notes',
+    '',
+    '<!-- Do not paste API keys, OAuth tokens, Discord tokens, private calendar details, or passwords. -->'
+  ].join('\n');
+  const url = 'https://github.com/DaveEuson/project-caroline/issues/new?' + new URLSearchParams({
+    title: '[Bug] ',
+    body
+  }).toString();
+  return url;
+}
+
+function copyIssueReportLink() {
+  const url = buildIssueReportUrl();
+  const status = document.getElementById('issue-report-status');
+  if (status) status.textContent = 'Issue link ready. Open this outside kiosk mode: ' + url;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(
+      () => showSettingsFeedback('Issue link copied'),
+      () => showSettingsFeedback('Issue link shown below')
+    );
+  } else {
+    showSettingsFeedback('Issue link shown below');
+  }
+  clog('info', 'GitHub issue link prepared');
+}
+
 // ── USAGE TRACKING ────────────────────────────
 let _usage = JSON.parse(localStorage.getItem('caro_usage') || '{"msgs":0,"inChars":0,"outChars":0}');
 function _trackSend(text) { _usage.msgs++; _usage.inChars += text.length; localStorage.setItem('caro_usage', JSON.stringify(_usage)); }
@@ -2974,7 +3053,6 @@ const NODE_RED_PORT = 1880;
 const NODE_RED_TIMEOUT_MS = 10000;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const CADDY_PORT = 8443;
-const RESTART_PORT = 8090;
 const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callback';
 
 function httpBase(port) {
@@ -3074,10 +3152,26 @@ async function fetchJsonWithTimeout(url, options = {}, label = 'fetch') {
   }
 }
 
+function showCarolineRebootScreen(text, color='#e2e8f0') {
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:JetBrains Mono;color:'+color+';background:#05050a;text-align:center;padding:24px;">'+text+'</div>';
+}
+async function triggerCarolineReboot() {
+  showCarolineRebootScreen('REQUESTING PROJECT: CAROLINE REBOOT...');
+  try {
+    const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/restart', {
+      method: 'POST',
+      timeoutMs: 7000
+    }, 'Caroline reboot');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    showCarolineRebootScreen('REBOOTING PROJECT: CAROLINE...');
+    setTimeout(() => window.location.reload(), 30000);
+  } catch(e) {
+    showCarolineRebootScreen('REBOOT REQUEST FAILED<br><span style="font-size:12px;color:rgba(226,232,240,0.55);">Check Node-RED and Caroline reboot permissions.</span>', '#f87171');
+  }
+}
 function requestPiRestart() {
-  if (!confirm('Reboot the Pi?')) return;
-  fetch(httpBase(RESTART_PORT) + '/restart', { method: 'POST' }).catch(() => {});
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:JetBrains Mono;color:#e2e8f0;background:#05050a;">REBOOTING...</div>';
+  if (!confirm('Reboot Project: Caroline?')) return;
+  triggerCarolineReboot();
 }
 
 function getSpotifyRedirectUri() {
@@ -3845,7 +3939,7 @@ async function fetchOllamaStatus() {
   const dot  = document.getElementById('ollama-status-dot');
   const text = document.getElementById('ollama-status-text');
   const ram  = document.getElementById('ollama-ram-text');
-  if (!dot || !text) return;
+  if (!dot || !text) return [];
   try {
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-ps', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama ps');
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -3867,11 +3961,13 @@ async function fetchOllamaStatus() {
       text.style.color     = 'rgba(251,191,36,0.8)';
       if (ram) ram.textContent = '';
     }
+    return running;
   } catch(e) {
     dot.style.background = '#4b5563';
     text.textContent     = 'Offline — is Ollama running?';
     text.style.color     = 'rgba(226,232,240,0.4)';
     if (ram) ram.textContent = '';
+    return [];
   }
 }
 
@@ -3966,9 +4062,32 @@ async function loadOllamaModel() {
   const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'gemma3:1b';
   const statusEl = document.getElementById('ollama-load-status');
   const btn = document.getElementById('ollama-load-btn');
-  if (statusEl) { statusEl.style.display = ''; statusEl.textContent = 'Loading ' + model + '...'; }
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+  const startedAt = Date.now();
+  let timer = null;
+  if (statusEl) {
+    statusEl.style.display = '';
+    statusEl.style.color = 'rgba(226,232,240,0.58)';
+    statusEl.textContent = 'Checking ' + model + '...';
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
   try {
+    const running = await fetchOllamaStatus();
+    if (running.some(m => (m.name || m.model) === model)) {
+      if (statusEl) {
+        statusEl.style.color = 'rgba(52,211,153,0.9)';
+        statusEl.textContent = 'Already running — ' + model;
+      }
+      return;
+    }
+    if (statusEl) {
+      statusEl.textContent = 'Warming ' + model + '... first load on a Pi can take 20-60s';
+    }
+    if (btn) btn.textContent = 'Warming...';
+    timer = setInterval(() => {
+      if (!statusEl) return;
+      const elapsed = Math.round((Date.now() - startedAt) / 1000);
+      statusEl.textContent = 'Warming ' + model + '... ' + elapsed + 's elapsed' + (elapsed >= 20 ? ' — still normal on first Pi load' : '');
+    }, 1000);
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-load', {
       method: 'POST',
       timeoutMs: 130000,
@@ -3977,12 +4096,19 @@ async function loadOllamaModel() {
     }, 'Ollama load');
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
-    if (statusEl) statusEl.textContent = 'Model ready';
+    if (statusEl) {
+      statusEl.style.color = 'rgba(52,211,153,0.9)';
+      statusEl.textContent = 'Model ready in ' + Math.max(1, Math.round((Date.now() - startedAt) / 1000)) + 's';
+    }
     await fetchOllamaStatus();
   } catch(e) {
-    if (statusEl) statusEl.textContent = 'Load failed — ' + e.message;
+    if (statusEl) {
+      statusEl.style.color = '#f87171';
+      statusEl.textContent = 'Load failed — ' + e.message;
+    }
     clog('err', 'ollama-load: ' + e.message);
   } finally {
+    if (timer) clearInterval(timer);
     if (btn) { btn.disabled = false; btn.textContent = 'Load Model'; }
   }
 }
@@ -4156,7 +4282,18 @@ async function testAiConnection(btn) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' from ' + endpoint + ': ' + (d.error || 'no JSON error'));
       const ms = Date.now() - start;
       if (d.ok && d.models && d.models.length) {
-        result.textContent = '✓ Ollama online — ' + d.models.length + ' model' + (d.models.length !== 1 ? 's' : '') + ' ready — ' + ms + 'ms';
+        const selectedModel = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'gemma3:1b';
+        result.textContent = '✓ Ollama online — warming ' + selectedModel + '...';
+        const load = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-load', {
+          method: 'POST',
+          timeoutMs: 130000,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: selectedModel })
+        }, 'Test Ollama inference');
+        const loadData = await load.json().catch(() => ({}));
+        if (!load.ok || !loadData.ok) throw new Error(loadData.error || ('HTTP ' + load.status + ' from load test'));
+        const totalMs = Date.now() - start;
+        result.textContent = '✓ Local AI ready — ' + selectedModel + ' warmed in ' + totalMs + 'ms';
         result.style.color = 'rgba(52,211,153,0.9)';
       } else {
         result.textContent = '⚠ Ollama up but no models — pull one';
@@ -4650,15 +4787,15 @@ async function submitPastedServiceAccount() {
   }
 }
 
-async function detectLocationFromZip(btn) {
-  const zip = (document.getElementById('set-zip')?.value || '').trim();
-  if (!zip || zip.length < 5) { btn.textContent = '✗ Enter zip'; setTimeout(() => btn.textContent = '🔍 Detect', 1500); return; }
+async function detectLocationFromInput(btn) {
+  const query = (document.getElementById('set-zip')?.value || document.getElementById('set-location')?.value || '').trim();
+  if (!query) { btn.textContent = '✗ Enter place'; setTimeout(() => btn.textContent = '🔍 Detect', 1500); return; }
   const orig = btn.textContent;
   btn.textContent = '...';
   btn.disabled = true;
   try {
-    const found = await _onbLookupZip(zip);
-    if (!found) throw new Error('ZIP not found');
+    const found = await _onbLookupPlace(query);
+    if (!found) throw new Error('Location not found');
 
     const locEl = document.getElementById('set-location');
     if (locEl) locEl.value = found.location;
@@ -4669,12 +4806,23 @@ async function detectLocationFromZip(btn) {
     const tidesEl = document.getElementById('set-tides-station');
     if (tidesEl && found.station && !tidesEl.value) tidesEl.value = found.station;
 
+    S.zipcode = query;
+    S.zipCode = query;
+    S.location = found.location || query;
+    S.cityName = found.location || query;
+    S.lat = found.lat || S.lat || 0;
+    S.lng = found.lng || S.lng || 0;
+    if (found.timezone) S.timezone = found.timezone;
+    if (found.station && !S.tidesStation) S.tidesStation = found.station;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+
     btn.textContent = '✓ ' + found.location;
   } catch(e) {
     btn.textContent = '✗ Not found';
   }
   setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
 }
+function detectLocationFromZip(btn) { return detectLocationFromInput(btn); }
 
 async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS) {
   const endpoint = httpBase() + '/admin/save-settings';
@@ -4721,6 +4869,8 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
 async function saveSettings() {
   const newZip = document.getElementById('set-zip').value.trim();
   const oldZip = S.zipcode || S.zipCode || '';
+  const locationVal = document.getElementById('set-location').value.trim();
+  const oldLocation = S.location || S.cityName || '';
   S.avatar = parseInt(document.getElementById('set-avatar').value);
   const nextTheme = Number(pendingSwatch);
   S.theme = Number.isInteger(nextTheme) && nextTheme >= 0 && nextTheme < THEME_COUNT ? nextTheme : DEFAULTS.theme;
@@ -4777,7 +4927,7 @@ async function saveSettings() {
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.timeFormat = document.getElementById('set-time-format')?.value || '12';
   S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
-  S.location = document.getElementById('set-location').value.trim();
+  S.location = locationVal;
   const calendarIdVal = document.getElementById('set-calendar-id').value.trim();
   if (calendarIdVal || !S.calendarId) {
     S.calendarId = normalizeCalendarIdInput(calendarIdVal);
@@ -4856,15 +5006,19 @@ async function saveSettings() {
   // Reconnect WebSocket if Pi IP changed
   if (needReconnect) { try { ws.close(); } catch(e) {} setTimeout(connectWS, 500); }
 
-  if (newZip.length === 5 && newZip !== oldZip) {
+  const locationQuery = (newZip || S.location || S.cityName || '').trim();
+  const locationChanged = newZip !== oldZip || locationVal !== oldLocation;
+  if (locationQuery && locationChanged) {
     try {
-      const found = await _onbLookupZip(newZip);
+      const found = await _onbLookupPlace(locationQuery);
       if (found) {
-        S.zipcode = newZip;
+        S.zipcode = locationQuery;
+        S.zipCode = locationQuery;
         S.lat = found.lat;
         S.lng = found.lng;
         S.cityName = found.location;
-        if (!S.location) S.location = found.location;
+        S.location = found.location;
+        if (found.timezone) S.timezone = found.timezone;
         if (found.station && !S.tidesStation) S.tidesStation = found.station;
         document.getElementById('weather-city-label').textContent = S.cityName;
         fetchWeather();
@@ -5014,11 +5168,11 @@ function changeAvatar(dir) {
 
 // ── VIDEO CHANNELS ────────────────────────────
 const MEDIA_CHANNELS = [
-  { icon:'🇯🇵', name:'NHK World',         genre:'News / Japan',       type:'hls', src:'https://master.nhkworld.jp/nhkworld-tv/playlist/live.m3u8' },
   { icon:'🌍', name:'Al Jazeera',        genre:'News / Live',        type:'hls', src:'https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8' },
   { icon:'📰', name:'DW English',        genre:'News / Live',        type:'hls', src:'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8' },
   { icon:'🇫🇷', name:'France 24',        genre:'News / Live',        type:'hls', src:'https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_900.m3u8' },
-  { icon:'🚀', name:'NASA TV',           genre:'Space / Science',    type:'hls', src:'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8' }
+  { icon:'🚀', name:'NASA TV',           genre:'Space / Science',    type:'hls', src:'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8' },
+  { icon:'🇯🇵', name:'NHK World',         genre:'News / Japan',       type:'hls', src:'https://master.nhkworld.jp/nhkworld-tv/playlist/live.m3u8' }
 ];
 let mediaChannelIndex = 0;
 let mediaMuted = true;
@@ -5206,11 +5360,11 @@ const voiceBtn=document.getElementById('voice-btn'), voiceStatus=document.getEle
 function syncVoiceButtonState(){
   if (!voiceBtn || !voiceStatus) return;
   if (voiceEnabled) {
-    voiceBtn.innerHTML='🔊';
+    voiceBtn.innerHTML='<i class="ti ti-volume"></i>';
     voiceBtn.classList.remove('muted');
     voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND';
   } else {
-    voiceBtn.innerHTML='🔇';
+    voiceBtn.innerHTML='<i class="ti ti-volume-off"></i>';
     voiceBtn.classList.add('muted');
     voiceStatus.textContent='● VOICE MUTED';
   }
@@ -5389,6 +5543,23 @@ function showUninstallCommand(btn) {
   clog('warn', 'Uninstall command shown');
 }
 
+function showUpdateCommand(btn) {
+  const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash';
+  const status = document.getElementById('update-command-status');
+  const message = 'Run this in the Pi terminal to update. Settings and saved credentials are preserved: ' + cmd;
+  if (status) {
+    status.textContent = message;
+    status.style.color = 'rgba(34,211,238,0.95)';
+  }
+  if (btn) {
+    btn.textContent = 'Copied command';
+    setTimeout(() => { btn.textContent = '⟳ Update'; }, 1800);
+  }
+  navigator.clipboard?.writeText(cmd).catch(() => {});
+  showSettingsFeedback('Update command copied');
+  clog('info', 'Update command shown');
+}
+
 // ── KIOSK SYSTEM CONTROLS ─────────────────────
 function exitKiosk(){
   if(!confirm('Exit kiosk? This will close Firefox.')) return;
@@ -5412,10 +5583,11 @@ function openTerminal(){
 // ── HOW-TO GUIDE ──────────────────────────────
 const HOWTO_CONTENT = {
   aiCore: {
-    title:'AI CORE — OPENROUTER',
-    html:`<h4>What it does</h4><p>Powers all conversation with Caroline. Uses OpenRouter to access Claude and other AI models.</p>
+    title:'AI CORE',
+    html:`<h4>What it does</h4><p>Powers all conversation with Caroline. Use local Ollama for private on-device chat, or OpenRouter for faster cloud models.</p>
 <h4>Step-by-step</h4><ol>
-<li>Go to <code>openrouter.ai</code> and create a free account</li>
+<li>Choose <strong>Ollama</strong> in Settings for local chat, then hit <strong>Refresh</strong> and <strong>Load Model</strong></li>
+<li>For cloud chat, go to <code>openrouter.ai</code> and create a free account</li>
 <li>Click your name → <strong>API Keys</strong></li>
 <li>Click <strong>Create Key</strong> — give it any name</li>
 <li>Copy the key (starts with <code>sk-or-v1-...</code>)</li>
@@ -5464,7 +5636,7 @@ const HOWTO_CONTENT = {
   },
   weather: {
     title:'WEATHER WIDGET',
-    html:`<h4>No setup required!</h4><p>Weather uses your ZIP code from Settings and the free <strong>Open-Meteo API</strong> — no account or key needed.</p><p style="margin-top:10px;">Just make sure your ZIP code is set correctly in Settings → Location.</p>`
+    html:`<h4>No setup required!</h4><p>Weather uses your location from Settings and the free <strong>Open-Meteo API</strong> — no account or key needed.</p><p style="margin-top:10px;">Use a US ZIP code or enter a city/country in Settings → Location.</p>`
   },
   voice: {
     title:'VOICE / SPEECH',
@@ -5498,6 +5670,24 @@ function showHowTo(id){
 // ── MESSAGES ──────────────────────────────────
 let subtitleTimeout;
 let _typingTimeout = null;
+let _localThinkingTimers = [];
+function clearLocalAiThinkingStatus() {
+  _localThinkingTimers.forEach(t => clearTimeout(t));
+  _localThinkingTimers = [];
+  if (voiceStatus && !voiceStatus.classList.contains('speaking-label') && !voiceStatus.classList.contains('listening-label')) {
+    if (typeof setMicIdleStatus === 'function') setMicIdleStatus();
+    else voiceStatus.textContent = voiceEnabled ? '● READY TO CHAT · ENTER TO SEND' : '● VOICE MUTED';
+  }
+}
+function startLocalAiThinkingStatus() {
+  clearLocalAiThinkingStatus();
+  if (!voiceStatus) return;
+  voiceStatus.textContent = '● LOCAL AI THINKING...';
+  _localThinkingTimers = [
+    setTimeout(() => { if (voiceStatus) voiceStatus.textContent = '● LOCAL AI STILL THINKING... FIRST PI REPLIES CAN BE SLOW'; }, 10000),
+    setTimeout(() => { if (voiceStatus) voiceStatus.textContent = '● LOCAL AI WORKING... TRY A SMALLER MODEL IF THIS OFTEN PASSES 60S'; }, 30000)
+  ];
+}
 function scrollChatToBottom() {
   const scroll = document.getElementById('caro-chat-scroll');
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
@@ -5510,6 +5700,7 @@ function addMessage(text, role, source){
   text = cleanDisplayText(text);
   if (!text) return;
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing'), subtitleLike=document.getElementById('subtitle-like');
+  clearLocalAiThinkingStatus();
   clearTimeout(_typingTimeout); _typingTimeout = null;
   typing.classList.remove('show'); box.classList.remove('hidden'); resetIdle();
   const userLabel = (S.userName || 'You').toUpperCase();
@@ -5738,6 +5929,39 @@ updateAiConfigIndicator();
 const input=document.getElementById('msg-input');
 let _lastSendMs = 0;
 const SEND_COOLDOWN_MS = 1500;
+async function sendLocalAiHttpMessage(text, context) {
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        aiProvider: 'ollama',
+        ollamaUrl: S.ollamaUrl || 'http://localhost:11434',
+        ollamaModel: S.ollamaModel || 'gemma3:1b',
+        aiName: S.aiName || 'Caroline',
+        userName: S.userName || '',
+        personalityPrompt: S.personalityPrompt || '',
+        userProfilePrompt: S.userProfilePrompt || '',
+        userMood: S.userMood,
+        aiMood: S.aiMood,
+        context: context || {}
+      }),
+      timeoutMs: 120000
+    }, 'Local AI chat');
+    let data = {};
+    try { data = await resp.json(); } catch(e) {}
+    if (!resp.ok) throw new Error((data && (data.error || data.reply)) || ('HTTP ' + resp.status));
+    const reply = cleanDisplayText(data.reply || data.content || '');
+    if (!reply) throw new Error('Empty local AI reply');
+    addMessage(reply, 'caroline', 'display');
+    speak(reply);
+  } catch(e) {
+    clearLocalAiThinkingStatus();
+    clog('err', 'Local AI chat failed: ' + e.message);
+    addMessage('Local AI did not answer. Try Settings -> AI -> Load Model, or switch to a smaller model.', 'caroline', 'display');
+  }
+}
 function sendMessage(){
   const t=input.value.trim(); if(!t) return;
   // Rate limiting
@@ -5763,14 +5987,20 @@ function sendMessage(){
     return;
   }
   addMessage(t,'user','display'); showTyping();
+  if ((S.aiProvider || 'openrouter') === 'ollama') startLocalAiThinkingStatus();
   nudgeAiMoodForInteraction(0.5);
   _trackSend(t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
+  const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
+  if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
+  if ((S.aiProvider || 'openrouter') === 'ollama') {
+    sendLocalAiHttpMessage(t, ctx);
+    return;
+  }
   if(ws&&ws.readyState===WebSocket.OPEN){
-    const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
-    if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
     ws.send(JSON.stringify({type:'user_message', content:t, userMood:S.userMood, aiMood:S.aiMood, context: ctx}));
   } else {
+    clearLocalAiThinkingStatus();
     clog('err', 'Send failed — WebSocket not connected');
     addMessage('⚡ No connection to home base. Reconnecting…', 'caroline', 'display');
   }
@@ -6059,18 +6289,21 @@ const WMO={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌂',61:'
 const WMO_D={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Light drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Showers',95:'Thunderstorm'};
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 async function hydrateLocationFromZip() {
-  const zip = (S.zipcode || S.zipCode || '').trim();
-  console.log('[Caroline] Weather ZIP:', zip || '(none)', 'lat/lng:', S.lat, S.lng);
-  if ((S.lat && S.lng) || !/^\d{5}$/.test(zip)) return !!(S.lat && S.lng);
-  const r = await fetch('https://api.zippopotam.us/us/' + zip, { signal: AbortSignal.timeout(NODE_RED_TIMEOUT_MS) });
-  if (!r.ok) throw new Error('ZIP lookup HTTP ' + r.status);
-  const d = await r.json();
-  S.zipcode = zip;
-  S.zipCode = zip;
-  S.lat = parseFloat(d.places[0].latitude);
-  S.lng = parseFloat(d.places[0].longitude);
-  S.cityName = d.places[0]['place name'] + ', ' + d.places[0]['state abbreviation'];
-  if (!S.location) S.location = S.cityName;
+  const savedPlace = String(S.zipcode || S.zipCode || '').trim();
+  const query = String(S.location || S.cityName || savedPlace || '').trim();
+  console.log('[Caroline] Weather location:', query || '(none)', 'lat/lng:', S.lat, S.lng);
+  if (S.lat && S.lng) return true;
+  if (!query) return false;
+  const found = await _onbLookupPlace(query);
+  if (!found) return false;
+  S.zipcode = savedPlace || query;
+  S.zipCode = S.zipcode;
+  S.lat = found.lat;
+  S.lng = found.lng;
+  S.cityName = found.location;
+  S.location = found.location;
+  if (found.timezone) S.timezone = found.timezone;
+  if (found.station && !S.tidesStation) S.tidesStation = found.station;
   localStorage.setItem('caro_settings', JSON.stringify(S));
   return true;
 }
@@ -6158,9 +6391,9 @@ async function ensureTideStationFromLocation() {
     try {
       let lat = Number(S.lat);
       let lng = Number(S.lng);
-      const zip = String(S.zipcode || S.zipCode || '').trim();
-      if ((!Number.isFinite(lat) || !Number.isFinite(lng) || !lat || !lng) && /^\d{5}$/.test(zip)) {
-        const found = await _onbLookupZip(zip);
+      const query = String(S.location || S.cityName || S.zipcode || S.zipCode || '').trim();
+      if ((!Number.isFinite(lat) || !Number.isFinite(lng) || !lat || !lng) && query) {
+        const found = await _onbLookupPlace(query);
         if (found) {
           S.lat = found.lat || S.lat || 0;
           S.lng = found.lng || S.lng || 0;
@@ -6323,7 +6556,7 @@ let up=0; setInterval(()=>{ up++; document.getElementById('uptime').innerHTML='�
 const modal=document.getElementById('modal-overlay');
 document.getElementById('restart-btn').onclick=()=>{ playBeep(800); modal.classList.add('show'); };
 document.getElementById('modal-cancel').onclick=()=>{ playBeep(400); modal.classList.remove('show'); };
-document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); fetch(httpBase(RESTART_PORT) + '/restart',{method:'POST'}).catch(()=>{}); document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:\'JetBrains Mono\';color:#e2e8f0;background:#05050a;">REBOOTING PI...</div>'; setTimeout(()=>window.location.reload(), 30000); };
+document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); triggerCarolineReboot(); };
 
 // ── PARTICLES ─────────────────────────────────
 function drawParticles(){ const pc=document.getElementById('particles'); pc.innerHTML=''; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
@@ -6854,10 +7087,10 @@ setTimeout(renderInlineTasks, 500);
 // ── CACHE BUST GIFS ───────────────────────────
 let HUE_GROUP = S.hueGroup || '';
 const HUE_MODES = [
-  { name:'OFF',   icon:'💡', cls:'mode-off', body:{on:false} },
-  { name:'RELAX', icon:'🌅', cls:'mode-relax', body:{on:true, bri:80, ct:450, sat:80, hue:8000, transitiontime:10} },
-  { name:'ALERT', icon:'☀️', cls:'mode-alert', body:{on:true, bri:254, sat:0, ct:153, transitiontime:5} },
-  { name:'DISCO', icon:'🩩', cls:'mode-disco', body:null }
+  { name:'OFF',   icon:'ti ti-bulb-off', cls:'mode-off', body:{on:false} },
+  { name:'RELAX', icon:'ti ti-lamp', cls:'mode-relax', body:{on:true, bri:80, ct:450, sat:80, hue:8000, transitiontime:10} },
+  { name:'ALERT', icon:'ti ti-bulb', cls:'mode-alert', body:{on:true, bri:254, sat:0, ct:153, transitiontime:5} },
+  { name:'DISCO', icon:'ti ti-sparkles', cls:'mode-disco', body:null }
 ];
 let hueModeIdx = 0, discoInterval = null;
 
@@ -6873,7 +7106,7 @@ function cycleHue() {
   const mode = HUE_MODES[hueModeIdx];
   const btn = document.getElementById('hue-btn');
   btn.className = 'touch-btn ' + mode.cls;
-  const hueIcon = document.getElementById('hue-icon'); if(hueIcon) hueIcon.textContent = mode.icon;
+  const hueIcon = document.getElementById('hue-icon'); if(hueIcon) hueIcon.innerHTML = '<i class="' + mode.icon + '"></i>';
   if (discoInterval) { clearInterval(discoInterval); discoInterval = null; }
   playBeep(hueModeIdx === 0 ? 400 : 900);
   if (mode.name === 'DISCO') { startDisco(); } else { hueWS('/groups/'+HUE_GROUP+'/action', 'PUT', mode.body); }
@@ -7027,8 +7260,8 @@ const ONB_AVATARS = [
 
 const ONB_MODULES = [
   { id:'aiCore',   title:'AI Core',   required:['apiKey'],
-    desc:'OpenRouter + conversation brain. Needed for chat.',
-    fields:[{ key:'apiKey', label:'OpenRouter API Key', type:'password', placeholder:'sk-or-v1-...' }] },
+    desc:'Local Ollama or OpenRouter conversation brain. Needed for chat.',
+    fields:[{ key:'apiKey', label:'OpenRouter API Key (optional)', type:'password', placeholder:'sk-or-v1-...' }] },
   { id:'spotify',  title:'Spotify',   required:[],
     desc:'Now playing + auth flow. A small shelter signal for your music.',
     githubNote: true, fields:[] },
@@ -7080,9 +7313,9 @@ const ONB_QUESTIONS = [
   { id:'identity-ai',   type:'text',  save:'config.aiName',
     prompt:"Sorry, things are still a bit fuzzy, what's my name again?", placeholder:'Caroline', defaultValue:'Caroline' },
   { id:'identity-zip',  type:'text',  save:'config.zipCode',
-    prompt:"What's your ZIP code? I'll use it for local weather and context.", placeholder:'92101' },
+    prompt:"What's your postal code or city? I'll use it for local weather and context.", placeholder:'90210 or Paris, France' },
   { id:'identity-location', type:'text', save:'config.location',
-    prompt:"What city or location should I use for context?", placeholder:'City, State',
+    prompt:"What city or location should I use for context?", placeholder:'City, Country',
     defaultValue:() => S.location || S.cityName || '' },
   { id:'identity-timezone', type:'text', save:'config.timezone',
     prompt:"What timezone are we in?", placeholder:'America/Los_Angeles',
@@ -7292,6 +7525,30 @@ async function _onbLookupZip(zip) {
   return { city, state, country, location: city + ', ' + state, lat, lng, timezone, station };
 }
 
+async function _onbLookupPlace(query) {
+  const q = String(query || '').trim();
+  if (!q) return null;
+  if (/^\d{5}$/.test(q)) return _onbLookupZip(q);
+
+  const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=1&language=en&format=json', { signal: AbortSignal.timeout(7000) });
+  if (!r.ok) throw new Error('Location lookup HTTP ' + r.status);
+  const d = await r.json();
+  const place = d.results && d.results[0];
+  if (!place) throw new Error('Location not found');
+
+  const city = place.name || q;
+  const state = place.admin1 || '';
+  const country = place.country || place.country_code || '';
+  const lat = Number(place.latitude);
+  const lng = Number(place.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Location missing coordinates');
+  const timezone = place.timezone || '';
+  const location = [city, state, country].filter(Boolean).join(', ');
+  let station = '';
+  try { station = await findNearestNoaaTideStation(lat, lng); } catch(e) {}
+  return { city, state, country, location, lat, lng, timezone, station };
+}
+
 function startBootSequence(){
   onboardingStarted = true;
   onbState.config = _onbLoadConfig();
@@ -7380,7 +7637,7 @@ async function _commitTextStep(){
   if (q.id === 'identity-zip') {
     onbState.zipReply = '';
     try {
-      const found = await _onbLookupZip(val);
+      const found = await _onbLookupPlace(val);
       if (found) {
         onbState.config.location = found.location;
         onbState.config.cityName = found.location;
@@ -7388,11 +7645,11 @@ async function _commitTextStep(){
         onbState.config.lng = found.lng;
         if (found.timezone) onbState.config.timezone = found.timezone;
         if (found.station) onbState.config.tidesStation = found.station;
-        const place = found.location + ', ' + found.country;
+        const place = found.location || found.country || val;
         onbState.zipReply = 'Oh, ' + place + ' - cool. I can use that for local context' + (found.timezone ? ' and set our timezone to ' + found.timezone + '.' : '.');
       }
     } catch(e) {
-      onbState.zipReply = "I couldn't place that ZIP yet, but we can still set the city manually.";
+      onbState.zipReply = "I couldn't place that location yet, but we can still set the city manually.";
     }
   }
   onbState.index = Math.min(ONB_QUESTIONS.length-1, onbState.index+1);
@@ -7665,7 +7922,7 @@ function renderChatStep(){
       return `<li>${widget.title}: ${enabled?'Visible':'Hidden'}</li>`;
     }).join('');
     grid.innerHTML=`
-      <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>ZIP ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
+      <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>Place ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
       <div class="caro-summary-card"><h4>Personality</h4><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
       <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}</p></div>
       <div class="caro-summary-card"><h4>Widgets</h4><ul>${wList}</ul></div>

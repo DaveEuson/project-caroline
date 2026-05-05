@@ -1136,6 +1136,19 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+echo -e "${YELLOW}  ► Allowing Caroline to reboot this host...${RESET}"
+sudo tee /etc/sudoers.d/caroline-reboot > /dev/null << EOF
+${REAL_USER} ALL=(root) NOPASSWD: /usr/sbin/reboot, /sbin/reboot, /usr/bin/systemctl reboot, /bin/systemctl reboot
+EOF
+sudo chmod 440 /etc/sudoers.d/caroline-reboot
+if sudo visudo -cf /etc/sudoers.d/caroline-reboot >/tmp/caroline-sudoers-check.log 2>&1; then
+  echo -e "${GREEN}  ✓ Reboot control ready${RESET}"
+else
+  sudo rm -f /etc/sudoers.d/caroline-reboot
+  echo -e "${YELLOW}  ⚠ Reboot control was not installed; sudoers validation failed${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-sudoers-check.log${RESET}"
+fi
+
 sudo systemctl daemon-reload
 sudo systemctl enable caroline
 
