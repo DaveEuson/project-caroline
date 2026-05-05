@@ -2015,10 +2015,6 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px;">
-            <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status">Copies the update command; Refresh Build only rereads version info</div></div>
-            <button class="sys-btn" onclick="showUpdateCommand(this)">⟳ Update</button>
-          </div>
-          <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Wipe all memory</div><div class="settings-sub">Delete settings, history &amp; personality — she won't be happy</div></div>
             <button class="sys-btn danger" id="factory-reset-btn" onclick="wipeMemory(this)">💀 Factory Reset</button>
           </div>
@@ -2065,6 +2061,10 @@
             <button class="settings-boot-btn" type="button" onclick="refreshBuildInfo()">⟳ Refresh Build</button>
             <button class="settings-boot-btn" type="button" onclick="copyBuildInfo()">Copy Build</button>
             <button class="settings-boot-btn" type="button" onclick="copyIssueReportLink()">Copy Issue Link</button>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status">Pulls the latest GitHub build; Refresh Build only rereads version info</div></div>
+            <button class="settings-boot-btn" type="button" onclick="showUpdateCommand(this)">⟳ Update</button>
           </div>
           <div id="issue-report-status" style="margin-top:8px;font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
         </div>
