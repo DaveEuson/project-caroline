@@ -195,15 +195,31 @@ write_browser_launchers() {
   mkdir -p "$_bin_dir"
   WINDOWED_LAUNCHER="$_bin_dir/caroline-window"
   KIOSK_LAUNCHER="$_bin_dir/caroline-kiosk"
+  FIREFOX_SNAP_MODE="false"
+  if command -v snap >/dev/null 2>&1 && snap list firefox >/dev/null 2>&1; then
+    FIREFOX_SNAP_MODE="true"
+  elif readlink -f "$BROWSER_BIN" 2>/dev/null | grep -q '/snap/'; then
+    FIREFOX_SNAP_MODE="true"
+  elif dpkg-query -W -f='${Version}' firefox 2>/dev/null | grep -qi 'snap'; then
+    FIREFOX_SNAP_MODE="true"
+  fi
 
   cat > "$WINDOWED_LAUNCHER" << EOF
 #!/bin/bash
+BROWSER="${BROWSER_BIN}"
+URL="${KIOSK_URL}"
+SNAP_MODE="${FIREFOX_SNAP_MODE}"
+
+if [ "\$SNAP_MODE" = "true" ]; then
+  exec "\$BROWSER" --new-window "\$URL"
+fi
+
 PROFILE="${WINDOWED_PROFILE_DIR}"
 mkdir -p "\$PROFILE"
 if ! pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
   rm -f "\$PROFILE/parent.lock" "\$PROFILE/lock" "\$PROFILE/.parentlock" 2>/dev/null || true
 fi
-exec "${BROWSER_BIN}" --profile "\$PROFILE" --new-window "${KIOSK_URL}"
+exec "\$BROWSER" --no-remote --new-instance --profile "\$PROFILE" --new-window "\$URL"
 EOF
 
   cat > "$KIOSK_LAUNCHER" << EOF
@@ -212,7 +228,15 @@ BROWSER="${BROWSER_BIN}"
 PROFILE="${FIREFOX_PROFILE_DIR}"
 URL="${KIOSK_URL}"
 LOCKDIR="/tmp/caroline-kiosk-\$(id -u).lock"
+SNAP_MODE="${FIREFOX_SNAP_MODE}"
 mkdir -p "\$PROFILE"
+
+if [ "\$SNAP_MODE" = "true" ]; then
+  # Ubuntu ships Firefox as a snap. Custom external profiles can trigger the
+  # "already running" dialog, so snap mode uses the user's normal Firefox
+  # profile and avoids profile-lock handling entirely.
+  exec "\$BROWSER" --kiosk "\$URL"
+fi
 
 if [ -d "\$LOCKDIR" ]; then
   if pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
@@ -226,7 +250,7 @@ if ! pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
 fi
 
 mkdir "\$LOCKDIR" 2>/dev/null || exit 0
-"\$BROWSER" --profile "\$PROFILE" --kiosk "\$URL"
+"\$BROWSER" --no-remote --new-instance --profile "\$PROFILE" --kiosk "\$URL"
 status=\$?
 rmdir "\$LOCKDIR" 2>/dev/null || true
 exit \$status

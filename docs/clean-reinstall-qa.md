@@ -242,6 +242,7 @@ If Ubuntu shows `Firefox is already running, but is not responding` after kiosk 
 pkill -f 'firefox.*caroline' 2>/dev/null || true
 rm -rf "/tmp/caroline-kiosk-$(id -u).lock"
 rm -f ~/.mozilla/firefox/caroline-kiosk/parent.lock ~/.mozilla/firefox/caroline-kiosk/lock ~/.mozilla/firefox/caroline-kiosk/.parentlock
+rm -f ~/.local/bin/caroline-window ~/.local/bin/caroline-kiosk
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 sudo reboot
 ```
