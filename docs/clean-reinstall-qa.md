@@ -10,6 +10,7 @@ This guide has two reset levels:
 ## Before You Start
 
 - Confirm you have SSH, Raspberry Pi Connect, or VM console access before enabling kiosk mode.
+- On Ubuntu, use a 64-bit Desktop VM for kiosk testing. A server-only VM can test services and the web UI, but it will not autostart a fullscreen browser.
 - Save any local credentials or notes you still need from `~/caroline`.
 - Rotate any secrets that may have been used in test installs if the machine was shared or exposed.
 - Do not port-forward Caroline ports to the public internet.
@@ -191,7 +192,7 @@ After reboot:
 - Caroline web UI still loads on port `8080`.
 - `caroline` service restarted.
 - `nginx` service restarted.
-- Desktop shortcuts exist on Raspberry Pi OS Desktop.
+- Desktop shortcuts exist on Raspberry Pi OS Desktop or Ubuntu Desktop.
 - Kiosk autostart works if kiosk mode was enabled.
 - SSH or Raspberry Pi Connect still works for recovery.
 

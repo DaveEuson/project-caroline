@@ -138,6 +138,20 @@ desktop_dir_for_user() {
   printf '%s' "$_desktop"
 }
 
+has_desktop_environment() {
+  [ -n "${DISPLAY:-}" ] && return 0
+  [ -n "${WAYLAND_DISPLAY:-}" ] && return 0
+  [ -n "${XDG_CURRENT_DESKTOP:-}" ] && return 0
+  [ -n "${DESKTOP_SESSION:-}" ] && return 0
+  command -v gnome-session >/dev/null 2>&1 && return 0
+  command -v startx >/dev/null 2>&1 && return 0
+  command -v labwc >/dev/null 2>&1 && return 0
+  [ -d /usr/share/xsessions ] && return 0
+  [ -d /usr/share/wayland-sessions ] && return 0
+  [ -d "$REAL_HOME/Desktop" ] && return 0
+  return 1
+}
+
 write_desktop_shortcuts() {
   local _desktop_dir="$1"
   local _windowed_file="$_desktop_dir/Project Caroline.desktop"
@@ -413,11 +427,11 @@ echo ""
 echo -e "${MAGENTA}  // CORE CRYSTAL SELECTION${RESET}"
 echo ""
 echo -e "${DIM}  OpenRouter = recommended. Fast, coherent, and usually costs pennies per month.${RESET}"
-echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but Pi CPU will spike and replies can be rough.${RESET}"
-echo -e "${DIM}  Pi note: tiny local models are best for demos/offline mode, not the polished Caroline experience.${RESET}"
+echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but CPU will spike and replies can be rough.${RESET}"
+echo -e "${DIM}  Device note: tiny local models are best for demos/offline mode, not the polished Caroline experience.${RESET}"
 echo ""
 echo -e "${DIM}  Local model options you can type if you install Ollama:${RESET}"
-echo -e "${DIM}    gemma3:1b     default; friendliest Pi-local replies, still slower than cloud.${RESET}"
+echo -e "${DIM}    gemma3:1b     default; friendliest local replies, still slower than cloud.${RESET}"
 echo -e "${DIM}    qwen3:0.6b    faster/smaller; good when Gemma feels too heavy.${RESET}"
 echo -e "${DIM}    smollm2:360m  tiny emergency fallback; fast, but lower quality.${RESET}"
 echo -e "${DIM}    tinyllama     legacy fallback; small, but more likely to wander.${RESET}"
@@ -431,14 +445,14 @@ if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo ""
 fi
 
-read -p "  Install experimental local Ollama fallback on this Pi? (y/N): " INSTALL_OLLAMA </dev/tty
+read -p "  Install experimental local Ollama fallback on this device? (y/N): " INSTALL_OLLAMA </dev/tty
 INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
 echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
   OLLAMA_MODEL="gemma3:1b"
-  echo -e "${DIM}  Default: gemma3:1b. Friendlier and more coherent in Pi testing.${RESET}"
+  echo -e "${DIM}  Default: gemma3:1b. Friendlier and more coherent in local testing.${RESET}"
   echo -e "${DIM}  Alternatives: qwen3:0.6b for speed, smollm2:360m for smallest download.${RESET}"
   echo -e "${DIM}  OpenRouter is still recommended for the polished Caroline experience.${RESET}"
   read -p "  Model [gemma3:1b]: " OLLAMA_MODEL_INPUT </dev/tty
@@ -448,13 +462,13 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
 else
   AI_PROVIDER="openrouter"
   OLLAMA_MODEL="gemma3:1b"
-  echo -e "${DIM}  Skipping Pi Ollama. OpenRouter can carry the spellbook, or Settings can point Ollama at another computer later.${RESET}"
+  echo -e "${DIM}  Skipping local Ollama. OpenRouter can carry the spellbook, or Settings can point Ollama at another computer later.${RESET}"
 fi
 echo ""
 
 echo -e "${MAGENTA}  // CAMPFIRE DISPLAY MODE${RESET}"
 echo ""
-echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated Pi display.${RESET}"
+echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated display.${RESET}"
 echo -e "${DIM}  Skip this if you're just testing, or if you don't have a desktop environment.${RESET}"
 echo ""
 read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
@@ -1190,7 +1204,7 @@ FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
 WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
 
 echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
-if command -v startx &> /dev/null || command -v labwc &> /dev/null || [ -d "$REAL_HOME/Desktop" ]; then
+if has_desktop_environment; then
   if ensure_browser; then
     configure_firefox_profile "$FIREFOX_PROFILE_DIR"
     configure_firefox_profile "$WINDOWED_PROFILE_DIR"
@@ -1212,9 +1226,9 @@ fi
 if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
   echo -e "${YELLOW}  ► Configuring kiosk mode...${RESET}"
 
-  if ! command -v startx &> /dev/null && ! command -v labwc &> /dev/null; then
+  if ! has_desktop_environment; then
     echo -e "${YELLOW}  ⚠ No desktop environment detected — skipping kiosk setup.${RESET}"
-    echo -e "${DIM}  Kiosk mode requires Pi OS Desktop, not Pi OS Lite.${RESET}"
+    echo -e "${DIM}  Kiosk mode requires a desktop session, not a server/Lite install.${RESET}"
     echo -e "${DIM}  You can enable it later in Caroline's settings panel.${RESET}"
   else
     sudo apt-get install -y -q xdotool unclutter 2>/dev/null || true
@@ -1250,6 +1264,7 @@ Exec=${KIOSK_LAUNCHER}
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
+      chown "$REAL_USER:$REAL_USER" "$REAL_HOME/.config/autostart/caroline-kiosk.desktop" 2>/dev/null || true
 
       # labwc autostart — default Wayland compositor on Pi OS Bookworm (Pi 5)
       # Written unconditionally: labwc may not be in PATH until first boot

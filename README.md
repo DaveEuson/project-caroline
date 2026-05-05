@@ -83,31 +83,31 @@ For remote access, use Raspberry Pi Connect, SSH over a VPN, Tailscale, WireGuar
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-The installer asks for your name, privacy/telemetry choices, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. Caroline supports both **local Ollama** and **OpenRouter** chat. Local Ollama is private, free, and works best with small models on Raspberry Pi hardware; first replies can take 20-60 seconds while the model warms up. OpenRouter remains the faster, more polished option when a cloud API key is available.
+The installer asks for your name, privacy/telemetry choices, kiosk mode, and whether to install Ollama. On first launch, Caroline walks through location/timezone, identity, personality, dashboard widget choices, and optional integrations. Caroline supports both **local Ollama** and **OpenRouter** chat. Local Ollama is private and free, but it needs patience on small devices; first replies can take 20-60 seconds while the model warms up. OpenRouter remains the faster, more polished option when a cloud API key is available.
 
 Maintainer note: remote project-health pings are only attempted when `CAROLINE_TELEMETRY_ENDPOINT` is set for the installer environment. Without that endpoint, telemetry choices and events are still written locally but nothing is sent off-device.
 
-| Local model | Pi recommendation | Notes |
+| Local model | Recommendation | Notes |
 |---|---|---|
-| `gemma3:1b` | Best local default | Friendlier and more coherent in Pi testing; still much slower than OpenRouter. |
+| `gemma3:1b` | Best local default | Friendlier and more coherent in local testing; still much slower than OpenRouter. |
 | `qwen3:0.6b` | Speed fallback | Smaller/faster candidate when Gemma feels heavy. |
 | `smollm2:360m` | Tiny emergency fallback | Fastest tiny model tested, but quality is limited. |
 | `tinyllama` | Legacy fallback | Also small; can be unpredictable. |
-| `llama3.2:1b` | Advanced / slow | Works on an 8GB Pi, but replies can take ~20-60 seconds. |
-| `gemma2:2b` / larger | Desktop or patient Pi users | Expect slow replies, heat, and sustained CPU load. |
+| `llama3.2:1b` | Advanced / slow | Works on stronger small devices, but replies can take ~20-60 seconds. |
+| `gemma2:2b` / larger | Desktop or patient users | Expect slow replies, heat, and sustained CPU load. |
 
-You can also run Ollama on another computer and use the Pi only as the kiosk. In **Settings -> AI**, set **AI provider** to **Ollama** and set **Ollama URL** to the other machine, for example `http://192.168.1.50:11434`. On that computer, Ollama must listen on the network, usually by setting `OLLAMA_HOST=0.0.0.0:11434`, and your firewall must allow the Pi to reach port `11434`. Keep this on your LAN or VPN; do not expose Ollama directly to the public internet.
+You can also run Ollama on another computer and use the Caroline device only as the kiosk. In **Settings -> AI**, set **AI provider** to **Ollama** and set **Ollama URL** to the other machine, for example `http://192.168.1.50:11434`. On that computer, Ollama must listen on the network, usually by setting `OLLAMA_HOST=0.0.0.0:11434`, and your firewall must allow the Caroline device to reach port `11434`. Keep this on your LAN or VPN; do not expose Ollama directly to the public internet.
 
 The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used. Not every user will be able to create every outside key, and that is okay; Caroline is intended to degrade gracefully when optional services are left disconnected.
 
-Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work.
+Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work. On an Ubuntu VM, use the 64-bit Desktop image, enable networking, and test without kiosk mode first. Kiosk mode needs a desktop session; a server-only VM can still run the services and web UI, but it will not autostart a fullscreen browser.
 
-On desktop Raspberry Pi OS, the installer also creates two desktop shortcuts:
+On desktop Linux, the installer also tries to create two desktop shortcuts:
 
 - **Project Caroline** — opens Caroline in a normal Firefox window.
 - **Project Caroline Kiosk** — opens Caroline in fullscreen kiosk mode.
 
-The kiosk uses Firefox because it has been the most stable display browser for Caroline on the Pi. Browser-based voice input depends on Chrome-family speech recognition, so voice is best treated as experimental until Caroline has a local speech-to-text service.
+The kiosk uses Firefox because it has been the most stable display browser for Caroline in Pi testing. Browser-based voice input depends on Chrome-family speech recognition, so voice is best treated as experimental until Caroline has a local speech-to-text service.
 
 ### Upgrading
 
@@ -123,7 +123,7 @@ Your API keys, Hue pairing, Discord token, Google/Spotify credentials, local tas
 
 ### Uninstalling
 
-To remove Caroline from a Pi and start fresh:
+To remove Caroline from a device and start fresh:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | sudo bash
@@ -144,7 +144,7 @@ After install, open **Settings** in Caroline for any optional services you want 
 - **Google:** create a Desktop OAuth client, then import or paste the OAuth JSON before using **Connect Google** for Calendar. Client ID alone is not enough because Caroline also needs the client secret from that JSON. The old Sheets/service-account path is kept only as an advanced fallback.
 - **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (usually `https://<pi-ip>:8443/spotify/callback`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
-- **Display preferences:** Settings → Widgets controls 12/24-hour time and Fahrenheit/Celsius for weather and Pi health.
+- **Display preferences:** Settings → Widgets controls 12/24-hour time and Fahrenheit/Celsius for weather and device health.
 
 ### Before QA: Remote Access
 

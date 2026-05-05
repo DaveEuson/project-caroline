@@ -1632,11 +1632,11 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr class="rec-table-row"><td>gemma3:1b</td><td>~815 MB</td><td>⚡⚡⚡</td><td>Best Pi-local chat</td><td><button type="button" class="detect-btn" onclick="startPull('gemma3:1b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma3:1b</td><td>~815 MB</td><td>⚡⚡⚡</td><td>Best local-device chat</td><td><button type="button" class="detect-btn" onclick="startPull('gemma3:1b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>qwen3:0.6b</td><td>523 MB</td><td>⚡⚡⚡⚡</td><td>Speed fallback</td><td><button type="button" class="detect-btn" onclick="startPull('qwen3:0.6b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>smollm2:360m</td><td>725 MB</td><td>⚡⚡⚡⚡⚡</td><td>Tiny emergency</td><td><button type="button" class="detect-btn" onclick="startPull('smollm2:360m')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>llama3.2:1b</td><td>1.3 GB</td><td>⚡</td><td>Works, but slow on Pi</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2:1b')">Pull</button></td></tr>
-                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡</td><td>Desktop / patient Pi</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>llama3.2:1b</td><td>1.3 GB</td><td>⚡</td><td>Works, but slow on small devices</td><td><button type="button" class="detect-btn" onclick="startPull('llama3.2:1b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma2:2b</td><td>1.6 GB</td><td>⚡</td><td>Desktop / patient devices</td><td><button type="button" class="detect-btn" onclick="startPull('gemma2:2b')">Pull</button></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1919,7 +1919,7 @@
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Temperature</div><div class="settings-sub">Weather and Pi health</div></div>
+            <div><div class="settings-label">Temperature</div><div class="settings-sub">Weather and device health</div></div>
             <select class="settings-select" id="set-temperature-unit" style="width:140px">
               <option value="fahrenheit">Fahrenheit</option>
               <option value="celsius">Celsius</option>
@@ -1998,7 +1998,7 @@
         <div class="settings-section">
           <h3>Hardware</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Pi CPU Temp</div><div class="settings-sub">Live reading</div></div>
+            <div><div class="settings-label">CPU Temp</div><div class="settings-sub">Live host reading</div></div>
             <div style="display:flex;align-items:center;gap:10px;">
               <div id="cpu-temp-bar" style="width:80px;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;"><div id="cpu-temp-fill" style="height:100%;border-radius:4px;width:0%;transition:width 1s ease,background 0.8s ease;"></div></div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;">
@@ -2008,7 +2008,7 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px;">
-            <div><div class="settings-label">Kiosk mode</div><div class="settings-sub">Escape or open a terminal on the Pi</div></div>
+            <div><div class="settings-label">Kiosk mode</div><div class="settings-sub">Escape or open a terminal on this device</div></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
               <button class="sys-btn" onclick="exitKiosk()">⛶ Exit Fullscreen</button>
               <button class="sys-btn" onclick="openTerminal()">⌨ Open Terminal</button>
@@ -2019,7 +2019,7 @@
             <button class="sys-btn danger" id="factory-reset-btn" onclick="wipeMemory(this)">💀 Factory Reset</button>
           </div>
           <div class="settings-row" style="margin-top:14px;">
-            <div><div class="settings-label">Uninstall Caroline</div><div class="settings-sub" id="uninstall-command-status">Shows the terminal command for a clean Pi wipe</div></div>
+            <div><div class="settings-label">Uninstall Caroline</div><div class="settings-sub" id="uninstall-command-status">Shows the terminal command for a clean device wipe</div></div>
             <button class="sys-btn danger" onclick="showUninstallCommand(this)">💔 Uninstall</button>
           </div>
         </div>
@@ -2134,7 +2134,7 @@
   <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
   <span class="net-pill" id="model-pill" title="Active AI model">-- --</span>
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
-  <span class="net-pill" id="resource-pill" title="Pi CPU and RAM usage">CPU -- RAM --</span>
+  <span class="net-pill" id="resource-pill" title="Host CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI">AI KEY NEEDED</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
@@ -2532,10 +2532,10 @@ handleSpotifyCallback(); // handle ?code= redirect from Spotify OAuth
 localStorage.setItem('caro_settings', JSON.stringify(S));
 
 const SAVED_SECRET_FIELDS = {
-  openrouterKey: { id: 'set-orkey', placeholder: 'OpenRouter key saved on Pi' },
-  hueKey: { id: 'set-huekey', placeholder: 'Hue API key saved on Pi' },
-  discordToken: { id: 'set-discord-token', placeholder: 'Bot token saved on Pi' },
-  googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on Pi' }
+  openrouterKey: { id: 'set-orkey', placeholder: 'OpenRouter key saved on device' },
+  hueKey: { id: 'set-huekey', placeholder: 'Hue API key saved on device' },
+  discordToken: { id: 'set-discord-token', placeholder: 'Bot token saved on device' },
+  googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on device' }
 };
 let integrationHealth = {};
 
@@ -2643,19 +2643,19 @@ function renderIntegrationStatus() {
   const usingOllama = (S.aiProvider || 'openrouter') === 'ollama';
   setSettingsSubStatus(
     'openrouter-key-status',
-    usingOllama ? (openrouterSaved ? 'Saved on Pi, currently using Ollama' : 'Optional while using Ollama') : (openrouterSaved ? 'Saved on Pi' : 'Required for Cloud mode'),
+    usingOllama ? (openrouterSaved ? 'Saved on device, currently using Ollama' : 'Optional while using Ollama') : (openrouterSaved ? 'Saved on device' : 'Required for Cloud mode'),
     usingOllama ? 'neutral' : (openrouterSaved ? 'ok' : 'warn')
   );
 
   const hueKeySaved = !!S.hueKey || !!S.hueKeyConfigured || !!integrationHealth.hue?.configured;
-  setSettingsSubStatus('hue-ip-status', S.hueIp ? 'Saved on Pi: ' + S.hueIp : 'Not configured', S.hueIp ? 'ok' : 'neutral');
-  setSettingsSubStatus('hue-key-status', hueKeySaved ? 'Saved on Pi' : 'Not paired yet', hueKeySaved ? 'ok' : 'warn');
+  setSettingsSubStatus('hue-ip-status', S.hueIp ? 'Saved on device: ' + S.hueIp : 'Not configured', S.hueIp ? 'ok' : 'neutral');
+  setSettingsSubStatus('hue-key-status', hueKeySaved ? 'Saved on device' : 'Not paired yet', hueKeySaved ? 'ok' : 'warn');
   setSettingsSubStatus('hue-group-status', S.hueGroupName ? 'Selected: ' + S.hueGroupName : (S.hueGroup ? 'Selected group ' + S.hueGroup : 'No group selected'), S.hueGroup ? 'ok' : 'neutral');
 
   const spotifyBrowserConnected = !!localStorage.getItem('spotify_token');
   const spotifyPiConnected = !!integrationHealth.spotify?.connected;
   const spotifyClientSaved = !!S.spotifyClientId || !!integrationHealth.spotify?.clientConfigured;
-  const spotifyText = spotifyBrowserConnected ? '✓ Connected' : (spotifyPiConnected ? 'Connected on Pi' : (spotifyClientSaved ? 'Client ID saved, reconnect account' : 'Not connected'));
+  const spotifyText = spotifyBrowserConnected ? '✓ Connected' : (spotifyPiConnected ? 'Connected on device' : (spotifyClientSaved ? 'Client ID saved, reconnect account' : 'Not connected'));
   const spotifyKind = (spotifyBrowserConnected || spotifyPiConnected) ? 'ok' : (spotifyClientSaved ? 'warn' : 'neutral');
   setSettingsSubStatus('spotify-status', spotifyText, spotifyKind);
   const spotifyBtn = document.getElementById('spotify-connect-btn');
@@ -2666,25 +2666,25 @@ function renderIntegrationStatus() {
   const discordEnabled = integrationHealth.discord ? parseSettingBool(integrationHealth.discord.enabled) : parseSettingBool(S.discordEnabled);
   if (integrationHealth.discord) S.discordEnabled = discordEnabled;
   setSettingsSubStatus('discord-enabled-status', discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
-  setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on Pi' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
-  setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on Pi: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on device' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on device: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
 
   const googleConnected = integrationHealth.google ? parseSettingBool(integrationHealth.google.connected) : parseSettingBool(S.googleConnected);
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
   const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured || !!integrationHealth.google?.hasClientSecret;
-  setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on Pi: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
-  setSettingsSubStatus('google-client-id-status', googleClientSaved ? 'Saved on Pi' : 'Not configured', googleClientSaved ? 'ok' : 'neutral');
-  setSettingsSubStatus('google-secret-status', googleSecretSaved ? 'Saved on Pi' : 'Not configured', googleSecretSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on device: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
+  setSettingsSubStatus('google-client-id-status', googleClientSaved ? 'Saved on device' : 'Not configured', googleClientSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('google-secret-status', googleSecretSaved ? 'Saved on device' : 'Not configured', googleSecretSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('google-auth-status', googleConnected ? 'Connected' : (googleClientSaved ? 'Client saved, not connected' : 'Not connected'), googleConnected ? 'ok' : (googleClientSaved ? 'warn' : 'neutral'));
   const calTitle = document.getElementById('cal-title');
   if (calTitle && !googleConnected && /^No upcoming events|No events|Calendar not connected/i.test(calTitle.textContent || '')) {
     setCalendarEmptyState('Calendar not connected', 'Connect Google in Settings');
   }
-  setSettingsSubStatus('sheet-id-status', S.sheetId ? 'Saved on Pi' : 'Not configured; optional legacy sync', S.sheetId ? 'ok' : 'neutral');
+  setSettingsSubStatus('sheet-id-status', S.sheetId ? 'Saved on device' : 'Not configured; optional legacy sync', S.sheetId ? 'ok' : 'neutral');
   const serviceAccountEl = document.getElementById('sa-upload-status');
   if (serviceAccountEl && !/^Uploading|Reading/i.test(serviceAccountEl.textContent || '')) {
     if (integrationHealth.google?.serviceAccountConfigured) {
-      serviceAccountEl.textContent = '✓ Service account saved on Pi';
+      serviceAccountEl.textContent = '✓ Service account saved on device';
       serviceAccountEl.style.color = 'rgba(52,211,153,0.9)';
     } else if (!serviceAccountEl.textContent || serviceAccountEl.textContent === 'No file uploaded') {
       serviceAccountEl.textContent = 'No file uploaded';
@@ -2692,7 +2692,7 @@ function renderIntegrationStatus() {
     }
   }
 
-  setSettingsSubStatus('tides-station-status', S.tidesStation ? 'Saved on Pi: ' + S.tidesStation : 'Not configured; optional widget', S.tidesStation ? 'ok' : 'neutral');
+  setSettingsSubStatus('tides-station-status', S.tidesStation ? 'Saved on device: ' + S.tidesStation : 'Not configured; optional widget', S.tidesStation ? 'ok' : 'neutral');
 }
 
 async function refreshIntegrationHealth() {
@@ -3334,7 +3334,7 @@ function showSpotifyAuthDialog(authUrl, clientId) {
         <button type="button" onclick="copySpotifyAuthText(spotifyPendingAuthUrl,'Spotify login link copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Login Link</button>
         <button type="button" onclick="openSpotifyAuthWindow()" style="background:rgba(29,185,84,.16);color:#86efac;border:1px solid rgba(29,185,84,.6);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Open Login Window</button>
       </div>
-      <div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Client ID ending ${spotifyHtmlEscape(shortIdSuffix(clientId))}. If Spotify says <strong style="color:#fca5a5;">redirect_uri mismatch</strong>, the URI above is not saved in your Spotify app yet, or the Node-RED URL changed from localhost to the Pi IP.</div>
+      <div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Client ID ending ${spotifyHtmlEscape(shortIdSuffix(clientId))}. If Spotify says <strong style="color:#fca5a5;">redirect_uri mismatch</strong>, the URI above is not saved in your Spotify app yet, or the Node-RED URL changed from localhost to the device IP.</div>
     </div>`;
   wrap.addEventListener('click', (e) => { if (e.target === wrap) closeSpotifyAuthDialog(); });
   document.body.appendChild(wrap);
@@ -4129,13 +4129,13 @@ async function loadOllamaModel() {
       return;
     }
     if (statusEl) {
-      statusEl.textContent = 'Warming ' + model + '... first load on a Pi can take 20-60s';
+      statusEl.textContent = 'Warming ' + model + '... first load on a small device can take 20-60s';
     }
     if (btn) btn.textContent = 'Warming...';
     timer = setInterval(() => {
       if (!statusEl) return;
       const elapsed = Math.round((Date.now() - startedAt) / 1000);
-      statusEl.textContent = 'Warming ' + model + '... ' + elapsed + 's elapsed' + (elapsed >= 20 ? ' — still normal on first Pi load' : '');
+      statusEl.textContent = 'Warming ' + model + '... ' + elapsed + 's elapsed' + (elapsed >= 20 ? ' — still normal on first local load' : '');
     }, 1000);
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-load', {
       method: 'POST',
@@ -4230,7 +4230,7 @@ async function testHueLights(btn) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   setStatus('Testing Hue group...', true);
   try {
-    if (!ip || !key) throw new Error('Using saved Pi credentials');
+    if (!ip || !key) throw new Error('Using saved device credentials');
     const base = `http://${ip}/api/${key}/groups/${encodeURIComponent(group)}/action`;
     const r = await fetch(base, {
       method: 'PUT',
@@ -4352,7 +4352,7 @@ async function testAiConnection(btn) {
       const key = (document.getElementById('set-orkey') || {}).value?.trim() || S.openrouterKey;
       if (!key) {
         if (S.openrouterKeyConfigured) {
-          result.textContent = '✓ OpenRouter key saved on Pi';
+          result.textContent = '✓ OpenRouter key saved on device';
           result.style.color = 'rgba(52,211,153,0.9)';
         } else {
           result.textContent = '✗ No OpenRouter key configured';
@@ -4521,7 +4521,7 @@ async function handleServiceAccountUpload(event) {
       if (resp.ok) integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { serviceAccountConfigured: true });
       renderIntegrationStatus();
     } catch(err) {
-      statusEl.textContent = '✗ Upload failed — check Pi connection';
+      statusEl.textContent = '✗ Upload failed — check device connection';
     }
   };
   reader.readAsText(file);
@@ -4832,7 +4832,7 @@ async function submitPastedServiceAccount() {
     if (resp.ok) integrationHealth.google = Object.assign({}, integrationHealth.google || {}, { serviceAccountConfigured: true });
     renderIntegrationStatus();
   } catch(err) {
-    statusEl.textContent = '✗ Upload failed — check Pi connection';
+    statusEl.textContent = '✗ Upload failed — check device connection';
   }
 }
 
@@ -5593,7 +5593,7 @@ function _wipeReset(){
 function showUninstallCommand(btn) {
   const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash';
   const status = document.getElementById('uninstall-command-status');
-  const message = 'Fine. If you need a clean break, run this in the Pi terminal: ' + cmd;
+  const message = 'Fine. If you need a clean break, run this in the device terminal: ' + cmd;
   if (status) {
     status.textContent = message;
     status.style.color = 'rgba(251,113,133,0.95)';
@@ -5609,7 +5609,7 @@ function showUninstallCommand(btn) {
 function showUpdateCommand(btn) {
   const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash';
   const status = document.getElementById('update-command-status');
-  const message = 'Run this in the Pi terminal to update. Refresh Build only rereads version info; this command pulls the latest release. Settings and saved credentials are preserved: ' + cmd;
+  const message = 'Run this in the device terminal to update. Refresh Build only rereads version info; this command pulls the latest release. Settings and saved credentials are preserved: ' + cmd;
   if (status) {
     status.textContent = message;
     status.style.color = 'rgba(34,211,238,0.95)';
@@ -5704,7 +5704,7 @@ const HOWTO_CONTENT = {
   voice: {
     title:'VOICE / SPEECH',
     html:`<h4>No setup required!</h4><p>Voice uses your browser's built-in <strong>Web Speech API</strong>.</p>
-<h4>Notes</h4><ul><li>Works best in <strong>Chromium</strong> on the Raspberry Pi</li><li>Firefox does not support speech recognition — use Chromium for the kiosk</li><li>You may need to allow microphone permission the first time</li></ul>`
+<h4>Notes</h4><ul><li>Works best in <strong>Chromium</strong> on localhost or HTTPS</li><li>Firefox does not support speech recognition — use Chromium for voice input</li><li>You may need to allow microphone permission the first time</li></ul>`
   }
 };
 // ── WIZARD COLOR PREVIEW ──────────────────────
@@ -6078,7 +6078,7 @@ let wakeArmed=false, wakeRestartTimer=null, stopRequested=false, micBlockedReaso
 function micOriginHint() {
   const host = window.location.hostname || '';
   const localHost = ['localhost','127.0.0.1','::1'].includes(host);
-  if (!window.isSecureContext && !localHost) return 'Mic needs Chromium on localhost/HTTPS. On the Pi, open http://127.0.0.1:8080 instead of the LAN IP.';
+  if (!window.isSecureContext && !localHost) return 'Mic needs Chromium on localhost/HTTPS. On the device, open http://127.0.0.1:8080 instead of the LAN IP.';
   return '';
 }
 function getWakePhrases() {

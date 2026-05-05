@@ -91,7 +91,7 @@
     "type": "tab",
     "label": "Caroline - Settings Persistence",
     "disabled": false,
-    "info": "Loads /home/davee/caroline/caroline_settings.json on startup and exposes POST /admin/save-settings, /admin/open-terminal, /admin/exit-kiosk"
+    "info": "Loads ~/caroline/caroline_settings.json on startup and exposes POST /admin/save-settings, /admin/open-terminal, /admin/exit-kiosk"
   },
   {
     "id": "f3e0e445bed3987b",
@@ -3233,14 +3233,14 @@
     "id": "a99fca53241bdbb4",
     "type": "exec",
     "z": "1497b6d50e1369f5",
-    "command": "WAYLAND_DISPLAY=wayland-1 foot || DISPLAY=:0 xterm",
+    "command": "sh -lc 'export DISPLAY=${DISPLAY:-:0}; export WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}; export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}; for t in xdg-terminal-exec gnome-terminal kgx konsole xfce4-terminal mate-terminal lxterminal xterm foot; do if command -v \"$t\" >/dev/null 2>&1; then exec \"$t\"; fi; done; exit 1'",
     "addpay": false,
     "append": "",
     "useSpawn": true,
     "timer": "",
     "winHide": false,
     "oldrc": false,
-    "name": "lxterminal &",
+    "name": "open terminal",
     "x": 390,
     "y": 320,
     "wires": [
