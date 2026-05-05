@@ -42,7 +42,11 @@ After reboot, open:
 http://<pi-or-vm-ip>:8080/
 ```
 
-On an Ubuntu Server VM, open that URL from your Windows/macOS/Linux host browser. The VM does not need to run a local GUI.
+On an Ubuntu Server VM, open that URL from your Windows/macOS/Linux host browser. The VM does not need to run a local GUI. The installer prints the exact client URL at the end:
+
+```text
+From another device: http://<vm-ip>:8080/
+```
 
 ## Interactive Uninstall
 
