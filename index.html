@@ -931,10 +931,17 @@
   }
   body.theme-ova #avatar-outer { width:248px; height:248px; filter:drop-shadow(0 24px 34px rgba(0,0,0,0.45)); }
   body.theme-ova #avatar-outer::before {
-    content:"CAROLINE / VIDEO-LINK";
+    content:attr(data-frame-label);
     position:absolute;
-    left:8px;
+    left:50%;
+    transform:translateX(-50%);
     top:-24px;
+    width:max-content;
+    max-width:calc(100% + 28px);
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
     color:rgba(215,166,80,0.55);
     font:9px/1 'JetBrains Mono',monospace;
     letter-spacing:.18em;
@@ -1230,10 +1237,17 @@
   body.theme-cybercore #avatar-outer { width:248px; height:248px; filter:drop-shadow(0 22px 30px rgba(0,0,0,0.36)); }
   body.idle-mode.theme-cybercore #avatar-outer { width:224px; height:224px; }
   body.theme-cybercore #avatar-outer::before {
-    content:"CAROLINE / RESOLVE FRAME";
+    content:attr(data-frame-label);
     position:absolute;
-    left:8px;
+    left:50%;
+    transform:translateX(-50%);
     top:-24px;
+    width:max-content;
+    max-width:calc(100% + 28px);
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
     color:rgba(250,204,21,0.68);
     font:9px/1 'JetBrains Mono',monospace;
     letter-spacing:.18em;
@@ -2803,6 +2817,7 @@ async function syncSettingsFromServer() {
       localStorage.setItem('caro_settings', JSON.stringify(S));
     }
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+    updateAvatarFrameLabel();
     const rebuiltPrompt = getSetupMemoryPrompt();
     if (rebuiltPrompt && !d.personalityPrompt) {
       postSettingsToNodeRed({ personalityPrompt: rebuiltPrompt }, 5000).catch(e => console.warn('[Caroline] setup memory repair failed:', e));
@@ -4915,6 +4930,7 @@ async function saveSettings() {
   const newName = document.getElementById('set-ainame').value.trim() || 'Caroline';
   S.aiName = newName;
   document.getElementById('topbar-name').textContent = newName;
+  updateAvatarFrameLabel();
   document.getElementById('subtitle-sender') && (document.getElementById('subtitle-sender').textContent = newName.toUpperCase());
   idleLimit = S.idleTimeout;
 
@@ -5009,7 +5025,7 @@ async function saveSettings() {
   const unInp = document.getElementById('set-username');
   if (unInp && unInp.value.trim()) S.userName = unInp.value.trim();
   const ainSysInp = document.getElementById('set-ainame-sys');
-  if (ainSysInp && ainSysInp.value.trim()) { S.aiName = ainSysInp.value.trim(); document.getElementById('topbar-name').textContent = S.aiName; }
+  if (ainSysInp && ainSysInp.value.trim()) { S.aiName = ainSysInp.value.trim(); document.getElementById('topbar-name').textContent = S.aiName; updateAvatarFrameLabel(); }
   const wakeEnabledInp = document.getElementById('set-wake-word-enabled');
   const wakePhrasesInp = document.getElementById('set-wake-phrases');
   if (wakeEnabledInp) S.wakeWordEnabled = wakeEnabledInp.checked;
@@ -5156,7 +5172,16 @@ function applyTheme(idx) {
   r.style.setProperty('--t-rgb1', t.rgb1); r.style.setProperty('--t-rgb2', t.rgb2);
   document.body.classList.toggle('theme-ova', !!t.ova);
   document.body.classList.toggle('theme-cybercore', !!t.cybercore);
+  updateAvatarFrameLabel();
   drawParticles();
+}
+
+function updateAvatarFrameLabel() {
+  const el = document.getElementById('avatar-outer');
+  if (!el) return;
+  const name = String(S.aiName || 'Caroline').trim() || 'Caroline';
+  const suffix = document.body.classList.contains('theme-ova') ? 'VIDEO-LINK' : 'RESOLVE FRAME';
+  el.dataset.frameLabel = (name + ' / ' + suffix).toUpperCase();
 }
 
 function applyAutoTheme() {
@@ -5961,6 +5986,7 @@ function retryNodeRedConnection() {
 }
 
 document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+updateAvatarFrameLabel();
 updateAiConfigIndicator();
 
 // ── SEND ──────────────────────────────────────
@@ -8189,6 +8215,7 @@ async function finalizeOnboarding(){
   fetchWeather();
   const tn = document.getElementById('topbar-name');
   if(tn) tn.textContent = S.aiName;
+  updateAvatarFrameLabel();
   updateSettingsStatus();
   document.getElementById('onboarding-overlay').classList.remove('show');
   const greeted = localStorage.getItem('caro_first_greeted');
