@@ -234,6 +234,20 @@ When reporting a bug, include:
 - Browser used.
 - Relevant log snippets.
 
+## Ubuntu Firefox Already Running Dialog
+
+If Ubuntu shows `Firefox is already running, but is not responding` after kiosk autostart, clear the stale Caroline browser lock and rerun the installer:
+
+```bash
+pkill -f 'firefox.*caroline' 2>/dev/null || true
+rm -rf "/tmp/caroline-kiosk-$(id -u).lock"
+rm -f ~/.mozilla/firefox/caroline-kiosk/parent.lock ~/.mozilla/firefox/caroline-kiosk/lock ~/.mozilla/firefox/caroline-kiosk/.parentlock
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+sudo reboot
+```
+
+For first Ubuntu QA, install with kiosk mode off first, confirm `http://localhost:8080/` works, then rerun the installer later to enable kiosk autostart.
+
 ## Release Gate
 
 Do not call the clean reinstall good until these pass:

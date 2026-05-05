@@ -198,7 +198,12 @@ write_browser_launchers() {
 
   cat > "$WINDOWED_LAUNCHER" << EOF
 #!/bin/bash
-exec "${BROWSER_BIN}" --no-remote --new-instance --profile "${WINDOWED_PROFILE_DIR}" --new-window "${KIOSK_URL}"
+PROFILE="${WINDOWED_PROFILE_DIR}"
+mkdir -p "\$PROFILE"
+if ! pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
+  rm -f "\$PROFILE/parent.lock" "\$PROFILE/lock" "\$PROFILE/.parentlock" 2>/dev/null || true
+fi
+exec "${BROWSER_BIN}" --profile "\$PROFILE" --new-window "${KIOSK_URL}"
 EOF
 
   cat > "$KIOSK_LAUNCHER" << EOF
@@ -207,6 +212,7 @@ BROWSER="${BROWSER_BIN}"
 PROFILE="${FIREFOX_PROFILE_DIR}"
 URL="${KIOSK_URL}"
 LOCKDIR="/tmp/caroline-kiosk-\$(id -u).lock"
+mkdir -p "\$PROFILE"
 
 if [ -d "\$LOCKDIR" ]; then
   if pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
@@ -216,11 +222,11 @@ if [ -d "\$LOCKDIR" ]; then
 fi
 
 if ! pgrep -u "\$(id -u)" -f "\$PROFILE" >/dev/null 2>&1; then
-  rm -f "\$PROFILE/parent.lock" "\$PROFILE/lock" 2>/dev/null || true
+  rm -f "\$PROFILE/parent.lock" "\$PROFILE/lock" "\$PROFILE/.parentlock" 2>/dev/null || true
 fi
 
 mkdir "\$LOCKDIR" 2>/dev/null || exit 0
-"\$BROWSER" --no-remote --new-instance --kiosk --profile "\$PROFILE" "\$URL"
+"\$BROWSER" --profile "\$PROFILE" --kiosk "\$URL"
 status=\$?
 rmdir "\$LOCKDIR" 2>/dev/null || true
 exit \$status
