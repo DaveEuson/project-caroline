@@ -158,7 +158,12 @@
   #left::-webkit-scrollbar-thumb { background: rgba(var(--t-rgb1),0.2); border-radius: 2px; }
   #left::-webkit-scrollbar-track { background: transparent; }
   #widgets { width: 100%; display: flex; flex-direction: column; gap: 6px; }
-  .widget { background: rgba(255,255,255,0.02); border: 1px solid rgba(var(--t-rgb1), 0.1); border-radius: 10px; padding: 6px 10px; }
+  .widget { position: relative; background: rgba(255,255,255,0.02); border: 1px solid rgba(var(--t-rgb1), 0.1); border-radius: 10px; padding: 6px 10px; }
+  .closable-widget { position: relative; padding-right: 30px !important; }
+  .widget-close-btn { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(var(--t-rgb1),0.18); border-radius: 5px; background: rgba(0,0,0,0.38); color: rgba(226,232,240,0.42); cursor: pointer; font-size: 12px; line-height: 1; opacity: 0.55; transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease, border-color 0.18s ease, background 0.18s ease; z-index: 5; }
+  .closable-widget:hover .widget-close-btn, .closable-widget:focus-within .widget-close-btn { opacity: 1; }
+  .widget-close-btn:hover { color: #f87171; border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.10); }
+  .widget-close-btn:active { transform: translateX(0) scale(0.92); }
   .widget-label { font-size: 14px; color: rgba(226,232,240,0.45); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
   #weather-main { display: flex; align-items: center; gap: 6px; }
   #weather-icon { font-size: 20px; }
@@ -881,14 +886,14 @@
   body.theme-ova #weather-desc, body.theme-ova .news-title, body.theme-ova #radio-genre, body.theme-ova .settings-sub, body.theme-ova .mood-caption, body.theme-ova .bc-msg, body.theme-ova .hist-msg {
     color:rgba(215,222,214,0.72);
   }
-  body.theme-ova .quick-btn, body.theme-ova .settings-boot-btn, body.theme-ova .sys-btn, body.theme-ova .detect-btn, body.theme-ova #todo-add-btn, body.theme-ova #todo-clear-btn, body.theme-ova #todo-close, body.theme-ova #modal-cancel, body.theme-ova #modal-confirm, body.theme-ova .caro-chat-btn, body.theme-ova .media-nav-btn, body.theme-ova .widget-refresh-btn {
+  body.theme-ova .quick-btn, body.theme-ova .settings-boot-btn, body.theme-ova .sys-btn, body.theme-ova .detect-btn, body.theme-ova #todo-add-btn, body.theme-ova #todo-clear-btn, body.theme-ova #todo-close, body.theme-ova #modal-cancel, body.theme-ova #modal-confirm, body.theme-ova .caro-chat-btn, body.theme-ova .media-nav-btn, body.theme-ova .widget-refresh-btn, body.theme-ova .widget-close-btn {
     border-radius:6px;
     background:linear-gradient(180deg, rgba(20,27,34,0.82), rgba(6,8,12,0.86));
     border:1px solid rgba(100,200,183,0.26);
     color:var(--ova-cyan);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 18px rgba(0,0,0,0.24);
   }
-  body.theme-ova .quick-btn:hover, body.theme-ova .settings-boot-btn:hover, body.theme-ova .sys-btn:hover, body.theme-ova .detect-btn:hover, body.theme-ova .media-nav-btn:hover, body.theme-ova .widget-refresh-btn:hover {
+  body.theme-ova .quick-btn:hover, body.theme-ova .settings-boot-btn:hover, body.theme-ova .sys-btn:hover, body.theme-ova .detect-btn:hover, body.theme-ova .media-nav-btn:hover, body.theme-ova .widget-refresh-btn:hover, body.theme-ova .widget-close-btn:hover {
     background:linear-gradient(180deg, rgba(31,40,49,0.9), rgba(10,13,18,0.92));
     border-color:rgba(215,166,80,0.44);
     color:#f0d18b;
@@ -1173,14 +1178,14 @@
   body.theme-cybercore #weather-desc, body.theme-cybercore .news-title, body.theme-cybercore #radio-genre, body.theme-cybercore .settings-sub, body.theme-cybercore .mood-caption {
     color:rgba(243,247,251,0.72);
   }
-  body.theme-cybercore .quick-btn, body.theme-cybercore .settings-boot-btn, body.theme-cybercore .sys-btn, body.theme-cybercore .detect-btn, body.theme-cybercore #todo-add-btn, body.theme-cybercore #todo-clear-btn, body.theme-cybercore #todo-close, body.theme-cybercore #modal-cancel, body.theme-cybercore #modal-confirm, body.theme-cybercore .caro-chat-btn, body.theme-cybercore .media-nav-btn, body.theme-cybercore .widget-refresh-btn {
+  body.theme-cybercore .quick-btn, body.theme-cybercore .settings-boot-btn, body.theme-cybercore .sys-btn, body.theme-cybercore .detect-btn, body.theme-cybercore #todo-add-btn, body.theme-cybercore #todo-clear-btn, body.theme-cybercore #todo-close, body.theme-cybercore #modal-cancel, body.theme-cybercore #modal-confirm, body.theme-cybercore .caro-chat-btn, body.theme-cybercore .media-nav-btn, body.theme-cybercore .widget-refresh-btn, body.theme-cybercore .widget-close-btn {
     border-radius:5px;
     background:linear-gradient(180deg, rgba(24,42,55,0.84), rgba(8,13,20,0.88));
     border:1px solid rgba(var(--t-rgb1),0.34);
     color:#7ef8ff;
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.20);
   }
-  body.theme-cybercore .quick-btn:hover, body.theme-cybercore .settings-boot-btn:hover, body.theme-cybercore .sys-btn:hover, body.theme-cybercore .detect-btn:hover, body.theme-cybercore .media-nav-btn:hover, body.theme-cybercore .widget-refresh-btn:hover {
+  body.theme-cybercore .quick-btn:hover, body.theme-cybercore .settings-boot-btn:hover, body.theme-cybercore .sys-btn:hover, body.theme-cybercore .detect-btn:hover, body.theme-cybercore .media-nav-btn:hover, body.theme-cybercore .widget-refresh-btn:hover, body.theme-cybercore .widget-close-btn:hover {
     border-color:rgba(250,204,21,0.56);
     color:#fff2a6;
     background:linear-gradient(180deg, rgba(31,52,65,0.92), rgba(10,16,24,0.94));
@@ -1926,6 +1931,21 @@
           </div>
         </div>
         <div class="settings-section">
+          <h3>Voice Input</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Activation word</div><div class="settings-sub">Optional always-listening browser mode</div></div>
+            <input type="checkbox" id="set-wake-word-enabled" style="width:20px;height:20px;cursor:pointer;accent-color:var(--t-hex1);"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Wake phrases</div><div class="settings-sub">Comma-separated phrases</div></div>
+            <input class="settings-input" id="set-wake-phrases" type="text" placeholder="hey caroline, hey ai" style="width:220px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Mic source</div><div class="settings-sub" id="mic-health-status">Checked in the browser</div></div>
+            <button class="settings-boot-btn" type="button" onclick="checkMicHealth(true)">Check Mic</button>
+          </div>
+        </div>
+        <div class="settings-section">
           <h3>Hardware</h3>
           <div class="settings-row">
             <div><div class="settings-label">Pi CPU Temp</div><div class="settings-sub">Live reading</div></div>
@@ -2306,10 +2326,11 @@
         </div>
       </div>
       <div id="widget-calendar">
-      <div class="news-header widget-header-row"><span>📅 Next Meeting</span><button id="calendar-refresh-btn" class="widget-refresh-btn" onclick="refreshCalendarWidget()" title="Refresh calendar"><i class="ti ti-refresh"></i></button></div>
+      <div class="news-header widget-header-row"><span>📅 Upcoming</span><button id="calendar-refresh-btn" class="widget-refresh-btn" onclick="refreshCalendarWidget()" title="Refresh calendar"><i class="ti ti-refresh"></i></button></div>
       <div style="padding:4px 0 8px; border-bottom:1px solid rgba(var(--t-rgb1),0.08); margin-bottom:6px;">
         <div id="cal-title" style="font-size:10px;color:#f8fafc;line-height:1.4;">No events today</div>
         <div id="cal-time" style="font-size:11px;color:rgba(226,232,240,0.5);font-family:'JetBrains Mono',monospace;margin-top:2px;"></div>
+        <div id="cal-list" style="display:flex;flex-direction:column;gap:5px;margin-top:6px;"></div>
       </div>
       </div>
       <div class="news-header">Top Stories</div>
@@ -2369,6 +2390,7 @@ const BOOLEAN_DEFAULTS = {
   voiceMuted: true,
   googleConnected: false,
   discordEnabled: false,
+  wakeWordEnabled: false,
   setupComplete: false,
   highContrastText: true,
   reduceMonoLabels: true,
@@ -2376,7 +2398,7 @@ const BOOLEAN_DEFAULTS = {
 };
 const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -2428,7 +2450,7 @@ function normalizeFeatureState(features, { repairAllOff = true } = {}) {
 }
 
 function syncFeatureCheckboxes() {
-  const featureState = normalizeFeatureState(S.features);
+  const featureState = normalizeFeatureState(S.features, { repairAllOff: false });
   S.features = featureState;
   FEATURE_KEYS.forEach(k => {
     const el = document.getElementById('feat-' + k);
@@ -2437,7 +2459,7 @@ function syncFeatureCheckboxes() {
   return featureState;
 }
 
-S.features = normalizeFeatureState(S.features);
+S.features = normalizeFeatureState(S.features, { repairAllOff: false });
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 normalizeSettingsBooleans(S);
 S.calendarId = normalizeCalendarIdInput(S.calendarId);
@@ -2471,7 +2493,7 @@ function clearBrowserInstallState(reason) {
   const keepNodeRedUrl = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
   const keepPiIp = S.piIp || '';
   S = Object.assign({}, DEFAULTS, { nodeRedUrl: keepNodeRedUrl, piIp: keepPiIp });
-  S.features = normalizeFeatureState(S.features);
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
   console.log('[Caroline] Browser install state reset:', reason || 'fresh install');
 }
@@ -2490,7 +2512,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
-  if (d.features) d.features = normalizeFeatureState(d.features);
+  if (d.features) d.features = normalizeFeatureState(d.features, { repairAllOff: false });
   normalizeSettingsBooleans(d);
   Object.keys(d).forEach(k => {
     if (skip.has(k)) return;
@@ -2501,7 +2523,7 @@ function mergeServerSettings(d, options = {}) {
       S[k] = v;
     }
   });
-  S.features = normalizeFeatureState(S.features);
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.calendarId = normalizeCalendarIdInput(S.calendarId);
@@ -2658,6 +2680,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-username', S.userName || '', { allowBlank });
   setInputValue('set-ollama-url', S.ollamaUrl || 'http://localhost:11434', { allowBlank });
   setInputValue('set-ollama-model', S.ollamaModel || 'gemma3:1b', { allowBlank });
+  setInputValue('set-wake-phrases', S.wakePhrases || DEFAULTS.wakePhrases, { allowBlank });
   onProviderChange(provider);
   if (provider === 'ollama') setTimeout(fetchOllamaModels, 100);
   setInputValue('set-ainame-sys', S.aiName || 'Caroline', { allowBlank });
@@ -2669,6 +2692,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (discordEnabledEl) discordEnabledEl.checked = parseSettingBool(S.discordEnabled);
   const autoThemeEl = document.getElementById('set-auto-theme');
   if (autoThemeEl) autoThemeEl.checked = parseSettingBool(S.autoTheme);
+  const wakeEl = document.getElementById('set-wake-word-enabled');
+  if (wakeEl) wakeEl.checked = parseSettingBool(S.wakeWordEnabled);
   const grEl = document.getElementById('google-redirect-uri');
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const hgSel = document.getElementById('set-hue-group');
@@ -2841,7 +2866,7 @@ function renderUsageStats() {
 // ── BACKUP EXPORT / IMPORT ────────────────────
 function exportBackup() {
   const exportedSettings = Object.assign({}, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
-  if (exportedSettings.features) exportedSettings.features = normalizeFeatureState(exportedSettings.features);
+  if (exportedSettings.features) exportedSettings.features = normalizeFeatureState(exportedSettings.features, { repairAllOff: false });
   normalizeSettingsBooleans(exportedSettings);
   const data = {
     version: VERSION,
@@ -2872,7 +2897,7 @@ function importBackup(input) {
       if (!data.settings) throw new Error('Not a valid Caroline backup');
       if (!confirm('Import backup from ' + (data.exported || 'unknown date') + '? This will overwrite current settings.')) return;
       if (data.settings) {
-        data.settings.features = normalizeFeatureState(data.settings.features);
+        data.settings.features = normalizeFeatureState(data.settings.features, { repairAllOff: false });
         normalizeSettingsBooleans(data.settings);
         localStorage.setItem('caro_settings', JSON.stringify(data.settings));
       }
@@ -3346,8 +3371,67 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── FEATURE TOGGLES ───────────────────────────
+const WIDGET_CLOSE_TARGETS = [
+  { feature: 'datetime', selector: '#widget-datetime', label: 'Date' },
+  { feature: 'weather', selector: '#widget-weather', label: 'Weather' },
+  { feature: 'radio', selector: '#widget-radio', label: 'Radio' },
+  { feature: 'pomodoro', selector: '#widget-pomodoro', label: 'Pomodoro' },
+  { feature: 'tides', selector: '#widget-tides', label: 'Tides' },
+  { feature: 'mood', selector: '#widget-user-mood', label: 'Mood meters' },
+  { feature: 'mood', selector: '#widget-caroline-mood', label: 'Mood meters' },
+  { feature: 'memes', selector: '#widget-meme', label: 'Meme' },
+  { feature: 'calendar', selector: '#widget-calendar', label: 'Calendar' },
+  { feature: 'spotify', selector: '#now-playing-panel', label: 'Now Playing' },
+  { feature: 'video', selector: '#video-section', label: 'Video' }
+];
+
+function attachWidgetCloseButtons() {
+  WIDGET_CLOSE_TARGETS.forEach(({ feature, selector, label }) => {
+    document.querySelectorAll(selector).forEach((el) => {
+      if (!el || el.dataset.closeFeature) return;
+      el.dataset.closeFeature = feature;
+      el.classList.add('closable-widget');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'widget-close-btn';
+      btn.innerHTML = '<i class="ti ti-x"></i>';
+      btn.title = 'Disable ' + label;
+      btn.setAttribute('aria-label', 'Disable ' + label);
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        disableWidgetFeature(feature, label);
+      });
+      el.appendChild(btn);
+    });
+  });
+}
+
+function persistFeatureState(reason = 'feature change') {
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'settings_update', features: S.features }));
+  }
+  postSettingsToNodeRed({ features: S.features }, 5000).catch(e => console.warn('[Caroline] ' + reason + ' settings sync failed:', e));
+}
+
+function disableWidgetFeature(feature, label) {
+  if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  S.features[feature] = false;
+  applyFeatures();
+  syncFeatureCheckboxes();
+  updateFeatWarnings();
+  updateAboutPanel();
+  persistFeatureState('widget close');
+  playBeep(420);
+  clog('info', label + ' widget disabled');
+}
+
 function applyFeatures() {
-  const f = normalizeFeatureState(S.features);
+  attachWidgetCloseButtons();
+  const f = normalizeFeatureState(S.features, { repairAllOff: false });
   S.features = f;
   const show = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
 
@@ -3382,7 +3466,7 @@ function previewFeature(key, val) {
 }
 
 function updateFeatWarnings() {
-  const f = normalizeFeatureState(S.features);
+  const f = normalizeFeatureState(S.features, { repairAllOff: false });
   S.features = f;
   const box = document.getElementById('feat-warnings');
   if (!box) return;
@@ -4605,12 +4689,12 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
     'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
     'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId',
     'hueIp', 'tidesStation', 'spotifyClientId',
-    'googleClientId', 'googleRedirectUri', 'discordChannelId', 'sheetId'
+    'googleClientId', 'googleRedirectUri', 'discordChannelId', 'sheetId', 'wakePhrases'
   ]);
   Object.keys(payload).forEach(k => {
     if (preserveBlankKeys.has(k) && String(payload[k] ?? '').trim() === '') delete payload[k];
   });
-  payload.features = normalizeFeatureState(payload.features);
+  payload.features = normalizeFeatureState(payload.features, { repairAllOff: false });
   console.log('[Caroline] POST settings to', endpoint, payload);
   try {
     const resp = await fetch(endpoint, {
@@ -4741,6 +4825,11 @@ async function saveSettings() {
   if (unInp && unInp.value.trim()) S.userName = unInp.value.trim();
   const ainSysInp = document.getElementById('set-ainame-sys');
   if (ainSysInp && ainSysInp.value.trim()) { S.aiName = ainSysInp.value.trim(); document.getElementById('topbar-name').textContent = S.aiName; }
+  const wakeEnabledInp = document.getElementById('set-wake-word-enabled');
+  const wakePhrasesInp = document.getElementById('set-wake-phrases');
+  if (wakeEnabledInp) S.wakeWordEnabled = wakeEnabledInp.checked;
+  if (wakePhrasesInp) S.wakePhrases = wakePhrasesInp.value.trim() || DEFAULTS.wakePhrases;
+  if (typeof applyVoiceInputSettings === 'function') applyVoiceInputSettings();
   const personalityInp = document.getElementById('personalityPrompt');
   const profileInp = document.getElementById('userProfilePrompt');
   S.personalityPrompt = (personalityInp ? personalityInp.value.trim() : '') || getSetupMemoryPrompt();
@@ -4750,13 +4839,13 @@ async function saveSettings() {
   localStorage.setItem('caroline_user_profile_prompt', S.userProfilePrompt);
 
   // Persist to localStorage immediately — never block the save on Node-RED being reachable
-  S.features = normalizeFeatureState(S.features);
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   localStorage.setItem('caro_settings', JSON.stringify(S));
   renderIntegrationStatus();
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, features: S.features, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, features: S.features, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -4790,7 +4879,7 @@ async function saveSettings() {
     const el = document.getElementById('feat-'+k);
     if (el) S.features[k] = el.checked;
   });
-  S.features = normalizeFeatureState(S.features);
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   syncFeatureCheckboxes();
   updateFeatWarnings();
 
@@ -5134,10 +5223,10 @@ function speak(text){
   const voice=pref.reduce((f,n)=>f||voices.find(v=>v.lang.startsWith('en')&&v.name.includes(n)),null); if(voice) u.voice=voice;
   const wp=isPlaying; if(wp) radioAudio.pause();
   u.onstart=()=>{ avatarOuter.classList.add('speaking'); voiceStatus.textContent='● '+(S.aiName||'Caroline').toUpperCase()+' IS SPEAKING...'; voiceStatus.className='speaking-label'; };
-  u.onend=()=>{ avatarOuter.classList.remove('speaking'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; if(wp) radioAudio.play(); };
+  u.onend=()=>{ avatarOuter.classList.remove('speaking'); if(typeof setMicIdleStatus==='function') setMicIdleStatus(); else { voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; } if(wp) radioAudio.play(); };
   u.onerror=u.onend; window.speechSynthesis.speak(u);
 }
-function stopSpeaking(){ window.speechSynthesis.cancel(); avatarOuter.classList.remove('speaking'); voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; }
+function stopSpeaking(){ window.speechSynthesis.cancel(); avatarOuter.classList.remove('speaking'); if(typeof setMicIdleStatus==='function') setMicIdleStatus(); else { voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; } }
 window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
 voiceBtn.onclick=()=>{ voiceEnabled=!voiceEnabled; S.ttsEnabled=voiceEnabled; S.voiceMuted=!voiceEnabled; localStorage.setItem('caro_settings', JSON.stringify(S)); if(!voiceEnabled) stopSpeaking(); syncVoiceButtonState(); resetIdle(); };
 syncVoiceButtonState();
@@ -5530,7 +5619,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','highContrastText','reduceMonoLabels','setupComplete','features'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       normalizeSettingsBooleans(_payload, { fillDefaults: false });
@@ -5585,7 +5674,7 @@ function connectWS(){
       updateCpuTemp(d.cpu_temp_f, d.cpu_temp_c);
     }
     else if (d.type === 'calendar_update') {
-      updateCalendar(d.event);
+      updateCalendar(d.event, d.events);
     }
     else if (d.type === 'todo_update') {
       handleTodoUpdate(d);
@@ -5692,17 +5781,254 @@ input.addEventListener('focus',()=>{ requestAnimationFrame(()=>{ window.scrollTo
 // ── STT ───────────────────────────────────────
 const micBtn=document.getElementById('mic-btn'), stopBtn=document.getElementById('stop-btn');
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recognition=null, isListening=false;
+let recognition=null, isListening=false, listenMode='manual', wakeCommandPending=false;
+let wakeArmed=false, wakeRestartTimer=null, stopRequested=false, micBlockedReason='';
+
+function micOriginHint() {
+  const host = window.location.hostname || '';
+  const localHost = ['localhost','127.0.0.1','::1'].includes(host);
+  if (!window.isSecureContext && !localHost) return 'Mic needs Chromium on localhost/HTTPS. On the Pi, open http://127.0.0.1:8080 instead of the LAN IP.';
+  return '';
+}
+function getWakePhrases() {
+  return String(S.wakePhrases || DEFAULTS.wakePhrases)
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+function findWakeCommand(text) {
+  const raw = String(text || '').trim();
+  const lower = raw.toLowerCase();
+  for (const phrase of getWakePhrases()) {
+    const idx = lower.indexOf(phrase);
+    if (idx >= 0) {
+      return { found: true, phrase, command: raw.slice(idx + phrase.length).replace(/^[,.:;\s-]+/, '').trim() };
+    }
+  }
+  return { found: false, phrase: '', command: '' };
+}
+function setMicHealthStatus(text, kind='neutral') {
+  const el = document.getElementById('mic-health-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = kind === 'ok' ? 'rgba(52,211,153,0.9)' : kind === 'warn' ? 'rgba(251,191,36,0.9)' : kind === 'err' ? '#f87171' : 'rgba(226,232,240,0.45)';
+}
+function setMicIdleStatus() {
+  if (!voiceStatus) return;
+  voiceStatus.className = '';
+  if (micBlockedReason) voiceStatus.textContent = '● MIC CHECK NEEDED';
+  else if (wakeArmed && parseSettingBool(S.wakeWordEnabled, false)) voiceStatus.textContent = '● WAKE WORD ARMED';
+  else voiceStatus.textContent = voiceEnabled ? '● READY TO CHAT · ENTER TO SEND' : '● READY · SPEAKER MUTED';
+  updateMicButtonHint();
+}
+function updateMicButtonHint() {
+  if (!micBtn) return;
+  const phrases = getWakePhrases().join(' / ');
+  micBtn.title = parseSettingBool(S.wakeWordEnabled, false)
+    ? (wakeArmed ? 'Wake word active: ' + phrases : 'Arm wake word: ' + phrases)
+    : 'Dictate one message';
+}
+async function checkMicHealth(showResult=false) {
+  micBlockedReason = '';
+  if (!SR) {
+    micBlockedReason = 'Speech recognition is not available. Use Chromium/Chrome for kiosk voice input.';
+    if (showResult) addMessage(micBlockedReason, 'caroline', 'display');
+    setMicHealthStatus('Speech recognition unsupported', 'err');
+    setMicIdleStatus();
+    return false;
+  }
+  const originHint = micOriginHint();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    micBlockedReason = originHint || 'Browser microphone API is unavailable on this page.';
+    if (showResult) addMessage(micBlockedReason, 'caroline', 'display');
+    setMicHealthStatus('Browser mic API unavailable', 'err');
+    setMicIdleStatus();
+    return false;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop());
+    micBlockedReason = '';
+    setMicHealthStatus(originHint ? 'Mic allowed, origin may still block STT' : 'Mic permission OK', originHint ? 'warn' : 'ok');
+    if (showResult) addMessage(originHint || 'Mic permission is OK. Try the microphone button now.', 'caroline', 'display');
+    setMicIdleStatus();
+    return true;
+  } catch(e) {
+    micBlockedReason = 'Mic permission failed: ' + (e && e.name ? e.name : 'blocked');
+    if (originHint) micBlockedReason += '. ' + originHint;
+    if (showResult) addMessage(micBlockedReason, 'caroline', 'display');
+    setMicHealthStatus(micBlockedReason, 'err');
+    setMicIdleStatus();
+    return false;
+  }
+}
+function buildRecognition(mode) {
+  const r = new SR();
+  r.lang = 'en-US';
+  r.continuous = true;
+  r.interimResults = true;
+  r.onstart = () => {
+    isListening = true;
+    micBtn.classList.add('listening');
+    stopBtn.classList.add('show');
+    avatarOuter.classList.add('listening');
+    input.classList.add('listening');
+    input.value = '';
+    input.placeholder = mode === 'wake' ? 'Say "' + getWakePhrases()[0] + '"...' : 'Listening... pause to send';
+    voiceStatus.textContent = mode === 'wake' ? '● WAKE WORD LISTENING' : '● LISTENING...';
+    voiceStatus.className = 'listening-label';
+    if (voiceEnabled) window.speechSynthesis.pause();
+    if (isPlaying) radioAudio.pause();
+    resetIdle();
+  };
+  r.onresult = (e) => {
+    let interim = '', finalText = '';
+    for (let i=e.resultIndex; i<e.results.length; i++) {
+      const bit = e.results[i][0].transcript || '';
+      if (e.results[i].isFinal) finalText += bit + ' ';
+      else interim += bit + ' ';
+    }
+    finalText = finalText.trim();
+    interim = interim.trim();
+    if (listenMode === 'manual') {
+      input.value = finalText || interim;
+      if (finalText) { playBeep(600); stopListening(true); }
+      return;
+    }
+    if (listenMode === 'command') {
+      input.value = finalText || interim;
+      if (finalText) { playBeep(600); stopListening(true, { rearmWake: true }); }
+      return;
+    }
+    const wake = findWakeCommand(finalText);
+    if (!wake.found) return;
+    playBeep(900);
+    if (wake.command) {
+      input.value = wake.command;
+      stopListening(true, { rearmWake: true });
+    } else {
+      listenMode = 'command';
+      wakeCommandPending = true;
+      input.value = '';
+      input.placeholder = 'Yes?';
+      voiceStatus.textContent = '● YES?';
+    }
+  };
+  r.onend = () => {
+    const shouldRestart = !stopRequested && wakeArmed && parseSettingBool(S.wakeWordEnabled, false);
+    isListening = false;
+    micBtn.classList.remove('listening');
+    stopBtn.classList.remove('show');
+    avatarOuter.classList.remove('listening');
+    input.classList.remove('listening');
+    input.placeholder = shouldRestart ? 'Say "' + getWakePhrases()[0] + '"...' : 'Say something to Caroline...';
+    if (voiceEnabled) window.speechSynthesis.resume();
+    if (isPlaying) radioAudio.play();
+    setMicIdleStatus();
+    if (shouldRestart) scheduleWakeRestart();
+  };
+  r.onerror = (e) => {
+    const err = (e && e.error) || 'unknown';
+    if (err === 'no-speech' && wakeArmed) return;
+    micBlockedReason = ['not-allowed','service-not-allowed','audio-capture'].includes(err) ? 'Mic error: ' + err + '. ' + micOriginHint() : '';
+    input.placeholder = 'Mic error: ' + err;
+    voiceStatus.textContent = '● MIC ERROR: ' + String(err).toUpperCase();
+    voiceStatus.className = '';
+    clog('err', 'Mic: ' + err);
+    if (listenMode === 'manual') stopListening(false);
+  };
+  return r;
+}
+function startListening(mode='manual') {
+  if (!SR) { checkMicHealth(true); return; }
+  if (isListening) return;
+  clearTimeout(wakeRestartTimer);
+  stopRequested = false;
+  listenMode = mode;
+  wakeCommandPending = false;
+  recognition = buildRecognition(mode);
+  try {
+    recognition.start();
+  } catch(e) {
+    input.placeholder = 'Mic: ' + e.message;
+    voiceStatus.textContent = '● MIC START FAILED';
+    clog('err', 'Mic start: ' + e.message);
+    setMicHealthStatus('Mic start failed: ' + e.message, 'err');
+  }
+}
+function scheduleWakeRestart() {
+  clearTimeout(wakeRestartTimer);
+  wakeRestartTimer = setTimeout(() => {
+    if (wakeArmed && parseSettingBool(S.wakeWordEnabled, false) && !isListening) startListening('wake');
+  }, 650);
+}
+function stopListening(send=true, opts={}) {
+  stopRequested = true;
+  clearTimeout(wakeRestartTimer);
+  if (opts.disarmWake) wakeArmed = false;
+  const shouldSend = send && input.value.trim();
+  try { if (recognition) recognition.stop(); } catch(e) {}
+  isListening = false;
+  micBtn.classList.remove('listening');
+  stopBtn.classList.remove('show');
+  avatarOuter.classList.remove('listening');
+  input.classList.remove('listening');
+  input.placeholder = 'Say something to Caroline...';
+  if (voiceEnabled) window.speechSynthesis.resume();
+  if (isPlaying) radioAudio.play();
+  if (shouldSend) sendMessage();
+  listenMode = 'manual';
+  wakeCommandPending = false;
+  setMicIdleStatus();
+  if (opts.rearmWake && wakeArmed && parseSettingBool(S.wakeWordEnabled, false)) scheduleWakeRestart();
+  resetIdle();
+}
+function applyVoiceInputSettings() {
+  S.wakeWordEnabled = parseSettingBool(S.wakeWordEnabled, false);
+  S.wakePhrases = String(S.wakePhrases || DEFAULTS.wakePhrases).trim() || DEFAULTS.wakePhrases;
+  if (!S.wakeWordEnabled && wakeArmed) stopListening(false, { disarmWake: true });
+  wakeArmed = S.wakeWordEnabled && wakeArmed;
+  updateMicButtonHint();
+  setMicIdleStatus();
+}
+window.checkMicHealth = checkMicHealth;
+window.applyVoiceInputSettings = applyVoiceInputSettings;
+
 if(SR){
-  recognition=new SR(); recognition.lang='en-US'; recognition.continuous=true; recognition.interimResults=true;
-  recognition.onstart=()=>{ isListening=true; micBtn.classList.add('listening'); stopBtn.classList.add('show'); avatarOuter.classList.add('listening'); input.classList.add('listening'); input.placeholder='Listening... pause to send'; input.value=''; voiceStatus.textContent='● LISTENING...'; voiceStatus.className='listening-label'; if(voiceEnabled) window.speechSynthesis.pause(); if(isPlaying) radioAudio.pause(); resetIdle(); };
-  recognition.onresult=(e)=>{ let int='',fin=''; for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) fin+=e.results[i][0].transcript; else int+=e.results[i][0].transcript; } input.value=fin||int; if(fin){ playBeep(600); stopListening(true); } };
-  recognition.onend=()=>{ if(isListening) stopListening(false); };
-  recognition.onerror=(e)=>{ if(e.error==='no-speech'){ try{recognition.stop();recognition.start();}catch(ex){} } else { input.placeholder='Mic error: '+e.error; stopListening(false); } };
-  function stopListening(send=true){ isListening=false; try{recognition.stop();}catch(e){} micBtn.classList.remove('listening'); stopBtn.classList.remove('show'); avatarOuter.classList.remove('listening'); input.classList.remove('listening'); input.placeholder='Say something to Caroline...'; voiceStatus.textContent='● READY TO CHAT · ENTER TO SEND'; voiceStatus.className=''; if(voiceEnabled) window.speechSynthesis.resume(); if(isPlaying) radioAudio.play(); if(send&&input.value.trim()) sendMessage(); resetIdle(); }
-  micBtn.onclick=()=>{ if(!isListening){ playBeep(800); try{recognition.start();}catch(e){ input.placeholder='Mic: '+e.message; } } };
-  stopBtn.onclick=()=>{ playBeep(400); stopListening(true); };
-} else { micBtn.style.opacity='0.3'; micBtn.style.cursor='not-allowed'; }
+  micBtn.onclick=async()=>{
+    playBeep(800);
+    if(isListening){ stopListening(false, { disarmWake: true }); return; }
+    const micOk = await checkMicHealth(false);
+    if (!micOk) return;
+    if (parseSettingBool(S.wakeWordEnabled, false)) {
+      wakeArmed = true;
+      startListening('wake');
+    } else {
+      startListening('manual');
+    }
+  };
+  stopBtn.onclick=()=>{ playBeep(400); stopListening(false, { disarmWake: true }); };
+  const originHint = micOriginHint();
+  if (originHint) setMicHealthStatus('Use localhost/HTTPS for reliable STT', 'warn');
+  setMicIdleStatus();
+} else {
+  micBlockedReason='Speech recognition unavailable';
+  micBtn.style.opacity='0.3';
+  micBtn.style.cursor='not-allowed';
+  micBtn.title='Speech recognition unavailable. Use Chromium/Chrome.';
+  setMicHealthStatus('Speech recognition unsupported', 'err');
+  voiceStatus.textContent='● MIC UNSUPPORTED';
+}
+if (voiceBtn) voiceBtn.onclick=()=>{
+  voiceEnabled=!voiceEnabled;
+  S.ttsEnabled=voiceEnabled;
+  S.voiceMuted=!voiceEnabled;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  if(!voiceEnabled) stopSpeaking();
+  syncVoiceButtonState();
+  setMicIdleStatus();
+  resetIdle();
+};
 
 // ── CPU TEMPERATURE ───────────────────────────
 function updateCpuTemp(tempF, tempC) {
@@ -6105,12 +6431,56 @@ function checkCalendarForTodos(event) {
   }
 }
 
-function updateCalendar(event) {
+function calendarEventText(event) {
+  return String(event && event.title ? event.title : 'Untitled');
+}
+
+function calendarEventTime(event) {
+  if (!event) return '';
+  const start = event.start || (event.allDay ? 'All day' : '');
+  const end = event.end && event.end !== start ? ' - ' + event.end : '';
+  const clock = start + end;
+  return event.date ? event.date + ' ' + clock : clock;
+}
+
+function updateCalendar(event, events) {
   const title = document.getElementById('cal-title');
   const time  = document.getElementById('cal-time');
+  const list = document.getElementById('cal-list');
   if (!title) return;
-  if (!event) { title.textContent = 'No events today'; if (time) time.textContent = ''; } 
-  else { title.textContent = event.title; if (time) time.textContent = event.start + (event.end ? ' – ' + event.end : ''); checkCalendarForTodos(event); }
+  const upcoming = Array.isArray(events) && events.length ? events : (event ? [event] : []);
+  if (!upcoming.length) {
+    title.textContent = 'No upcoming events';
+    if (time) time.textContent = '';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  const next = upcoming[0];
+  title.textContent = calendarEventText(next);
+  if (time) time.textContent = calendarEventTime(next);
+  if (list) {
+    list.innerHTML = '';
+    upcoming.slice(0, 6).forEach((ev, idx) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:7px;padding:5px 6px;border:1px solid rgba(var(--t-rgb1),0.08);background:rgba(var(--t-rgb1),0.035);font-family:JetBrains Mono,monospace;';
+      const clock = document.createElement('div');
+      clock.textContent = calendarEventTime(ev) || '--';
+      clock.style.cssText = 'width:58px;flex:0 0 58px;color:rgba(var(--t-rgb1),0.62);font-size:9px;line-height:1.25;';
+      const name = document.createElement('div');
+      name.textContent = calendarEventText(ev);
+      name.style.cssText = 'min-width:0;flex:1;color:' + (idx === 0 ? '#f8fafc' : 'rgba(226,232,240,0.72)') + ';font-size:10px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;';
+      row.appendChild(clock);
+      row.appendChild(name);
+      list.appendChild(row);
+    });
+    if (upcoming.length > 6) {
+      const more = document.createElement('div');
+      more.textContent = '+' + (upcoming.length - 6) + ' more';
+      more.style.cssText = 'font-size:9px;color:rgba(var(--t-rgb1),0.45);font-family:JetBrains Mono,monospace;padding-left:65px;';
+      list.appendChild(more);
+    }
+  }
+  checkCalendarForTodos(next);
 }
 
 async function refreshCalendarWidget() {
@@ -6123,7 +6493,7 @@ async function refreshCalendarWidget() {
     const resp = await fetchJsonWithTimeout(httpBase() + '/admin/calendar/refresh', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Calendar refresh');
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok || data.ok === false) throw new Error(data.error || 'Calendar refresh failed');
-    updateCalendar(data.event || null);
+    updateCalendar(data.event || null, data.events || []);
     playBeep(900);
   } catch(e) {
     console.warn('[Caroline] calendar refresh failed:', e);

@@ -88,6 +88,8 @@ On desktop Raspberry Pi OS, the installer also creates two desktop shortcuts:
 - **Project Caroline** — opens Caroline in a normal Firefox window.
 - **Project Caroline Kiosk** — opens Caroline in fullscreen kiosk mode.
 
+The kiosk uses Firefox because it has been the most stable display browser for Caroline on the Pi. Browser-based voice input depends on Chrome-family speech recognition, so voice is best treated as experimental until Caroline has a local speech-to-text service.
+
 ### Upgrading
 
 To upgrade an existing Caroline install after a new GitHub release, rerun the installer:
@@ -127,7 +129,7 @@ After install, open **Settings** in Caroline:
 
 ### Before QA: Remote Access
 
-For clean installs, wipes, and kiosk debugging, set up Raspberry Pi Connect before you depend on the kiosk screen alone. It gives you browser-based access to the Pi desktop or shell, which is helpful if Firefox opens full-screen or the Pi is across the room.
+For clean installs, wipes, and kiosk debugging, set up Raspberry Pi Connect before you depend on the kiosk screen alone. It gives you browser-based access to the Pi desktop or shell, which is helpful if the kiosk browser opens full-screen or the Pi is across the room.
 
 - Raspberry Pi Connect requires Raspberry Pi OS Bookworm or later.
 - Raspberry Pi OS Desktop and Full include Connect by default; Raspberry Pi OS Lite includes the remote-shell-only variant.
@@ -137,6 +139,21 @@ For clean installs, wipes, and kiosk debugging, set up Raspberry Pi Connect befo
 
 Official guide: [Raspberry Pi Connect documentation](https://www.raspberrypi.com/documentation/services/connect.html)
 
+### Local Pi Update During QA
+
+When testing local changes before a GitHub release, copy only the file you changed, keep a timestamped backup on the Pi, then restart nginx:
+
+```powershell
+$ts = Get-Date -Format "yyyyMMdd-HHmmss"
+ssh davee@192.168.1.50 "cp /home/davee/caroline/index.html /home/davee/caroline/index.html.backup-$ts"
+scp .\index.html davee@192.168.1.50:/home/davee/caroline/index.html
+ssh davee@192.168.1.50
+sudo systemctl restart nginx
+exit
+```
+
+Use Bash commands after you are inside the Pi shell. PowerShell syntax such as `(Invoke-WebRequest ...).Content` only works from Windows PowerShell, not from the Pi terminal.
+
 ### QA Checklist
 
 Before calling a release good, test these paths on a clean Pi or VM:
@@ -144,9 +161,13 @@ Before calling a release good, test these paths on a clean Pi or VM:
 - Fresh install from the public `curl -fsSL ... install.sh | bash` command.
 - Reboot after install and confirm Caroline, nginx, kiosk autostart, and desktop shortcuts still work.
 - Settings save/reopen for every integration: OpenRouter, Ollama, Hue, Spotify, Discord, Google, Tides, time format, and temperature unit.
+- Calendar: add an event, confirm Upcoming sorts the next real event first, remove that same event, then refresh.
+- Tasks: add a task by chat, confirm it appears in the Tasks widget, complete it, then refresh.
+- Widgets: close a widget with its `X`, reload the kiosk, and confirm the disabled state persists.
 - Upgrade by rerunning the installer and confirm saved settings/API keys still show as saved or connected.
 - Uninstall with `uninstall.sh`, then reinstall cleanly.
 - Kiosk recovery: Raspberry Pi Connect or SSH is available before enabling boot-to-kiosk on a physical display.
+- Voice input: treat browser voice as experimental in the Firefox kiosk until Caroline has a local speech-to-text service.
 
 ### Advanced Widget Setup
 

@@ -35,3 +35,7 @@ desktop.ini
 # ── BACKUPS & EXPORTS ─────────────────────────────────────────
 caroline-backup-*.json
 flows-backup.json
+flows.pi-backup-*.json
+*.backup-*
+*.cybercore-backup-*
+Screenshot_*.png.jpg
