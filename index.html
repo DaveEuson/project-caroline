@@ -1794,6 +1794,16 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Meeting reminders</div><div class="settings-sub">Caroline gives a spoken heads-up before events</div></div>
+            <select class="settings-select" id="set-meeting-reminder">
+              <option value="0">Off</option>
+              <option value="5">5 minutes before</option>
+              <option value="10">10 minutes before</option>
+              <option value="15">15 minutes before</option>
+              <option value="30">30 minutes before</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">OAuth Client ID</div><div class="settings-sub" id="google-client-id-status">Desktop app client from Google Cloud</div></div>
             <input class="settings-input" id="set-google-client-id" type="text" placeholder="client id" style="width:200px"/>
           </div>
@@ -2419,7 +2429,7 @@ const BOOLEAN_DEFAULTS = {
 };
 const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -2455,6 +2465,11 @@ function normalizeSettingsBooleans(target, { fillDefaults = true } = {}) {
   return target;
 }
 
+function normalizeMeetingReminderMinutes(value) {
+  const n = Math.round(Number(value) || 0);
+  return [0, 5, 10, 15, 30].includes(n) ? n : 0;
+}
+
 function normalizeFeatureState(features, { repairAllOff = true } = {}) {
   let src = features;
   if (typeof src === 'string') {
@@ -2483,6 +2498,7 @@ function syncFeatureCheckboxes() {
 S.features = normalizeFeatureState(S.features, { repairAllOff: false });
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 normalizeSettingsBooleans(S);
+S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
 S.calendarId = normalizeCalendarIdInput(S.calendarId);
 if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
 if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
@@ -2546,6 +2562,7 @@ function mergeServerSettings(d, options = {}) {
   });
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
+  S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.calendarId = normalizeCalendarIdInput(S.calendarId);
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
@@ -2721,6 +2738,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (wakeEl) wakeEl.checked = parseSettingBool(S.wakeWordEnabled);
   const grEl = document.getElementById('google-redirect-uri');
   if (grEl) grEl.textContent = S.googleRedirectUri;
+  const meetingReminderEl = document.getElementById('set-meeting-reminder');
+  if (meetingReminderEl) meetingReminderEl.value = String(normalizeMeetingReminderMinutes(S.meetingReminderMinutes));
   const hgSel = document.getElementById('set-hue-group');
   if (hgSel) {
     const hueGroupValue = S.hueGroup || '';
@@ -4942,6 +4961,7 @@ async function saveSettings() {
       showSettingsFeedback('Calendar name was changed to primary; use Load Calendars to choose by name', true);
     }
   }
+  S.meetingReminderMinutes = normalizeMeetingReminderMinutes(document.getElementById('set-meeting-reminder')?.value || 0);
   const sheetInp = document.getElementById('set-sheet-id');
   if (sheetInp) {
     const sheetVal = sheetInp.value.trim();
@@ -4999,7 +5019,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, features: S.features, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, features: S.features, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -5817,7 +5837,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','setupComplete','features'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       normalizeSettingsBooleans(_payload, { fillDefaults: false });
@@ -6680,6 +6700,86 @@ function calendarEventTime(event) {
   return event.date ? event.date + ' ' + clock : clock;
 }
 
+let latestCalendarEvents = [];
+const MEETING_REMINDER_STORE = 'caro_meeting_reminders_v1';
+
+function calendarEventStartDate(event) {
+  if (!event || event.allDay) return null;
+  if (event.startIso || event.startISO || event.startDateTime) {
+    const isoDate = new Date(event.startIso || event.startISO || event.startDateTime);
+    if (!isNaN(isoDate.getTime())) return isoDate;
+  }
+  const startText = String(event.start || '').trim();
+  if (!startText || !/\d/.test(startText) || /^all day$/i.test(startText)) return null;
+  const now = new Date();
+  const dateText = String(event.date || '').trim();
+  let parsed = null;
+  if (!dateText || /^today$/i.test(dateText)) {
+    parsed = new Date(now.toDateString() + ' ' + startText);
+  } else if (/^tomorrow$/i.test(dateText)) {
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    parsed = new Date(tomorrow.toDateString() + ' ' + startText);
+  } else {
+    parsed = new Date(dateText + ' ' + now.getFullYear() + ' ' + startText);
+    if (!isNaN(parsed.getTime()) && parsed.getTime() < now.getTime() - 180 * 24 * 60 * 60 * 1000) {
+      parsed = new Date(dateText + ' ' + (now.getFullYear() + 1) + ' ' + startText);
+    }
+  }
+  return parsed && !isNaN(parsed.getTime()) ? parsed : null;
+}
+
+function loadMeetingReminderCache() {
+  try {
+    const cache = JSON.parse(localStorage.getItem(MEETING_REMINDER_STORE) || '{}') || {};
+    const cutoff = Date.now() - 36 * 60 * 60 * 1000;
+    Object.keys(cache).forEach(k => { if (Number(cache[k]) < cutoff) delete cache[k]; });
+    return cache;
+  } catch(e) {
+    return {};
+  }
+}
+
+function saveMeetingReminderCache(cache) {
+  localStorage.setItem(MEETING_REMINDER_STORE, JSON.stringify(cache || {}));
+}
+
+function meetingReminderKey(event, startDate, reminderMinutes) {
+  return [
+    event.id || event.title || 'event',
+    startDate.toISOString(),
+    reminderMinutes
+  ].join('|');
+}
+
+function checkMeetingReminders() {
+  const reminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
+  if (!reminderMinutes || !isCalendarConnected() || !latestCalendarEvents.length) return;
+  const now = Date.now();
+  const cache = loadMeetingReminderCache();
+  let changed = false;
+  latestCalendarEvents.forEach(event => {
+    const startDate = calendarEventStartDate(event);
+    if (!startDate) return;
+    const msUntil = startDate.getTime() - now;
+    if (msUntil <= 0 || msUntil > reminderMinutes * 60 * 1000) return;
+    const key = meetingReminderKey(event, startDate, reminderMinutes);
+    if (cache[key]) return;
+    const minutesUntil = Math.max(1, Math.round(msUntil / 60000));
+    const user = String(S.userName || '').trim();
+    const title = calendarEventText(event);
+    const prefix = user ? 'Hi ' + user + ', ' : '';
+    const unit = minutesUntil === 1 ? 'minute' : 'minutes';
+    const text = prefix + 'quick heads up: you have "' + title + '" in ' + minutesUntil + ' ' + unit + '.';
+    cache[key] = Date.now();
+    changed = true;
+    addMessage(text, 'caroline', 'proactive');
+    speak(text);
+    playBeep(900);
+  });
+  if (changed) saveMeetingReminderCache(cache);
+}
+
 function isCalendarConnected() {
   return parseSettingBool(S.googleConnected)
     || parseSettingBool(integrationHealth.google?.connected)
@@ -6701,6 +6801,7 @@ function updateCalendar(event, events) {
   const list = document.getElementById('cal-list');
   if (!title) return;
   const upcoming = Array.isArray(events) && events.length ? events : (event ? [event] : []);
+  latestCalendarEvents = upcoming;
   if (!upcoming.length) {
     if (isCalendarConnected()) setCalendarEmptyState('No upcoming events', '');
     else setCalendarEmptyState('Calendar not connected', 'Connect Google in Settings');
@@ -6732,6 +6833,7 @@ function updateCalendar(event, events) {
     }
   }
   checkCalendarForTodos(next);
+  checkMeetingReminders();
 }
 
 async function refreshCalendarWidget() {
@@ -6757,6 +6859,7 @@ async function refreshCalendarWidget() {
     if (btn) btn.classList.remove('loading');
   }
 }
+setInterval(checkMeetingReminders, 60000);
 
 // ── BOTTOM BAR ────────────────────────────────
 function updateBottomChat() {

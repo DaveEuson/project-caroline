@@ -1019,6 +1019,7 @@ jq -n \
     highContrastText: true,
     reduceMonoLabels: true,
     defaultChannel:  0,
+    meetingReminderMinutes: 0,
     ttsEnabled:      false,
     voiceMuted:      true,
     aiModel:         $model,

@@ -176,6 +176,7 @@ Check:
 - Chat can add a task.
 - Chat can complete a task.
 - Calendar refresh gives a clear setup message if Google is not connected.
+- Meeting reminders are off by default; if enabled, a timed calendar event within the reminder window speaks/shows one heads-up and does not repeat.
 
 ## Reboot And Kiosk QA
 

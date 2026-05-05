@@ -40,6 +40,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Robust Backend** — Node-RED on port 1880 as a bare-metal system service
 - **Persistent Memory** — AI chat with memory across sessions
 - **Productivity** — Creates calendar events and manages a local task list via chat
+- **Calendar Reminders** — Optional spoken/display heads-up before upcoming meetings
 - **Proactive AI** — Caroline checks in four times a day with lightweight context
 - **Local & Cloud AI** — Ollama (gemma3:1b, qwen3:0.6b, smollm2:360m) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
