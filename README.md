@@ -14,6 +14,16 @@ Project: Caroline is your portal to an ambient digital sidekick completely perso
 
 ---
 
+## Beta Status
+
+Project: Caroline is public beta software. The core kiosk, local AI chat, weather, news, radio, Pomodoro, local tasks, and display settings are designed to work from the Caroline GUI after the one-command installer. Some integrations still require patience and developer-style setup.
+
+You do **not** need every integration to use Caroline. Local Ollama mode can run without an OpenRouter key, Google Cloud project, Spotify Developer app, Discord bot, or Philips Hue bridge. Optional services such as Google Calendar, Spotify, Discord, Hue, and cloud AI are powerful, but they may require creating OAuth clients, copying redirect URLs exactly, pairing devices, or troubleshooting account/provider limitations. If you are new to Raspberry Pi, Linux, OAuth, or developer dashboards, expect some fiddly configuration and ask for help when needed.
+
+The goal is not to scare anyone off. It is to be honest: Caroline is usable today, but it is still an enthusiast project, not a polished consumer appliance.
+
+---
+
 ## Privacy First
 
 One of the core values of this project is that your information is safe. Caroline does not harvest personal information, chat prompts, memory, calendar data, OAuth tokens, API keys, location, ZIP code, or IP address.
@@ -34,7 +44,7 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 - **Local & Cloud AI** — Ollama (gemma3:1b, qwen3:0.6b, smollm2:360m) free forever, or OpenRouter (Claude Haiku) for ~$0.05/month
 - **Built-in Widgets** — Live news, weather, tides, radio, Pomodoro timer, task lists, and TV channels
 - **Smart Home** — Philips Hue control
-- **OAuth Integrations** — Google and Spotify connect from the GUI; no JSON key upload required for normal setup
+- **Optional Integrations** — Google Calendar, Spotify, Hue, Discord, and cloud AI can be connected from Settings, but some require external developer accounts or OAuth setup
 
 ---
 
@@ -79,7 +89,7 @@ Maintainer note: remote project-health pings are only attempted when `CAROLINE_T
 
 You can also run Ollama on another computer and use the Pi only as the kiosk. In **Settings -> AI**, set **AI provider** to **Ollama** and set **Ollama URL** to the other machine, for example `http://192.168.1.50:11434`. On that computer, Ollama must listen on the network, usually by setting `OLLAMA_HOST=0.0.0.0:11434`, and your firewall must allow the Pi to reach port `11434`. Keep this on your LAN or VPN; do not expose Ollama directly to the public internet.
 
-The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used.
+The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used. Not every user will be able to create every outside key, and that is okay; Caroline is intended to degrade gracefully when optional services are left disconnected.
 
 Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work.
 
@@ -120,7 +130,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/u
 
 Use `--keep-data` if you only want to remove services and launchers while preserving `~/caroline`.
 
-After install, open **Settings** in Caroline:
+After install, open **Settings** in Caroline for any optional services you want to use:
 
 - **Google:** create a Desktop OAuth client, then import or paste the OAuth JSON before using **Connect Google** for Calendar. Client ID alone is not enough because Caroline also needs the client secret from that JSON. The old Sheets/service-account path is kept only as an advanced fallback.
 - **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (usually `https://<pi-ip>:8443/spotify/callback`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
