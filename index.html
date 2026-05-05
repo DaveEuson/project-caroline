@@ -401,7 +401,8 @@
   body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
-  body.idle-mode #avatar-carousel { position:fixed; top:clamp(176px,23vh,248px); left:50%; transform:translateX(-50%); width:min(520px,90vw); z-index:14; pointer-events:none; }
+  body.idle-mode #avatar-carousel { position:fixed; top:clamp(176px,23vh,248px); left:50%; transform:translateX(-50%); width:auto; gap:0; z-index:14; pointer-events:none; }
+  body.idle-mode #avatar-carousel .nav-btn { display:none; }
   body.idle-mode #avatar-outer { transform: scale(1.2); }
   body.idle-mode #avatar-outer::before { display:none; }
   #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
@@ -416,10 +417,16 @@
   body.idle-mode #idle-clock-panel { display:block; }
   #idle-clock-time { font-family:'JetBrains Mono',monospace; font-size:clamp(54px,9vw,96px); line-height:1; color:#f8fafc; font-weight:300; letter-spacing:0; text-shadow:0 0 34px rgba(var(--t-rgb1),0.18); }
   #idle-clock-date { margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.62); text-transform:uppercase; }
-  #idle-recent { display:none; position:fixed; bottom:clamp(24px,5vh,54px); left:50%; transform:translateX(-50%); width:min(560px,82vw); text-align:center; z-index:14; pointer-events:none; }
+  #idle-recent { display:none; position:fixed; bottom:clamp(22px,4vh,44px); left:50%; transform:translateX(-50%); width:min(620px,84vw); text-align:center; z-index:14; pointer-events:none; }
   body.idle-mode #idle-recent { display:block; }
   #idle-recent-label { font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.55); text-transform:uppercase; margin-bottom:8px; }
-  #idle-recent-text { font-size:clamp(18px,2.2vw,24px); color:rgba(226,232,240,0.75); line-height:1.38; font-style:italic; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+  #idle-recent-text { font-size:clamp(17px,2vw,23px); color:rgba(226,232,240,0.75); line-height:1.34; font-style:italic; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  #idle-calendar { display:none; margin:18px auto 0; max-width:560px; }
+  #idle-calendar-label { font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.16em; color:rgba(var(--t-rgb1),0.52); text-transform:uppercase; margin-bottom:8px; }
+  #idle-calendar-list { display:flex; flex-direction:column; gap:5px; }
+  .idle-cal-row { display:grid; grid-template-columns:76px minmax(0,1fr); gap:10px; align-items:center; padding:6px 10px; border:1px solid rgba(var(--t-rgb1),0.12); background:rgba(2,6,12,0.34); text-align:left; }
+  .idle-cal-time { font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(var(--t-rgb1),0.68); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .idle-cal-title { font-size:13px; color:rgba(226,232,240,0.78); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   /* ANIMATIONS */
   @keyframes holidayFade { 0%,10%{opacity:0;transform:translateY(3px)} 15%,85%{opacity:1;transform:translateY(0)} 90%,100%{opacity:0;transform:translateY(-3px)} }
@@ -1390,6 +1397,10 @@
 <div id="idle-recent">
   <div id="idle-recent-label">💬 Recent</div>
   <div id="idle-recent-text"></div>
+  <div id="idle-calendar">
+    <div id="idle-calendar-label">📅 Upcoming</div>
+    <div id="idle-calendar-list"></div>
+  </div>
 </div>
 <div id="corner-glow-tl"></div>
 <div id="corner-glow-br"></div>
@@ -6700,6 +6711,40 @@ function calendarEventTime(event) {
   return event.date ? event.date + ' ' + clock : clock;
 }
 
+function renderIdleCalendar() {
+  const panel = document.getElementById('idle-calendar');
+  const list = document.getElementById('idle-calendar-list');
+  if (!panel || !list) return;
+  if (!isCalendarConnected()) {
+    panel.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  panel.style.display = 'block';
+  list.innerHTML = '';
+  const upcoming = latestCalendarEvents.slice(0, 3);
+  if (!upcoming.length) {
+    const row = document.createElement('div');
+    row.className = 'idle-cal-row';
+    row.innerHTML = '<div class="idle-cal-time">--</div><div class="idle-cal-title">No upcoming events</div>';
+    list.appendChild(row);
+    return;
+  }
+  upcoming.forEach(event => {
+    const row = document.createElement('div');
+    row.className = 'idle-cal-row';
+    const time = document.createElement('div');
+    time.className = 'idle-cal-time';
+    time.textContent = calendarEventTime(event) || '--';
+    const title = document.createElement('div');
+    title.className = 'idle-cal-title';
+    title.textContent = calendarEventText(event);
+    row.appendChild(time);
+    row.appendChild(title);
+    list.appendChild(row);
+  });
+}
+
 let latestCalendarEvents = [];
 const MEETING_REMINDER_STORE = 'caro_meeting_reminders_v1';
 
@@ -6793,6 +6838,8 @@ function setCalendarEmptyState(text, detail) {
   if (title) title.textContent = text;
   if (time) time.textContent = detail || '';
   if (list) list.innerHTML = '';
+  if (/not connected/i.test(text || '')) latestCalendarEvents = [];
+  renderIdleCalendar();
 }
 
 function updateCalendar(event, events) {
@@ -6802,6 +6849,7 @@ function updateCalendar(event, events) {
   if (!title) return;
   const upcoming = Array.isArray(events) && events.length ? events : (event ? [event] : []);
   latestCalendarEvents = upcoming;
+  renderIdleCalendar();
   if (!upcoming.length) {
     if (isCalendarConnected()) setCalendarEmptyState('No upcoming events', '');
     else setCalendarEmptyState('Calendar not connected', 'Connect Google in Settings');
