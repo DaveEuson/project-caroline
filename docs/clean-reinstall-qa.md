@@ -13,6 +13,7 @@ This guide has two reset levels:
 - Save any local credentials or notes you still need from `~/caroline`.
 - Rotate any secrets that may have been used in test installs if the machine was shared or exposed.
 - Do not port-forward Caroline ports to the public internet.
+- Treat Node-RED and the kiosk as trusted-LAN services. Settings and System controls can save credentials, reboot the device, exit kiosk mode, and launch local diagnostics.
 
 Ports used by Caroline:
 

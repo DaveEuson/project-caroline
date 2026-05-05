@@ -68,6 +68,14 @@ Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the serv
 
 ---
 
+## Network Safety
+
+Caroline is designed for a trusted home LAN or VPN. Do not port-forward or publicly expose the kiosk, Node-RED backend, OAuth proxy, or Ollama ports (`8080`, `1880`, `8443`, or `11434`). Several Settings and System buttons intentionally control the local machine from the GUI, including save settings, update, reboot, kiosk exit, and optional terminal launch. Those routes assume you trust the devices on your local network.
+
+For remote access, use Raspberry Pi Connect, SSH over a VPN, Tailscale, WireGuard, or another private access method instead of opening Caroline directly to the public internet.
+
+---
+
 ## Installation
 
 ```bash
