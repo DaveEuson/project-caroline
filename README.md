@@ -53,19 +53,19 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 
 | Category | Recommended | Minimum / Alternate |
 |---|---|---|
-| Hardware | Raspberry Pi 4 or 5 | 64-bit Ubuntu/Debian/Linux desktop or VM |
-| RAM | 4GB+ | 4GB recommended for a smooth kiosk experience |
-| OS | Raspberry Pi OS Desktop 64-bit | 64-bit Ubuntu/Debian/Linux |
+| Hardware | Raspberry Pi 4 or 5 | 64-bit Ubuntu/Debian/Linux server VM or desktop host |
+| RAM | 4GB+ | 4GB recommended; 6-8GB nicer with local AI |
+| OS | Raspberry Pi OS Desktop 64-bit | Ubuntu Server 64-bit VM for headless hosting; Ubuntu Desktop only for experimental local kiosk testing |
 | CPU architecture | `arm64` / `aarch64` | `x86_64` / `amd64` also works |
 | Storage | 32GB+ microSD card | 16GB microSD minimum if skipping local AI/Ollama |
 | Local AI storage | 64GB+ microSD card | Recommended when installing Ollama/local models |
-| Network | Internet access during install | Local network access for kiosk and integrations |
+| Network | Internet access during install | Local network access from your browser/client to the Caroline host |
 | Recovery access | Raspberry Pi Connect or SSH before kiosk testing | Strongly recommended before enabling boot-to-kiosk |
 | Runtime | Node.js 18+ | Installed by the Caroline installer when available |
 
 Avoid 32-bit `i386` VM images for this release. NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages.
 
-Kiosk mode requires a desktop environment. Raspberry Pi OS Lite can run the services and web UI, but it is not the recommended path for the dedicated fullscreen display experience.
+Kiosk mode requires a desktop environment and is primarily tested on Raspberry Pi OS Desktop. For an Ubuntu VM, the recommended path is **server mode**: install Caroline on Ubuntu Server, leave kiosk mode off, and open the GUI from another machine on your LAN at `http://<vm-ip>:8080/`.
 
 ---
 
@@ -100,7 +100,7 @@ You can also run Ollama on another computer and use the Caroline device only as 
 
 The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display preferences work from the Caroline GUI. Some optional widgets and integrations require outside accounts, API keys, OAuth clients, or device pairing before they can be used. Not every user will be able to create every outside key, and that is okay; Caroline is intended to degrade gracefully when optional services are left disconnected.
 
-Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux desktop or VM should also work. On an Ubuntu VM, use the 64-bit Desktop image, enable networking, and test without kiosk mode first. Kiosk mode needs a desktop session; a server-only VM can still run the services and web UI, but it will not autostart a fullscreen browser.
+Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux VM should also work as a **server host**. On an Ubuntu VM, use Ubuntu Server 64-bit, enable networking, choose **No** when the installer asks about kiosk mode, then open Caroline from an external browser at `http://<vm-ip>:8080/`. Ubuntu Desktop kiosk mode is possible, but it is not the recommended VM path because VM display layers such as Hyper-V Enhanced Session/XRDP and snap Firefox can interfere with fullscreen kiosk behavior.
 
 On desktop Linux, the installer also tries to create two desktop shortcuts:
 
@@ -108,6 +108,19 @@ On desktop Linux, the installer also tries to create two desktop shortcuts:
 - **Project Caroline Kiosk** — opens Caroline in fullscreen kiosk mode.
 
 The kiosk uses Firefox because it has been the most stable display browser for Caroline in Pi testing. Browser-based voice input depends on Chrome-family speech recognition, so voice is best treated as experimental until Caroline has a local speech-to-text service.
+
+### Ubuntu VM Server Mode
+
+For VM testing or non-Pi installs, treat Caroline like a small home-server app:
+
+1. Install Ubuntu Server 64-bit in the VM.
+2. Give the VM network access. Bridged networking is easiest; NAT also works if you can reach the VM IP from your browser.
+3. Run the one-command installer.
+4. Choose **No** for kiosk mode.
+5. After reboot, find the VM IP with `hostname -I`.
+6. Open `http://<vm-ip>:8080/` from your normal desktop browser.
+
+This mode tests the installer, nginx web UI, Node-RED backend, settings persistence, AI provider routing, integrations, update, and reboot paths. It does not test local fullscreen kiosk autostart, local browser microphone permissions, or VM display wake/sleep behavior.
 
 ### Upgrading
 

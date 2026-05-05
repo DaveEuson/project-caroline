@@ -1,6 +1,6 @@
 # Caroline Clean Reinstall QA Guide
 
-Use this when you want to wipe a Pi or disposable Linux VM back to a clean Caroline state, reinstall from GitHub, and verify the core release paths.
+Use this when you want to wipe a Pi or disposable Linux VM back to a clean Caroline state, reinstall from GitHub, and verify the core release paths. For Ubuntu VM testing, the recommended setup is Ubuntu Server with Caroline opened from an external browser.
 
 This guide has two reset levels:
 
@@ -10,7 +10,8 @@ This guide has two reset levels:
 ## Before You Start
 
 - Confirm you have SSH, Raspberry Pi Connect, or VM console access before enabling kiosk mode.
-- On Ubuntu, use a 64-bit Desktop VM for kiosk testing. A server-only VM can test services and the web UI, but it will not autostart a fullscreen browser.
+- For Ubuntu VM QA, use Ubuntu Server 64-bit when possible, choose **No** for kiosk mode, and open Caroline from another machine at `http://<vm-ip>:8080/`.
+- Use Ubuntu Desktop VM only if you specifically want to test experimental local fullscreen kiosk behavior.
 - Save any local credentials or notes you still need from `~/caroline`.
 - Rotate any secrets that may have been used in test installs if the machine was shared or exposed.
 - Do not port-forward Caroline ports to the public internet.
@@ -40,6 +41,8 @@ After reboot, open:
 ```text
 http://<pi-or-vm-ip>:8080/
 ```
+
+On an Ubuntu Server VM, open that URL from your Windows/macOS/Linux host browser. The VM does not need to run a local GUI.
 
 ## Interactive Uninstall
 
@@ -192,8 +195,9 @@ After reboot:
 - Caroline web UI still loads on port `8080`.
 - `caroline` service restarted.
 - `nginx` service restarted.
-- Desktop shortcuts exist on Raspberry Pi OS Desktop or Ubuntu Desktop.
-- Kiosk autostart works if kiosk mode was enabled.
+- Desktop shortcuts exist on Raspberry Pi OS Desktop or Ubuntu Desktop if a desktop environment was used.
+- Kiosk autostart works if kiosk mode was enabled on a desktop environment.
+- Ubuntu Server VM remains reachable from an external browser at `http://<vm-ip>:8080/`.
 - SSH or Raspberry Pi Connect still works for recovery.
 
 ## Upgrade QA
@@ -247,7 +251,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 sudo reboot
 ```
 
-For first Ubuntu QA, install with kiosk mode off first, confirm `http://localhost:8080/` works, then rerun the installer later to enable kiosk autostart.
+For Ubuntu QA, the recommended path is to keep kiosk mode off and open Caroline from an external browser at `http://<vm-ip>:8080/`. Only rerun the installer to enable kiosk autostart if you intentionally want to test Ubuntu Desktop fullscreen behavior.
 
 ## Release Gate
 
