@@ -331,15 +331,15 @@
   #kbd-btn.active { background: rgba(var(--t-rgb1),0.18); border-color: rgba(var(--t-rgb1),0.58); color: #f8feff; box-shadow: 0 0 16px rgba(var(--t-rgb1), 0.14); }
 
   /* RIGHT PANEL */
-  #news-panel { width: 312px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0 10px 0 0; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
-  #video-section { flex-shrink: 0; padding: 12px 0 10px 10px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
+  #news-panel { width: 312px; flex-shrink: 0; background: linear-gradient(180deg, rgba(12,8,20,0.8) 0%, rgba(5,5,10,0.9) 100%); border-left: 1px solid rgba(var(--t-rgb1), 0.08); display: flex; flex-direction: column; padding: 0 12px 0 10px; overflow: hidden; min-height: 0; transition: opacity 1s ease, transform 1s ease; backdrop-filter: blur(5px); }
+  #video-section { flex-shrink: 0; padding: 10px 0 10px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.08); }
   #media-bar { display:flex; align-items:center; gap:4px; margin-bottom:6px; }
   #media-label { font-size:11px; color:rgba(226,232,240,0.4); text-transform:uppercase; letter-spacing:0.12em; font-family:'JetBrains Mono',monospace; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #media-panel { width:100%; min-height:200px; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.2); background:radial-gradient(circle at 20% 0%, rgba(var(--t-rgb1),0.12), transparent 40%), rgba(0,0,0,0.26); position:relative; }
-  .media-mode { display:none; height:100%; padding:9px; }
+  .media-mode { display:none; height:100%; padding:10px; }
   .media-mode.active { display:block; }
-  .media-player-head { display:grid; grid-template-columns:26px minmax(0,1fr) 26px; align-items:center; gap:7px; margin-bottom:7px; min-width:0; }
-  #media-channel-label { min-width:0; color:#f8fafc; font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+  .media-player-head { display:grid; grid-template-columns:26px minmax(0,1fr) 26px; align-items:center; gap:8px; margin-bottom:8px; min-width:0; }
+  #media-channel-label { min-width:0; color:#f8fafc; font-size:9px; font-family:'JetBrains Mono',monospace; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
   .media-nav-btn { width:24px; height:22px; display:grid; place-items:center; border:1px solid rgba(var(--t-rgb1),0.28); border-radius:6px; background:rgba(0,0,0,0.18); color:var(--t-hex1); cursor:pointer; }
   .media-frame-wrap { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; border:1px solid rgba(var(--t-rgb1),0.24); background:#000; }
   #media-iframe, #media-video { width:100%; height:100%; border:0; display:none; background:#000; }
@@ -1132,7 +1132,7 @@
     pointer-events:none;
   }
   body.theme-cybercore #left::before { content:"LOCAL AUX"; right:10px; }
-  body.theme-cybercore #news-panel::before { content:"LIVE FEED"; left:10px; }
+  body.theme-cybercore #news-panel::before { display:none; content:""; }
   body.theme-cybercore .widget, body.theme-cybercore .about-card, body.theme-cybercore .todo-item, body.theme-cybercore .note-item, body.theme-cybercore .ollama-card, body.theme-cybercore .caro-avatar-card, body.theme-cybercore .caro-module-card, body.theme-cybercore .caro-summary-card {
     position:relative;
     border-radius:5px;
@@ -5218,7 +5218,10 @@ function loadMediaChannel(idx) {
   const video = document.getElementById('media-video');
   const fallback = document.getElementById('media-fallback-card');
   const muteBtn = document.getElementById('media-mute-btn');
-  if (label) label.textContent = ch.icon + ' ' + ch.name + ' — ' + ch.genre;
+  if (label) {
+    label.textContent = ch.icon + ' ' + ch.name;
+    label.title = ch.name + ' - ' + ch.genre;
+  }
   if (fallback) fallback.style.display = 'none';
   if (iframe) { iframe.style.display = 'none'; iframe.src = 'about:blank'; }
   if (video) video.style.display = 'none';
