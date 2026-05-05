@@ -401,7 +401,8 @@
   body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
-  body.idle-mode #avatar-outer { transform: scale(1.2) translateY(54px); }
+  body.idle-mode #avatar-carousel { position:fixed; top:clamp(176px,23vh,248px); left:50%; transform:translateX(-50%); width:min(520px,90vw); z-index:14; pointer-events:none; }
+  body.idle-mode #avatar-outer { transform: scale(1.2); }
   body.idle-mode #avatar-outer::before { display:none; }
   #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
