@@ -5929,14 +5929,17 @@ updateAiConfigIndicator();
 const input=document.getElementById('msg-input');
 let _lastSendMs = 0;
 const SEND_COOLDOWN_MS = 1500;
-async function sendLocalAiHttpMessage(text, context) {
+async function sendAiHttpMessage(text, context) {
+  const provider = S.aiProvider || 'openrouter';
   try {
     const resp = await fetchJsonWithTimeout(httpBase() + '/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text,
-        aiProvider: 'ollama',
+        aiProvider: provider,
+        aiModel: S.aiModel || 'anthropic/claude-haiku-4.5',
+        openrouterKey: S.openrouterKey || '',
         ollamaUrl: S.ollamaUrl || 'http://localhost:11434',
         ollamaModel: S.ollamaModel || 'gemma3:1b',
         aiName: S.aiName || 'Caroline',
@@ -5953,13 +5956,17 @@ async function sendLocalAiHttpMessage(text, context) {
     try { data = await resp.json(); } catch(e) {}
     if (!resp.ok) throw new Error((data && (data.error || data.reply)) || ('HTTP ' + resp.status));
     const reply = cleanDisplayText(data.reply || data.content || '');
-    if (!reply) throw new Error('Empty local AI reply');
+    if (!reply) throw new Error('Empty AI reply');
     addMessage(reply, 'caroline', 'display');
     speak(reply);
   } catch(e) {
     clearLocalAiThinkingStatus();
-    clog('err', 'Local AI chat failed: ' + e.message);
-    addMessage('Local AI did not answer. Try Settings -> AI -> Load Model, or switch to a smaller model.', 'caroline', 'display');
+    clog('err', 'AI chat failed: ' + e.message);
+    const local = provider === 'ollama';
+    addMessage(local
+      ? 'Local AI did not answer. Try Settings -> AI -> Load Model, or switch to a smaller model.'
+      : 'Cloud AI did not answer. Check the OpenRouter key/model in Settings -> AI, then try Test Connection.',
+      'caroline', 'display');
   }
 }
 function sendMessage(){
@@ -5993,17 +6000,7 @@ function sendMessage(){
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
   const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
   if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
-  if ((S.aiProvider || 'openrouter') === 'ollama') {
-    sendLocalAiHttpMessage(t, ctx);
-    return;
-  }
-  if(ws&&ws.readyState===WebSocket.OPEN){
-    ws.send(JSON.stringify({type:'user_message', content:t, userMood:S.userMood, aiMood:S.aiMood, context: ctx}));
-  } else {
-    clearLocalAiThinkingStatus();
-    clog('err', 'Send failed — WebSocket not connected');
-    addMessage('⚡ No connection to home base. Reconnecting…', 'caroline', 'display');
-  }
+  sendAiHttpMessage(t, ctx);
 }
 input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ playBeep(600); sendMessage(); } });
 input.addEventListener('focus',()=>{ requestAnimationFrame(()=>{ window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; }); });
