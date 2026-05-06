@@ -769,13 +769,33 @@ echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 # ── NODE-RED ─────────────────────────────────────────────────
 phase "REACTIVATION 2/6 — NODE-RED RUNTIME"
 
+install_node_red_global() {
+  sudo env \
+    npm_config_audit=false \
+    npm_config_fund=false \
+    npm_config_update_notifier=false \
+    npm_config_jobs=1 \
+    npm install -g --unsafe-perm --no-audit --no-fund node-red >/tmp/caroline-npm.log 2>&1
+}
+
+ensure_install_swap 4096 2048
 echo -e "${YELLOW}  ► Installing Node-RED (this takes 1-3 minutes)...${RESET}"
-sudo npm install -g --unsafe-perm node-red >/tmp/caroline-npm.log 2>&1 &
+install_node_red_global &
 NODERED_PID=$!
 spin "$NODERED_PID" "Installing Node-RED..."
 wait "$NODERED_PID" || {
-  echo -e "${RED}  ✗ Node-RED install failed. Check: cat /tmp/caroline-npm.log${RESET}"
-  exit 1
+  echo -e "${YELLOW}  ⚠ Node-RED install failed once. Adding more temporary swap and retrying...${RESET}"
+  echo -e "${DIM}    First log: cat /tmp/caroline-npm.log${RESET}"
+  ensure_install_swap 6144 3072
+  sudo npm cache clean --force >/tmp/caroline-npm-cache.log 2>&1 || true
+  install_node_red_global &
+  NODERED_PID=$!
+  spin "$NODERED_PID" "Retrying Node-RED install..."
+  wait "$NODERED_PID" || {
+    echo -e "${RED}  ✗ Node-RED install failed. Check: cat /tmp/caroline-npm.log${RESET}"
+    echo -e "${DIM}    If the log or console says out-of-memory, increase the VM to 4GB+ RAM or add swap, then rerun.${RESET}"
+    exit 1
+  }
 }
 
 # Resolve binary path — npm global installs to /usr/local/bin, not /usr/bin
