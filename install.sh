@@ -473,7 +473,7 @@ echo -e "${CYAN} |_|   |_|  \\___// |\\___|\\___|\\__|    \\____\\__,_|_|  \\___
 echo -e "${CYAN}              |__/                                                        ${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}  Project: Caroline${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
-echo -e "${DIM}  Home dashboard, assistant interface, and local automation host.${RESET}"
+echo -e "${DIM}  Retro terminal setup. Modern home dashboard, assistant interface, and automation host.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -492,15 +492,16 @@ fi
 
 # ── INTRO ────────────────────────────────────────────────────
 echo -e "${BOLD}  Starting Project: Caroline setup.${RESET}"
-echo -e "${DIM}  A few system choices are needed before setup begins.${RESET}"
+echo -e "${DIM}  Think 90s setup wizard, minus the mysteryware.${RESET}"
+echo -e "${DIM}  A few system choices are needed before files are copied.${RESET}"
 echo -e "${DIM}  Location, widgets, API keys, integrations, and personality are configured in the Caroline GUI after install.${RESET}"
-echo -e "${DIM}  Press Enter to skip any field.${RESET}"
+echo -e "${DIM}  Press Enter to skip any field. No floppy disks required.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
 
 # ── USER INPUT ───────────────────────────────────────────────
-echo -e "${MAGENTA}  // USER SETUP${RESET}"
+echo -e "${MAGENTA}  // SETUP.EXE — USER PROFILE${RESET}"
 echo ""
 read -p "  Your name: " USER_NAME </dev/tty
 TIMEZONE="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
@@ -510,7 +511,7 @@ ZIP_CODE=""
 echo -e "${DIM}  Location, timezone, and weather ZIP happen in Caroline's first-boot setup.${RESET}"
 echo ""
 
-echo -e "${MAGENTA}  // AI RUNTIME${RESET}"
+echo -e "${MAGENTA}  // SETUP.EXE — AI RUNTIME${RESET}"
 echo ""
 echo -e "${DIM}  OpenRouter = recommended. Fast, coherent, and usually costs pennies per month.${RESET}"
 echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but CPU will spike and replies can be rough.${RESET}"
@@ -552,7 +553,7 @@ else
 fi
 echo ""
 
-echo -e "${MAGENTA}  // DISPLAY MODE${RESET}"
+echo -e "${MAGENTA}  // SETUP.EXE — DISPLAY MODE${RESET}"
 echo ""
 echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated display.${RESET}"
 if has_desktop_environment; then
@@ -567,12 +568,12 @@ echo ""
 
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}  Acknowledged. Installing Caroline into ~/caroline/...${RESET}"
+echo -e "${BOLD}  Acknowledged. Writing Caroline files to ~/caroline/...${RESET}"
 echo ""
 sleep 1
 
 # ── DEPENDENCIES ─────────────────────────────────────────────
-phase "STEP 1 — SYSTEM DEPENDENCIES"
+phase "SETUP 1/6 — SYSTEM DEPENDENCIES"
 
 ensure_install_swap
 
@@ -712,7 +713,7 @@ fi
 echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 
 # ── NODE-RED ─────────────────────────────────────────────────
-phase "STEP 2 — NODE-RED"
+phase "SETUP 2/6 — NODE-RED RUNTIME"
 
 echo -e "${YELLOW}  ► Installing Node-RED (this takes 1-3 minutes)...${RESET}"
 sudo npm install -g --unsafe-perm node-red >/tmp/caroline-npm.log 2>&1 &
@@ -759,7 +760,7 @@ echo -e "${GREEN}  ✓ Node-RED configured${RESET}"
 
 # ── OLLAMA (optional) ────────────────────────────────────────
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
-  phase "STEP 3 — LOCAL AI"
+  phase "SETUP 3/6 — LOCAL AI"
 
   echo -e "${YELLOW}  ► Installing Ollama...${RESET}"
   if ! command -v ollama &> /dev/null; then
@@ -838,7 +839,7 @@ echo -e "${GREEN}  ✓ Data directory ready${RESET}"
 echo -e "${DIM}    Local data directory is ready.${RESET}"
 
 # ── CAROLINE FILES ───────────────────────────────────────────
-phase "STEP 4 — APPLICATION FILES"
+phase "SETUP 4/6 — APPLICATION FILES"
 
 mkdir -p "$CAROLINE_DIR"
 
@@ -859,7 +860,7 @@ else
   }
 fi
 
-echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
+echo -e "${DIM}    Copying application files to ${CAROLINE_DIR}...${RESET}"
 
 # Existing installs may contain a .git directory with ownership left over from
 # older installer runs. The runtime directory does not need Git metadata, so
@@ -985,7 +986,7 @@ pip3 install edge-tts 2>/dev/null || true
 echo -e "${GREEN}  ✓ edge-tts installed (or skipped)${RESET}"
 
 # ── NGINX (serve kiosk on port 8080) ─────────────────────────
-phase "STEP 5 — WEB INTERFACE"
+phase "SETUP 5/6 — WEB INTERFACE"
 
 echo -e "${YELLOW}  ► Deploying kiosk interface on port ${KIOSK_PORT}...${RESET}"
 
@@ -1208,7 +1209,7 @@ else
 fi
 
 # ── SYSTEMD SERVICE ──────────────────────────────────────────
-phase "STEP 6 — SYSTEM SERVICE"
+phase "SETUP 6/6 — SYSTEM SERVICE"
 
 echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 
@@ -1405,13 +1406,13 @@ fi
 unset _svc _svc_ok
 
 # ── DONE ─────────────────────────────────────────────────────
-phase "INSTALL COMPLETE"
+phase "INSTALL COMPLETE — READY"
 PI_IP_FINAL=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP_FINAL" ] || PI_IP_FINAL="localhost"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}  Project: Caroline is installed and running.${RESET}"
+echo -e "${BOLD}${GREEN}  Project: Caroline is installed and running. Setup completed successfully.${RESET}"
 echo ""
 echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
@@ -1468,7 +1469,7 @@ echo -e "${DIM}  Caroline is free to use. If you enjoy it and want to support fu
 echo -e "${BOLD}    https://buymeacoffee.com/daveeuson${RESET}"
 echo -e "${DIM}  Totally optional — no pressure, no locked features.${RESET}"
 echo ""
-echo -e "${MAGENTA}  Reboot when you are ready to finish startup setup.${RESET}"
+echo -e "${MAGENTA}  You may now reboot when ready to finish startup setup.${RESET}"
 echo ""
 echo -e "${BOLD}  sudo reboot${RESET}"
 echo ""
