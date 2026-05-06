@@ -1786,7 +1786,7 @@
             <div style="margin-bottom:5px;color:#c4d7ff;">This setup is free for Caroline's calendar use; no paid Google Cloud billing is needed.</div>
             <div>1. In Google Cloud, enable Calendar API and create an OAuth Client ID as a <strong>Desktop app</strong>.</div>
             <div>2. Download the OAuth JSON, then use <strong>Import OAuth JSON</strong> or <strong>Paste OAuth JSON</strong> here. The JSON has both the Client ID and secret.</div>
-            <div>3. Click <strong>Connect Google</strong>. If Google lands on a localhost page in another browser, paste that final URL into <strong>Finish Google Sign-In</strong> below.</div>
+            <div>3. Click <strong>Connect Google</strong>. If Google lands on <strong>127.0.0.1 refused to connect</strong> in a remote browser, copy that full address-bar URL and paste it into <strong>Finish Google Sign-In</strong> below.</div>
             <button type="button" onclick="showHowTo('calendar')" style="margin-top:8px;background:rgba(66,133,244,0.1);border:1px solid rgba(66,133,244,0.45);border-radius:10px;padding:5px 12px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Open full guide</button>
           </div>
           <div class="settings-row">
@@ -1831,6 +1831,14 @@
               <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
             </div>
           </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Finish Google Sign-In</div><div class="settings-sub">Remote browser: paste the full 127.0.0.1 callback URL here</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste full 127.0.0.1 callback URL" style="width:260px"/>
+              <button id="google-manual-callback-btn" type="button" onclick="handleGoogleManualCallback()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Finish Google Sign-In</button>
+              <span id="google-manual-callback-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;">Only needed if Google ends on a refused localhost page.</span>
+            </div>
+          </div>
           <details style="margin-top:12px">
             <summary style="cursor:pointer;color:rgba(226,232,240,0.45);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Advanced Google options</summary>
             <div class="settings-row" style="margin-top:10px">
@@ -1840,14 +1848,6 @@
             <div class="settings-row" style="margin-top:14px">
               <div><div class="settings-label">Task Sheet ID</div><div class="settings-sub" id="sheet-id-status">Legacy Sheets sync only</div></div>
               <input class="settings-input" id="set-sheet-id" type="text" placeholder="spreadsheet id" style="width:200px"/>
-            </div>
-            <div class="settings-row" style="margin-top:14px">
-              <div><div class="settings-label">Finish Sign-In</div><div class="settings-sub">Use only if the browser gets stuck</div></div>
-              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-                <input class="settings-input" id="google-manual-callback" type="text" placeholder="paste callback URL or code" style="width:260px"/>
-                <button id="google-manual-callback-btn" type="button" onclick="handleGoogleManualCallback()" style="background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Finish Google Sign-In</button>
-                <span id="google-manual-callback-status" style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;"></span>
-              </div>
             </div>
           </details>
           <details style="margin-top:12px">
@@ -4714,6 +4714,14 @@ async function loadGoogleCalendars() {
   }
 }
 
+function googleRemoteCallbackHint() {
+  const host = window.location.hostname || '';
+  const remoteClient = host && !isLocalHostName(host);
+  return remoteClient
+    ? 'Remote browser mode: after Google approves, a 127.0.0.1 refused page is expected. Copy that full URL and paste it into Finish Google Sign-In.'
+    : 'Waiting for Google... paste the final callback URL below if it stalls';
+}
+
 async function handleGoogleAuth() {
   const statusEl = document.getElementById('google-auth-status');
   const btn = document.getElementById('google-connect-btn');
@@ -4734,7 +4742,12 @@ async function handleGoogleAuth() {
   localStorage.setItem('caro_settings', JSON.stringify(S));
   try { await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: redirectUri }, NODE_RED_TIMEOUT_MS); } catch(e) {}
   const params = new URLSearchParams({ clientId, redirectUri });
-  if (statusEl) statusEl.textContent = 'Waiting for Google... paste URL below if it stalls';
+  if (statusEl) statusEl.textContent = googleRemoteCallbackHint();
+  const manualStatus = document.getElementById('google-manual-callback-status');
+  if (manualStatus) {
+    manualStatus.textContent = googleRemoteCallbackHint();
+    manualStatus.style.color = isLocalHostName(window.location.hostname || '') ? 'rgba(226,232,240,0.45)' : '#fbbf24';
+  }
   if (btn) btn.textContent = 'Waiting for Google...';
   if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
   googleAuthPopup = window.open(httpBase() + '/admin/google/auth?' + params.toString(), 'caroline_google_auth', 'popup,width=540,height=760,menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes');
@@ -4748,7 +4761,7 @@ async function handleGoogleAuth() {
     if (!googleAuthPopup || !googleAuthPopup.closed) return;
     clearInterval(googleAuthPopupTimer);
     googleAuthPopupTimer = null;
-    if (!parseSettingBool(S.googleConnected) && statusEl) statusEl.textContent = 'Google popup closed - paste the final callback URL below if it got stuck';
+    if (!parseSettingBool(S.googleConnected) && statusEl) statusEl.textContent = 'Google popup closed - paste the 127.0.0.1 callback URL into Finish Google Sign-In';
     if (!parseSettingBool(S.googleConnected) && btn) btn.textContent = 'Connect Google';
     refreshGoogleStatus();
   }, 900);
@@ -4762,7 +4775,7 @@ async function handleGoogleAuth() {
       if (googleAuthPopup && !googleAuthPopup.closed) googleAuthPopup.close();
       clearInterval(timer);
     } else if (tries > 60) {
-      if (statusEl) statusEl.textContent = 'Google sign-in timed out - paste the final callback URL below';
+      if (statusEl) statusEl.textContent = 'Google sign-in timed out - paste the 127.0.0.1 callback URL below';
       if (btn) btn.textContent = 'Connect Google';
       clearInterval(timer);
     }
@@ -5674,7 +5687,7 @@ const HOWTO_CONTENT = {
 <li>Enable the <strong>Google Calendar API</strong></li>
 <li>Create an OAuth Client ID with application type <strong>Desktop app</strong></li>
 <li>Download the OAuth JSON and import or paste it in Caroline Settings -> Connect -> Google</li>
-<li>Click <strong>Connect Google</strong>; if a remote browser lands on localhost, paste the final URL into <strong>Finish Google Sign-In</strong></li>
+<li>Click <strong>Connect Google</strong>; if a remote browser lands on <strong>127.0.0.1 refused to connect</strong>, copy the full address-bar URL and paste it into <strong>Finish Google Sign-In</strong></li>
 <li>Leave Calendar ID as <code>primary</code>, or use <strong>Load Calendars</strong> to choose a writable calendar by name</li>
 </ol>
 <div class="howto-note">This Calendar API + Desktop OAuth setup is free for normal Caroline use and does not require paid Google Cloud billing. Google Sheets and service-account JSON are legacy fallback options; most installs do not need them.</div>`

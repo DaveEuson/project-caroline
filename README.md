@@ -250,7 +250,7 @@ Use this for calendar context and calendar event creation.
 6. Download the OAuth JSON.
 7. In Caroline, open **Settings → Connect → Google**.
 8. Import or paste the OAuth JSON.
-9. Click **Connect Google** and finish the browser sign-in.
+9. Click **Connect Google** and finish the browser sign-in. In server/client mode, a `127.0.0.1 refused to connect` page after Google approval is expected; copy that full address-bar URL back into **Finish Google Sign-In** in Caroline.
 
 This setup is free for normal Caroline calendar use and does not require paid Google Cloud billing.
 

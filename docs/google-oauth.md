@@ -37,14 +37,14 @@ If the JSON says `"type": "service_account"`, or the client ID is only a long nu
 3. Use **Import OAuth JSON** or **Paste OAuth JSON** with the Desktop app JSON you downloaded.
 4. Click **Connect Google**.
 5. Sign in with the same Google account you added as a test user.
-6. If Google redirects to a localhost/error page in a remote browser, copy the full URL from the address bar and paste it into **Finish Google Sign-In** in Caroline.
+6. If Google redirects to a `127.0.0.1 refused to connect` page in a remote browser, copy the full URL from the address bar and paste it into **Finish Google Sign-In** in Caroline.
 
 ## Kiosk vs Browser
 
 The Caroline host/kiosk and a normal client browser use the same setup screen. The only difference is where Google lands after consent:
 
 - **Host/kiosk browser:** the loopback callback can complete directly on the Caroline host.
-- **Remote browser/laptop:** the browser may land on `127.0.0.1` on your laptop. Copy that final URL and paste it into **Finish Google Sign-In**.
+- **Remote browser/laptop:** the browser may land on `127.0.0.1` on your laptop and show `refused to connect`. That is expected. Copy that final URL and paste it into **Finish Google Sign-In**.
 
 Do not use Google's TV/device-code OAuth flow for Caroline Calendar. Google limits that flow to a small set of scopes that does not include Calendar, so Caroline uses Desktop OAuth with the manual callback fallback instead.
 
@@ -53,7 +53,7 @@ Do not use Google's TV/device-code OAuth flow for Caroline Calendar. Google limi
 - `redirect_uri_mismatch`: you probably used a Web Application client, service-account JSON, or an old invalid client. Create a new **Desktop app** OAuth client and import that JSON.
 - `Access blocked` / unverified app warning: make sure your Gmail account is listed as a test user, then continue through the advanced/testing prompt.
 - Caroline says `Import Desktop OAuth JSON`: the saved Google client ID is not a valid OAuth client ID ending in `.apps.googleusercontent.com`.
-- Kiosk mode hides the callback URL: open Caroline in a normal browser for setup, or copy the final localhost URL from the browser that completed Google sign-in and paste it into **Finish Google Sign-In**.
+- Kiosk mode hides the callback URL: open Caroline in a normal browser for setup, or copy the final `127.0.0.1` URL from the browser that completed Google sign-in and paste it into **Finish Google Sign-In**.
 
 Google references:
 
