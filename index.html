@@ -2607,6 +2607,7 @@
 const VERSION = '0.3.0-dev';
 const BUILD_FALLBACK = 'local-dev';
 let buildInfo = { version: VERSION, commit: BUILD_FALLBACK, branch: '', installedAt: '', source: 'local file' };
+let latestBuildInfo = { checkedAt: 0, commit: '', shortCommit: '', available: false, error: '' };
 document.addEventListener('DOMContentLoaded', () => {
   const vEl = document.querySelector('.topbar-version');
   if (vEl) vEl.textContent = 'v' + VERSION;
@@ -3042,6 +3043,7 @@ async function refreshBuildInfo(options = {}) {
     if (!options.quiet) showSettingsFeedback('Build manifest not found yet', true);
   }
   updateAboutPanel();
+  if (!options.skipUpdateCheck) checkUpdateAvailability({ quiet: true }).catch(() => {});
   return buildInfo;
 }
 
@@ -3049,6 +3051,59 @@ function shortBuildLabel(info = buildInfo) {
   const commit = String(info.commit || info.gitCommit || BUILD_FALLBACK).trim();
   const branch = String(info.branch || '').trim();
   return commit + (branch ? ' / ' + branch : '');
+}
+
+function normalizeCommit(value) {
+  return String(value || '').trim().toLowerCase().replace(/[^0-9a-f]/g, '');
+}
+
+function commitMatches(localCommit, remoteCommit) {
+  const local = normalizeCommit(localCommit);
+  const remote = normalizeCommit(remoteCommit);
+  return !!(local && remote && (remote === local || remote.startsWith(local) || local.startsWith(remote)));
+}
+
+async function fetchLatestBuildInfo() {
+  const resp = await fetch('https://api.github.com/repos/DaveEuson/project-caroline/commits/master', {
+    cache: 'no-store',
+    headers: { 'Accept': 'application/vnd.github+json' }
+  });
+  if (!resp.ok) throw new Error('GitHub HTTP ' + resp.status);
+  const data = await resp.json();
+  const commit = String(data.sha || '').trim();
+  if (!commit) throw new Error('GitHub did not return a commit');
+  return {
+    commit,
+    shortCommit: commit.slice(0, 7),
+    date: data.commit?.committer?.date || data.commit?.author?.date || '',
+    message: String(data.commit?.message || '').split('\n')[0].trim()
+  };
+}
+
+async function checkUpdateAvailability(options = {}) {
+  const localCommit = buildInfo.commit || buildInfo.gitCommit || '';
+  try {
+    const latest = await fetchLatestBuildInfo();
+    if (!normalizeCommit(localCommit) || localCommit === BUILD_FALLBACK) {
+      throw new Error('local build hash is not available yet');
+    }
+    latest.available = !commitMatches(localCommit, latest.commit);
+    latest.checkedAt = Date.now();
+    latest.error = '';
+    latestBuildInfo = latest;
+    if (latest.available) {
+      setUpdateStatus('Update available: ' + (localCommit || 'unknown') + ' → ' + latest.shortCommit, '#fbbf24');
+    } else {
+      setUpdateStatus('Caroline is up to date (' + (localCommit || latest.shortCommit) + ')', 'rgba(52,211,153,0.9)');
+    }
+    updateAboutPanel();
+    return latest;
+  } catch(e) {
+    latestBuildInfo = { checkedAt: Date.now(), commit: '', shortCommit: '', available: false, error: e.message || 'update check failed' };
+    if (!options.quiet) setUpdateStatus('Could not check GitHub for updates: ' + latestBuildInfo.error, '#fbbf24');
+    updateAboutPanel();
+    return latestBuildInfo;
+  }
 }
 
 function updateAboutPanel() {
@@ -3061,7 +3116,10 @@ function updateAboutPanel() {
   const importedMemory = S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt') || '';
   const installedVersion = String(buildInfo.version || '').trim();
   set('about-version', 'UI v' + VERSION + (installedVersion && installedVersion !== VERSION ? ' · install v' + installedVersion : ''));
-  set('about-build', shortBuildLabel());
+  const updateSuffix = latestBuildInfo.checkedAt
+    ? (latestBuildInfo.error ? ' · update check unavailable' : (latestBuildInfo.available ? ' · update ' + latestBuildInfo.shortCommit + ' available' : ' · current'))
+    : '';
+  set('about-build', shortBuildLabel() + updateSuffix);
   set('about-installed', buildInfo.installedAt ? new Date(buildInfo.installedAt).toLocaleString() : 'not installed by script');
   set('about-source', buildInfo.repo || buildInfo.source || window.location.href);
   set('about-runtime', (S.nodeRedUrl || DEFAULT_NODE_RED_URL) + ' · ' + (navigator.userAgent || '').replace(/\s+/g, ' ').slice(0, 120));
@@ -5964,7 +6022,7 @@ function showUninstallCommand(btn) {
 function showUpdateCommand(btn) {
   const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash';
   const status = document.getElementById('update-command-status');
-  const message = 'Run this in the device terminal to update. Refresh Build only rereads version info; this command pulls the latest release. Settings and saved credentials are preserved: ' + cmd;
+  const message = 'Manual fallback: run this in the device terminal if the GUI cannot verify or start the update. Settings and saved credentials are preserved: ' + cmd;
   if (status) {
     status.textContent = message;
     status.style.color = 'rgba(34,211,238,0.95)';
@@ -5988,12 +6046,40 @@ function setUpdateStatus(text, color = 'rgba(34,211,238,0.95)') {
 }
 
 async function startCarolineUpdate(btn) {
-  if (!confirm('Update Project: Caroline now? The interface may disconnect for a minute while services restart.')) return;
   const originalText = btn ? btn.textContent : '⟳ Update';
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Starting...';
+    btn.textContent = 'Checking...';
   }
+  setUpdateStatus('Checking GitHub for a newer Caroline build...');
+  await refreshBuildInfo({ quiet: true, skipUpdateCheck: true });
+  const latest = await checkUpdateAvailability({ quiet: false });
+  if (latest.error) {
+    setUpdateStatus('Could not verify whether an update exists. Command copied as a manual fallback.', '#fbbf24');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+    showUpdateCommand(null);
+    return;
+  }
+  if (!latest.available) {
+    setUpdateStatus('Caroline is already up to date. No update needed.', 'rgba(52,211,153,0.9)');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+    return;
+  }
+  if (!confirm('Update Project: Caroline to ' + latest.shortCommit + ' now? The interface may disconnect for a minute while services restart.')) {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+    setUpdateStatus('Update available: ' + latest.shortCommit + '. Not started yet.', '#fbbf24');
+    return;
+  }
+  if (btn) btn.textContent = 'Starting...';
   setUpdateStatus('Starting update on the Caroline host...');
   try {
     const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/update', {
@@ -6029,15 +6115,23 @@ function pollCarolineUpdateStatus(btn, originalText) {
         setUpdateStatus('Updating... ' + (data.lastLine || 'installer is running'));
         return;
       }
-      if (data.ok && data.lastLine) setUpdateStatus(data.lastLine.includes('complete') ? 'Update complete. Refreshing build info...' : data.lastLine, data.lastLine.includes('complete') ? 'rgba(52,211,153,0.9)' : 'rgba(34,211,238,0.95)');
-      if (data.lastLine && /complete/i.test(data.lastLine)) {
+      const lastLine = data.lastLine || '';
+      const isComplete = /complete/i.test(lastLine);
+      const isAlreadyCurrent = /already current/i.test(lastLine);
+      const isFailed = /failed|unavailable/i.test(lastLine);
+      if (data.ok && lastLine) {
+        const message = isComplete ? 'Update complete. Refreshing build info...' : (isAlreadyCurrent ? 'Caroline is already up to date. No update needed.' : lastLine);
+        const color = (isComplete || isAlreadyCurrent) ? 'rgba(52,211,153,0.9)' : (isFailed ? '#fbbf24' : 'rgba(34,211,238,0.95)');
+        setUpdateStatus(message, color);
+      }
+      if (lastLine && (isComplete || isAlreadyCurrent || isFailed)) {
         clearInterval(carolineUpdatePollTimer);
         carolineUpdatePollTimer = null;
         if (btn) {
           btn.disabled = false;
           btn.textContent = originalText || '⟳ Update';
         }
-        setTimeout(() => { refreshBuildInfo(); }, 1500);
+        if (isComplete) setTimeout(() => { refreshBuildInfo(); }, 1500);
       }
     } catch(e) {
       setUpdateStatus('Update is still running or Caroline is restarting. Refresh this page in about a minute.', '#fbbf24');

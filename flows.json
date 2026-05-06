@@ -5593,7 +5593,7 @@
     "type": "function",
     "z": "1497b6d50e1369f5",
     "name": "Read Caroline update status",
-    "func": "const LOG = '/tmp/caroline-update.log';\nlet text = '';\nlet mtimeMs = 0;\ntry {\n  text = fs.existsSync(LOG) ? fs.readFileSync(LOG, 'utf8') : '';\n  if (text) mtimeMs = fs.statSync(LOG).mtimeMs || 0;\n} catch(e) {}\nconst lines = text.split(/\\r?\\n/).map(s => s.trim()).filter(Boolean);\nconst lastLine = lines[lines.length - 1] || 'No update has run yet';\nconst recent = mtimeMs && (Date.now() - mtimeMs < 30 * 60 * 1000);\nconst finished = /Project: Caroline GUI update (complete|failed)/i.test(lastLine);\nconst running = !!(text && recent && !finished);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, running, lastLine, logTail: lines.slice(-40) };\nreturn msg;",
+    "func": "const LOG = '/tmp/caroline-update.log';\nlet text = '';\nlet mtimeMs = 0;\ntry {\n  text = fs.existsSync(LOG) ? fs.readFileSync(LOG, 'utf8') : '';\n  if (text) mtimeMs = fs.statSync(LOG).mtimeMs || 0;\n} catch(e) {}\nconst lines = text.split(/\\r?\\n/).map(s => s.trim()).filter(Boolean);\nconst lastLine = lines[lines.length - 1] || 'No update has run yet';\nconst recent = mtimeMs && (Date.now() - mtimeMs < 30 * 60 * 1000);\nconst finished = /Project: Caroline GUI update (complete|failed|already current|check unavailable)/i.test(lastLine);\nconst running = !!(text && recent && !finished);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, running, lastLine, logTail: lines.slice(-40) };\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,

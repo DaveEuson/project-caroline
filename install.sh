@@ -1449,6 +1449,24 @@ fi
 curl -fsSL "$REPO_INSTALL_URL" -o "$INSTALLER" >> "$LOG" 2>&1
 chmod 700 "$INSTALLER"
 git config --global --add safe.directory "$TARGET_HOME/project-caroline" >/dev/null 2>&1 || true
+LOCAL_COMMIT=""
+REMOTE_COMMIT=""
+if [ -f "$TARGET_HOME/caroline/caroline_build.json" ] && command -v jq >/dev/null 2>&1; then
+  LOCAL_COMMIT="$(jq -r '.commit // ""' "$TARGET_HOME/caroline/caroline_build.json" 2>/dev/null || true)"
+fi
+if [ -z "$LOCAL_COMMIT" ] && [ -d "$TARGET_HOME/project-caroline/.git" ]; then
+  LOCAL_COMMIT="$(git -C "$TARGET_HOME/project-caroline" rev-parse --short HEAD 2>/dev/null || true)"
+fi
+REMOTE_COMMIT="$(git ls-remote https://github.com/DaveEuson/project-caroline.git refs/heads/master 2>/dev/null | awk '{print $1}' | head -1 || true)"
+if [ -z "$REMOTE_COMMIT" ]; then
+  echo "$(date -Is) Project: Caroline GUI update check unavailable (could not reach GitHub)" >> "$LOG"
+  exit 0
+fi
+if [ -n "$LOCAL_COMMIT" ] && [ -n "$REMOTE_COMMIT" ] && [ "${REMOTE_COMMIT#${LOCAL_COMMIT}}" != "$REMOTE_COMMIT" ]; then
+  echo "$(date -Is) Project: Caroline GUI update already current (${LOCAL_COMMIT})" >> "$LOG"
+  exit 0
+fi
+echo "$(date -Is) Update available: ${LOCAL_COMMIT:-unknown} -> ${REMOTE_COMMIT:0:7}" >> "$LOG"
 SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
 echo "$(date -Is) Project: Caroline GUI update complete" >> "$LOG"
 EOF
