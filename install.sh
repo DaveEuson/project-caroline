@@ -160,14 +160,15 @@ cleanup_install_swap() {
 trap cleanup_install_swap EXIT
 
 ensure_install_swap() {
-  local _mem_mb _swap_mb _total_mb _target_mb _free_mb
+  local _required_mb="${1:-1800}"
+  local _target_mb="${2:-1536}"
+  local _mem_mb _swap_mb _total_mb _free_mb
   _mem_mb=$(awk '/MemTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
   _swap_mb=$(awk '/SwapTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
   _total_mb=$((_mem_mb + _swap_mb))
 
-  [ "$_total_mb" -ge 1800 ] && return 0
+  [ "$_total_mb" -ge "$_required_mb" ] && return 0
 
-  _target_mb=1536
   _free_mb=$(df -Pm /var/tmp 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)
   if [ "${_free_mb:-0}" -lt $((_target_mb + 256)) ]; then
     echo -e "${YELLOW}  ⚠ Low memory detected (${_mem_mb}MB RAM, ${_swap_mb}MB swap), but /var/tmp lacks room for temporary swap.${RESET}"
@@ -584,6 +585,7 @@ TOTAL_RAM_MB=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null
 if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo -e "${YELLOW}  ⚠ ${TOTAL_RAM_MB}MB RAM detected. Ollama runs better with 4GB+.${RESET}"
   echo -e "${DIM}    Use OpenRouter for normal chat; local Ollama may feel slow or wander.${RESET}"
+  echo -e "${DIM}    If Ollama cannot install here, Caroline will continue with OpenRouter.${RESET}"
   echo ""
 fi
 
@@ -814,70 +816,75 @@ echo -e "${GREEN}  ✓ Node-RED configured${RESET}"
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   phase "REACTIVATION 3/6 — LOCAL AI"
 
+  ensure_install_swap 4096 2048
+  OLLAMA_AVAILABLE=true
   echo -e "${YELLOW}  ► Installing Ollama...${RESET}"
   if ! command -v ollama &> /dev/null; then
     if curl -fsSL https://ollama.ai/install.sh -o /tmp/caroline-ollama-install.sh; then
       sh /tmp/caroline-ollama-install.sh >/tmp/caroline-ollama.log 2>&1 || {
-        echo -e "${RED}  ✗ Ollama install failed. Check: cat /tmp/caroline-ollama.log${RESET}"
-        exit 1
+        OLLAMA_AVAILABLE=false
       }
     else
-      echo -e "${RED}  ✗ Ollama installer download failed. Check your internet connection.${RESET}"
-      echo -e "${DIM}    Manual install: curl -fsSL https://ollama.ai/install.sh | sh${RESET}"
-      exit 1
+      OLLAMA_AVAILABLE=false
     fi
   fi
   if ! command -v ollama &> /dev/null; then
-    echo -e "${RED}  ✗ Ollama command was not found after install.${RESET}"
-    echo -e "${DIM}    Manual install: curl -fsSL https://ollama.ai/install.sh | sh${RESET}"
-    exit 1
+    OLLAMA_AVAILABLE=false
   fi
-  echo -e "${GREEN}  ✓ Ollama installed${RESET}"
+  if [ "$OLLAMA_AVAILABLE" != "true" ]; then
+    echo -e "${YELLOW}  ⚠ Ollama install failed or was killed by the OS. Continuing with OpenRouter as the AI runtime.${RESET}"
+    echo -e "${DIM}    Log: cat /tmp/caroline-ollama.log${RESET}"
+    echo -e "${DIM}    You can install Ollama later from Caroline Settings or with: curl -fsSL https://ollama.ai/install.sh | sh${RESET}"
+    INSTALL_OLLAMA="n"
+    AI_PROVIDER="openrouter"
+  else
+    echo -e "${GREEN}  ✓ Ollama installed${RESET}"
 
-  echo -e "${YELLOW}  ► Configuring Ollama network access...${RESET}"
-  sudo mkdir -p /etc/systemd/system/ollama.service.d/
-  sudo tee /etc/systemd/system/ollama.service.d/env.conf > /dev/null << 'OLLAMA_ENV_EOF'
+    echo -e "${YELLOW}  ► Configuring Ollama network access...${RESET}"
+    sudo mkdir -p /etc/systemd/system/ollama.service.d/
+    sudo tee /etc/systemd/system/ollama.service.d/env.conf > /dev/null << 'OLLAMA_ENV_EOF'
 [Service]
 Environment="OLLAMA_HOST=0.0.0.0"
 Environment="OLLAMA_ORIGINS=*"
 OLLAMA_ENV_EOF
 
-  echo -e "${YELLOW}  ► Starting Ollama service...${RESET}"
-  sudo systemctl enable ollama 2>/dev/null || true
-  sudo systemctl daemon-reload
-  sudo systemctl restart ollama 2>/dev/null || sudo systemctl start ollama 2>/dev/null || true
-  sleep 3
+    echo -e "${YELLOW}  ► Starting Ollama service...${RESET}"
+    sudo systemctl enable ollama 2>/dev/null || true
+    sudo systemctl daemon-reload
+    sudo systemctl restart ollama 2>/dev/null || sudo systemctl start ollama 2>/dev/null || true
+    sleep 3
 
-  echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"
-  OLLAMA_READY=false
-  for i in $(seq 1 15); do
-    if curl -sf "http://localhost:11434/api/tags" > /dev/null 2>&1; then
-      OLLAMA_READY=true
-      break
+    echo -e "${YELLOW}  ► Verifying Ollama is responding...${RESET}"
+    OLLAMA_READY=false
+    for i in $(seq 1 15); do
+      if curl -sf "http://localhost:11434/api/tags" > /dev/null 2>&1; then
+        OLLAMA_READY=true
+        break
+      fi
+      sleep 2
+    done
+    if [ "$OLLAMA_READY" = "true" ]; then
+      echo -e "${GREEN}  ✓ Ollama responding at localhost:11434${RESET}"
+    else
+      echo -e "${YELLOW}  ⚠ Ollama not yet responding — run 'ollama serve' manually if needed${RESET}"
     fi
-    sleep 2
-  done
-  if [ "$OLLAMA_READY" = "true" ]; then
-    echo -e "${GREEN}  ✓ Ollama responding at localhost:11434${RESET}"
-  else
-    echo -e "${YELLOW}  ⚠ Ollama not yet responding — run 'ollama serve' manually if needed${RESET}"
-  fi
 
-  echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL}...${RESET}"
-  echo -e "${DIM}    Large local models can take a while on first pull.${RESET}"
-  ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
-  PULL_PID=$!
-  spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
-  if wait "$PULL_PID"; then
-    echo -e "${GREEN}  ✓ Model ${OLLAMA_MODEL} locked and loaded${RESET}"
-    echo -e "${YELLOW}  ► Starting ${OLLAMA_MODEL} warm-up in the background...${RESET}"
-    (timeout 45s ollama run "$OLLAMA_MODEL" "hello" >/tmp/caroline-ollama-warmup.log 2>&1 || true) &
-    echo -e "${DIM}    Continuing install. First local AI reply may still be slow.${RESET}"
-  else
-    echo -e "${YELLOW}  ⚠ Model pull failed — run 'ollama pull ${OLLAMA_MODEL}' manually after install${RESET}"
-    echo -e "${DIM}    Log: cat /tmp/caroline-pull.log${RESET}"
+    echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL}...${RESET}"
+    echo -e "${DIM}    Large local models can take a while on first pull.${RESET}"
+    ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
+    PULL_PID=$!
+    spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
+    if wait "$PULL_PID"; then
+      echo -e "${GREEN}  ✓ Model ${OLLAMA_MODEL} locked and loaded${RESET}"
+      echo -e "${YELLOW}  ► Starting ${OLLAMA_MODEL} warm-up in the background...${RESET}"
+      (timeout 45s ollama run "$OLLAMA_MODEL" "hello" >/tmp/caroline-ollama-warmup.log 2>&1 || true) &
+      echo -e "${DIM}    Continuing install. First local AI reply may still be slow.${RESET}"
+    else
+      echo -e "${YELLOW}  ⚠ Model pull failed — run 'ollama pull ${OLLAMA_MODEL}' manually after install${RESET}"
+      echo -e "${DIM}    Log: cat /tmp/caroline-pull.log${RESET}"
+    fi
+    echo -e "${GREEN}  ✓ Ollama setup complete${RESET}"
   fi
-  echo -e "${GREEN}  ✓ Ollama setup complete${RESET}"
 fi
 true
 
