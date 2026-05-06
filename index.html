@@ -56,8 +56,9 @@
   #news-ticker { height:26px; flex-shrink:0; position:relative; z-index:10; display:flex; align-items:center; gap:10px; overflow:hidden; border-bottom:1px solid rgba(var(--t-rgb1),0.12); background:linear-gradient(90deg, rgba(5,5,10,0.98), rgba(12,8,20,0.92)); font-family:'JetBrains Mono',monospace; }
   #news-ticker-label { flex:0 0 auto; height:100%; display:flex; align-items:center; padding:0 10px 0 14px; border-right:1px solid rgba(var(--t-rgb1),0.14); color:#facc15; font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
   #news-ticker-track { flex:1; min-width:0; overflow:hidden; height:100%; display:flex; align-items:center; mask-image:linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
-  #news-ticker-inner { display:flex; align-items:center; gap:22px; white-space:nowrap; animation:newsTickerScroll 46s linear infinite; }
+  #news-ticker-inner { display:flex; align-items:center; white-space:nowrap; animation:newsTickerScroll 110s linear infinite; will-change:transform; transform:translate3d(0,0,0); }
   #news-ticker:hover #news-ticker-inner { animation-play-state:paused; }
+  .ticker-group { display:flex; align-items:center; gap:26px; flex:0 0 auto; padding-right:26px; }
   .ticker-item { appearance:none; border:0; background:transparent; display:inline-flex; align-items:center; gap:8px; color:rgba(226,232,240,0.68); font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; padding:0; }
   .ticker-item:hover { color:#f8fafc; }
   .ticker-src { color:#05050a; background:#facc15; border:1px solid rgba(250,204,21,0.5); border-radius:4px; padding:1px 5px; font-size:9px; font-weight:700; letter-spacing:.08em; }
@@ -459,7 +460,7 @@
   @keyframes micPulse { 0%,100%{box-shadow:0 0 15px rgba(var(--t-rgb2),0.5)} 50%{box-shadow:0 0 30px rgba(var(--t-rgb2),0.8)} }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  @keyframes newsTickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  @keyframes newsTickerScroll { from{transform:translate3d(0,0,0)} to{transform:translate3d(-50%,0,0)} }
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
@@ -6701,24 +6702,29 @@ function renderNewsTicker(items = latestNewsItems) {
   if (!inner) return;
   inner.replaceChildren();
   const list = Array.isArray(items) && items.length ? items.slice(0, 8) : [{ title: 'Headlines unavailable', src: 'NEWS' }];
-  const doubled = list.concat(list);
-  doubled.forEach((item) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'ticker-item';
-    btn.title = item.title || '';
-    btn.onclick = () => item.link ? openNewsModal(item) : null;
-    const src = document.createElement('span');
-    src.className = 'ticker-src';
-    src.textContent = (item.src || 'NEWS').slice(0, 10);
-    const title = document.createElement('span');
-    title.textContent = item.title || 'Headlines unavailable';
-    const sep = document.createElement('span');
-    sep.className = 'ticker-sep';
-    sep.textContent = '◆';
-    btn.append(src, title, sep);
-    inner.appendChild(btn);
-  });
+  const buildGroup = () => {
+    const group = document.createElement('div');
+    group.className = 'ticker-group';
+    list.forEach((item) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ticker-item';
+      btn.title = item.title || '';
+      btn.onclick = () => item.link ? openNewsModal(item) : null;
+      const src = document.createElement('span');
+      src.className = 'ticker-src';
+      src.textContent = (item.src || 'NEWS').slice(0, 10);
+      const title = document.createElement('span');
+      title.textContent = item.title || 'Headlines unavailable';
+      const sep = document.createElement('span');
+      sep.className = 'ticker-sep';
+      sep.textContent = '◆';
+      btn.append(src, title, sep);
+      group.appendChild(btn);
+    });
+    return group;
+  };
+  inner.append(buildGroup(), buildGroup());
 }
 
 async function fetchNews() {
