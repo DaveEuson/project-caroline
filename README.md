@@ -197,6 +197,14 @@ If `localhost` does not work immediately after install, reboot Windows or run `w
 
 WSL is best treated as a developer/test host. It is convenient, but Windows sleep, reboots, firewall rules, and WSL lifecycle behavior can stop or change the Caroline host.
 
+For local AI on a WSL-hosted Caroline, use **Ollama for Windows** instead of installing Linux Ollama inside WSL. Linux Ollama inside WSL can fail during install or model pulls because of memory limits, systemd/service behavior, or WSL virtualization. After installing Ollama for Windows, set Caroline's **Settings -> AI -> Ollama URL** to the Windows host address printed by the installer, usually something like:
+
+```text
+http://<windows-host-ip-from-wsl>:11434
+```
+
+OpenRouter is still the easiest WSL test path. Ollama on Windows is the better local-AI path when you want to test private local chat from a WSL Caroline server.
+
 ### Browser Clients
 
 Any modern browser on your trusted LAN can be a Caroline display/client:

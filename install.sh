@@ -78,6 +78,7 @@ NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
 AI_MODEL="anthropic/claude-haiku-4.5"
+OLLAMA_URL_DEFAULT="http://localhost:11434"
 CAROLINE_TELEMETRY_ENDPOINT="${CAROLINE_TELEMETRY_ENDPOINT:-}"
 
 # Node-RED palette nodes required by Caroline
@@ -395,6 +396,10 @@ is_wsl() {
   return 1
 }
 
+wsl_windows_host_ip() {
+  ip route 2>/dev/null | awk '/^default/ {print $3; exit}'
+}
+
 telemetry_emit() {
   local _event="$1"
   local _allow_remote="$2"
@@ -579,6 +584,16 @@ echo ""
 echo -e "${DIM}  OpenRouter = recommended. Fast, coherent, and usually costs pennies per month.${RESET}"
 echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but CPU will spike and replies can be rough.${RESET}"
 echo -e "${DIM}  Device note: tiny local models are best for demos/offline mode, not the polished Caroline experience.${RESET}"
+if is_wsl; then
+  WSL_WINDOWS_HOST_IP="$(wsl_windows_host_ip)"
+  if [ -n "$WSL_WINDOWS_HOST_IP" ]; then
+    OLLAMA_URL_DEFAULT="http://${WSL_WINDOWS_HOST_IP}:11434"
+  fi
+  echo ""
+  echo -e "${YELLOW}  ⚠ WSL detected. Installing Linux Ollama inside WSL is not recommended for this beta.${RESET}"
+  echo -e "${DIM}    Use OpenRouter, or install Ollama for Windows and set Caroline's Ollama URL to:${RESET}"
+  echo -e "${DIM}    ${OLLAMA_URL_DEFAULT}${RESET}"
+fi
 echo ""
 echo -e "${DIM}  Local model options you can type if you install Ollama:${RESET}"
 echo -e "${DIM}    gemma3:1b     default; friendliest local replies, still slower than cloud.${RESET}"
@@ -596,8 +611,13 @@ if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo ""
 fi
 
-read -p "  Install experimental local Ollama fallback on this device? (y/N): " INSTALL_OLLAMA </dev/tty
-INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
+if is_wsl; then
+  INSTALL_OLLAMA="N"
+  echo -e "${DIM}  Install experimental local Ollama fallback on this device? (y/N): N  (WSL: use Windows Ollama or OpenRouter)${RESET}"
+else
+  read -p "  Install experimental local Ollama fallback on this device? (y/N): " INSTALL_OLLAMA </dev/tty
+  INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
+fi
 echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
@@ -1195,6 +1215,7 @@ jq -n \
   --arg model        "$AI_MODEL" \
   --arg provider     "$AI_PROVIDER" \
   --arg ollamaModel  "$OLLAMA_MODEL" \
+  --arg ollamaUrl    "$OLLAMA_URL_DEFAULT" \
   --arg piIp         "$PI_IP" \
   --arg nrUrl        "http://${BROWSER_HOST_IP}:${NODE_RED_PORT}" \
   --arg installId    "$INSTALL_ID" \
@@ -1232,7 +1253,7 @@ jq -n \
     voiceMuted:      true,
     aiModel:         $model,
     aiProvider:      $provider,
-    ollamaUrl:       "http://localhost:11434",
+    ollamaUrl:       $ollamaUrl,
     ollamaModel:     $ollamaModel,
     openrouterKey:   "",
     hueIp:           "",
@@ -1574,6 +1595,9 @@ echo -e "${CYAN}  │  CONFIGURE MANUALLY AFTER REBOOT                        �
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 if [ "$AI_PROVIDER" = "openrouter" ]; then
 echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add in Caroline Settings > AI"
+fi
+if is_wsl; then
+echo -e "${CYAN}  │${RESET}  ${DIM}Ollama on Windows${RESET}  — optional; set URL to ${OLLAMA_URL_DEFAULT}"
 fi
 echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Connect (optional)"
 echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Connect (optional)"
