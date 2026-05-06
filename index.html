@@ -2781,6 +2781,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
 async function syncSettingsFromServer() {
   try {
     const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
+    const localOnboardingMemory = hasOnboardingMemory(S) || !!String(localStorage.getItem('caroline_personality_prompt') || '').trim();
     const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
     console.log('[Caroline] GET settings from', settingsUrl);
     const r = await fetchJsonWithTimeout(settingsUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'GET settings');
@@ -2796,9 +2797,9 @@ async function syncSettingsFromServer() {
     const installChanged = !!(d.installId && localInstallId && localInstallId !== d.installId);
     mergeServerSettings(d);
     serverSettingsLoaded = true;
-    if (d.setupComplete === true || S.setupComplete === true || hasSavedSetupState(d)) {
+    if (d.setupComplete === true || (d.setupComplete === undefined && hasOnboardingMemory(d))) {
       markOnboardingCompleteLocally();
-    } else if (d.setupComplete !== true && localOnboardingComplete && !installChanged) {
+    } else if (d.setupComplete !== true && localOnboardingComplete && localOnboardingMemory && !installChanged) {
       markOnboardingCompleteLocally();
       postSettingsToNodeRed({
         setupComplete: true,
@@ -7652,14 +7653,13 @@ function _onbModuleReady(id){
   const cfg = onbState.config.modules[id]||{};
   return def.required.every(k=>!!cfg[k]);
 }
-function hasSavedSetupState(source = S){
+function hasOnboardingMemory(source = S){
   const d = source || {};
   const modules = d.onboardingModules && typeof d.onboardingModules === 'object' ? d.onboardingModules : {};
   const hasModuleValues = Object.values(modules).some(mod => (
     mod && typeof mod === 'object' && Object.values(mod).some(v => v === true || String(v || '').trim() !== '')
   ));
-  return d.setupComplete === true ||
-    !!String(d.personalityPrompt || d.userProfilePrompt || d.userName || d.location || d.cityName || d.zipcode || d.zipCode || '').trim() ||
+  return !!String(d.personalityPrompt || '').trim() ||
     hasModuleValues;
 }
 function markOnboardingCompleteLocally(){
@@ -7673,7 +7673,7 @@ function shouldRunOnboarding(){
     markOnboardingCompleteLocally();
     return false;
   }
-  if(hasSavedSetupState(S)){
+  if(S.setupComplete !== false && hasOnboardingMemory(S)){
     markOnboardingCompleteLocally();
     return false;
   }
