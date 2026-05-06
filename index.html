@@ -1969,9 +1969,13 @@
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
-            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;max-width:300px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                <button id="google-connect-btn" type="button" onclick="handleGoogleAuth()" style="background:rgba(66,133,244,0.1);border:1px solid #4285f4;border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Connect Google</button>
+                <button id="google-device-btn" type="button" onclick="startGoogleDeviceAuth()" title="Use a phone or another browser when kiosk mode has no address bar" style="background:rgba(var(--t-rgb1),0.08);border:1px solid rgba(var(--t-rgb1),0.35);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Phone Code</button>
+              </div>
               <a id="google-auth-direct-link" href="#" target="_blank" rel="noopener" style="display:none;font-size:9px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;text-align:right;text-decoration:none;">Open Google sign-in in a new tab</a>
+              <span id="google-device-status" style="font-size:9px;color:rgba(226,232,240,0.45);font-family:'JetBrains Mono',monospace;text-align:right;max-width:280px;"></span>
               <span id="google-redirect-uri" style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;text-align:right;max-width:260px;word-break:break-all;"></span>
             </div>
           </div>
@@ -3243,6 +3247,7 @@ let spotifyAuthPopupTimer = null;
 let spotifyPendingAuthUrl = '';
 let googleAuthPopup = null;
 let googleAuthPopupTimer = null;
+let googleDevicePollTimer = null;
 
 function getNodeRedUrl() {
   const fieldUrl = (document.getElementById('set-nodered-url')?.value || '').trim();
@@ -4846,6 +4851,9 @@ async function refreshGoogleStatus() {
     const connected = parseSettingBool(data.connected);
     const hasRefreshToken = parseSettingBool(data.hasRefreshToken);
     const hasClientSecret = parseSettingBool(data.hasClientSecret);
+    const scopes = String(data.scopes || '');
+    const scopeList = scopes.split(/\s+/).filter(Boolean);
+    const canWriteCalendar = !connected || scopeList.includes('https://www.googleapis.com/auth/calendar.events') || scopeList.includes('https://www.googleapis.com/auth/calendar');
     S.googleConnected = connected;
     if (hasClientSecret) S.googleClientSecretConfigured = true;
     integrationHealth.google = Object.assign({}, integrationHealth.google || {}, {
@@ -4863,13 +4871,13 @@ async function refreshGoogleStatus() {
       if (secretEl) secretEl.value = '';
     }
     const text = connected
-      ? 'Connected'
+      ? (canWriteCalendar ? 'Connected' : 'Reconnect for calendar write access')
       : (data.invalidClient
         ? 'Import Desktop OAuth JSON'
         : (hasRefreshToken && !hasClientSecret
           ? 'OAuth JSON missing client secret'
           : 'Not connected'));
-    const color = connected ? 'rgba(52,211,153,0.9)' : (hasRefreshToken && !hasClientSecret ? '#fbbf24' : 'rgba(226,232,240,0.4)');
+    const color = connected ? (canWriteCalendar ? 'rgba(52,211,153,0.9)' : '#fbbf24') : (hasRefreshToken && !hasClientSecret ? '#fbbf24' : 'rgba(226,232,240,0.4)');
     if (statusEl) { statusEl.textContent = text; statusEl.style.color = color; }
     if (legacyStatusEl) { legacyStatusEl.textContent = text; legacyStatusEl.style.color = color; }
     if (btn) btn.textContent = connected ? 'Reconnect Google' : 'Connect Google';
@@ -4974,7 +4982,83 @@ function googleRemoteCallbackHint() {
   const remoteClient = host && !isLocalHostName(host);
   return remoteClient
     ? 'Remote browser mode: after Google approves, a 127.0.0.1 refused page is expected. Copy that full URL and paste it into Finish Google Sign-In.'
-    : 'Waiting for Google... paste the final callback URL below if it stalls';
+    : 'Waiting for Google... use Phone Code if kiosk mode hides the address bar.';
+}
+
+function setGoogleDeviceStatus(text, color) {
+  const el = document.getElementById('google-device-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = color || 'rgba(226,232,240,0.45)';
+}
+
+function stopGoogleDevicePolling() {
+  if (googleDevicePollTimer) clearInterval(googleDevicePollTimer);
+  googleDevicePollTimer = null;
+  const btn = document.getElementById('google-device-btn');
+  if (btn) btn.textContent = 'Phone Code';
+}
+
+async function startGoogleDeviceAuth() {
+  const btn = document.getElementById('google-device-btn');
+  const clientId = (document.getElementById('set-google-client-id')?.value || S.googleClientId || '').trim();
+  const clientSecret = (document.getElementById('set-google-client-secret')?.value || S.googleClientSecret || '').trim();
+  if (!clientId || !isGoogleOAuthClientId(clientId)) {
+    setGoogleDeviceStatus('Import a valid OAuth JSON first', '#fbbf24');
+    return;
+  }
+  if (!clientSecret) {
+    setGoogleDeviceStatus('OAuth JSON must include the client secret', '#fbbf24');
+    return;
+  }
+  stopGoogleDevicePolling();
+  if (btn) btn.textContent = 'Starting...';
+  setGoogleDeviceStatus('Requesting Google phone code...');
+  try {
+    await postSettingsToNodeRed({ googleClientId: clientId, googleClientSecret: clientSecret, googleRedirectUri: GOOGLE_LOOPBACK_REDIRECT_URI }, NODE_RED_TIMEOUT_MS);
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, clientSecret }),
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Google phone code');
+    const data = await resp.json();
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    const uri = data.verificationUri || 'https://www.google.com/device';
+    const code = data.userCode || data.user_code || '';
+    setGoogleDeviceStatus('On phone: ' + uri + '  code: ' + code, '#67e8f9');
+    if (btn) btn.textContent = 'Waiting...';
+    const intervalMs = Math.max(5, Number(data.interval || 5)) * 1000;
+    googleDevicePollTimer = setInterval(() => pollGoogleDeviceAuth(), intervalMs);
+    pollGoogleDeviceAuth();
+  } catch(e) {
+    stopGoogleDevicePolling();
+    setGoogleDeviceStatus((e.message || '').replace(/This OAuth client may need to be type TV and Limited Input/i, 'Create a Google OAuth client type TV and Limited Input for phone-code sign-in, or use Connect Google from another browser.'), '#f87171');
+  }
+}
+
+async function pollGoogleDeviceAuth() {
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/device/poll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+      timeoutMs: NODE_RED_TIMEOUT_MS
+    }, 'Google phone code poll');
+    const data = await resp.json();
+    if (data.pending) {
+      setGoogleDeviceStatus('Waiting for Google approval on your phone...', '#fbbf24');
+      return;
+    }
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    stopGoogleDevicePolling();
+    setGoogleDeviceStatus('Google connected', 'rgba(52,211,153,0.9)');
+    await refreshGoogleStatus();
+    await loadGoogleCalendars().catch(() => {});
+  } catch(e) {
+    stopGoogleDevicePolling();
+    setGoogleDeviceStatus('Phone sign-in failed: ' + (e.message || 'try Connect Google'), '#f87171');
+  }
 }
 
 async function handleGoogleAuth() {

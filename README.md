@@ -326,6 +326,8 @@ Use this for calendar context and calendar event creation.
 8. Import or paste the OAuth JSON.
 9. Click **Connect Google** and finish the browser sign-in. In server/client mode, a `127.0.0.1 refused to connect` page after Google approval is expected; copy that full address-bar URL back into **Finish Google Sign-In** in Caroline.
 
+Kiosk note: if the Pi is locked in fullscreen and you cannot see an address bar, open Caroline from another browser on your LAN (`http://<pi-ip>:8080/`) and finish Google there, or use **Phone Code** in the Google Account row. Phone-code sign-in may require a Google OAuth client type that supports TV / limited-input devices; if Google rejects it, the remote-browser callback method is the reliable fallback.
+
 This setup is free for normal Caroline calendar use and does not require paid Google Cloud billing.
 
 The Calendar ID can usually stay `primary`. After Google is connected, use **Load Calendars** in Settings to pick a specific writable calendar by name.
