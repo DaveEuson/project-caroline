@@ -1908,7 +1908,10 @@
             </div>
             <div class="settings-row" style="margin-top:14px">
               <div><div class="settings-label">Channel ID</div><div class="settings-sub" id="discord-channel-status">Right-click channel → Copy ID</div></div>
-              <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px"/>
+                <button type="button" onclick="clearDiscordChannelId()" title="Clear saved Discord channel ID" style="background:rgba(239,68,68,0.08);border:1px solid rgba(248,113,113,0.35);border-radius:10px;padding:7px 10px;color:#fca5a5;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Clear</button>
+              </div>
             </div>
             <div class="settings-row" style="margin-top:14px">
               <div><div class="settings-label">Connection test</div><div class="settings-sub">Sends one test message</div></div>
@@ -2750,6 +2753,8 @@ function mergeServerSettings(d, options = {}) {
     const v = d[k];
     if (k.endsWith('Configured')) {
       S[k] = !!v;
+    } else if (k === 'discordChannelId') {
+      S[k] = looksLikeDiscordChannelId(v) ? String(v).trim() : '';
     } else if (v !== undefined && v !== null && v !== '') {
       S[k] = v;
     }
@@ -2831,12 +2836,14 @@ function renderIntegrationStatus() {
   if (spotifyBtn) spotifyBtn.textContent = (spotifyBrowserConnected || spotifyPiConnected) ? '🔄 Reconnect' : '🔌 Connect Spotify';
 
   const discordTokenSaved = !!S.discordToken || !!S.discordTokenConfigured || !!integrationHealth.discord?.configured;
-  const discordChannelSaved = !!S.discordChannelId;
+  const discordChannelValue = String(S.discordChannelId || '').trim();
+  const discordChannelSaved = !!discordChannelValue && looksLikeDiscordChannelId(discordChannelValue);
+  const discordChannelLooksWrong = !!discordChannelValue && !discordChannelSaved;
   const discordEnabled = integrationHealth.discord ? parseSettingBool(integrationHealth.discord.enabled) : parseSettingBool(S.discordEnabled);
   if (integrationHealth.discord) S.discordEnabled = discordEnabled;
   setSettingsSubStatus('discord-enabled-status', discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
   setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on device' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
-  setSettingsSubStatus('discord-channel-status', discordChannelSaved ? 'Saved on device: ' + S.discordChannelId : 'Not configured', discordChannelSaved ? 'ok' : 'neutral');
+  setSettingsSubStatus('discord-channel-status', discordChannelLooksWrong ? 'Looks wrong - clear it and paste the numeric channel ID' : (discordChannelSaved ? 'Saved on device: ' + maskDiscordChannelId(discordChannelValue) : 'Not configured'), discordChannelLooksWrong ? 'warn' : (discordChannelSaved ? 'ok' : 'neutral'));
 
   const googleConnected = integrationHealth.google ? parseSettingBool(integrationHealth.google.connected) : parseSettingBool(S.googleConnected);
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
@@ -4046,6 +4053,31 @@ function looksLikeDiscordBotToken(token) {
   return t.length >= 45;
 }
 
+function looksLikeDiscordChannelId(channelId) {
+  return /^\d{16,22}$/.test(String(channelId || '').trim());
+}
+
+function looksLikeApiKeyValue(value) {
+  const v = String(value || '').trim();
+  if (!v) return false;
+  return /^(sk-|sk_or_|sk-or-|sk-proj-|sk-ant-|AIza|ghp_|github_pat_|xox[baprs]-|ya29\.)/i.test(v)
+    || /^-----BEGIN [A-Z ]+PRIVATE KEY-----/.test(v);
+}
+
+function maskDiscordChannelId(channelId) {
+  const v = String(channelId || '').trim();
+  if (!v) return '';
+  return v.length > 8 ? '...' + v.slice(-4) : v;
+}
+
+function clearDiscordChannelId() {
+  const input = document.getElementById('set-discord-channel');
+  if (input) input.value = '';
+  S.discordChannelId = '';
+  setDiscordTestStatus('Channel ID cleared. Save & Apply to write it to the device.');
+  renderIntegrationStatus();
+}
+
 function setDiscordTestStatus(text, isError = false) {
   const el = document.getElementById('discord-test-status');
   if (!el) return;
@@ -4059,6 +4091,16 @@ async function testDiscordConnection() {
   const channelId = (document.getElementById('set-discord-channel')?.value || S.discordChannelId || '').trim();
   if (!enabled) { setDiscordTestStatus('Enable Discord first', true); return; }
   if (!channelId) { setDiscordTestStatus('Paste the channel ID first', true); return; }
+  if (looksLikeApiKeyValue(channelId)) {
+    setDiscordTestStatus('That looks like an API key, not a channel ID', true);
+    document.getElementById('set-discord-channel')?.focus();
+    return;
+  }
+  if (!looksLikeDiscordChannelId(channelId)) {
+    setDiscordTestStatus('Channel ID should be a numeric Discord snowflake', true);
+    document.getElementById('set-discord-channel')?.focus();
+    return;
+  }
   if (token && !looksLikeDiscordBotToken(token)) {
     setDiscordTestStatus('That looks like an ID, not a bot token', true);
     return;
@@ -5101,7 +5143,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
     'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
     'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId',
     'hueIp', 'tidesStation', 'spotifyClientId',
-    'googleClientId', 'googleRedirectUri', 'discordChannelId', 'sheetId', 'wakePhrases'
+    'googleClientId', 'googleRedirectUri', 'sheetId', 'wakePhrases'
   ]);
   Object.keys(payload).forEach(k => {
     if (preserveBlankKeys.has(k) && String(payload[k] ?? '').trim() === '') delete payload[k];
@@ -5221,7 +5263,21 @@ async function saveSettings() {
   if (discordTokenVal) S.discordToken = discordTokenVal;
   else if (!S.discordTokenConfigured) delete S.discordToken;
   const discordChannelVal = document.getElementById('set-discord-channel').value.trim();
-  if (discordChannelVal || !S.discordChannelId) S.discordChannelId = discordChannelVal;
+  if (discordChannelVal && looksLikeApiKeyValue(discordChannelVal)) {
+    setDiscordTestStatus('That looks like an API key, not a channel ID', true);
+    if (fb) { fb.textContent = 'Discord Channel ID looks like an API key. Clear it or paste the numeric channel ID.'; fb.classList.add('show', 'error'); }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
+    document.getElementById('set-discord-channel').focus();
+    return;
+  }
+  if (discordChannelVal && !looksLikeDiscordChannelId(discordChannelVal)) {
+    setDiscordTestStatus('Channel ID should be a numeric Discord snowflake', true);
+    if (fb) { fb.textContent = 'Discord Channel ID must be the numeric channel ID from Discord developer mode.'; fb.classList.add('show', 'error'); }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
+    document.getElementById('set-discord-channel').focus();
+    return;
+  }
+  S.discordChannelId = discordChannelVal;
   S.zipCode = newZip;
   S.zipcode = newZip;
   const tsInp = document.getElementById('set-tides-station');
