@@ -16,7 +16,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Project: Caroline</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Roboto:wght@300;400;500&family=Open+Sans:wght@300;400;600&family=Noto+Sans:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Roboto:wght@300;400;500&family=Open+Sans:wght@300;400;600&family=Noto+Sans:wght@300;400;600&family=JetBrains+Mono:wght@300;400&family=Major+Mono+Display&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
 <style>
@@ -520,9 +520,15 @@
   #caro-boot-panel, #caro-chat-panel { width:min(950px, calc(100vw - 24px)); max-width:950px; }
   .caro-boot-shell, .caro-chat-shell { position:relative; background:linear-gradient(180deg, rgba(11,15,25,0.96), rgba(5,7,11,0.97)); border:1px solid rgba(var(--t-rgb1),0.16); border-radius:28px; box-shadow:0 0 32px rgba(var(--t-rgb1),0.10), inset 0 0 0 1px rgba(255,255,255,0.02); overflow:hidden; }
   .caro-boot-shell { min-height:min(700px, calc(100vh - 24px)); display:flex; flex-direction:column; justify-content:center; align-items:center; padding:34px 28px; text-align:center; }
-  #caro-boot-avatar { width:160px; height:160px; border-radius:28px; object-fit:cover; border:1px solid rgba(var(--t-rgb1),0.20); background:#081018; box-shadow:0 0 32px rgba(var(--t-rgb1),0.15); animation:onbFloat 4.6s ease-in-out infinite; margin-bottom:26px; }
-  #caro-boot-log { min-height:180px; max-width:700px; width:100%; font-size:18px; line-height:1.9; color:#e9fff6; text-shadow:0 0 12px rgba(var(--t-rgb1),0.15); font-family:'JetBrains Mono',monospace; }
-  #caro-boot-log div { margin:4px 0; }
+  .caro-boot-logo { font-family:'Major Mono Display','JetBrains Mono',monospace; font-size:clamp(30px, 5vw, 56px); letter-spacing:.18em; color:var(--t-hex1); text-shadow:0 0 20px rgba(var(--t-rgb1),0.46); animation:caroBootFlicker 2.4s infinite; }
+  .caro-boot-tag { margin-top:8px; font-size:9px; color:rgba(226,232,240,0.38); letter-spacing:.34em; font-family:'JetBrains Mono',monospace; }
+  #caro-boot-avatar { width:138px; height:138px; border-radius:22px; object-fit:cover; border:1px solid rgba(var(--t-rgb1),0.20); background:#081018; box-shadow:0 0 32px rgba(var(--t-rgb1),0.15); animation:onbFloat 4.6s ease-in-out infinite; margin:24px 0 18px; }
+  #caro-boot-progress { width:min(440px, 86vw); height:4px; background:rgba(var(--t-rgb1),0.08); border:1px solid rgba(var(--t-rgb1),0.24); border-radius:3px; overflow:hidden; box-shadow:inset 0 0 12px rgba(0,0,0,0.28); }
+  #caro-boot-progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--t-hex1), rgba(var(--t-rgb2),0.88)); box-shadow:0 0 10px rgba(var(--t-rgb1),0.66); transition:width .38s linear; }
+  #caro-boot-log { min-height:170px; max-width:440px; width:min(440px,86vw); margin-top:14px; font-size:12px; line-height:1.65; color:rgba(226,232,240,0.72); text-shadow:0 0 12px rgba(var(--t-rgb1),0.15); font-family:'JetBrains Mono',monospace; text-align:left; }
+  #caro-boot-log div { margin:2px 0; }
+  .caro-boot-line { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(var(--t-rgb1),0.05); padding:1px 0; }
+  .caro-boot-line .ok { color:#34d399; text-shadow:0 0 8px rgba(52,211,153,0.36); }
   #caro-boot-ready { margin-top:4px; color:var(--t-hex1); font-size:16px; letter-spacing:.06em; font-family:'JetBrains Mono',monospace; }
   .caro-cli-line { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:10px; font-size:18px; }
   .caro-prompt { color:#f8fafc; }
@@ -604,6 +610,7 @@
   .settings-status-chip .mini-dot { width:8px; height:8px; border-radius:50%; background:#5d6974; }
   .settings-status-chip.online .mini-dot { background:var(--t-hex1); box-shadow:0 0 10px rgba(var(--t-rgb1),0.4); }
   .settings-boot-btn { background:none; border:1px solid rgba(var(--t-rgb1),0.3); border-radius:10px; padding:6px 12px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:11px; cursor:pointer; }
+  @keyframes caroBootFlicker { 0%,94%,100%{opacity:1;} 95%{opacity:.42;} 96%{opacity:1;} 97%{opacity:.66;} }
   @keyframes onbFloat { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
   @keyframes onbCaret { 0%,49%{ opacity:1; } 50%,100%{ opacity:0; } }
   @keyframes caroTyping { 0%,100%{ transform:translateY(0); opacity:.30; } 50%{ transform:translateY(-3px); opacity:.95; } }
@@ -1406,7 +1413,10 @@
 <div id="onboarding-overlay">
   <section id="caro-boot-panel">
     <div class="caro-boot-shell">
+      <div class="caro-boot-logo">CAROLINE</div>
+      <div class="caro-boot-tag">PROJECT ARCHIVE :: ASSISTANT CORE</div>
       <img id="caro-boot-avatar" src="assets/caroline.gif" alt="Project: Caroline"/>
+      <div id="caro-boot-progress" aria-hidden="true"><div id="caro-boot-progress-fill"></div></div>
       <div id="caro-boot-log"></div>
       <div id="caro-boot-ready" class="hidden">
         <span>[ SYNC READY ]</span>
@@ -7827,10 +7837,12 @@ function startBootSequence(){
   const ready = document.getElementById('caro-boot-ready');
   const btn   = document.getElementById('caro-begin-btn');
   const skipBtn = document.getElementById('caro-skip-boot-btn');
+  const progressFill = document.getElementById('caro-boot-progress-fill');
   const avatar= document.getElementById('caro-boot-avatar');
   const a = ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
   avatar.src = a.src || 'assets/caroline.gif';
   log.innerHTML=''; ready.classList.add('hidden'); btn.classList.add('hidden');
+  if(progressFill) progressFill.style.width = '0%';
   if(skipBtn) {
     skipBtn.disabled = false;
     skipBtn.textContent = '[ SKIP ] — Use Existing Settings';
@@ -7839,17 +7851,24 @@ function startBootSequence(){
   }
   document.getElementById('wipe-memory-btn').classList.add('hidden');
   const lines=[
-    '[ INITIALIZING PROJECT: CAROLINE CORE... ]',
-    '[ OPENING LOCAL TIME GATE... ]',
-    '[ PILOT SYNC RATIO STABLE... ]',
-    '[ LOCAL SETTINGS CHECK... ]',
-    '[ NEURAL INTERFACE READY ]'
+    'KERNEL.........................',
+    'PROJECT: CAROLINE.............',
+    'ASSISTANT CORE................',
+    'LOCAL SETTINGS................',
+    'PERSONA HANDSHAKE.............',
+    'AUDIO TX/RX...................',
+    'READY..........................'
   ];
   let i=0;
   (function typeLine(){
     if(i<lines.length){
-      const d=document.createElement('div'); d.textContent=lines[i++]; log.appendChild(d);
-      setTimeout(typeLine, 800);
+      const d=document.createElement('div');
+      d.className = 'caro-boot-line';
+      d.innerHTML = '<span>' + lines[i] + '</span><span class="ok">[OK]</span>';
+      i++;
+      log.appendChild(d);
+      if(progressFill) progressFill.style.width = Math.round((i / lines.length) * 100) + '%';
+      setTimeout(typeLine, 520);
     } else {
       ready.classList.remove('hidden');
       btn.classList.remove('hidden');
