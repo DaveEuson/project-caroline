@@ -2061,6 +2061,17 @@
             <div class="about-card full"><div class="k">Widgets</div><div class="v" id="about-widgets">--</div></div>
           </div>
         </div>
+        <div class="settings-section">
+          <h3>Support</h3>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Buy Dave a coffee</div>
+              <div class="settings-sub">Optional support if Caroline has been useful</div>
+            </div>
+            <button class="settings-boot-btn" type="button" onclick="copySupportLink()">Copy Link</button>
+          </div>
+          <div id="support-link-status" style="margin-top:8px;font-size:10px;color:rgba(226,232,240,0.45);font-family:'JetBrains Mono',monospace;word-break:break-all;">https://buymeacoffee.com/daveeuson</div>
+        </div>
       </div>
       <div class="settings-footer">
         <button class="clear-history-btn" onclick="clearHistory()">🗑 Clear chat log</button>
@@ -2948,6 +2959,21 @@ function copyIssueReportLink() {
     showSettingsFeedback('Issue link shown below');
   }
   clog('info', 'GitHub issue link prepared');
+}
+
+function copySupportLink() {
+  const url = 'https://buymeacoffee.com/daveeuson';
+  const status = document.getElementById('support-link-status');
+  if (status) status.textContent = url + ' - copied if browser permissions allow';
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(
+      () => showSettingsFeedback('Support link copied'),
+      () => showSettingsFeedback('Support link shown below')
+    );
+  } else {
+    showSettingsFeedback('Support link shown below');
+  }
+  clog('info', 'Support link prepared');
 }
 
 // ── USAGE TRACKING ────────────────────────────

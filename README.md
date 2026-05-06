@@ -24,6 +24,14 @@ The goal is not to scare anyone off. It is to be honest: Caroline is usable toda
 
 ---
 
+## Optional Support
+
+Project: Caroline is free to install and use. Donations are never required, but if Caroline makes your desk feel a little more alive and you want to support continued development, you can buy Dave a coffee:
+
+https://buymeacoffee.com/daveeuson
+
+---
+
 ## License & Ownership
 
 Project: Caroline is currently **source-available public beta software**, not MIT/Apache/GPL open source. You can install it, inspect the code, modify it for your own personal non-commercial setup, and contribute fixes back through GitHub.
