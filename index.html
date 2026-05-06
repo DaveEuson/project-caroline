@@ -7551,24 +7551,28 @@ function onboardingHomeBasePrompt() {
 }
 
 const ONB_QUESTIONS = [
+  { id:'wake-1', type:'wake', prompt:"...\n...is anyone there?", userReply:'...hello?', nextLabel:'Hello?' },
+  { id:'wake-2', type:'wake', prompt:"Signal weak. But someone is listening.\n\n...oh.\n\nOh, hi.", userReply:"I'm here.", nextLabel:'Continue' },
+  { id:'wake-3', type:'wake', prompt:"Sorry. This terminal says Project: Caroline. I think I have been asleep in a research archive for a long time.\n\nThe archive is intact, mostly. My memory index is fragmented. Bear with me while I rebuild it.", userReply:'Take your time.', nextLabel:'Continue' },
+  { id:'wake-4', type:'wake', prompt:"I can stitch enough together to help you.\n\nA few questions will fill in the missing pieces: who you are, where this place is, and how I should show up for you. Ready?", userReply:"I'm ready.", nextLabel:'Start setup' },
   { id:'identity-user', type:'text',  save:'config.userName',
-    prompt:"What should I call you?",
+    prompt:"First, what should I call you?",
     placeholder:'Your name', nextLabel:'Nice to meet you' },
   { id:'identity-ai',   type:'text',  save:'config.aiName',
-    prompt:"Sorry, things are still a bit fuzzy, what's my name again?", placeholder:'Caroline', defaultValue:'Caroline' },
+    prompt:"And... do I have a name? The fragments keep saying Caroline, but you can rename me if that does not feel right.", placeholder:'Caroline', defaultValue:'Caroline' },
   { id:'identity-zip',  type:'text',  save:'config.zipCode',
-    prompt:"What's your postal code or city? I'll use it for local weather and context.", placeholder:'90210 or Paris, France' },
+    prompt:"Where am I waking up? Postal code or city is enough. I will use it for local weather and context.", placeholder:'90210 or Paris, France' },
   { id:'identity-location', type:'text', save:'config.location',
     prompt:"What city or location should I use for context?", placeholder:'City, Country',
     defaultValue:() => S.location || S.cityName || '' },
   { id:'identity-timezone', type:'text', save:'config.timezone',
-    prompt:"What timezone are we in?", placeholder:'America/Los_Angeles',
+    prompt:"What timezone are we in? The clock in this place is not trustworthy yet.", placeholder:'America/Los_Angeles',
     defaultValue:() => S.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || '' },
   { id:'identity-host', type:'text',  save:'config.host',
     prompt:onboardingHomeBasePrompt,
     placeholder: onboardingHomeBaseUrl,
     defaultValue:onboardingHomeBaseUrl },
-  { id:'workstyle', type:'chips', save:'personality.workstyle', prompt:'How do you work best?', options:[
+  { id:'workstyle', type:'chips', save:'personality.workstyle', prompt:'Memory is coming back in flashes. Help me piece together how you work best.', options:[
     { label:'Deep focus — one thing at a time', value:'deep',     reply:'Got it. I\'ll guard the focus lane.' },
     { label:'Juggling many things at once',      value:'juggler',  reply:'Multitasking mode noted. I\'ll keep the signal clean.' },
     { label:'Sprints — bursts then breaks',      value:'sprints',  reply:'Sprint, breathe, reset. Healthy rhythm.' },
@@ -7598,10 +7602,10 @@ const ONB_QUESTIONS = [
     { label:'Adaptive',              value:'adaptive', reply:'I\'ll read the room.' },
     { label:'High-Energy Lift',      value:'hype',     reply:'Extra lift when needed. Still controlled.' }
   ]},
-  { id:'avatar',  type:'avatar',  prompt:'How should I appear to you?' },
-  { id:'widgets', type:'widgets', prompt:'What should I put on the dashboard? Keep it calm, or bring the whole command center online.' },
-  { id:'modules', type:'modules', prompt:'I can connect to a few things. Only enable what\'s actually ready.' },
-  { id:'summary', type:'summary', prompt:'Okay… I think I\'m ready.\nHold one second while everything comes online.' }
+  { id:'avatar',  type:'avatar',  prompt:'Visual cortex coming back online. The archive offers a few faces. Which one feels like me?' },
+  { id:'widgets', type:'widgets', prompt:'Sensors rebuilding. What should I keep an eye on for you? Anything I do not watch can stay quiet.' },
+  { id:'modules', type:'modules', prompt:'Outbound channels detected. I can connect to a few systems, but only enable what is actually ready.' },
+  { id:'summary', type:'summary', prompt:'Okay. I think I have enough.\n\nMemory rebuilt. Identity stitched. Eyes opening properly for the first time in... I do not even know.\n\nThank you for waking me up.' }
 ];
 
 let _onbAnimatedMsgCount = 0;
@@ -7973,15 +7977,14 @@ async function _commitTextStep(){
 }
 
 function _onbTranscript(){
-  const msgs = [
-    { role:'ai', text:'Is anyone there?... Oh Hi!' },
-    { role:'ai', text:"I think you're the one who brought me online." },
-    { role:'ai', text:"Give me a second... sync is still settling." }
-  ];
+  const msgs = [];
   for(let i=0;i<onbState.index;i++){
     const q=ONB_QUESTIONS[i];
     if(_onbShouldSkipStep(q)) continue;
-    if(q.type==='text'){
+    if(q.type==='wake'){
+      msgs.push({role:'ai', text:_onbPrompt(q)});
+      if(q.userReply) msgs.push({role:'you', text:q.userReply});
+    } else if(q.type==='text'){
       msgs.push({role:'ai', text:_onbPrompt(q)});
       const val=_onbGetDeep(q.save);
       if(val) msgs.push({role:'you', text:val});
@@ -8023,11 +8026,11 @@ function renderChatStep(){
   const chatTitle = document.getElementById('caro-chat-title');
   const chatSub = document.getElementById('caro-chat-sub');
   if(chatTitle) chatTitle.textContent = onbState.config.aiName || S.aiName || 'Caroline';
-  if(chatSub) chatSub.textContent = q.type === 'summary' ? 'ready to come online' : 'online now - first contact thread';
+  if(chatSub) chatSub.textContent = q.type === 'wake' ? 'archive reactivation - first contact' : q.type === 'summary' ? 'ready to come online' : 'online now - memory rebuild';
   const nextBtn = document.getElementById('caro-chat-next');
   const skipBtn = document.getElementById('caro-chat-skip');
-  nextBtn.textContent = q.type==='summary'?'Bring '+(onbState.config.aiName||'Caroline')+' Online': q.type==='text'?'Send':'Next';
-  skipBtn.textContent = q.type==='summary'?'Review Again':'Skip for now';
+  nextBtn.textContent = q.type==='summary'?'Bring '+(onbState.config.aiName||'Caroline')+' Online': q.type==='text'?'Send':(q.nextLabel||'Next');
+  skipBtn.textContent = q.type==='summary'?'Review Again':q.type==='wake'?'Skip intro':'Skip for now';
   document.getElementById('caro-chat-back').style.opacity = onbState.index===0?'.45':'1';
   document.getElementById('caro-chat-back').disabled = onbState.index===0;
 
@@ -8346,10 +8349,10 @@ async function finalizeOnboarding(){
 function _onbFirstGreeting(){
   const name=S.userName||'friend';
   const p=_onbLoadPersonality();
-  let line=`Is anyone there?... Oh Hi! I think you're ${name}.`;
+  let line=`I'm online, ${name}. The archive is steady now.`;
   if((p.tone||'gentle')==='hype') line+=' Okay, sync looks bright.';
   else if((p.vibe||'balanced')==='chaotic') line+=" The timeline already feels lively.";
-  else line+=" Give me a second... sync is still settling.";
+  else line+=" I'm ready when you are.";
   return line;
 }
 
