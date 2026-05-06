@@ -1,6 +1,6 @@
 # Project: Caroline
 
-**Your open-source, highly personalized digital sidekick.**
+**Your source-available, highly personalized digital sidekick.**
 
 > "Not a voice assistant you talk at. A co-pilot that's actually on your side."
 
@@ -21,6 +21,16 @@ Project: Caroline is public beta software. The core kiosk, local AI chat, weathe
 You do **not** need every integration to use Caroline. Local Ollama mode can run without an OpenRouter key, Google Cloud project, Spotify Developer app, Discord bot, or Philips Hue bridge. Optional services such as Google Calendar, Spotify, Discord, Hue, and cloud AI are powerful, but they may require creating OAuth clients, copying redirect URLs exactly, pairing devices, or troubleshooting account/provider limitations. If you are new to Raspberry Pi, Linux, OAuth, or developer dashboards, expect some fiddly configuration and ask for help when needed.
 
 The goal is not to scare anyone off. It is to be honest: Caroline is usable today, but it is still an enthusiast project, not a polished consumer appliance.
+
+---
+
+## License & Ownership
+
+Project: Caroline is currently **source-available public beta software**, not MIT/Apache/GPL open source. You can install it, inspect the code, modify it for your own personal non-commercial setup, and contribute fixes back through GitHub.
+
+You may not sell it, rebrand it, remove attribution, publish a competing packaged derivative, or present Project: Caroline as your own product without written permission.
+
+Copyright (c) 2026 Dave Euson. All rights reserved. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for the full beta terms.
 
 ---
 
@@ -358,7 +368,7 @@ While the initial setup gives your sidekick a baseline vibe, you can deeply cust
 
 Copy and paste this prompt into your existing AI to generate a highly tailored profile:
 
-> *"I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write a concise user profile I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, and any recurring patterns worth remembering. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk."*
+> *"I am setting up a source-available digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write a concise user profile I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, and any recurring patterns worth remembering. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk."*
 
 Paste the result into **Settings -> AI -> Personality -> Imported memory prompt**. The boot sequence writes Caroline's setup answers into **Setup memory prompt**, while the imported memory prompt tells Caroline how to support you based on what another AI already knows.
 
@@ -387,12 +397,12 @@ v2.0 — Virtual Sidekick mode — moods, adaptive workflow.           [░░�
 
 ## What Makes It Unique
 
-No other open-source kiosk project combines conversational AI with persistent memory, local model support, a distinct sidekick personality, proactive ambient messages, and a one-command install. MagicMirror² is the closest comparison, but it's a static dashboard. Project: Caroline is an active participant in your day.
+Few kiosk projects combine conversational AI with persistent memory, local model support, a distinct sidekick personality, proactive ambient messages, and a one-command install. MagicMirror² is the closest comparison, but it's a static dashboard. Project: Caroline is an active participant in your day.
 
 ---
 
 ## Links & Credits
 
 - **GitHub:** [github.com/daveeuson/project-caroline](https://github.com/daveeuson/project-caroline)
-- **License:** MIT
+- **License:** Source-available public beta; see [LICENSE](LICENSE)
 - Built by Dave Euson

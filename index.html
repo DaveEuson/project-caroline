@@ -1,27 +1,8 @@
 <!--
   Project: Caroline — Personal AI Kiosk
   Version: 0.3.0-dev
-  MIT License
-
-  Copyright (c) 2024 Dave Euson
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+  Copyright (c) 2026 Dave Euson. All rights reserved.
+  Source-available public beta. See LICENSE and NOTICE.md for terms.
 
   NOTE ON API KEY SECURITY:
   By default, the OpenRouter key is stored in localStorage for kiosk convenience.
@@ -4287,7 +4268,7 @@ function getSetupMemoryPrompt() {
   return rebuilt;
 }
 
-const PROFILE_REQUEST_PROMPT = "I am setting up an open-source digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write an imported memory prompt I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, recurring patterns worth remembering, and how to support me without being generic. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk.";
+const PROFILE_REQUEST_PROMPT = "I am setting up a source-available digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write an imported memory prompt I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, recurring patterns worth remembering, and how to support me without being generic. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk.";
 
 async function copyProfileRequest() {
   try {

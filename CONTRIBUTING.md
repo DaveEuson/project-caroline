@@ -5,6 +5,7 @@ Thanks for wanting to make Caroline better. Here's what you need to know.
 ## Ground Rules
 
 - **Privacy first.** No telemetry, tracking, or phoning home — ever. Don't add features that send user data anywhere without explicit opt-in.
+- **Respect the beta license.** Project: Caroline is source-available during beta, not MIT. Contributions should preserve Dave Euson's copyright, attribution, and project identity.
 - **Single-file frontend.** `index.html` is one file on purpose. Keep it that way.
 - **No Docker.** Node-RED runs as a bare-metal systemd service. Don't add container dependencies.
 - **The WebSocket ID `f3e0e445bed3987b` is sacred.** Changing it breaks every existing install. Don't touch it.
@@ -15,6 +16,8 @@ Thanks for wanting to make Caroline better. Here's what you need to know.
 2. Make your changes. Test on a Pi if possible — that's the target hardware.
 3. Run the secret scanner: `gitleaks detect --no-git` before committing. No API keys in code.
 4. Open a pull request with a clear description of what changed and why.
+
+By contributing, you agree your contribution can be used in Project: Caroline under the current beta license and under any future Project: Caroline license. You still retain any copyright you have in your contribution.
 
 ## What We Welcome
 

@@ -1,21 +1,57 @@
-MIT License
+Project: Caroline Public Beta Source License
+Version 0.1
 
-Copyright (c) 2026 Dave Euson
+Copyright (c) 2026 Dave Euson. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This repository is source-available for public beta testing, personal use,
+review, learning, and contribution. It is not currently released under an
+open-source license such as MIT, Apache, GPL, or AGPL.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+You may:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+- Download, install, and run Project: Caroline for personal, non-commercial
+  use.
+- Inspect the source code for security, privacy, learning, and compatibility
+  review.
+- Modify the source code for your own personal, non-commercial install.
+- Fork the repository for the purpose of proposing fixes or improvements back
+  to the original Project: Caroline repository.
+- Share bug reports, patches, pull requests, and documentation improvements.
+
+You may not, without prior written permission from Dave Euson:
+
+- Sell, rent, sublicense, or commercially redistribute Project: Caroline or a
+  modified version of it.
+- Rebrand Project: Caroline, remove attribution, or present it as your own
+  original project.
+- Publish or distribute a competing public fork, packaged installer, hosted
+  service, appliance image, or derivative product based substantially on this
+  code.
+- Use the Project: Caroline name, screenshots, avatar, artwork, README text,
+  or distinctive visual identity in a way that suggests your project is the
+  original or official release.
+- Remove copyright, license, attribution, or safety notices from the project.
+
+Contributions:
+
+By submitting a pull request, patch, issue comment containing code, or other
+contribution to this repository, you agree that your contribution may be used
+by Dave Euson in Project: Caroline under this license and under any future
+license chosen for Project: Caroline. You retain any copyright you have in
+your contribution.
+
+Third-party components:
+
+This license applies only to original Project: Caroline code, documentation,
+configuration, and assets in this repository. Third-party libraries, services,
+APIs, icons, models, packages, and dependencies remain governed by their own
+licenses and terms.
+
+Disclaimer:
+
+Project: Caroline is provided "as is", without warranty of any kind, express
+or implied, including but not limited to warranties of merchantability, fitness
+for a particular purpose, and noninfringement. You are responsible for your own
+installation, credentials, network exposure, and device safety.
+
+All rights not expressly granted in this license are reserved.
