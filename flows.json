@@ -334,7 +334,7 @@
       }
     ],
     "x": 1990,
-    "y": 620,
+    "y": 760,
     "wires": [
       []
     ]
@@ -521,7 +521,7 @@
     "statusVal": "",
     "statusType": "auto",
     "x": 1980,
-    "y": 660,
+    "y": 820,
     "wires": []
   },
   {
@@ -631,7 +631,7 @@
     "finalize": "",
     "libs": [],
     "x": 1080,
-    "y": 660,
+    "y": 680,
     "wires": [
       [
         "caro-discord-rest-send"
@@ -671,7 +671,7 @@
     "finalize": "",
     "libs": [],
     "x": 820,
-    "y": 220,
+    "y": 260,
     "wires": [
       [
         "caro-discord-rest-send"
@@ -807,7 +807,7 @@
     "senderr": false,
     "headers": [],
     "x": 1930,
-    "y": 600,
+    "y": 640,
     "wires": [
       [
         "caro-hue-action-debug"
@@ -828,7 +828,7 @@
     "statusVal": "",
     "statusType": "auto",
     "x": 2160,
-    "y": 600,
+    "y": 640,
     "wires": []
   },
   {
@@ -959,7 +959,7 @@
       }
     ],
     "x": 480,
-    "y": 720,
+    "y": 820,
     "wires": [
       [
         "e41f16297639eea8"
@@ -1210,7 +1210,7 @@
       }
     ],
     "x": 1880,
-    "y": 560,
+    "y": 580,
     "wires": [
       [
         "caro-action-task-add-ws"
@@ -1234,7 +1234,7 @@
     "senderr": false,
     "headers": [],
     "x": 2080,
-    "y": 560,
+    "y": 580,
     "wires": [
       [
         "ef679bf2bf5c19db"
@@ -1254,7 +1254,7 @@
     "finalize": "",
     "libs": [],
     "x": 2270,
-    "y": 560,
+    "y": 580,
     "wires": [
       [
         "d0039ded19bb1b22"
@@ -1278,7 +1278,7 @@
     "senderr": false,
     "headers": [],
     "x": 2450,
-    "y": 560,
+    "y": 580,
     "wires": [
       []
     ]
@@ -2890,7 +2890,7 @@
     "statusCode": "",
     "headers": {},
     "x": 790,
-    "y": 560,
+    "y": 580,
     "wires": []
   },
   {
@@ -3162,7 +3162,7 @@
     "statusCode": "",
     "headers": {},
     "x": 850,
-    "y": 200,
+    "y": 260,
     "wires": []
   },
   {
@@ -3278,7 +3278,7 @@
     "statusCode": "",
     "headers": {},
     "x": 730,
-    "y": 320,
+    "y": 380,
     "wires": []
   },
   {
@@ -3347,7 +3347,7 @@
     "statusCode": "",
     "headers": {},
     "x": 730,
-    "y": 440,
+    "y": 500,
     "wires": []
   },
   {
@@ -3360,7 +3360,7 @@
     "upload": false,
     "swaggerDoc": "",
     "x": 160,
-    "y": 560,
+    "y": 580,
     "wires": [
       [
         "54436518f9426d54"
@@ -3379,7 +3379,7 @@
     "finalize": "",
     "libs": [],
     "x": 420,
-    "y": 560,
+    "y": 580,
     "wires": [
       [
         "6c9cf4a5e4823dd5"
@@ -3397,7 +3397,7 @@
     "statusCode": "",
     "headers": {},
     "x": 680,
-    "y": 540,
+    "y": 620,
     "wires": []
   },
   {
@@ -3406,7 +3406,7 @@
     "z": "1497b6d50e1369f5",
     "name": "POST configured Ollama /api/pull",
     "x": 680,
-    "y": 580,
+    "y": 680,
     "wires": [
       [],
       [],
@@ -3435,7 +3435,7 @@
     "upload": false,
     "swaggerDoc": "",
     "x": 160,
-    "y": 680,
+    "y": 700,
     "wires": [
       [
         "caro-ollama-status-url"
@@ -3460,7 +3460,7 @@
     "headers": [],
     "timeout": 5000,
     "x": 420,
-    "y": 680,
+    "y": 760,
     "wires": [
       [
         "6ff33b27e26ac44b"
@@ -3479,7 +3479,7 @@
     "finalize": "",
     "libs": [],
     "x": 680,
-    "y": 680,
+    "y": 800,
     "wires": [
       [
         "89bc88f6d409d71b"
@@ -3494,7 +3494,7 @@
     "statusCode": "",
     "headers": {},
     "x": 880,
-    "y": 680,
+    "y": 700,
     "wires": []
   },
   {
@@ -3514,7 +3514,7 @@
     "senderr": false,
     "headers": [],
     "x": 760,
-    "y": 120,
+    "y": 200,
     "wires": [
       [
         "0ffb12436bce0a50"
@@ -3622,7 +3622,7 @@
     "senderr": false,
     "headers": [],
     "x": 420,
-    "y": 760,
+    "y": 820,
     "wires": [
       [
         "caro-ollama-ps-fn"
@@ -3693,7 +3693,7 @@
       }
     ],
     "x": 380,
-    "y": 840,
+    "y": 880,
     "wires": [
       [
         "caro-health-res"
@@ -3750,7 +3750,7 @@
       }
     ],
     "x": 420,
-    "y": 900,
+    "y": 940,
     "wires": [
       [
         "caro-resources-res"
@@ -3778,7 +3778,7 @@
     "upload": false,
     "swaggerDoc": "",
     "x": 160,
-    "y": 920,
+    "y": 960,
     "wires": [
       [
         "caro-hue-disc-req"
@@ -3802,7 +3802,7 @@
     "senderr": false,
     "headers": [],
     "x": 400,
-    "y": 920,
+    "y": 1000,
     "wires": [
       [
         "caro-hue-disc-fn"
@@ -3821,7 +3821,7 @@
     "finalize": "",
     "libs": [],
     "x": 650,
-    "y": 920,
+    "y": 960,
     "wires": [
       [
         "caro-hue-disc-res"
@@ -3849,7 +3849,7 @@
     "upload": false,
     "swaggerDoc": "",
     "x": 160,
-    "y": 1000,
+    "y": 1020,
     "wires": [
       [
         "caro-hue-pair-prep"
@@ -3868,7 +3868,7 @@
     "finalize": "",
     "libs": [],
     "x": 380,
-    "y": 1000,
+    "y": 1060,
     "wires": [
       [
         "caro-hue-pair-req"
@@ -3892,7 +3892,7 @@
     "senderr": false,
     "headers": [],
     "x": 590,
-    "y": 1000,
+    "y": 1020,
     "wires": [
       [
         "caro-hue-pair-fn"
@@ -3911,7 +3911,7 @@
     "finalize": "",
     "libs": [],
     "x": 800,
-    "y": 1000,
+    "y": 1020,
     "wires": [
       [
         "caro-hue-pair-res"
@@ -3964,7 +3964,7 @@
     "upload": false,
     "swaggerDoc": "",
     "x": 170,
-    "y": 620,
+    "y": 640,
     "wires": [
       [
         "caro-ollama-load-validate"
@@ -3984,7 +3984,7 @@
     "finalize": "",
     "libs": [],
     "x": 430,
-    "y": 620,
+    "y": 640,
     "wires": [
       [
         "caro-ollama-load-res"
@@ -4000,7 +4000,7 @@
     "z": "1497b6d50e1369f5",
     "name": "POST configured Ollama /api/generate",
     "x": 690,
-    "y": 640,
+    "y": 740,
     "wires": [
       [
         "caro-ollama-load-format"
@@ -4070,7 +4070,7 @@
     "senderr": false,
     "headers": [],
     "x": 1360,
-    "y": 660,
+    "y": 700,
     "wires": [
       [
         "caro-discord-send-log"
@@ -4181,7 +4181,7 @@
     "finalize": "",
     "libs": [],
     "x": 1580,
-    "y": 660,
+    "y": 700,
     "wires": []
   },
   {
@@ -4240,7 +4240,7 @@
     "senderr": false,
     "headers": [],
     "x": 650,
-    "y": 540,
+    "y": 560,
     "wires": [
       [
         "caro-discord-test-format"
@@ -4314,7 +4314,7 @@
         "caro-hue-probe-res"
       ]
     ],
-    "y": 1080,
+    "y": 1120,
     "initialize": "",
     "outputs": 1,
     "z": "161d0c4cebe17cda",
@@ -4366,7 +4366,7 @@
       }
     ],
     "x": 430,
-    "y": 1160,
+    "y": 1180,
     "wires": [
       [
         "caro-network-prefixes-res"
@@ -4397,7 +4397,7 @@
     "finalize": "",
     "libs": [],
     "x": 610,
-    "y": 700,
+    "y": 760,
     "wires": [
       [
         "bad2805f769f7005"
@@ -4417,7 +4417,7 @@
     "finalize": "",
     "libs": [],
     "x": 620,
-    "y": 740,
+    "y": 880,
     "wires": [
       [
         "bad2805f769f7005"
@@ -4437,7 +4437,7 @@
     "finalize": "",
     "libs": [],
     "x": 620,
-    "y": 660,
+    "y": 700,
     "wires": [
       [
         "bad2805f769f7005"
@@ -4584,7 +4584,7 @@
     "senderr": false,
     "headers": [],
     "x": 710,
-    "y": 1300,
+    "y": 1320,
     "wires": [
       [
         "caro-google-store-fn"
@@ -4736,7 +4736,7 @@
     "senderr": false,
     "headers": [],
     "x": 760,
-    "y": 1500,
+    "y": 1520,
     "wires": [
       [
         "caro-google-device-code-fn"
@@ -4828,7 +4828,7 @@
     "senderr": false,
     "headers": [],
     "x": 760,
-    "y": 1560,
+    "y": 1580,
     "wires": [
       [
         "caro-google-device-token-fn"
@@ -4980,7 +4980,7 @@
     "authType": "",
     "senderr": true,
     "x": 710,
-    "y": 1620,
+    "y": 1640,
     "wires": [
       [
         "caro-google-calendars-list-fn"
@@ -5025,7 +5025,7 @@
     "authType": "",
     "senderr": true,
     "x": 1210,
-    "y": 1620,
+    "y": 1640,
     "wires": [
       [
         "caro-google-calendars-format-fn"
@@ -5075,7 +5075,7 @@
     "finalize": "",
     "libs": [],
     "x": 400,
-    "y": 680,
+    "y": 700,
     "wires": [
       [
         "de933630db6a2573"
@@ -5094,7 +5094,7 @@
     "finalize": "",
     "libs": [],
     "x": 680,
-    "y": 120,
+    "y": 140,
     "wires": [
       [
         "1a5ff61e4a7196cc"
@@ -5291,14 +5291,14 @@
     "x": 1940,
     "timeout": 0,
     "name": "Calendar Delete Token Guard",
-    "y": 620,
+    "y": 700,
     "noerr": 0,
     "type": "function",
     "outputs": 2
   },
   {
     "id": "caro-calendar-delete-token-http",
-    "y": 600,
+    "y": 700,
     "tls": "",
     "headers": [],
     "proxy": "",
@@ -5337,14 +5337,14 @@
     "x": 2440,
     "timeout": 0,
     "name": "Find Calendar Event to Delete",
-    "y": 600,
+    "y": 640,
     "noerr": 0,
     "type": "function",
     "outputs": 2
   },
   {
     "id": "caro-calendar-delete-list-http",
-    "y": 580,
+    "y": 700,
     "tls": "",
     "headers": [],
     "proxy": "",
@@ -5470,7 +5470,7 @@
     "authType": "",
     "senderr": false,
     "x": 2700,
-    "y": 550,
+    "y": 640,
     "wires": [
       []
     ]
@@ -5493,7 +5493,7 @@
     "allowrate": false,
     "outputs": 1,
     "x": 2690,
-    "y": 550,
+    "y": 580,
     "wires": [
       [
         "caro-calendar-create-refresh-http"
