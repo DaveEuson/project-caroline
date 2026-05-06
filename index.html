@@ -53,6 +53,17 @@
   #hist-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 8px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
   #hist-btn:hover { background: rgba(var(--t-rgb1),0.2); }
   .date-sep { color: rgba(var(--t-rgb1), 0.2); font-size: 14px; }
+  #news-ticker { height:26px; flex-shrink:0; position:relative; z-index:10; display:flex; align-items:center; gap:10px; overflow:hidden; border-bottom:1px solid rgba(var(--t-rgb1),0.12); background:linear-gradient(90deg, rgba(5,5,10,0.98), rgba(12,8,20,0.92)); font-family:'JetBrains Mono',monospace; }
+  #news-ticker-label { flex:0 0 auto; height:100%; display:flex; align-items:center; padding:0 10px 0 14px; border-right:1px solid rgba(var(--t-rgb1),0.14); color:#facc15; font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
+  #news-ticker-track { flex:1; min-width:0; overflow:hidden; height:100%; display:flex; align-items:center; mask-image:linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
+  #news-ticker-inner { display:flex; align-items:center; gap:22px; white-space:nowrap; animation:newsTickerScroll 46s linear infinite; }
+  #news-ticker:hover #news-ticker-inner { animation-play-state:paused; }
+  .ticker-item { appearance:none; border:0; background:transparent; display:inline-flex; align-items:center; gap:8px; color:rgba(226,232,240,0.68); font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; padding:0; }
+  .ticker-item:hover { color:#f8fafc; }
+  .ticker-src { color:#05050a; background:#facc15; border:1px solid rgba(250,204,21,0.5); border-radius:4px; padding:1px 5px; font-size:9px; font-weight:700; letter-spacing:.08em; }
+  .ticker-sep { color:rgba(var(--t-rgb1),0.62); font-size:12px; }
+  #news-ticker-close { flex:0 0 auto; width:24px; height:24px; border:0; border-left:1px solid rgba(var(--t-rgb1),0.12); background:rgba(0,0,0,0.18); color:rgba(226,232,240,0.52); cursor:pointer; font-size:14px; display:grid; place-items:center; }
+  #news-ticker-close:hover { color:#f87171; }
   /* DATE/MOON WIDGET */
   #widget-datetime .dt-date { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: rgba(var(--t-rgb1), 0.9); font-weight: 500; letter-spacing: 0.04em; }
   #widget-datetime .dt-dayname { font-size: 12px; color: rgba(250,204,21,0.9); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -223,8 +234,15 @@
   .todo-meta { font-size:11px; color:rgba(226,232,240,0.3); font-family:'JetBrains Mono',monospace; margin-top:3px; }
   .todo-tag { display:inline-block; padding:1px 6px; border-radius:8px; font-size:10px; font-family:'JetBrains Mono',monospace; margin-right:4px; }
   .todo-tag.work { background:rgba(34,211,238,0.1); color:var(--t-hex1); border:1px solid rgba(34,211,238,0.2); }
+  .todo-tag.life { background:rgba(250,204,21,0.10); color:#fde68a; border:1px solid rgba(250,204,21,0.22); }
   .todo-tag.personal { background:rgba(219,39,119,0.1); color:var(--t-hex2); border:1px solid rgba(219,39,119,0.2); }
   .todo-tag.auto { background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.2); }
+  #todo-filter-row { display:flex; align-items:center; gap:8px; padding:0 16px 10px; border-bottom:1px solid rgba(var(--t-rgb1),0.08); }
+  .todo-filter { border:1px solid rgba(var(--t-rgb1),0.18); border-radius:999px; background:rgba(var(--t-rgb1),0.04); color:rgba(226,232,240,0.62); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; padding:5px 10px; cursor:pointer; }
+  .todo-filter.active { border-color:rgba(var(--t-rgb1),0.44); color:var(--t-hex1); background:rgba(var(--t-rgb1),0.12); }
+  .todo-tag-picker { display:flex; align-items:center; gap:6px; }
+  .todo-tag-choice { border:1px solid rgba(var(--t-rgb1),0.18); border-radius:999px; background:rgba(255,255,255,0.03); color:rgba(226,232,240,0.58); font-family:'JetBrains Mono',monospace; font-size:10px; padding:6px 9px; cursor:pointer; }
+  .todo-tag-choice.active { color:var(--t-hex1); border-color:rgba(var(--t-rgb1),0.42); background:rgba(var(--t-rgb1),0.12); }
   #todo-input-row { display:flex; gap:8px; padding:10px 16px; border-top:1px solid rgba(var(--t-rgb1),0.1); flex-shrink:0; }
   #todo-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb1),0.25); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:var(--ui-font, 'Inter'),sans-serif; font-size:13px; outline:none; }
   #todo-add-btn { background:rgba(var(--t-rgb1),0.1); border:1px solid rgba(var(--t-rgb1),0.3); border-radius:20px; padding:8px 16px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:13px; cursor:pointer; }
@@ -343,10 +361,32 @@
   .widget-refresh-btn.loading i { animation:spin 0.9s linear infinite; }
   #news-section { overflow-y:auto; padding:0 0 0 10px; }
   #news-panel .widget-close-btn { right:10px; }
-  #news-list { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  #top-stories-header, #news-list { display:none !important; }
+  #news-list { overflow: hidden; flex: 1; flex-direction: column; gap: 2px; }
   .news-item { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; gap: 5px; align-items: flex-start; cursor: pointer; transition: background 0.2s; border-radius: 4px; }
   .news-item:hover { background: rgba(var(--t-rgb1),0.05); }
   .news-item:last-child { border-bottom: none; }
+  .rail-widget { margin:8px 0; padding:9px 10px; border:1px solid rgba(var(--t-rgb1),0.12); border-radius:10px; background:rgba(255,255,255,0.025); }
+  .rail-widget-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid rgba(var(--t-rgb1),0.08); font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.14em; }
+  .rail-title { display:flex; align-items:center; gap:6px; min-width:0; color:var(--t-hex1); font-size:10px; }
+  .rail-title .idx { color:#facc15; }
+  .rail-meta { color:rgba(226,232,240,0.38); font-size:10px; white-space:nowrap; }
+  #memory-list { display:flex; flex-direction:column; gap:7px; max-height:160px; overflow-y:auto; padding-right:2px; }
+  #memory-list::-webkit-scrollbar, #smart-grid::-webkit-scrollbar { width:2px; }
+  #memory-list::-webkit-scrollbar-thumb, #smart-grid::-webkit-scrollbar-thumb { background:rgba(var(--t-rgb1),0.22); border-radius:2px; }
+  .memory-shard { padding:7px 8px; border:1px solid rgba(var(--t-rgb1),0.10); border-radius:8px; background:rgba(0,0,0,0.18); }
+  .memory-text { font-size:11px; line-height:1.35; color:rgba(226,232,240,0.76); overflow-wrap:anywhere; }
+  .memory-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(226,232,240,0.36); }
+  .memory-deny { border:1px solid rgba(248,113,113,0.28); border-radius:999px; background:rgba(248,113,113,0.07); color:#fda4af; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
+  .memory-deny:hover { background:rgba(248,113,113,0.15); color:#fecdd3; }
+  .memory-empty { color:rgba(226,232,240,0.30); font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.4; padding:6px 2px; }
+  #smart-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; max-height:150px; overflow-y:auto; }
+  .smart-btn { min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:7px; background:rgba(var(--t-rgb1),0.05); color:var(--t-hex1); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:background .18s, border-color .18s, color .18s, transform .18s; }
+  .smart-btn i { font-size:18px; }
+  .smart-btn span { font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+  .smart-btn:hover { transform:translateY(-1px); border-color:rgba(var(--t-rgb1),0.48); background:rgba(var(--t-rgb1),0.11); }
+  .smart-btn.active { border-color:rgba(249,115,22,0.58); background:rgba(249,115,22,0.14); color:#fed7aa; box-shadow:inset 0 0 18px rgba(249,115,22,0.08); }
+  .smart-status { margin-top:7px; color:rgba(226,232,240,0.40); font-family:'JetBrains Mono',monospace; font-size:10px; min-height:13px; }
 
   /* NEWS STORY MODAL */
   #news-modal { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.92); z-index:850; flex-direction:column; backdrop-filter:blur(8px); }
@@ -375,11 +415,11 @@
 
   /* FOCUS / IDLE */
   body.focus-mode #left, body.focus-mode #news-panel { opacity: 0; transform: translateY(20px); pointer-events: none; }
-  body.focus-mode #topbar { opacity: 0.1; pointer-events: none; }
+  body.focus-mode #topbar, body.focus-mode #news-ticker { opacity: 0.1; pointer-events: none; }
   body.focus-mode #avatar-hint { opacity: 0; }
   body.focus-mode #avatar-outer { transform: scale(1.2) translateY(10px); }
   body.idle-mode #left, body.idle-mode #news-panel { opacity: 0; transform: translateY(10px); pointer-events: none; }
-  body.idle-mode #topbar { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+  body.idle-mode #topbar, body.idle-mode #news-ticker { opacity: 0; transform: translateY(-10px); pointer-events: none; }
   body.idle-mode #interaction-zone { opacity: 0; transform: translateY(10px); pointer-events: none; }
   body.idle-mode #avatar-hint { opacity: 0; }
   body.idle-mode #avatar-carousel { position:fixed; top:clamp(232px,28vh,292px); left:50%; transform:translateX(-50%); width:auto; gap:0; z-index:14; pointer-events:none; }
@@ -419,6 +459,7 @@
   @keyframes micPulse { 0%,100%{box-shadow:0 0 15px rgba(var(--t-rgb2),0.5)} 50%{box-shadow:0 0 30px rgba(var(--t-rgb2),0.8)} }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes newsTickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
@@ -652,7 +693,7 @@
   #osk-close:hover { color:rgba(226,232,240,0.8); border-color:rgba(var(--t-rgb1),0.4); }
 
   /* ── OFFLINE BANNER ─────────────────────────── */
-  #offline-banner { position:absolute; top:40px; left:0; right:0; z-index:999; background:rgba(244,63,94,0.10); border-bottom:1px solid rgba(244,63,94,0.22); padding:5px 14px; font-size:11px; color:#fb7185; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transform:translateY(calc(-100% - 40px)); transition:transform 0.3s ease; pointer-events:auto; }
+  #offline-banner { position:absolute; top:66px; left:0; right:0; z-index:999; background:rgba(244,63,94,0.10); border-bottom:1px solid rgba(244,63,94,0.22); padding:5px 14px; font-size:11px; color:#fb7185; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transform:translateY(calc(-100% - 66px)); transition:transform 0.3s ease; pointer-events:auto; }
   #offline-banner.show { transform:translateY(0); }
   #offline-reconnect-btn { margin-left:auto; background:rgba(244,63,94,0.12); border:1px solid rgba(244,63,94,0.35); border-radius:8px; padding:3px 9px; color:#fecdd3; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer; }
   .nodered-status { font-size:14px; width:18px; text-align:center; color:rgba(226,232,240,0.35); font-family:'JetBrains Mono',monospace; }
@@ -1934,6 +1975,7 @@
             <label class="feat-toggle"><input type="checkbox" id="feat-spotify"  onchange="previewFeature('spotify',  this.checked)"/> 🎵 Spotify</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-calendar" onchange="previewFeature('calendar', this.checked)"/> 📅 Calendar</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-news"     onchange="previewFeature('news',     this.checked)"/> 📰 News</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-memory"   onchange="previewFeature('memory',   this.checked)"/> 🧠 Memory</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-video"    onchange="previewFeature('video',    this.checked)"/> 📺 Video Player</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-pomodoro" onchange="previewFeature('pomodoro', this.checked)"/> ⏱ Pomodoro</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> 🌊 Tides</label>
@@ -2128,9 +2170,18 @@
     </div>
     <button id="todo-close" onclick="toggleTodo()">CLOSE ✕</button>
   </div>
+  <div id="todo-filter-row">
+    <button class="todo-filter active" data-filter="all" onclick="setTodoFilter('all')">ALL</button>
+    <button class="todo-filter" data-filter="work" onclick="setTodoFilter('work')">WORK</button>
+    <button class="todo-filter" data-filter="life" onclick="setTodoFilter('life')">LIFE</button>
+  </div>
   <div id="todo-body"></div>
   <div id="todo-input-row">
     <input id="todo-input" type="text" placeholder="Add a task..." autocomplete="off"/>
+    <div class="todo-tag-picker" aria-label="Task category">
+      <button class="todo-tag-choice active" data-tag="work" onclick="setNewTodoTag('work')" title="Add as work task">WORK</button>
+      <button class="todo-tag-choice" data-tag="life" onclick="setNewTodoTag('life')" title="Add as life task">LIFE</button>
+    </div>
     <button id="todo-add-btn" onclick="addTodoItem()">+ ADD</button>
     <button id="todo-clear-btn" onclick="clearDoneTodos()">CLEAR DONE</button>
   </div>
@@ -2154,6 +2205,12 @@
   <button id="hist-btn" onclick="toggleHistory()" title="Chat history" aria-label="Open chat history"><i class="ti ti-message-circle"></i></button>
   <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog"><i class="ti ti-settings"></i> Settings</button>
   <span id="restart-btn"><i class="ti ti-refresh"></i> REBOOT</span>
+</div>
+
+<div id="news-ticker">
+  <div id="news-ticker-label"><i class="ti ti-news"></i>&nbsp;News</div>
+  <div id="news-ticker-track"><div id="news-ticker-inner"><span class="ticker-item">Fetching headlines...</span></div></div>
+  <button id="news-ticker-close" type="button" onclick="toggleNewsTicker(false)" title="Hide news ticker" aria-label="Hide news ticker"><i class="ti ti-x"></i></button>
 </div>
 
 <div id="offline-banner">⚡ NODE-RED UNREACHABLE — chat unavailable until reconnected <button id="offline-reconnect-btn" type="button" onclick="retryNodeRedConnection()">Reconnect</button></div>
@@ -2398,7 +2455,27 @@
         <div id="cal-list" style="display:flex;flex-direction:column;gap:5px;margin-top:6px;"></div>
       </div>
       </div>
-      <div class="news-header">Top Stories</div>
+      <div class="rail-widget" id="widget-memory">
+        <div class="rail-widget-head">
+          <div class="rail-title"><span class="idx">08</span><span>MEMORY</span></div>
+          <div class="rail-meta" id="memory-count">0 SHARDS</div>
+        </div>
+        <div id="memory-list"><div class="memory-empty">No memories yet. Say "remember this..." to save one.</div></div>
+      </div>
+      <div class="rail-widget" id="widget-smart">
+        <div class="rail-widget-head">
+          <div class="rail-title"><span class="idx">10</span><span>SMART</span></div>
+          <div class="rail-meta">HUE</div>
+        </div>
+        <div id="smart-grid">
+          <button class="smart-btn active" data-hue-mode="relax" onclick="setSmartHueScene('office','relax',this)" title="Warm office lighting"><i class="ti ti-bulb"></i><span>Office</span></button>
+          <button class="smart-btn" data-hue-mode="focus" onclick="setSmartHueScene('kitchen','focus',this)" title="Bright kitchen lighting"><i class="ti ti-tools-kitchen-2"></i><span>Kitchen</span></button>
+          <button class="smart-btn" data-hue-mode="night" onclick="setSmartHueScene('bedroom','night',this)" title="Low bedroom lighting"><i class="ti ti-bed"></i><span>Bedroom</span></button>
+          <button class="smart-btn" data-hue-mode="party" onclick="setSmartHueScene('patio','party',this)" title="Patio color loop"><i class="ti ti-leaf"></i><span>Patio</span></button>
+        </div>
+        <div class="smart-status" id="smart-status">Configure Hue in Settings to send scenes.</div>
+      </div>
+      <div class="news-header" id="top-stories-header">Top Stories</div>
       <div id="news-list"><div class="news-loading">Fetching news...</div></div>
     </div>
   </div>
@@ -2447,7 +2524,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
-const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
+const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, memory: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
 const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS);
 const BOOLEAN_DEFAULTS = {
   autoTheme: false,
@@ -3027,6 +3104,7 @@ function exportBackup() {
     settings: exportedSettings,
     chatLog: JSON.parse(localStorage.getItem('caro_log') || '[]'),
     todos: JSON.parse(localStorage.getItem('caro_todos') || '[]'),
+    memories: JSON.parse(localStorage.getItem('caro_notes') || '[]'),
     personality: JSON.parse(localStorage.getItem('caroline_personality') || '{}'),
     personalityPrompt: S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '',
     userProfilePrompt: S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt') || '',
@@ -3055,6 +3133,7 @@ function importBackup(input) {
       }
       if (data.chatLog)      localStorage.setItem('caro_log', JSON.stringify(data.chatLog));
       if (data.todos)        localStorage.setItem('caro_todos', JSON.stringify(data.todos));
+      if (data.memories)     localStorage.setItem('caro_notes', JSON.stringify(data.memories));
       if (data.personality)  localStorage.setItem('caroline_personality', JSON.stringify(data.personality));
       if (data.personalityPrompt) localStorage.setItem('caroline_personality_prompt', data.personalityPrompt);
       if (data.userProfilePrompt) localStorage.setItem('caroline_user_profile_prompt', data.userProfilePrompt);
@@ -3549,7 +3628,9 @@ const WIDGET_CLOSE_TARGETS = [
   { feature: 'mood', selector: '#widget-caroline-mood', label: 'Mood meters' },
   { feature: 'memes', selector: '#widget-meme', label: 'Meme' },
   { feature: 'calendar', selector: '#widget-calendar', label: 'Calendar' },
+  { feature: 'memory', selector: '#widget-memory', label: 'Memory' },
   { feature: 'spotify', selector: '#now-playing-panel', label: 'Now Playing' },
+  { feature: 'hue', selector: '#widget-smart', label: 'Smart Home' },
   { feature: 'video', selector: '#video-section', label: 'Video' }
 ];
 
@@ -3610,6 +3691,9 @@ function applyFeatures() {
   show('hue-warning',        !!f.hue && !S.hueIp);
   show('now-playing-panel',  !!f.spotify);
   show('widget-calendar',    f.calendar !== false);
+  show('news-ticker',        f.news !== false && localStorage.getItem('caro_news_ticker_hidden') !== 'true');
+  show('widget-memory',      f.memory !== false);
+  show('widget-smart',       !!f.hue);
   show('video-section',      f.video !== false);
   show('widget-pomodoro',    f.pomodoro !== false);
   show('widget-tides',       f.tides !== false);
@@ -3617,17 +3701,20 @@ function applyFeatures() {
   show('widget-caroline-mood',  f.mood !== false);
   show('widget-meme',           !!f.memes);
 
-  // News: hide the header + list together
-  const newsList = document.getElementById('news-list');
-  const newsHeaders = document.querySelectorAll('.news-header');
-  if (newsList) newsList.style.display = f.news !== false ? '' : 'none';
-  newsHeaders.forEach(h => { if (h.textContent.includes('Top Stories')) h.style.display = f.news !== false ? '' : 'none'; });
+  renderMemoryWidget();
+  updateSmartStatus();
+}
+
+function toggleNewsTicker(showTicker) {
+  localStorage.setItem('caro_news_ticker_hidden', showTicker ? 'false' : 'true');
+  applyFeatures();
 }
 
 function previewFeature(key, val) {
   // Live preview while settings are open
   if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
   S.features[key] = val;
+  if (key === 'news' && val) localStorage.setItem('caro_news_ticker_hidden', 'false');
   applyFeatures();
   updateFeatWarnings();
   if (key === 'memes' && val && !currentMeme) { fetchMeme(); scheduleMemeRotation(); }
@@ -6574,6 +6661,8 @@ let pomoSeconds = POMO_WORK, pomoRunning = false, pomoIsBreak = false, pomoInter
 fetchWeather(); setInterval(fetchWeather,10*60*1000); updatePomoDisplay(); setTimeout(function(){ fetchTides(); setInterval(fetchTides, 30*60*1000); }, 500);
 
 // ── NEWS ──────────────────────────────────────
+let latestNewsItems = [];
+
 function closeNewsModal() {
   document.getElementById('news-modal')?.classList.remove('show');
 }
@@ -6607,6 +6696,31 @@ function openNewsModal(item) {
   modal.classList.add('show');
 }
 
+function renderNewsTicker(items = latestNewsItems) {
+  const inner = document.getElementById('news-ticker-inner');
+  if (!inner) return;
+  inner.replaceChildren();
+  const list = Array.isArray(items) && items.length ? items.slice(0, 8) : [{ title: 'Headlines unavailable', src: 'NEWS' }];
+  const doubled = list.concat(list);
+  doubled.forEach((item) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ticker-item';
+    btn.title = item.title || '';
+    btn.onclick = () => item.link ? openNewsModal(item) : null;
+    const src = document.createElement('span');
+    src.className = 'ticker-src';
+    src.textContent = (item.src || 'NEWS').slice(0, 10);
+    const title = document.createElement('span');
+    title.textContent = item.title || 'Headlines unavailable';
+    const sep = document.createElement('span');
+    sep.className = 'ticker-sep';
+    sep.textContent = '◆';
+    btn.append(src, title, sep);
+    inner.appendChild(btn);
+  });
+}
+
 async function fetchNews() {
   const nl = document.getElementById('news-list');
   if (!nl) return;
@@ -6621,6 +6735,8 @@ async function fetchNews() {
       } catch(e) {}
     }
     if (!items.length) throw new Error();
+    latestNewsItems = items;
+    renderNewsTicker(items);
     nl.innerHTML = '';
     items.slice(0, 5).forEach(i => {
       const el = document.createElement('div');
@@ -6647,6 +6763,8 @@ async function fetchNews() {
     });
   } catch(e) {
     nl.innerHTML = '<div class="news-loading">Headlines unavailable</div>';
+    latestNewsItems = [];
+    renderNewsTicker([]);
   }
 }
 fetchNews(); setInterval(fetchNews,15*60*1000);
@@ -7183,6 +7301,29 @@ if (S.spotifyClientId) {
 
 // ── TODO LIST ─────────────────────────────────
 // todos initialized above
+let todoFilter = localStorage.getItem('caro_todo_filter') || 'all';
+let newTodoTag = localStorage.getItem('caro_new_todo_tag') || 'work';
+function escapeHtmlText(s) {
+  return String(s || '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+function normalizeTodoTag(tag, text = '') {
+  const t = String(tag || '').toLowerCase();
+  if (t === 'life' || t === 'personal') return 'life';
+  if (t === 'work') return 'work';
+  const lower = String(text || '').toLowerCase();
+  return /\b(home|house|laundry|dishes|trash|doctor|dentist|groceries|family|personal|walk|sleep|meds|medicine|garden|yard)\b/.test(lower) ? 'life' : 'work';
+}
+function setTodoFilter(filter) {
+  todoFilter = ['all','work','life'].includes(filter) ? filter : 'all';
+  localStorage.setItem('caro_todo_filter', todoFilter);
+  document.querySelectorAll('.todo-filter').forEach(btn => btn.classList.toggle('active', btn.dataset.filter === todoFilter));
+  renderTodos();
+}
+function setNewTodoTag(tag) {
+  newTodoTag = normalizeTodoTag(tag);
+  localStorage.setItem('caro_new_todo_tag', newTodoTag);
+  document.querySelectorAll('.todo-tag-choice').forEach(btn => btn.classList.toggle('active', btn.dataset.tag === newTodoTag));
+}
 function saveTodos() { localStorage.setItem('caro_todos', JSON.stringify(todos)); renderInlineTasks(); }
 function renderInlineTasks() {
   const container = document.getElementById('inline-task-list');
@@ -7190,16 +7331,29 @@ function renderInlineTasks() {
   container.innerHTML = '';
   if (!todos.length) { container.innerHTML = '<div style="font-size:11px;color:rgba(226,232,240,0.2);font-family:JetBrains Mono,monospace;padding:4px 0;">No tasks yet</div>'; return; }
   const sorted = [...todos].sort((a,b) => (a.done===b.done)?0:a.done?1:-1);
-  sorted.forEach((todo) => {
-    const realIdx = todos.indexOf(todo);
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background 0.2s;' + (todo.done ? 'opacity:0.4;' : 'background:rgba(var(--t-rgb1),0.04);border:1px solid rgba(var(--t-rgb1),0.1);');
-    div.onclick = () => { toggleTodoItem(realIdx); };
-    const check = todo.done ? '<i class="ti ti-circle-check" style="font-size:14px;color:var(--t-hex1);flex-shrink:0;margin-top:1px;"></i>' : '<i class="ti ti-circle" style="font-size:14px;color:rgba(var(--t-rgb1),0.3);flex-shrink:0;margin-top:1px;"></i>';
-    const text = `<span style="font-size:12px;color:${todo.done?'rgba(226,232,240,0.35)':'#e2e8f0'};line-height:1.3;${todo.done?'text-decoration:line-through;':''}">${todo.text}</span>`;
-    div.innerHTML = check + text;
-    container.appendChild(div);
+  const groups = [
+    { key:'work', label:'WORK', items: sorted.filter(t => normalizeTodoTag(t.tag, t.text) === 'work') },
+    { key:'life', label:'LIFE', items: sorted.filter(t => normalizeTodoTag(t.tag, t.text) === 'life') }
+  ].filter(g => g.items.length);
+  if (!groups.length) { container.innerHTML = '<div style="font-size:11px;color:rgba(226,232,240,0.2);font-family:JetBrains Mono,monospace;padding:4px 0;">No tasks yet</div>'; return; }
+  groups.forEach(group => {
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:9px;color:rgba(var(--t-rgb1),0.48);font-family:JetBrains Mono,monospace;letter-spacing:.16em;margin:5px 0 1px;';
+    label.textContent = group.label;
+    container.appendChild(label);
+    group.items.slice(0, 4).forEach(todo => renderInlineTaskRow(container, todo));
   });
+}
+
+function renderInlineTaskRow(container, todo) {
+  const realIdx = todos.indexOf(todo);
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background 0.2s;' + (todo.done ? 'opacity:0.4;' : 'background:rgba(var(--t-rgb1),0.04);border:1px solid rgba(var(--t-rgb1),0.1);');
+  div.onclick = () => { toggleTodoItem(realIdx); };
+  const check = todo.done ? '<i class="ti ti-circle-check" style="font-size:14px;color:var(--t-hex1);flex-shrink:0;margin-top:1px;"></i>' : '<i class="ti ti-circle" style="font-size:14px;color:rgba(var(--t-rgb1),0.3);flex-shrink:0;margin-top:1px;"></i>';
+  const text = `<span style="font-size:12px;color:${todo.done?'rgba(226,232,240,0.35)':'#e2e8f0'};line-height:1.3;${todo.done?'text-decoration:line-through;':''}">${escapeHtmlText(todo.text)}</span>`;
+  div.innerHTML = check + text;
+  container.appendChild(div);
 }
 
 function showAddTask() {
@@ -7220,17 +7374,24 @@ function updateTodoDate() { const el = document.getElementById('todo-date'); if 
 function renderTodos() {
   const body = document.getElementById('todo-body');
   if (!body) return;
+  document.querySelectorAll('.todo-filter').forEach(btn => btn.classList.toggle('active', btn.dataset.filter === todoFilter));
+  document.querySelectorAll('.todo-tag-choice').forEach(btn => btn.classList.toggle('active', btn.dataset.tag === newTodoTag));
   body.innerHTML = '';
   if (!todos.length) { body.innerHTML = '<div style="text-align:center;color:rgba(226,232,240,0.25);font-size:12px;font-family:JetBrains Mono,monospace;margin-top:40px;">No tasks yet — add one below or ask '+(S.aiName||'Caroline')+'!</div>'; return; }
-  const sorted = [...todos].sort((a,b) => (a.done===b.done) ? 0 : a.done ? 1 : -1);
+  const sorted = [...todos]
+    .filter(t => todoFilter === 'all' || normalizeTodoTag(t.tag, t.text) === todoFilter)
+    .sort((a,b) => (a.done===b.done) ? 0 : a.done ? 1 : -1);
+  if (!sorted.length) { body.innerHTML = '<div style="text-align:center;color:rgba(226,232,240,0.25);font-size:12px;font-family:JetBrains Mono,monospace;margin-top:40px;">No '+todoFilter+' tasks right now.</div>'; return; }
   sorted.forEach((todo, i) => {
     const realIdx = todos.indexOf(todo);
     const div = document.createElement('div');
     div.className = 'todo-item' + (todo.done ? ' done' : '') + (todo.autoDone ? ' auto-done' : '');
     div.onclick = () => toggleTodoItem(realIdx);
-    const tag = todo.tag ? `<span class="todo-tag ${todo.tag}">${todo.tag}</span>` : '';
+    const normalizedTag = normalizeTodoTag(todo.tag, todo.text);
+    todo.tag = normalizedTag;
+    const tag = `<span class="todo-tag ${normalizedTag}">${normalizedTag}</span>`;
     const meta = todo.autoDone ? '<span class="todo-tag auto">✓ auto-completed</span>' : todo.doneAt ? `completed ${formatDisplayTime(new Date(todo.doneAt))}` : '';
-    div.innerHTML = `<div class="todo-check"><span class="todo-check-icon">✓</span></div><div style="flex:1"><div class="todo-text">${todo.text}</div><div class="todo-meta">${tag}${meta}</div></div>`;
+    div.innerHTML = `<div class="todo-check"><span class="todo-check-icon">✓</span></div><div style="flex:1"><div class="todo-text">${escapeHtmlText(todo.text)}</div><div class="todo-meta">${tag}${meta}</div></div>`;
     body.appendChild(div);
   });
 }
@@ -7287,7 +7448,7 @@ function addTodoItem() {
   const input = document.getElementById('todo-input');
   const text = input.value.trim();
   if (!text) return;
-  todos.push({ text, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null });
+  todos.push({ text, done: false, autoDone: false, tag: normalizeTodoTag(newTodoTag, text), createdAt: Date.now(), doneAt: null });
   input.value = ''; saveTodos(); renderTodos(); playBeep(700);
 }
 function clearDoneTodos() { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); playBeep(400); }
@@ -7305,12 +7466,12 @@ function autoCompleteTodo(text) {
 function handleTodoUpdate(data) {
   if (data.action === 'replace' && data.tasks) {
     const kept = todos.filter(t => t.done);
-    const newTasks = data.tasks.map(t => ({ text: t, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }));
+    const newTasks = data.tasks.map(t => ({ text: t, done: false, autoDone: false, tag: normalizeTodoTag('', t), createdAt: Date.now(), doneAt: null }));
     todos = [...kept, ...newTasks];
     saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
   }
   if (data.action === 'add' && data.tasks) {
-    data.tasks.forEach(t => { if (!todos.find(existing => existing.text.toLowerCase() === t.toLowerCase())) { todos.push({ text: t, done: false, autoDone: false, tag: 'work', createdAt: Date.now(), doneAt: null }); } });
+    data.tasks.forEach(t => { if (!todos.find(existing => existing.text.toLowerCase() === t.toLowerCase())) { todos.push({ text: t, done: false, autoDone: false, tag: normalizeTodoTag('', t), createdAt: Date.now(), doneAt: null }); } });
     saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
   }
   if (data.action === 'complete' && data.task) {
@@ -7322,14 +7483,15 @@ document.getElementById('todo-input') && document.getElementById('todo-input').a
 document.getElementById('inline-task-text') && document.getElementById('inline-task-text').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const txt = document.getElementById('inline-task-text').value.trim();
-    if (txt) { todos.push({ text:txt, done:false, autoDone:false, tag:'work', createdAt:Date.now(), doneAt:null }); saveTodos(); document.getElementById('inline-task-text').value=''; document.getElementById('inline-task-input').style.display='none'; playBeep(700); }
+    if (txt) { todos.push({ text:txt, done:false, autoDone:false, tag:normalizeTodoTag(newTodoTag, txt), createdAt:Date.now(), doneAt:null }); saveTodos(); document.getElementById('inline-task-text').value=''; document.getElementById('inline-task-input').style.display='none'; playBeep(700); }
   }
   if (e.key === 'Escape') { document.getElementById('inline-task-input').style.display='none'; }
 });
 setTimeout(renderInlineTasks, 500);
+setTimeout(() => { setNewTodoTag(newTodoTag); setTodoFilter(todoFilter); }, 550);
 
 // ── CACHE BUST GIFS ───────────────────────────
-let HUE_GROUP = S.hueGroup || '';
+var HUE_GROUP = S.hueGroup || '';
 const HUE_MODES = [
   { name:'OFF',   icon:'ti ti-bulb-off', cls:'mode-off', body:{on:false} },
   { name:'RELAX', icon:'ti ti-lamp', cls:'mode-relax', body:{on:true, bri:80, ct:450, sat:80, hue:8000, transitiontime:10} },
@@ -7339,6 +7501,43 @@ const HUE_MODES = [
 let hueModeIdx = 0, discoInterval = null;
 
 function hueWS(path, method, body) { if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type:'hue', path, method:method||'PUT', body:body||{} })); } }
+
+function hueBodyForMode(mode) {
+  const m = String(mode || 'on').toLowerCase();
+  if (m === 'off') return { on:false };
+  if (m === 'party' || m === 'disco') return { on:true, bri:254, sat:254, effect:'colorloop', transitiontime:4 };
+  if (m === 'focus') return { on:true, bri:254, sat:0, ct:153, effect:'none', transitiontime:5 };
+  if (m === 'night') return { on:true, bri:28, ct:500, effect:'none', transitiontime:10 };
+  if (m === 'relax') return { on:true, bri:105, ct:450, sat:80, hue:8000, effect:'none', transitiontime:10 };
+  return { on:true, bri:180, effect:'none', transitiontime:5 };
+}
+
+function updateSmartStatus(message) {
+  const el = document.getElementById('smart-status');
+  if (!el) return;
+  if (message) { el.textContent = message; return; }
+  if (!S.features?.hue) el.textContent = 'Enable Hue in Settings to show smart controls.';
+  else if (!HUE_GROUP || !S.hueIp) el.textContent = 'Configure Hue bridge and group in Settings.';
+  else el.textContent = 'Ready: ' + (S.hueGroupName || ('group ' + HUE_GROUP));
+}
+
+function setSmartHueScene(zone, mode, btn) {
+  if (btn) {
+    document.querySelectorAll('.smart-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  if (!HUE_GROUP) {
+    updateSmartStatus('Hue group is not configured yet.');
+    playBeep(300);
+    return;
+  }
+  if (discoInterval) { clearInterval(discoInterval); discoInterval = null; }
+  const body = hueBodyForMode(mode);
+  hueWS('/groups/' + HUE_GROUP + '/action', 'PUT', body);
+  updateSmartStatus((zone || 'scene').toUpperCase() + ' scene sent to ' + (S.hueGroupName || 'Hue'));
+  playBeep(880);
+  resetIdle();
+}
 
 function cycleHue() {
   if (!HUE_GROUP) {
@@ -7369,12 +7568,96 @@ function checkRememberCommand(text) {
   for (const p of pats) { const m = text.match(p); if (m) return m[1].trim(); }
   return null;
 }
-let stickyNotes = JSON.parse(localStorage.getItem('caro_notes') || '[]');
+var stickyNotes = JSON.parse(localStorage.getItem('caro_notes') || '[]');
 async function saveToMemory(fact) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'remember', content:fact }));
   stickyNotes.unshift({ text:'📌 '+fact, ts:Date.now() });
   if (stickyNotes.length > 20) stickyNotes.pop();
   localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
+  renderMemoryWidget();
+}
+
+function cleanMemoryText(text) {
+  return String(text || '').replace(/^📌\s*/, '').trim();
+}
+
+function memoryAgeLabel(ts) {
+  const d = new Date(Number(ts) || Date.now());
+  if (Number.isNaN(d.getTime())) return 'saved memory';
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return d.toLocaleDateString([], { month:'short', day:'numeric' });
+}
+
+function renderMemoryWidget() {
+  const list = document.getElementById('memory-list');
+  const count = document.getElementById('memory-count');
+  if (!list) return;
+  stickyNotes = Array.isArray(stickyNotes) ? stickyNotes : [];
+  const setupSaved = !!String(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '').trim();
+  const importedSaved = !!(S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt'));
+  const shards = stickyNotes.map((note, idx) => ({
+    id: idx,
+    kind: 'note',
+    text: cleanMemoryText(note.text),
+    ts: note.ts
+  }));
+  if (count) count.textContent = shards.length + ' SHARDS';
+  list.replaceChildren();
+  if (setupSaved || importedSaved) {
+    const status = document.createElement('div');
+    status.className = 'memory-shard';
+    const labels = [];
+    if (setupSaved) labels.push('setup memory saved');
+    if (importedSaved) labels.push('imported profile saved');
+    status.innerHTML = '<div class="memory-text">' + labels.join(' · ') + '</div><div class="memory-meta"><span>core memory</span><span></span></div>';
+    list.appendChild(status);
+  }
+  shards.forEach((m) => {
+    const item = document.createElement('div');
+    item.className = 'memory-shard';
+    const text = document.createElement('div');
+    text.className = 'memory-text';
+    text.textContent = m.text || 'Untitled memory';
+    const meta = document.createElement('div');
+    meta.className = 'memory-meta';
+    const age = document.createElement('span');
+    age.textContent = memoryAgeLabel(m.ts);
+    const deny = document.createElement('button');
+    deny.type = 'button';
+    deny.className = 'memory-deny';
+    deny.textContent = 'Not true';
+    deny.title = 'Delete this local memory shard';
+    deny.onclick = (ev) => {
+      ev.stopPropagation();
+      markMemoryNotTrue(m.id);
+    };
+    meta.append(age, deny);
+    item.append(text, meta);
+    list.appendChild(item);
+  });
+  if (!list.childElementCount) {
+    const empty = document.createElement('div');
+    empty.className = 'memory-empty';
+    empty.textContent = 'No memories yet. Say "remember this..." to save one.';
+    list.appendChild(empty);
+  }
+}
+
+function markMemoryNotTrue(idx) {
+  const note = stickyNotes[idx];
+  if (!note) return;
+  const text = cleanMemoryText(note.text);
+  stickyNotes.splice(idx, 1);
+  localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'memory_correction', action:'not_true', content:text }));
+  renderMemoryWidget();
+  addMessage('Memory marked not true. I removed that local shard.', 'caroline', 'display');
+  playBeep(360);
 }
 
 // ── WIFI SIGNAL ──────────────────────────────
@@ -7522,7 +7805,8 @@ const ONB_WIDGETS = [
   { id:'datetime', title:'Date & Moon',    desc:'Date, weekday, moon phase, and daily markers.', defaultOn:true },
   { id:'radio',    title:'Radio',          desc:'Nightwave Plaza and ambient audio controls.', defaultOn:true },
   { id:'calendar', title:'Calendar',       desc:'Calendar and task timeline panels.', defaultOn:true },
-  { id:'news',     title:'News',           desc:'Top stories in the side rail.', defaultOn:true },
+  { id:'news',     title:'News Ticker',    desc:'Scrolling headlines above the dashboard.', defaultOn:true },
+  { id:'memory',   title:'Memory',         desc:'Saved memory shards with a correction button.', defaultOn:true },
   { id:'video',    title:'Video Player',   desc:'Lo-fi, TV, or custom video channels.', defaultOn:true },
   { id:'pomodoro', title:'Pomodoro',       desc:'Focus timer for sprint mode.', defaultOn:true },
   { id:'tides',    title:'Tides',          desc:'NOAA tide widget for coastal context.', defaultOn:true },
