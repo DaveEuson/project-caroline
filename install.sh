@@ -201,6 +201,7 @@ protect_secret_files() {
   for _secret in \
     "$CAROLINE_DIR/caroline_settings.json" \
     "$CAROLINE_DIR/caroline_telemetry.jsonl" \
+    "$CAROLINE_DIR/caroline_feedback.jsonl" \
     "$CAROLINE_DIR/google_oauth.json" \
     "$CAROLINE_DIR/caroline_tasks.json" \
     "$CAROLINE_DIR/caroline_mind.json" \
