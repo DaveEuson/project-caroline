@@ -13,6 +13,7 @@ This guide has two reset levels:
 - For Ubuntu VM QA, use Ubuntu Server 64-bit when possible, choose **No** for kiosk mode, and open Caroline from another machine at `http://<vm-ip>:8080/`.
 - Use Ubuntu Desktop VM only if you specifically want to test experimental local fullscreen kiosk behavior.
 - Ubuntu-based distributions such as Pop!_OS, Linux Mint, Zorin OS, and elementary OS are expected to work best in server/client mode, but treat them as unverified until install, reboot, update, and integration checks pass.
+- For Ubuntu Server, VM, or server/client installs, give the Caroline host a stable local IP. A router DHCP reservation is recommended because it keeps setup simple; a manual static IP also works if you know your network settings.
 - Save any local credentials or notes you still need from `~/caroline`.
 - Rotate any secrets that may have been used in test installs if the machine was shared or exposed.
 - Do not port-forward Caroline ports to the public internet.
@@ -52,6 +53,8 @@ From another device: http://<vm-ip>:8080/
 ## Server/Client Mode Expectations
 
 Use this path for Ubuntu Server, Proxmox/Hyper-V/VirtualBox VMs, Ubuntu-based desktop distributions, or any Linux box that should host Caroline without running a local kiosk browser.
+
+Before connecting integrations, reserve a stable IP for the Caroline host if this install will be used beyond one test session. A DHCP reservation in your router is the best default. A static IP inside Ubuntu is fine for advanced setups. If the IP changes later, open Caroline at the new URL and update any integration redirect URLs that include the old address.
 
 Expected to work from the external client browser:
 

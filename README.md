@@ -75,6 +75,8 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 
 Tested release targets are Raspberry Pi OS Desktop and Ubuntu Server. Ubuntu-based distributions such as Pop!_OS, Linux Mint, Zorin OS, and elementary OS are expected to work best in **server/client mode** because they share the same Debian/Ubuntu package base, but they are not fully tested yet. Local desktop kiosk behavior may need distro-specific adjustment.
 
+For Ubuntu Server, VM, or any server/client install, give the Caroline host a stable local IP address. A router DHCP reservation is usually the easiest choice; a manually configured static IP also works if you know your LAN settings. If the host IP changes later, your browser URL and some integration redirect URLs may need to be updated.
+
 Avoid 32-bit `i386` VM images for this release. NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages.
 
 Kiosk mode requires a desktop environment and is primarily tested on Raspberry Pi OS Desktop. For an Ubuntu VM, the recommended path is **server mode**: install Caroline on Ubuntu Server, leave kiosk mode off, and open the GUI from another machine on your LAN at `http://<vm-ip>:8080/`.
@@ -127,10 +129,11 @@ For VM testing or non-Pi installs, treat Caroline like a small home-server app:
 
 1. Install Ubuntu Server 64-bit in the VM.
 2. Give the VM network access. Bridged networking is easiest; NAT also works if you can reach the VM IP from your browser.
-3. Run the one-command installer.
-4. Choose **No** for kiosk mode.
-5. After reboot, find the VM IP with `hostname -I`.
-6. Open `http://<vm-ip>:8080/` from your normal desktop browser.
+3. Reserve a stable IP for the VM if you plan to keep using it. A DHCP reservation in your router is recommended; a static IP inside Ubuntu is fine for advanced setups.
+4. Run the one-command installer.
+5. Choose **No** for kiosk mode.
+6. After reboot, find the VM IP with `hostname -I`.
+7. Open `http://<vm-ip>:8080/` from your normal desktop browser.
 
 At the end of install, Caroline prints host-specific next steps. On a Raspberry Pi, it points to the Pi display/kiosk path and still shows browser fallback URLs. On an Ubuntu/server host, it points users to the client-browser URL:
 
