@@ -12,6 +12,7 @@ This guide has two reset levels:
 - Confirm you have SSH, Raspberry Pi Connect, or VM console access before enabling kiosk mode.
 - For Ubuntu VM QA, use Ubuntu Server 64-bit when possible, choose **No** for kiosk mode, and open Caroline from another machine at `http://<vm-ip>:8080/`.
 - Use Ubuntu Desktop VM only if you specifically want to test experimental local fullscreen kiosk behavior.
+- Ubuntu-based distributions such as Pop!_OS, Linux Mint, Zorin OS, and elementary OS are expected to work best in server/client mode, but treat them as unverified until install, reboot, update, and integration checks pass.
 - Save any local credentials or notes you still need from `~/caroline`.
 - Rotate any secrets that may have been used in test installs if the machine was shared or exposed.
 - Do not port-forward Caroline ports to the public internet.
@@ -50,7 +51,7 @@ From another device: http://<vm-ip>:8080/
 
 ## Server/Client Mode Expectations
 
-Use this path for Ubuntu Server, Proxmox/Hyper-V/VirtualBox VMs, or any Linux box that should host Caroline without running a local kiosk browser.
+Use this path for Ubuntu Server, Proxmox/Hyper-V/VirtualBox VMs, Ubuntu-based desktop distributions, or any Linux box that should host Caroline without running a local kiosk browser.
 
 Expected to work from the external client browser:
 
