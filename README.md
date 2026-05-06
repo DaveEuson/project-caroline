@@ -129,6 +129,8 @@ From client browser: http://<vm-ip>:8080/
 
 This mode tests the installer, nginx web UI, Node-RED backend, settings persistence, AI provider routing, integrations, update, and reboot paths. It does not test local fullscreen kiosk autostart, local browser microphone permissions, or VM display wake/sleep behavior.
 
+In server/client mode, the Ubuntu Server VM is the Caroline host and your normal browser is the client. The same GUI still controls the host: Settings save to the VM, chat routes through Node-RED on the VM, the CPU/RAM pill reports the VM, and Update/Reboot act on the VM. The expected exceptions are display-only controls such as local kiosk autostart, local terminal launch, kiosk exit, and browser microphone/wake-word behavior over plain LAN HTTP. Voice input in a remote browser needs a secure browser context, such as HTTPS, or a future local speech-to-text service.
+
 ### Upgrading
 
 To upgrade an existing Caroline install after a new GitHub release, rerun the installer:
@@ -162,9 +164,11 @@ Use `--keep-data` if you only want to remove services and launchers while preser
 After install, open **Settings** in Caroline for any optional services you want to use:
 
 - **Google:** create a Desktop OAuth client, then import or paste the OAuth JSON before using **Connect Google** for Calendar. Client ID alone is not enough because Caroline also needs the client secret from that JSON. The old Sheets/service-account path is kept only as an advanced fallback.
-- **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (usually `https://<pi-ip>:8443/spotify/callback`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
+- **Spotify:** open Settings → Connect → Spotify. The settings panel shows your exact redirect URI (usually `https://<host-ip>:8443/spotify/callback`). Add that URI in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) under your app → Edit → Redirect URIs, then click **Connect Spotify**.
 - **Hue / Discord / OpenRouter:** paste credentials directly in Settings.
 - **Display preferences:** Settings → Widgets controls 12/24-hour time and Fahrenheit/Celsius for weather and device health.
+
+Spotify's LAN redirect uses Caroline's self-signed HTTPS proxy on port `8443`. In server/client mode, open `https://<host-ip>:8443/` once from the same browser and accept the local certificate warning before connecting Spotify.
 
 ### Before QA: Remote Access
 
@@ -267,6 +271,8 @@ Use this for Spotify account connection/control.
 
 The redirect URI must match exactly, including trailing slash.
 
+In server/client mode, the Spotify redirect uses Caroline's local HTTPS proxy on port `8443`. If your browser warns about the certificate, accept it once for your Caroline host before finishing Spotify login.
+
 #### Discord
 
 Use this for Discord channel messaging.
@@ -319,7 +325,7 @@ Use this if you want custom streams in the video widget.
 | Web server | nginx (serves HTML on port 8080) |
 | AI (local/remote) | Ollama on `localhost:11434` or another LAN computer |
 | AI (cloud) | OpenRouter API |
-| Display | Firefox, kiosk mode, 1280×800 |
+| Display | Firefox kiosk on Pi/desktop, or any modern client browser in server mode |
 
 ---
 
@@ -328,11 +334,11 @@ Use this if you want custom streams in the video widget.
 ```
 Browser
   ├── HTTP GET (port 8080) ──────► nginx ──► index.html
-  └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (Pi or LAN server)
+  └── WebSocket (port 1880) ─────► Node-RED ──► Ollama (host or LAN server)
                                             └──► OpenRouter (cloud)
 ```
 
-Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and an HTTPS proxy on port 8443 for OAuth callbacks. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses a PKCE OAuth popup through `/spotify/callback`, so the kiosk stays in place while Spotify redirects back to the Pi.
+Node-RED runs as a bare-metal systemd service. nginx serves the static kiosk on port 8080 and an HTTPS proxy on port 8443 for OAuth callbacks. WebSocket traffic goes directly to Node-RED on port 1880. Spotify uses a PKCE OAuth popup through `/spotify/callback`, so the Caroline GUI stays in place while Spotify redirects back to the Caroline host.
 
 ---
 

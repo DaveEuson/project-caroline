@@ -41,9 +41,9 @@ If the JSON says `"type": "service_account"`, or the client ID is only a long nu
 
 ## Kiosk vs Browser
 
-The Pi kiosk and a normal browser use the same setup screen. The only difference is where Google lands after consent:
+The Caroline host/kiosk and a normal client browser use the same setup screen. The only difference is where Google lands after consent:
 
-- **Pi kiosk:** the loopback callback can complete directly on the Pi.
+- **Host/kiosk browser:** the loopback callback can complete directly on the Caroline host.
 - **Remote browser/laptop:** the browser may land on `127.0.0.1` on your laptop. Copy that final URL and paste it into **Finish Google Sign-In**.
 
 Do not use Google's TV/device-code OAuth flow for Caroline Calendar. Google limits that flow to a small set of scopes that does not include Calendar, so Caroline uses Desktop OAuth with the manual callback fallback instead.

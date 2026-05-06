@@ -511,7 +511,12 @@ echo ""
 echo -e "${MAGENTA}  // CAMPFIRE DISPLAY MODE${RESET}"
 echo ""
 echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated display.${RESET}"
-echo -e "${DIM}  Skip this if you're just testing, or if you don't have a desktop environment.${RESET}"
+if has_desktop_environment; then
+  echo -e "${DIM}  Skip this if you're testing server/client mode or plan to open Caroline from another browser.${RESET}"
+else
+  echo -e "${DIM}  No desktop environment detected. Choose No for Ubuntu Server / headless mode.${RESET}"
+  echo -e "${DIM}  Caroline will still run as a server and print the client browser URL after install.${RESET}"
+fi
 echo ""
 read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
 echo ""

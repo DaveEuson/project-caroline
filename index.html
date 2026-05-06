@@ -3329,6 +3329,7 @@ function showSpotifyAuthDialog(authUrl, clientId) {
       </div>
       <div style="font-size:11px;color:#94a3b8;margin:10px 0 6px;">Redirect URI Spotify must have:</div>
       <div style="background:#05050a;border:1px solid rgba(29,185,84,.28);border-radius:8px;padding:10px;word-break:break-all;font-size:12px;color:#67e8f9;">${spotifyHtmlEscape(redirectUri)}</div>
+      <div style="margin-top:8px;font-size:10px;line-height:1.5;color:#94a3b8;">Server/client note: if your browser shows a certificate warning for port 8443, accept it once so Spotify can return to Caroline.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
         <button type="button" onclick="copySpotifyAuthText('${spotifyHtmlEscape(redirectUri)}','Redirect URI copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Redirect URI</button>
         <button type="button" onclick="copySpotifyAuthText(spotifyPendingAuthUrl,'Spotify login link copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Login Link</button>
@@ -6078,7 +6079,7 @@ let wakeArmed=false, wakeRestartTimer=null, stopRequested=false, micBlockedReaso
 function micOriginHint() {
   const host = window.location.hostname || '';
   const localHost = ['localhost','127.0.0.1','::1'].includes(host);
-  if (!window.isSecureContext && !localHost) return 'Mic needs Chromium on localhost/HTTPS. On the device, open http://127.0.0.1:8080 instead of the LAN IP.';
+  if (!window.isSecureContext && !localHost) return 'Mic needs a secure browser context. In server/client mode, use HTTPS or type messages from the client browser; on the device itself, open http://127.0.0.1:8080.';
   return '';
 }
 function getWakePhrases() {
