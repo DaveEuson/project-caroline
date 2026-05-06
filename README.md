@@ -193,7 +193,7 @@ On Windows, WSL Ubuntu can be used like a lightweight Ubuntu Server host for tes
 http://localhost:8080/
 ```
 
-If `localhost` does not work, check the WSL IP with `hostname -I` inside WSL and try `http://<wsl-ip>:8080/`. For other devices on your LAN to reach a WSL-hosted Caroline, you may need WSL mirrored networking or Windows port forwarding.
+If `localhost` does not work immediately after install, reboot Windows or run `wsl --shutdown` from PowerShell, reopen Ubuntu, and try again. You can also check the WSL IP with `hostname -I` inside WSL and try `http://<wsl-ip>:8080/`. For other devices on your LAN to reach a WSL-hosted Caroline, you may need WSL mirrored networking or Windows port forwarding.
 
 WSL is best treated as a developer/test host. It is convenient, but Windows sleep, reboots, firewall rules, and WSL lifecycle behavior can stop or change the Caroline host.
 

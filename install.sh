@@ -241,6 +241,7 @@ desktop_dir_for_user() {
 }
 
 has_desktop_environment() {
+  is_wsl && return 1
   [ -n "${DISPLAY:-}" ] && return 0
   [ -n "${WAYLAND_DISPLAY:-}" ] && return 0
   [ -n "${XDG_CURRENT_DESKTOP:-}" ] && return 0
@@ -385,6 +386,12 @@ is_raspberry_pi() {
   if [ -r /etc/os-release ] && grep -qi '^ID=raspbian' /etc/os-release; then
     return 0
   fi
+  return 1
+}
+
+is_wsl() {
+  grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null && return 0
+  grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null && return 0
   return 1
 }
 
@@ -610,14 +617,22 @@ echo ""
 echo -e "${MAGENTA}  // CAROLINE ARCHIVE — DISPLAY CONSOLE${RESET}"
 echo ""
 echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated display.${RESET}"
-if has_desktop_environment; then
+if is_wsl; then
+  echo -e "${DIM}  WSL detected. Use server/client mode and open Caroline from Windows at http://localhost:${KIOSK_PORT}/.${RESET}"
+  echo -e "${DIM}  Kiosk autostart is skipped in WSL because the display belongs to Windows.${RESET}"
+elif has_desktop_environment; then
   echo -e "${DIM}  Skip this if you're testing server/client mode or plan to open Caroline from another browser.${RESET}"
 else
   echo -e "${DIM}  No desktop environment detected. Choose No for Ubuntu Server / headless mode.${RESET}"
   echo -e "${DIM}  Caroline will still run as a server and print the client browser URL after install.${RESET}"
 fi
 echo ""
-read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
+if is_wsl; then
+  KIOSK_MODE="N"
+  echo -e "${DIM}  Enable kiosk mode on boot? (y/N): N  (WSL server/client mode)${RESET}"
+else
+  read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
+fi
 echo ""
 
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
@@ -1161,6 +1176,10 @@ echo -e "${YELLOW}  ► Writing settings...${RESET}"
 # paired devices, OAuth clients, and user preferences survive reruns.
 PI_IP=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP" ] || PI_IP="localhost"
+BROWSER_HOST_IP="$PI_IP"
+if is_wsl; then
+  BROWSER_HOST_IP="localhost"
+fi
 INSTALL_ID="$(date +%s)-$(hostname)-$RANDOM"
 INSTALL_EVENT_TYPE="install"
 if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
@@ -1177,7 +1196,7 @@ jq -n \
   --arg provider     "$AI_PROVIDER" \
   --arg ollamaModel  "$OLLAMA_MODEL" \
   --arg piIp         "$PI_IP" \
-  --arg nrUrl        "http://${PI_IP}:${NODE_RED_PORT}" \
+  --arg nrUrl        "http://${BROWSER_HOST_IP}:${NODE_RED_PORT}" \
   --arg installId    "$INSTALL_ID" \
   --argjson telemetryInstallCount "$(bool_json "$TELEMETRY_INSTALL_COUNT")" \
   --argjson telemetryTroubleshooting "$(bool_json "$TELEMETRY_TROUBLESHOOTING")" \
@@ -1379,7 +1398,10 @@ FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
 WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
 
 echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
-if has_desktop_environment; then
+if is_wsl; then
+  echo -e "${DIM}  WSL server/client mode detected — use your Windows browser instead.${RESET}"
+  echo -e "${DIM}  Open: http://localhost:${KIOSK_PORT}/${RESET}"
+elif has_desktop_environment; then
   if ensure_browser; then
     configure_firefox_profile "$FIREFOX_PROFILE_DIR"
     configure_firefox_profile "$WINDOWED_PROFILE_DIR"
@@ -1401,7 +1423,9 @@ fi
 if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
   echo -e "${YELLOW}  ► Configuring kiosk mode...${RESET}"
 
-  if ! has_desktop_environment; then
+  if is_wsl; then
+    echo -e "${DIM}  WSL server/client mode detected — skipping kiosk autostart.${RESET}"
+  elif ! has_desktop_environment; then
     echo -e "${YELLOW}  ⚠ No desktop environment detected — skipping kiosk setup.${RESET}"
     echo -e "${DIM}  Kiosk mode requires a desktop session, not a server/Lite install.${RESET}"
     echo -e "${DIM}  You can enable it later in Caroline's settings panel.${RESET}"
@@ -1488,6 +1512,10 @@ unset _svc _svc_ok
 phase "REACTIVATION COMPLETE"
 PI_IP_FINAL=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP_FINAL" ] || PI_IP_FINAL="localhost"
+BROWSER_HOST_FINAL="$PI_IP_FINAL"
+if is_wsl; then
+  BROWSER_HOST_FINAL="localhost"
+fi
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -1496,9 +1524,9 @@ echo ""
 echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
-echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
-echo -e "${CYAN}  │${RESET}  Node-RED:    http://${PI_IP_FINAL}:${NODE_RED_PORT}"
-echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${PI_IP_FINAL}:${HTTPS_PROXY_PORT}"
+echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${BROWSER_HOST_FINAL}:${KIOSK_PORT}/${RESET}"
+echo -e "${CYAN}  │${RESET}  Node-RED:    http://${BROWSER_HOST_FINAL}:${NODE_RED_PORT}"
+echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${BROWSER_HOST_FINAL}:${HTTPS_PROXY_PORT}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
 else
@@ -1518,6 +1546,15 @@ echo -e "${CYAN}  │${RESET}  Pi display:        use the desktop shortcut or br
   echo -e "${CYAN}  │${RESET}  On this Pi:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  From another device: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  If the IP changes: run ${BOLD}hostname -I${RESET} on the Pi"
+  echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
+elif is_wsl; then
+  echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
+  echo -e "${CYAN}  │  OPEN CAROLINE FROM WINDOWS                             │${RESET}"
+  echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
+  echo -e "${CYAN}  │${RESET}  Windows browser:   ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  Inside WSL:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  WSL network IP:    http://${PI_IP_FINAL}:${KIOSK_PORT}/"
+  echo -e "${CYAN}  │${RESET}  If it fails:       restart WSL or Windows, then retry localhost"
   echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 else
   echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
