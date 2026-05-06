@@ -83,6 +83,25 @@ If you choose to run the AI in **Local** mode (via Ollama), your prompts, calend
 
 Tested release targets are Raspberry Pi OS Desktop and Ubuntu Server. Ubuntu-based distributions such as Pop!_OS, Linux Mint, Zorin OS, and elementary OS are expected to work best in **server/client mode** because they share the same Debian/Ubuntu package base, but they are not fully tested yet. Local desktop kiosk behavior may need distro-specific adjustment.
 
+### Server vs Client Support
+
+Caroline has two parts:
+
+- **Server/host**: the machine running the installer, Node-RED, nginx, settings, updates, optional Ollama, and local integrations.
+- **Client/display**: the browser that opens the Caroline GUI at `http://<host-ip>:8080/`.
+
+| Platform | As Caroline server/host | As browser client/display |
+|---|---|---|
+| Raspberry Pi OS Desktop 64-bit | Supported and primary beta target | Supported, including kiosk mode |
+| Ubuntu Server 64-bit | Supported server/client target | Use another browser device for display |
+| Ubuntu Desktop / Debian desktop | Experimental | Supported as a browser client |
+| WSL Ubuntu on Windows | Experimental development/server host | Windows browser usually opens `http://localhost:8080/` |
+| macOS | Not first-beta supported as a one-command server install | Supported as a browser client |
+| Windows native | Not first-beta supported as a one-command server install | Supported as a browser client |
+| iPad/tablet/phone | Not a server target | Supported for basic dashboard viewing; kiosk/voice behavior varies |
+
+In plain English: the first beta supports **Pi or Ubuntu as the host**, and almost any modern browser as the client. A Mac, Windows PC, tablet, or phone can view and control Caroline if it can reach the host URL on your trusted LAN or VPN.
+
 For Ubuntu Server, VM, or any server/client install, give the Caroline host a stable local IP address. A router DHCP reservation is usually the easiest choice; a manually configured static IP also works if you know your LAN settings. If the host IP changes later, your browser URL and some integration redirect URLs may need to be updated.
 
 Small Ubuntu Server VMs can run out of memory while installing Node.js or Node-RED. The installer creates a temporary swap cushion on low-memory hosts when there is enough disk space, but 2GB+ RAM is still the smoother minimum for beta QA.
@@ -126,6 +145,10 @@ The core kiosk, chat, weather, news, radio, Pomodoro, local tasks, and display p
 
 Platform note: this release is designed for Raspberry Pi first. If you do not want to use a Pi, a 64-bit Ubuntu/Debian/Linux VM should also work as a **server host**. On an Ubuntu VM, use Ubuntu Server 64-bit, enable networking, choose **No** when the installer asks about kiosk mode, then open Caroline from an external browser at `http://<vm-ip>:8080/`. Ubuntu-based desktop distributions may also work, especially as server/client hosts, but fullscreen kiosk autostart is only lightly tested outside Raspberry Pi OS. Ubuntu Desktop kiosk mode is possible, but it is not the recommended VM path because VM display layers such as Hyper-V Enhanced Session/XRDP and snap Firefox can interfere with fullscreen kiosk behavior.
 
+WSL Ubuntu on Windows should work for development-style server/client testing: install Caroline inside WSL, then open the GUI from Windows at `http://localhost:8080/` or the WSL host address. This is useful for testing the Ubuntu install path without a separate VM, but it is not the best always-on kiosk target because WSL depends on the Windows host session, power state, and networking. External LAN clients may need WSL mirrored networking or Windows port forwarding.
+
+macOS and Windows native installs are not first-beta server targets because the installer assumes Linux tooling such as `apt`, Linux paths, and system service setup. Macs and Windows PCs are excellent **browser clients**, though: open `http://<caroline-host-ip>:8080/` from Safari, Chrome, Edge, or Firefox and Caroline should behave like the same GUI. Hardware-local features such as kiosk autostart, wake word, microphone permissions, terminal launch, and reboot/update controls apply to the Linux host, not the client device.
+
 On desktop Linux, the installer also tries to create two desktop shortcuts:
 
 - **Project Caroline** — opens Caroline in a normal Firefox window.
@@ -155,6 +178,34 @@ From client browser: http://<vm-ip>:8080/
 This mode tests the installer, nginx web UI, Node-RED backend, settings persistence, AI provider routing, integrations, update, and reboot paths. It does not test local fullscreen kiosk autostart, local browser microphone permissions, or VM display wake/sleep behavior.
 
 In server/client mode, the Ubuntu Server VM is the Caroline host and your normal browser is the client. The same GUI still controls the host: Settings save to the VM, chat routes through Node-RED on the VM, the CPU/RAM pill reports the VM, and Update/Reboot act on the VM. The expected exceptions are display-only controls such as local kiosk autostart, local terminal launch, kiosk exit, and browser microphone/wake-word behavior over plain LAN HTTP. Voice input in a remote browser needs a secure browser context, such as HTTPS, or a future local speech-to-text service.
+
+### WSL Development Mode
+
+On Windows, WSL Ubuntu can be used like a lightweight Ubuntu Server host for testing:
+
+1. Install Ubuntu in WSL.
+2. Open the WSL terminal.
+3. Run the Caroline installer.
+4. Choose **No** for kiosk mode.
+5. Open Caroline from Windows at:
+
+```text
+http://localhost:8080/
+```
+
+If `localhost` does not work, check the WSL IP with `hostname -I` inside WSL and try `http://<wsl-ip>:8080/`. For other devices on your LAN to reach a WSL-hosted Caroline, you may need WSL mirrored networking or Windows port forwarding.
+
+WSL is best treated as a developer/test host. It is convenient, but Windows sleep, reboots, firewall rules, and WSL lifecycle behavior can stop or change the Caroline host.
+
+### Browser Clients
+
+Any modern browser on your trusted LAN can be a Caroline display/client:
+
+```text
+http://<caroline-host-ip>:8080/
+```
+
+This includes macOS, Windows, Linux desktops, tablets, and phones. The browser client shows and controls the same Caroline GUI, but the backend still runs on the Linux host. Settings, chat, integrations, Update, Reboot, and CPU/RAM status apply to the host. Local display features such as boot-to-kiosk, kiosk exit, local terminal launch, and microphone/wake-word behavior depend on the browser/device and are not guaranteed in remote client mode.
 
 ### Upgrading
 
