@@ -86,6 +86,61 @@ PALETTE_NODES=(
   "node-red-contrib-google-sheets"
 )
 
+OLLAMA_MODEL_VALUES=("gemma3:1b" "qwen3:0.6b" "smollm2:360m" "tinyllama")
+OLLAMA_MODEL_LABELS=(
+  "Recommended default; friendliest local replies"
+  "Faster and smaller; good when Gemma feels too heavy"
+  "Tiny emergency fallback; fast, but lower quality"
+  "Legacy fallback; small, but more likely to wander"
+)
+
+choose_ollama_model() {
+  local selected=0
+  local key rest i
+
+  if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
+    printf '%s' "gemma3:1b"
+    return 0
+  fi
+
+  echo -e "${DIM}  Use ↑/↓ then Enter. You can also press j/k.${RESET}" >/dev/tty
+  tput civis >/dev/tty 2>&1 || true
+
+  while true; do
+    for i in "${!OLLAMA_MODEL_VALUES[@]}"; do
+      if [ "$i" -eq "$selected" ]; then
+        echo -e "\r\033[K  ${CYAN}› ${BOLD}${OLLAMA_MODEL_VALUES[$i]}${RESET} ${DIM}${OLLAMA_MODEL_LABELS[$i]}${RESET}" >/dev/tty
+      else
+        echo -e "\r\033[K    ${OLLAMA_MODEL_VALUES[$i]} ${DIM}${OLLAMA_MODEL_LABELS[$i]}${RESET}" >/dev/tty
+      fi
+    done
+
+    IFS= read -rsn1 key </dev/tty || break
+    case "$key" in
+      "")
+        break
+        ;;
+      $'\x1b')
+        IFS= read -rsn2 -t 0.2 rest </dev/tty || rest=""
+        case "$rest" in
+          "[A") selected=$(( (selected - 1 + ${#OLLAMA_MODEL_VALUES[@]}) % ${#OLLAMA_MODEL_VALUES[@]} )) ;;
+          "[B") selected=$(( (selected + 1) % ${#OLLAMA_MODEL_VALUES[@]} )) ;;
+        esac
+        ;;
+      k|K)
+        selected=$(( (selected - 1 + ${#OLLAMA_MODEL_VALUES[@]}) % ${#OLLAMA_MODEL_VALUES[@]} ))
+        ;;
+      j|J)
+        selected=$(( (selected + 1) % ${#OLLAMA_MODEL_VALUES[@]} ))
+        ;;
+    esac
+    printf "\033[%sA" "${#OLLAMA_MODEL_VALUES[@]}" >/dev/tty
+  done
+
+  tput cnorm >/dev/tty 2>&1 || true
+  printf '%s' "${OLLAMA_MODEL_VALUES[$selected]}"
+}
+
 # ── RESOLVE REAL USER (safe even if run with sudo) ───────────
 REAL_USER=${SUDO_USER:-$USER}
 REAL_HOME=$(eval echo "~$REAL_USER")
@@ -96,6 +151,7 @@ CAROLINE_TEMP_SWAP="/var/tmp/caroline-install.swap"
 CAROLINE_TEMP_SWAP_CREATED="false"
 
 cleanup_install_swap() {
+  tput cnorm >/dev/tty 2>&1 || true
   if [ "$CAROLINE_TEMP_SWAP_CREATED" = "true" ]; then
     sudo swapoff "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
     sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
@@ -537,12 +593,9 @@ echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  OLLAMA_MODEL="gemma3:1b"
-  echo -e "${DIM}  Default: gemma3:1b. Friendlier and more coherent in local testing.${RESET}"
-  echo -e "${DIM}  Alternatives: qwen3:0.6b for speed, smollm2:360m for smallest download.${RESET}"
+  echo -e "${DIM}  Choose a local model. gemma3:1b is selected by default.${RESET}"
   echo -e "${DIM}  OpenRouter is still recommended for the polished Caroline experience.${RESET}"
-  read -p "  Model [gemma3:1b]: " OLLAMA_MODEL_INPUT </dev/tty
-  OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-gemma3:1b}"
+  OLLAMA_MODEL="$(choose_ollama_model)"
   echo ""
   echo -e "${DIM}  Selected ${OLLAMA_MODEL}. The installer will download it after the core services are ready.${RESET}"
 else
