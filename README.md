@@ -268,6 +268,8 @@ Official guide: [Raspberry Pi Connect documentation](https://www.raspberrypi.com
 
 ### Local Pi Update During QA
 
+For normal beta updates, open **Settings → About → Update**. On installs that include the updater helper, Caroline starts the update on the host and preserves settings, credentials, OAuth tokens, and local data. Older installs may still copy the terminal command as a fallback; run that once, then future builds can update from the GUI.
+
 When testing local changes before a GitHub release, copy only the file you changed, keep a timestamped backup on the Pi, then restart nginx:
 
 ```powershell

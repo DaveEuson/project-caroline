@@ -2194,7 +2194,7 @@
           </div>
           <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status">Pulls the latest GitHub build; Refresh Build only rereads version info</div></div>
-            <button class="settings-boot-btn" type="button" onclick="showUpdateCommand(this)">⟳ Update</button>
+            <button class="settings-boot-btn" type="button" onclick="startCarolineUpdate(this)">⟳ Update</button>
           </div>
           <div id="issue-report-status" style="margin-top:8px;font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
         </div>
@@ -5976,6 +5976,82 @@ function showUpdateCommand(btn) {
   navigator.clipboard?.writeText(cmd).catch(() => {});
   showSettingsFeedback('Update command copied');
   clog('info', 'Update command shown');
+}
+
+let carolineUpdatePollTimer = null;
+
+function setUpdateStatus(text, color = 'rgba(34,211,238,0.95)') {
+  const status = document.getElementById('update-command-status');
+  if (!status) return;
+  status.textContent = text;
+  status.style.color = color;
+}
+
+async function startCarolineUpdate(btn) {
+  if (!confirm('Update Project: Caroline now? The interface may disconnect for a minute while services restart.')) return;
+  const originalText = btn ? btn.textContent : '⟳ Update';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Starting...';
+  }
+  setUpdateStatus('Starting update on the Caroline host...');
+  try {
+    const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/update', {
+      method: 'POST',
+      timeoutMs: 7000
+    }, 'Caroline update');
+    let data = {};
+    try { data = await resp.clone().json(); } catch(e) {}
+    if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
+    setUpdateStatus('Update started. Caroline may disconnect while Node-RED restarts; give her about a minute.');
+    clog('info', 'Update started from GUI');
+    if (btn) btn.textContent = 'Updating...';
+    pollCarolineUpdateStatus(btn, originalText);
+  } catch(e) {
+    setUpdateStatus('Automatic update is not ready on this install. Command copied as fallback.', '#fbbf24');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+    showUpdateCommand(null);
+  }
+}
+
+function pollCarolineUpdateStatus(btn, originalText) {
+  if (carolineUpdatePollTimer) clearInterval(carolineUpdatePollTimer);
+  let tries = 0;
+  carolineUpdatePollTimer = setInterval(async () => {
+    tries++;
+    try {
+      const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/update/status', { timeoutMs: 3500 }, 'Caroline update status');
+      const data = await resp.json();
+      if (data.running) {
+        setUpdateStatus('Updating... ' + (data.lastLine || 'installer is running'));
+        return;
+      }
+      if (data.ok && data.lastLine) setUpdateStatus(data.lastLine.includes('complete') ? 'Update complete. Refreshing build info...' : data.lastLine, data.lastLine.includes('complete') ? 'rgba(52,211,153,0.9)' : 'rgba(34,211,238,0.95)');
+      if (data.lastLine && /complete/i.test(data.lastLine)) {
+        clearInterval(carolineUpdatePollTimer);
+        carolineUpdatePollTimer = null;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = originalText || '⟳ Update';
+        }
+        setTimeout(() => { refreshBuildInfo(); }, 1500);
+      }
+    } catch(e) {
+      setUpdateStatus('Update is still running or Caroline is restarting. Refresh this page in about a minute.', '#fbbf24');
+    }
+    if (tries > 40) {
+      clearInterval(carolineUpdatePollTimer);
+      carolineUpdatePollTimer = null;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText || '⟳ Update';
+      }
+      setUpdateStatus('Update may still be finishing. Refresh Caroline and check About > Build.');
+    }
+  }, 3000);
 }
 
 // ── KIOSK SYSTEM CONTROLS ─────────────────────

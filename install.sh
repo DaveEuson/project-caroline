@@ -20,6 +20,19 @@ DIM='\033[2m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+CAROLINE_NONINTERACTIVE="${CAROLINE_NONINTERACTIVE:-false}"
+for _arg in "$@"; do
+  case "$_arg" in
+    --noninteractive|--update)
+      CAROLINE_NONINTERACTIVE="true"
+      ;;
+  esac
+done
+
+can_prompt() {
+  [ "$CAROLINE_NONINTERACTIVE" != "true" ] && [ -r /dev/tty ] && [ -w /dev/tty ]
+}
+
 # ── SPINNER ───────────────────────────────────────────────────
 spin() {
   local pid=$1 msg=$2
@@ -52,7 +65,7 @@ ask_yes_no() {
     suffix="(Y/n)"
   fi
 
-  if [ -r /dev/tty ]; then
+  if can_prompt; then
     read -p "  ${prompt} ${suffix}: " answer </dev/tty
   else
     answer=""
@@ -572,7 +585,12 @@ echo ""
 # ── USER INPUT ───────────────────────────────────────────────
 echo -e "${MAGENTA}  // CAROLINE ARCHIVE — OPERATOR RECORD${RESET}"
 echo ""
-read -p "  Your name: " USER_NAME </dev/tty
+if can_prompt; then
+  read -p "  Your name: " USER_NAME </dev/tty
+else
+  USER_NAME="${CAROLINE_USER_NAME:-}"
+  echo -e "${DIM}  Your name: ${USER_NAME:-preserved from existing settings}${RESET}"
+fi
 TIMEZONE="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
 [ -n "$TIMEZONE" ] || TIMEZONE="America/Los_Angeles"
 LOCATION=""
@@ -615,6 +633,9 @@ fi
 if is_wsl; then
   INSTALL_OLLAMA="N"
   echo -e "${DIM}  Install experimental local Ollama fallback on this device? (y/N): N  (WSL: use Windows Ollama or OpenRouter)${RESET}"
+elif [ "$CAROLINE_NONINTERACTIVE" = "true" ]; then
+  INSTALL_OLLAMA="N"
+  echo -e "${DIM}  Install experimental local Ollama fallback on this device? (y/N): N  (noninteractive update)${RESET}"
 else
   read -p "  Install experimental local Ollama fallback on this device? (y/N): " INSTALL_OLLAMA </dev/tty
   INSTALL_OLLAMA="${INSTALL_OLLAMA:-N}"
@@ -651,6 +672,9 @@ echo ""
 if is_wsl; then
   KIOSK_MODE="N"
   echo -e "${DIM}  Enable kiosk mode on boot? (y/N): N  (WSL server/client mode)${RESET}"
+elif [ "$CAROLINE_NONINTERACTIVE" = "true" ]; then
+  KIOSK_MODE="N"
+  echo -e "${DIM}  Enable kiosk mode on boot? (y/N): N  (preserved from existing settings during update)${RESET}"
 else
   read -p "  Enable kiosk mode on boot? (y/N): " KIOSK_MODE </dev/tty
 fi
@@ -965,6 +989,7 @@ CLONE_DIR="$REAL_HOME/project-caroline"
 
 if [ -d "$CLONE_DIR/.git" ]; then
   echo -e "${DIM}    Repo already present — pulling latest...${RESET}"
+  git config --global --add safe.directory "$CLONE_DIR" >/dev/null 2>&1 || true
   git -C "$CLONE_DIR" pull --ff-only 2>/tmp/caroline-git.log || \
     echo -e "${YELLOW}    ⚠ git pull failed — using existing clone${RESET}"
 else
@@ -974,6 +999,7 @@ else
     exit 1
   }
 fi
+sudo chown -R "$REAL_USER":"$REAL_USER" "$CLONE_DIR" 2>/dev/null || true
 
 echo -e "${DIM}    Copying application files to ${CAROLINE_DIR}...${RESET}"
 
@@ -1378,6 +1404,66 @@ else
   sudo rm -f /etc/sudoers.d/caroline-reboot
   echo -e "${YELLOW}  ⚠ Reboot control was not installed; sudoers validation failed${RESET}"
   echo -e "${DIM}    Log: cat /tmp/caroline-sudoers-check.log${RESET}"
+fi
+
+echo -e "${YELLOW}  ► Allowing Caroline to update this host...${RESET}"
+sudo tee /usr/local/sbin/caroline-update > /dev/null << 'EOF'
+#!/bin/bash
+set -Eeuo pipefail
+LOG="/tmp/caroline-update.log"
+LOCK="/tmp/caroline-update.lock"
+INSTALLER="/tmp/caroline-install.sh"
+REPO_INSTALL_URL="https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh"
+trap 'code=$?; echo "$(date -Is) Project: Caroline GUI update failed (exit $code)" >> "$LOG"; exit $code' ERR
+
+exec 9>"$LOCK"
+if ! flock -n 9; then
+  echo "$(date -Is) update already running" >> "$LOG"
+  exit 0
+fi
+
+TARGET_USER="$(awk -F= '/^User=/{print $2; exit}' /etc/systemd/system/caroline.service 2>/dev/null || true)"
+if [ -z "$TARGET_USER" ] || [ "$TARGET_USER" = "root" ]; then
+  TARGET_USER="${SUDO_USER:-${USER:-}}"
+fi
+if [ -z "$TARGET_USER" ] || [ "$TARGET_USER" = "root" ]; then
+  TARGET_USER="$(stat -c '%U' /home/*/caroline 2>/dev/null | head -1 || true)"
+fi
+if [ -z "$TARGET_USER" ] || [ "$TARGET_USER" = "root" ]; then
+  echo "$(date -Is) could not determine Caroline user" | tee -a "$LOG"
+  exit 1
+fi
+TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
+if [ -z "$TARGET_HOME" ] || [ ! -d "$TARGET_HOME" ]; then
+  echo "$(date -Is) could not determine home for $TARGET_USER" | tee -a "$LOG"
+  exit 1
+fi
+
+{
+  echo "============================================================"
+  echo "$(date -Is) Project: Caroline GUI update requested"
+  echo "Target user: $TARGET_USER"
+  echo "Target home: $TARGET_HOME"
+} > "$LOG"
+
+curl -fsSL "$REPO_INSTALL_URL" -o "$INSTALLER" >> "$LOG" 2>&1
+chmod 700 "$INSTALLER"
+git config --global --add safe.directory "$TARGET_HOME/project-caroline" >/dev/null 2>&1 || true
+SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
+echo "$(date -Is) Project: Caroline GUI update complete" >> "$LOG"
+EOF
+sudo chmod 755 /usr/local/sbin/caroline-update
+sudo chown root:root /usr/local/sbin/caroline-update
+sudo tee /etc/sudoers.d/caroline-update > /dev/null << EOF
+${REAL_USER} ALL=(root) NOPASSWD: /usr/local/sbin/caroline-update
+EOF
+sudo chmod 440 /etc/sudoers.d/caroline-update
+if sudo visudo -cf /etc/sudoers.d/caroline-update >/tmp/caroline-update-sudoers-check.log 2>&1; then
+  echo -e "${GREEN}  ✓ Update control ready${RESET}"
+else
+  sudo rm -f /etc/sudoers.d/caroline-update
+  echo -e "${YELLOW}  ⚠ Update control was not installed; sudoers validation failed${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-update-sudoers-check.log${RESET}"
 fi
 
 sudo systemctl daemon-reload

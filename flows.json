@@ -5499,5 +5499,124 @@
         "caro-calendar-create-refresh-http"
       ]
     ]
+  },
+  {
+    "id": "caro-admin-update-in",
+    "type": "http in",
+    "z": "1497b6d50e1369f5",
+    "name": "POST /admin/update",
+    "url": "/admin/update",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 150,
+    "y": 700,
+    "wires": [
+      [
+        "caro-admin-update-start-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-admin-update-start-fn",
+    "type": "function",
+    "z": "1497b6d50e1369f5",
+    "name": "Start Caroline update",
+    "func": "const CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nconst response = { req: msg.req, res: msg.res, statusCode: 202, headers: CORS, payload: { ok: true, message: 'Update started on the Caroline host' } };\nconst run = { payload: '' };\nreturn [response, run];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 380,
+    "y": 700,
+    "wires": [
+      [
+        "caro-admin-update-res"
+      ],
+      [
+        "caro-admin-update-exec"
+      ]
+    ]
+  },
+  {
+    "id": "caro-admin-update-res",
+    "type": "http response",
+    "z": "1497b6d50e1369f5",
+    "name": "update response",
+    "statusCode": "",
+    "headers": {},
+    "x": 620,
+    "y": 680,
+    "wires": []
+  },
+  {
+    "id": "caro-admin-update-exec",
+    "type": "exec",
+    "z": "1497b6d50e1369f5",
+    "command": "bash -lc 'nohup sudo -n /usr/local/sbin/caroline-update >/tmp/caroline-update-trigger.log 2>&1 &'",
+    "addpay": false,
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "winHide": false,
+    "oldrc": false,
+    "name": "run caroline-update",
+    "x": 640,
+    "y": 720,
+    "wires": [
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "caro-admin-update-status-in",
+    "type": "http in",
+    "z": "1497b6d50e1369f5",
+    "name": "GET /admin/update/status",
+    "url": "/admin/update/status",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 170,
+    "y": 760,
+    "wires": [
+      [
+        "caro-admin-update-status-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-admin-update-status-fn",
+    "type": "function",
+    "z": "1497b6d50e1369f5",
+    "name": "Read Caroline update status",
+    "func": "const LOG = '/tmp/caroline-update.log';\nlet text = '';\nlet mtimeMs = 0;\ntry {\n  text = fs.existsSync(LOG) ? fs.readFileSync(LOG, 'utf8') : '';\n  if (text) mtimeMs = fs.statSync(LOG).mtimeMs || 0;\n} catch(e) {}\nconst lines = text.split(/\\r?\\n/).map(s => s.trim()).filter(Boolean);\nconst lastLine = lines[lines.length - 1] || 'No update has run yet';\nconst recent = mtimeMs && (Date.now() - mtimeMs < 30 * 60 * 1000);\nconst finished = /Project: Caroline GUI update (complete|failed)/i.test(lastLine);\nconst running = !!(text && recent && !finished);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, running, lastLine, logTail: lines.slice(-40) };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 430,
+    "y": 760,
+    "wires": [
+      [
+        "caro-admin-update-status-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-admin-update-status-res",
+    "type": "http response",
+    "z": "1497b6d50e1369f5",
+    "name": "update status response",
+    "statusCode": "",
+    "headers": {},
+    "x": 700,
+    "y": 760,
+    "wires": []
   }
 ]
