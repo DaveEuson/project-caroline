@@ -85,6 +85,8 @@ Tested release targets are Raspberry Pi OS Desktop and Ubuntu Server. Ubuntu-bas
 
 For Ubuntu Server, VM, or any server/client install, give the Caroline host a stable local IP address. A router DHCP reservation is usually the easiest choice; a manually configured static IP also works if you know your LAN settings. If the host IP changes later, your browser URL and some integration redirect URLs may need to be updated.
 
+Small Ubuntu Server VMs can run out of memory while installing Node.js or Node-RED. The installer creates a temporary swap cushion on low-memory hosts when there is enough disk space, but 2GB+ RAM is still the smoother minimum for beta QA.
+
 Avoid 32-bit `i386` VM images for this release. NodeSource does not publish Node 20 packages for `i386`, official Node.js 18 Linux binaries do not include 32-bit x86, and many 32-bit distro repositories only provide old Node.js packages.
 
 Kiosk mode requires a desktop environment and is primarily tested on Raspberry Pi OS Desktop. For an Ubuntu VM, the recommended path is **server mode**: install Caroline on Ubuntu Server, leave kiosk mode off, and open the GUI from another machine on your LAN at `http://<vm-ip>:8080/`.

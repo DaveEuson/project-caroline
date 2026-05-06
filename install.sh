@@ -92,6 +92,51 @@ REAL_HOME=$(eval echo "~$REAL_USER")
 CAROLINE_DIR="$REAL_HOME/caroline"
 SETTINGS_PATH="$CAROLINE_DIR/caroline_settings.json"
 TELEMETRY_LOG_PATH="$CAROLINE_DIR/caroline_telemetry.jsonl"
+CAROLINE_TEMP_SWAP="/var/tmp/caroline-install.swap"
+CAROLINE_TEMP_SWAP_CREATED="false"
+
+cleanup_install_swap() {
+  if [ "$CAROLINE_TEMP_SWAP_CREATED" = "true" ]; then
+    sudo swapoff "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
+    sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup_install_swap EXIT
+
+ensure_install_swap() {
+  local _mem_mb _swap_mb _total_mb _target_mb _free_mb
+  _mem_mb=$(awk '/MemTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
+  _swap_mb=$(awk '/SwapTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
+  _total_mb=$((_mem_mb + _swap_mb))
+
+  [ "$_total_mb" -ge 1800 ] && return 0
+
+  _target_mb=1536
+  _free_mb=$(df -Pm /var/tmp 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)
+  if [ "${_free_mb:-0}" -lt $((_target_mb + 256)) ]; then
+    echo -e "${YELLOW}  ⚠ Low memory detected (${_mem_mb}MB RAM, ${_swap_mb}MB swap), but /var/tmp lacks room for temporary swap.${RESET}"
+    echo -e "${DIM}    If install fails, give the VM at least 2GB RAM or add swap before retrying.${RESET}"
+    return 0
+  fi
+
+  echo -e "${YELLOW}  ► Low-memory server detected — adding temporary install swap...${RESET}"
+  sudo swapoff "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
+  sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
+  if ! sudo fallocate -l "${_target_mb}M" "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1; then
+    sudo dd if=/dev/zero of="$CAROLINE_TEMP_SWAP" bs=1M count="$_target_mb" status=none || {
+      echo -e "${YELLOW}  ⚠ Could not create temporary swap. Continuing without it.${RESET}"
+      return 0
+    }
+  fi
+  sudo chmod 600 "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
+  sudo mkswap "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 && sudo swapon "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || {
+    sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
+    echo -e "${YELLOW}  ⚠ Could not enable temporary swap. Continuing without it.${RESET}"
+    return 0
+  }
+  CAROLINE_TEMP_SWAP_CREATED="true"
+  echo -e "${GREEN}  ✓ Temporary install swap active (${_target_mb}MB)${RESET}"
+}
 
 protect_secret_files() {
   local _secret
@@ -530,6 +575,8 @@ sleep 1
 # ── DEPENDENCIES ─────────────────────────────────────────────
 phase "CHAPTER 1 — OPENING THE GATE"
 
+ensure_install_swap
+
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
 sudo apt-get update -q >/tmp/caroline-apt-update.log 2>&1 || {
   echo -e "${RED}  ✗ apt-get update failed. Is the network up?${RESET}"
@@ -616,8 +663,11 @@ install_node_from_apt() {
     exit 1
   fi
   echo -e "${DIM}    Installing Node.js from OS package repositories...${RESET}"
+  sudo dpkg --configure -a >/tmp/caroline-dpkg-configure.log 2>&1 || true
+  sudo apt-get -f install -y >/tmp/caroline-apt-fix.log 2>&1 || true
   sudo apt-get install -y nodejs npm >/tmp/caroline-node-apt.log 2>&1 || {
     echo -e "${RED}  ✗ Node.js apt install failed. Check: cat /tmp/caroline-node-apt.log${RESET}"
+    echo -e "${DIM}    If the log mentions out-of-memory, give the VM 2GB+ RAM or add swap, then rerun the installer.${RESET}"
     exit 1
   }
 }
