@@ -7486,7 +7486,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
   { id:'pilot', title:'Red Pilot',      desc:'Curious, grounded, warm. Default sync profile.', src:'assets/caroline.gif' },
-  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with soft shelter-signal energy.', src:'assets/robot.gif' },
+  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with warm dashboard energy.', src:'assets/robot.gif' },
   { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'assets/cat.gif' },
   { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, a little time-displaced.', src:'assets/ghost.gif' }
 ];
@@ -7496,7 +7496,7 @@ const ONB_MODULES = [
     desc:'Local Ollama or OpenRouter conversation brain. Needed for chat.',
     fields:[{ key:'apiKey', label:'OpenRouter API Key (optional)', type:'password', placeholder:'sk-or-v1-...' }] },
   { id:'spotify',  title:'Spotify',   required:[],
-    desc:'Now playing + auth flow. A small shelter signal for your music.',
+    desc:'Now playing + auth flow for your music.',
     githubNote: true, fields:[] },
   { id:'hue',      title:'Hue Lights', required:[],
     desc:'Local Philips Hue bridge control. Keep the room sync gentle.',
@@ -7842,7 +7842,7 @@ function startBootSequence(){
     '[ INITIALIZING PROJECT: CAROLINE CORE... ]',
     '[ OPENING LOCAL TIME GATE... ]',
     '[ PILOT SYNC RATIO STABLE... ]',
-    '[ SHELTER SIGNAL / GOOD FAITH CHECK... ]',
+    '[ LOCAL SETTINGS CHECK... ]',
     '[ NEURAL INTERFACE READY ]'
   ];
   let i=0;

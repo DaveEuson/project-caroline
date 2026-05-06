@@ -473,7 +473,7 @@ echo -e "${CYAN} |_|   |_|  \\___// |\\___|\\___|\\__|    \\____\\__,_|_|  \\___
 echo -e "${CYAN}              |__/                                                        ${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}  Project: Caroline${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
-echo -e "${DIM}  A pocket-size companion terminal with a tiny neon pulse.${RESET}"
+echo -e "${DIM}  Home dashboard, assistant interface, and local automation host.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -491,17 +491,16 @@ if [[ "$OS_ID" != "raspbian" && "$OS_ID" != "debian" && "$OS_ID" != "ubuntu" ]];
 fi
 
 # ── INTRO ────────────────────────────────────────────────────
-echo -e "${BOLD}  Booting Project: Caroline for the first time.${RESET}"
-echo -e "${DIM}  Prologue: a quiet terminal wakes at the edge of the world map.${RESET}"
-echo -e "${DIM}  A few system choices before the save point lights up.${RESET}"
-echo -e "${DIM}  Location, widgets, API keys, integrations, and personality are configured in her GUI after install.${RESET}"
+echo -e "${BOLD}  Starting Project: Caroline setup.${RESET}"
+echo -e "${DIM}  A few system choices are needed before setup begins.${RESET}"
+echo -e "${DIM}  Location, widgets, API keys, integrations, and personality are configured in the Caroline GUI after install.${RESET}"
 echo -e "${DIM}  Press Enter to skip any field.${RESET}"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
 
 # ── USER INPUT ───────────────────────────────────────────────
-echo -e "${MAGENTA}  // PARTY REGISTRY${RESET}"
+echo -e "${MAGENTA}  // USER SETUP${RESET}"
 echo ""
 read -p "  Your name: " USER_NAME </dev/tty
 TIMEZONE="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
@@ -511,7 +510,7 @@ ZIP_CODE=""
 echo -e "${DIM}  Location, timezone, and weather ZIP happen in Caroline's first-boot setup.${RESET}"
 echo ""
 
-echo -e "${MAGENTA}  // CORE CRYSTAL SELECTION${RESET}"
+echo -e "${MAGENTA}  // AI RUNTIME${RESET}"
 echo ""
 echo -e "${DIM}  OpenRouter = recommended. Fast, coherent, and usually costs pennies per month.${RESET}"
 echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but CPU will spike and replies can be rough.${RESET}"
@@ -545,15 +544,15 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   read -p "  Model [gemma3:1b]: " OLLAMA_MODEL_INPUT </dev/tty
   OLLAMA_MODEL="${OLLAMA_MODEL_INPUT:-gemma3:1b}"
   echo ""
-  echo -e "${DIM}  Good. ${OLLAMA_MODEL} is the little crystal in the hilt. Worth the wait.${RESET}"
+  echo -e "${DIM}  Selected ${OLLAMA_MODEL}. The installer will download it after the core services are ready.${RESET}"
 else
   AI_PROVIDER="openrouter"
   OLLAMA_MODEL="gemma3:1b"
-  echo -e "${DIM}  Skipping local Ollama. OpenRouter can carry the spellbook, or Settings can point Ollama at another computer later.${RESET}"
+  echo -e "${DIM}  Skipping local Ollama. You can add an OpenRouter key or point Ollama at another computer later in Settings.${RESET}"
 fi
 echo ""
 
-echo -e "${MAGENTA}  // CAMPFIRE DISPLAY MODE${RESET}"
+echo -e "${MAGENTA}  // DISPLAY MODE${RESET}"
 echo ""
 echo -e "${DIM}  Kiosk mode opens Caroline fullscreen on boot — ideal for a dedicated display.${RESET}"
 if has_desktop_environment; then
@@ -568,12 +567,12 @@ echo ""
 
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}  Acknowledged. Save point warming at ~/caroline/...${RESET}"
+echo -e "${BOLD}  Acknowledged. Installing Caroline into ~/caroline/...${RESET}"
 echo ""
 sleep 1
 
 # ── DEPENDENCIES ─────────────────────────────────────────────
-phase "CHAPTER 1 — OPENING THE GATE"
+phase "STEP 1 — SYSTEM DEPENDENCIES"
 
 ensure_install_swap
 
@@ -713,7 +712,7 @@ fi
 echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 
 # ── NODE-RED ─────────────────────────────────────────────────
-phase "CHAPTER 2 — WIRING THE RELAY"
+phase "STEP 2 — NODE-RED"
 
 echo -e "${YELLOW}  ► Installing Node-RED (this takes 1-3 minutes)...${RESET}"
 sudo npm install -g --unsafe-perm node-red >/tmp/caroline-npm.log 2>&1 &
@@ -730,7 +729,7 @@ NODE_RED_BIN=$(which node-red)
 echo -e "${GREEN}  ✓ Node-RED ready${RESET}"
 
 # ── NODE-RED SETTINGS ────────────────────────────────────────
-echo -e "${YELLOW}  ► Calibrating personality matrix...${RESET}"
+echo -e "${YELLOW}  ► Writing Node-RED settings...${RESET}"
 
 mkdir -p "$CAROLINE_DIR"
 
@@ -760,7 +759,7 @@ echo -e "${GREEN}  ✓ Node-RED configured${RESET}"
 
 # ── OLLAMA (optional) ────────────────────────────────────────
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
-  phase "CHAPTER 3 — SETTING THE CORE CRYSTAL"
+  phase "STEP 3 — LOCAL AI"
 
   echo -e "${YELLOW}  ► Installing Ollama...${RESET}"
   if ! command -v ollama &> /dev/null; then
@@ -811,8 +810,8 @@ OLLAMA_ENV_EOF
     echo -e "${YELLOW}  ⚠ Ollama not yet responding — run 'ollama serve' manually if needed${RESET}"
   fi
 
-  echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL} — this is her brain. Worth the wait.${RESET}"
-  echo -e "${DIM}    Large local models can take a while on first pull. 🐱${RESET}"
+  echo -e "${YELLOW}  ► Pulling ${OLLAMA_MODEL}...${RESET}"
+  echo -e "${DIM}    Large local models can take a while on first pull.${RESET}"
   ollama pull "$OLLAMA_MODEL" >/tmp/caroline-pull.log 2>&1 &
   PULL_PID=$!
   spin "$PULL_PID" "Downloading ${OLLAMA_MODEL}..."
@@ -830,21 +829,21 @@ fi
 true
 
 # ── DATA DIRECTORY ───────────────────────────────────────────
-echo -e "${YELLOW}  ► Initializing memory banks at ${CAROLINE_DIR}...${RESET}"
+echo -e "${YELLOW}  ► Initializing data directory at ${CAROLINE_DIR}...${RESET}"
 
 mkdir -p "$CAROLINE_DIR"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR"
 
-echo -e "${GREEN}  ✓ Memory banks online${RESET}"
-echo -e "${DIM}    Save crystal lit; local memory is ready.${RESET}"
+echo -e "${GREEN}  ✓ Data directory ready${RESET}"
+echo -e "${DIM}    Local data directory is ready.${RESET}"
 
 # ── CAROLINE FILES ───────────────────────────────────────────
-phase "CHAPTER 4 — UNPACKING THE SATCHEL"
+phase "STEP 4 — APPLICATION FILES"
 
 mkdir -p "$CAROLINE_DIR"
 
 echo -e "${YELLOW}  ► Cloning Caroline from GitHub...${RESET}"
-echo -e "${DIM}    Fetching the airship manifest.${RESET}"
+echo -e "${DIM}    Fetching the latest project files.${RESET}"
 
 CLONE_DIR="$REAL_HOME/project-caroline"
 
@@ -861,7 +860,6 @@ else
 fi
 
 echo -e "${DIM}    Copying payload to ${CAROLINE_DIR}...${RESET}"
-echo -e "${DIM}    Companion manners module: polite.${RESET}"
 
 # Existing installs may contain a .git directory with ownership left over from
 # older installer runs. The runtime directory does not need Git metadata, so
@@ -987,7 +985,7 @@ pip3 install edge-tts 2>/dev/null || true
 echo -e "${GREEN}  ✓ edge-tts installed (or skipped)${RESET}"
 
 # ── NGINX (serve kiosk on port 8080) ─────────────────────────
-phase "CHAPTER 5 — LIGHTING THE WINDOW"
+phase "STEP 5 — WEB INTERFACE"
 
 echo -e "${YELLOW}  ► Deploying kiosk interface on port ${KIOSK_PORT}...${RESET}"
 
@@ -1210,7 +1208,7 @@ else
 fi
 
 # ── SYSTEMD SERVICE ──────────────────────────────────────────
-phase "CHAPTER 6 — INSCRIBING AUTOSTART"
+phase "STEP 6 — SYSTEM SERVICE"
 
 echo -e "${YELLOW}  ► Configuring Caroline as a system service...${RESET}"
 
@@ -1407,13 +1405,13 @@ fi
 unset _svc _svc_ok
 
 # ── DONE ─────────────────────────────────────────────────────
-phase "SAVE POINT REACHED"
+phase "INSTALL COMPLETE"
 PI_IP_FINAL=$(hostname -I | awk '{print $1}')
 [ -n "$PI_IP_FINAL" ] || PI_IP_FINAL="localhost"
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}  Caroline joined the party. Soft signal, steady co-pilot energy.${RESET}"
+echo -e "${BOLD}${GREEN}  Project: Caroline is installed and running.${RESET}"
 echo ""
 echo -e "${CYAN}  ┌─────────────────────────────────────────────────────────┐${RESET}"
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
@@ -1470,7 +1468,7 @@ echo -e "${DIM}  Caroline is free to use. If you enjoy it and want to support fu
 echo -e "${BOLD}    https://buymeacoffee.com/daveeuson${RESET}"
 echo -e "${DIM}  Totally optional — no pressure, no locked features.${RESET}"
 echo ""
-echo -e "${MAGENTA}  Reboot to load the next scene; the save point is green.${RESET}"
+echo -e "${MAGENTA}  Reboot when you are ready to finish startup setup.${RESET}"
 echo ""
 echo -e "${BOLD}  sudo reboot${RESET}"
 echo ""
