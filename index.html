@@ -3014,6 +3014,7 @@ async function syncSettingsFromServer() {
     fetchWeather();
     fetchTides();
     updateFeedbackQuickButton();
+    if (typeof applyVoiceInputSettings === 'function') applyVoiceInputSettings();
     return true;
   } catch(e) {
     console.warn('[Caroline] /admin/get-settings failed:', e);
@@ -6766,7 +6767,16 @@ async function checkMicHealth(showResult=false) {
     stream.getTracks().forEach(t => t.stop());
     micBlockedReason = '';
     setMicHealthStatus(originHint ? 'Mic allowed, origin may still block STT' : 'Mic permission OK', originHint ? 'warn' : 'ok');
-    if (showResult) addMessage(originHint || 'Mic permission is OK. Try the microphone button now.', 'caroline', 'display');
+    if (parseSettingBool(S.wakeWordEnabled, false) && !isListening) {
+      wakeArmed = true;
+      setMicHealthStatus('Wake word armed', 'ok');
+      if (showResult) addMessage(originHint || 'Mic permission is OK. Wake word is armed now.', 'caroline', 'display');
+      setTimeout(() => {
+        if (wakeArmed && parseSettingBool(S.wakeWordEnabled, false) && !isListening) startListening('wake');
+      }, 0);
+    } else if (showResult) {
+      addMessage(originHint || 'Mic permission is OK. Try the microphone button now.', 'caroline', 'display');
+    }
     setMicIdleStatus();
     return true;
   } catch(e) {
@@ -6903,7 +6913,12 @@ function applyVoiceInputSettings() {
   S.wakeWordEnabled = parseSettingBool(S.wakeWordEnabled, false);
   S.wakePhrases = String(S.wakePhrases || DEFAULTS.wakePhrases).trim() || DEFAULTS.wakePhrases;
   if (!S.wakeWordEnabled && wakeArmed) stopListening(false, { disarmWake: true });
-  wakeArmed = S.wakeWordEnabled && wakeArmed;
+  if (S.wakeWordEnabled) {
+    wakeArmed = true;
+    if (SR && !isListening) checkMicHealth(false);
+  } else {
+    wakeArmed = false;
+  }
   updateMicButtonHint();
   setMicIdleStatus();
 }
