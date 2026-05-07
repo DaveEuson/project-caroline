@@ -2949,7 +2949,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   const hgSel = document.getElementById('set-hue-group');
   if (hgSel) {
     const hueGroupValue = S.hueGroup || '';
-    hgSel.innerHTML = hueGroupValue ? `<option value="${hueGroupValue}">${S.hueGroupName||('Group '+hueGroupValue)}</option>` : '<option value="">— hit Detect —</option>';
+    hgSel.replaceChildren(new Option(hueGroupValue ? (S.hueGroupName || ('Group ' + hueGroupValue)) : '— hit Detect —', hueGroupValue));
     hgSel.value = hueGroupValue;
   }
   syncFeatureCheckboxes();
@@ -3965,7 +3965,7 @@ function toggleSettings() {
     const hgSel = document.getElementById('set-hue-group');
     if (hgSel) {
       const hueGroupValue = S.hueGroup || '';
-      hgSel.innerHTML = hueGroupValue ? `<option value="${hueGroupValue}">${S.hueGroupName||('Group '+hueGroupValue)}</option>` : '<option value="">— hit Detect —</option>';
+      hgSel.replaceChildren(new Option(hueGroupValue ? (S.hueGroupName || ('Group ' + hueGroupValue)) : '— hit Detect —', hueGroupValue));
       hgSel.value = hueGroupValue;
     }
     const pTa = document.getElementById('personalityPrompt');
@@ -5299,7 +5299,11 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
     if (preserveBlankKeys.has(k) && String(payload[k] ?? '').trim() === '') delete payload[k];
   });
   payload.features = normalizeFeatureState(payload.features, { repairAllOff: false });
-  console.log('[Caroline] POST settings to', endpoint, payload);
+  const logPayload = Object.assign({}, payload);
+  ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret', 'googleRefreshToken'].forEach(k => {
+    if (logPayload[k]) logPayload[k] = '[saved]';
+  });
+  console.log('[Caroline] POST settings to', endpoint, logPayload);
   try {
     const resp = await fetch(endpoint, {
       method: 'POST',
