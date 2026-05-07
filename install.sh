@@ -176,21 +176,26 @@ trap cleanup_install_swap EXIT
 ensure_install_swap() {
   local _required_mb="${1:-1800}"
   local _target_mb="${2:-1536}"
+  local _min_swap_mb="${3:-0}"
   local _mem_mb _swap_mb _total_mb _free_mb
   _mem_mb=$(awk '/MemTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
   _swap_mb=$(awk '/SwapTotal:/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
   _total_mb=$((_mem_mb + _swap_mb))
 
-  [ "$_total_mb" -ge "$_required_mb" ] && return 0
+  [ "$_total_mb" -ge "$_required_mb" ] && [ "$_swap_mb" -ge "$_min_swap_mb" ] && return 0
 
   _free_mb=$(df -Pm /var/tmp 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)
   if [ "${_free_mb:-0}" -lt $((_target_mb + 256)) ]; then
-    echo -e "${YELLOW}  ⚠ Low memory detected (${_mem_mb}MB RAM, ${_swap_mb}MB swap), but /var/tmp lacks room for temporary swap.${RESET}"
-    echo -e "${DIM}    If install fails, give the VM at least 2GB RAM or add swap before retrying.${RESET}"
+    echo -e "${YELLOW}  ⚠ Install swap recommended (${_mem_mb}MB RAM, ${_swap_mb}MB swap), but /var/tmp lacks room for temporary swap.${RESET}"
+    echo -e "${DIM}    If install fails, add swap or free disk space before retrying.${RESET}"
     return 0
   fi
 
-  echo -e "${YELLOW}  ► Low-memory server detected — adding temporary install swap...${RESET}"
+  if [ "$_total_mb" -ge "$_required_mb" ]; then
+    echo -e "${YELLOW}  ► No/low swap detected — adding temporary install swap...${RESET}"
+  else
+    echo -e "${YELLOW}  ► Low-memory server detected — adding temporary install swap...${RESET}"
+  fi
   sudo swapoff "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
   sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
   if ! sudo fallocate -l "${_target_mb}M" "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1; then
@@ -689,7 +694,7 @@ sleep 1
 # ── DEPENDENCIES ─────────────────────────────────────────────
 phase "REACTIVATION 1/6 — SYSTEM DEPENDENCIES"
 
-ensure_install_swap
+ensure_install_swap 1800 1536 1024
 
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
 sudo apt-get update -q >/tmp/caroline-apt-update.log 2>&1 || {

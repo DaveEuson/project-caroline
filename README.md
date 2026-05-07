@@ -1,224 +1,89 @@
-# ✦ Project: Caroline
+# Project: Caroline
 
-**Your source-available, highly personalized digital sidekick.**
-
-> "Not a voice assistant you talk at. A co-pilot that's actually on your side."
+Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, music, lights, local tasks, and a little cyberpunk companionship.
 
 ![Project: Caroline avatar](assets/caroline.gif)
 ![Project: Caroline interface](Screenshot_7.png)
 
----
+## Install
 
-## ⚡ What It Does
-
-- **Cyberpunk UI** — Ambient kiosk interface on port 8080
-- **Persistent Memory** — AI chat that remembers conversations
-- **Productivity** — Create calendar events & manage local tasks
-- **Local & Cloud AI** — Free Ollama models or OpenRouter (~$0.05/month)
-- **Built-in Widgets** — News, weather, radio, Pomodoro, tasks, video
-- **Smart Home** — Philips Hue light control
-- **Proactive** — Checks in 4x daily with lightweight context
-- **Privacy-First** — Your data stays local or encrypted
-
----
-
-## 🚀 Quick Start
+Run this on Raspberry Pi OS or Ubuntu:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
 
-**Requirements:** Raspberry Pi 4/5 or 64-bit Ubuntu/Debian, 4GB+ RAM, internet during install.
+Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
 
-The installer handles everything: Node.js, Node-RED, nginx, optional Ollama, and setup wizard.
+## Pick Your Setup
 
----
-
-## 🔧 Setup Paths
-
-| Platform | Server Role | Client Display |
+| Platform | Status | Best For |
 |---|---|---|
-| **Raspberry Pi OS Desktop 64-bit** | ✅ Primary beta | ✅ Firefox kiosk |
-| **Ubuntu Server 64-bit** | ✅ Full support | Use any LAN browser |
-| **WSL Ubuntu** | 🔧 Dev/test only | Via `localhost:8080` |
-| **Any modern browser** | N/A | ✅ From any LAN device |
+| Raspberry Pi OS Desktop 64-bit | Primary beta | Dedicated kiosk screen |
+| Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
+| Ubuntu Desktop 64-bit | Works, less tested | Desktop testing or local browser use |
+| WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
-**First time?** Start with Raspberry Pi OS or Ubuntu Server. [Detailed setup guide →](docs/clean-reinstall-qa.md)
+## Beginner Guides
 
-**Before installing on a dedicated device:** enable SSH and give the device a stable local IP. [Network prep guide →](docs/network-prep.md)
+- [Start here: choose the right install guide](docs/how-to.md)
+- [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
+- [How to install on Ubuntu Server](docs/how-to-ubuntu-server.md)
+- [How to install on Ubuntu Desktop](docs/how-to-ubuntu-desktop.md)
+- [How to set up SSH and a stable IP](docs/network-prep.md)
+- [How to set up Google Calendar OAuth](docs/google-oauth.md)
+- [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
 
----
+## Requirements
 
-## ⚙️ Optional Integrations
-
-Click **Settings → Connect** in Caroline to add:
-
-| Service | Purpose | Setup Effort |
-|---|---|---|
-| **OpenRouter** | Cloud AI (Claude/others) | Paste API key |
-| **Google Calendar** | Calendar sync & event creation | OAuth setup (~5 min) |
-| **Spotify** | Music control & playback | OAuth setup (~5 min) |
-| **Philips Hue** | Smart light control | Pair bridge (~2 min) |
-| **Discord** | Channel messaging | Paste bot token & channel ID |
-| **Ollama** | Local AI (free) | Choose model during install |
-| **Tides** | Tide predictions | Paste NOAA station ID |
-
-You don't need all of these—just pick what matters to you.
-
----
-
-## 🛡️ Privacy & Safety
-
-- **Local-first by default:** Chat, tasks, and calendar can stay on your network
-- **Transparent telemetry:** Optional anonymous install/update pings only
-- **No harvesting:** No tracking, keystroke logging, or forced cloud storage
-- **Network-safe:** Never expose Caroline to the public internet; use VPN/SSH for remote access
-
----
-
-## 📊 Stack
-
-| Layer | Tech |
-|---|---|
-| Frontend | Single HTML file |
-| Backend | Node-RED (systemd service) |
-| Web server | nginx (port 8080) |
-| AI (local) | Ollama |
-| AI (cloud) | OpenRouter API |
-| Display | Firefox kiosk or web browser |
-
----
-
-## 💰 Cost
-
-| What | Cost | Notes |
-|---|---|---|
-| **Ollama** (local AI) | $0 | Free forever |
-| **OpenRouter** (cloud AI) | ~$0.05/month | Claude Haiku ~200K tokens |
-| **Total** | **<$1/month** | Optional services only |
-
----
-
-## 🎨 Customize Your Sidekick
-
-Caroline learns your vibe during setup. To go deeper:
-
-1. **In another AI** (ChatGPT, Claude), run this prompt:
-   > *"I'm setting up a digital sidekick kiosk. Write a concise personality prompt tailored to my workflow and communication style."*
-
-2. **Paste the result** into **Settings → AI → Personality → Imported memory prompt**
-
-3. **Caroline merges** your setup answers + imported memory for a truly personalized sidekick
-
----
-
-## 📋 System Requirements
-
-**Recommended:**
-- Raspberry Pi 4 or 5
-- 4GB+ RAM
-- 32GB+ microSD card
-- 64-bit OS (Raspberry Pi OS Desktop or Ubuntu Server)
-
-**Minimum:**
-- 64-bit Linux (Ubuntu, Debian, Raspberry Pi OS)
-- 4GB RAM (6-8GB better with Ollama)
-- 16GB storage (64GB+ if using local AI)
-
-**Network:**
+- 64-bit Raspberry Pi OS or Ubuntu
+- 4GB RAM minimum; 6-8GB is better for local AI
 - Internet during install
-- Stable local IP (router DHCP reservation recommended)
-- SSH enabled for headless installs, troubleshooting, and updates
+- A stable local IP address is strongly recommended
+- Do not expose Caroline directly to the public internet
 
-**Avoid:**
-- 32-bit OS or systems
-- Port-forwarding Caroline ports to the internet
+## What Caroline Can Do
 
----
+- Chat with local Ollama or cloud models through OpenRouter
+- Add, read, and delete Google Calendar events
+- Manage local tasks
+- Control Philips Hue lights
+- Show weather, news, video, tides, radio, Pomodoro, memory, and system widgets
+- Run as a fullscreen kiosk or as a server opened from another browser
 
-## 🔄 Upgrade & Uninstall
+## Optional Integrations
 
-**Upgrade:**
+Add these later in **Settings**:
+
+- OpenRouter API key for fast cloud AI
+- Google Calendar OAuth
+- Spotify client ID
+- Philips Hue bridge/key
+- Discord bot token and channel ID
+- NOAA tide station
+
+## Update
+
+Use **Settings > About > Update**, or rerun:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 ```
-Your settings, API keys, tasks, and memory are preserved.
 
-**Uninstall:**
+Settings, API keys, tasks, and memory are preserved.
+
+## Uninstall
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | sudo bash
 ```
 
----
+## Safety
 
-## 📈 Roadmap
+Caroline is designed for your local network. Keep ports `8080`, `1880`, and SSH private unless you are using a VPN such as Tailscale or WireGuard.
 
-```
-v0.1 — Core kiosk, chat, widgets, smart home      [██████████] Done
-v0.2 — Agent loop, auto-tasks, installer, CI      [██████████] Done
-v0.3 — Tabbed settings, Spotify PKCE, launch      [████████░░] ← You are here
-v1.0 — Multi-platform (Windows, Mac, tablet)      [░░░░░░░░░░]
-v2.0 — Virtual Sidekick (moods, adaptive)         [░░░░░░░░░░]
-```
+## Support
 
----
+Caroline is free to use. If you enjoy it and want to support future builds:
 
-## 🧩 Upcoming Modules
-
-New integrations and features coming to Caroline:
-
-| Module | Purpose | Status |
-|---|---|---|
-| **Telegram** | Direct messaging & notifications | 🔜 Planned |
-| **Nano Leaf** | Smart light panels & ambience | 🔜 Planned |
-| **iTunes / Apple Music** | Music control & library sync | 🔜 Planned |
-| **Stream Deck** | Physical button integration | 🔜 Planned |
-| **Extended Hue Profiles** | Focus, calm, morning, evening, cybercore themes | 🔜 Planned |
-
-### Platform Expansion
-
-Coming soon, Caroline will run on more platforms and devices:
-
-- **Server Platforms:** Windows (native), macOS (native), EC2 & remote servers
-- **Display Clients:** Android & iOS native apps (in addition to web browser)
-- **Containerization:** Docker support for quick cloud deployment
-- **Visual Themes:** Brighter cybercore mode, dark terminal/archive variants, anime-themed UI
-
-### 🎬 Looking for Animators
-
-We're seeking talented animators to help bring Caroline to life! If you're interested in creating custom avatars, idle animations, and character interactions for Project: Caroline, [reach out on GitHub Discussions](https://github.com/DaveEuson/project-caroline/discussions) or contact Dave directly.
-
----
-
-## 📜 License & Terms
-
-**Source-available public beta** — Not open source (MIT/Apache/GPL).
-
-- ✅ Install, inspect, and modify for personal use
-- ✅ Run locally, no restrictions
-- ❌ Sell, rebrand, or remove attribution
-- ❌ Publish competing packaged derivatives
-
-See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for full terms.
-
-**Copyright © 2026 Dave Euson. All rights reserved.**
-
----
-
-## 💝 Support Development
-
-Project: Caroline is free. If it makes your desk feel alive and you'd like to support continued development:
-
-→ [Buy me a coffee ☕](https://buymeacoffee.com/daveeuson)
-
----
-
-## 🔗 Links & More
-
-- **GitHub:** [github.com/daveeuson/project-caroline](https://github.com/daveeuson/project-caroline)
-- **Full QA Checklist:** [docs/clean-reinstall-qa.md](docs/clean-reinstall-qa.md)
-- **Full Setup Docs:** [docs/](docs/)
-
----
-
-*Built by Dave Euson*
+https://buymeacoffee.com/daveeuson
