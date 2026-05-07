@@ -5382,7 +5382,7 @@ async function saveSettings() {
     S.hueGroup = hgEl.value || '';
     S.hueGroupName = hgEl.value ? (hgEl.options[hgEl.selectedIndex]?.text || '') : '';
   }
-  HUE_GROUP = S.hueGroup || '';
+  HUE_GROUP = S.hueGroup || '0';
   const spotifyClientIdVal = document.getElementById('set-spotify-id').value.trim();
   if (spotifyClientIdVal || !S.spotifyClientId) S.spotifyClientId = spotifyClientIdVal;
   S.timezone = document.getElementById('set-timezone').value.trim();
@@ -7914,7 +7914,7 @@ setTimeout(renderInlineTasks, 500);
 setTimeout(() => { setNewTodoTag(newTodoTag); setTodoFilter(todoFilter); }, 550);
 
 // ── CACHE BUST GIFS ───────────────────────────
-var HUE_GROUP = S.hueGroup || '';
+var HUE_GROUP = S.hueGroup || '0';
 const HUE_MODES = [
   { name:'OFF',   icon:'ti ti-bulb-off', cls:'mode-off', body:{on:false} },
   { name:'RELAX', icon:'ti ti-lamp', cls:'mode-relax', body:{on:true, bri:80, ct:450, sat:80, hue:8000, transitiontime:10} },
@@ -7940,19 +7940,14 @@ function updateSmartStatus(message) {
   if (!el) return;
   if (message) { el.textContent = message; return; }
   if (!S.features?.hue) el.textContent = 'Enable Hue in Settings to show smart controls.';
-  else if (!HUE_GROUP || !S.hueIp) el.textContent = 'Configure Hue bridge and group in Settings.';
-  else el.textContent = 'Ready: ' + (S.hueGroupName || ('group ' + HUE_GROUP));
+  else if (!S.hueIp) el.textContent = 'Configure Hue bridge in Settings.';
+  else el.textContent = 'Ready: ' + (S.hueGroupName || (HUE_GROUP === '0' ? 'all Hue lights' : ('group ' + HUE_GROUP)));
 }
 
 function setSmartHueScene(zone, mode, btn) {
   if (btn) {
     document.querySelectorAll('.smart-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-  }
-  if (!HUE_GROUP) {
-    updateSmartStatus('Hue group is not configured yet.');
-    playBeep(300);
-    return;
   }
   if (discoInterval) { clearInterval(discoInterval); discoInterval = null; }
   const body = hueBodyForMode(mode);
@@ -7963,11 +7958,6 @@ function setSmartHueScene(zone, mode, btn) {
 }
 
 function cycleHue() {
-  if (!HUE_GROUP) {
-    clog('warn', 'Hue group is not configured yet.');
-    playBeep(300);
-    return;
-  }
   hueModeIdx = (hueModeIdx + 1) % HUE_MODES.length;
   const mode = HUE_MODES[hueModeIdx];
   const btn = document.getElementById('hue-btn');
