@@ -957,7 +957,6 @@
 
   body.theme-ova #center {
     background:
-      linear-gradient(90deg, transparent 0 49.8%, rgba(100,200,183,0.04) 49.8% 50.2%, transparent 50.2%),
       radial-gradient(ellipse at center, rgba(122,215,210,0.05), transparent 44%);
   }
   body.theme-ova #avatar-outer { width:248px; height:248px; filter:drop-shadow(0 24px 34px rgba(0,0,0,0.45)); }
@@ -1262,7 +1261,6 @@
   }
   body.theme-cybercore #center {
     background:
-      linear-gradient(90deg, transparent 0 49.7%, rgba(var(--t-rgb1),0.075) 49.7% 50.3%, transparent 50.3%),
       radial-gradient(ellipse at center, rgba(var(--t-rgb1),0.10), transparent 45%);
   }
   body.theme-cybercore #avatar-outer { width:248px; height:248px; filter:drop-shadow(0 22px 30px rgba(0,0,0,0.36)); }
@@ -1441,7 +1439,6 @@
   }
   body.theme-cybercore #center {
     background:
-      linear-gradient(90deg, transparent 0 49.7%, rgba(var(--t-rgb1),0.11) 49.7% 50.3%, transparent 50.3%),
       radial-gradient(circle at 43% 28%, rgba(var(--t-rgb1),0.13), transparent 24%),
       radial-gradient(circle at 72% 72%, rgba(var(--t-rgb2),0.10), transparent 28%);
   }
@@ -7867,12 +7864,18 @@ function toggleTodoItem(idx) {
     ws.send(JSON.stringify({ type: 'task_complete', task: taskText }));
   }
 }
+function sendTaskAddToServer(taskText) {
+  if (ws && ws.readyState === 1 && taskText) {
+    ws.send(JSON.stringify({ type: 'task_add', task: taskText }));
+  }
+}
 function addTodoItem() {
   const input = document.getElementById('todo-input');
   const text = input.value.trim();
   if (!text) return;
   todos.push({ text, done: false, autoDone: false, tag: normalizeTodoTag(newTodoTag, text), createdAt: Date.now(), doneAt: null });
   input.value = ''; saveTodos(); renderTodos(); playBeep(700);
+  sendTaskAddToServer(text);
 }
 function clearDoneTodos() { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); playBeep(400); }
 function autoCompleteTodo(text) {
@@ -7886,19 +7889,47 @@ function autoCompleteTodo(text) {
   });
   if (matched) saveTodos(); return matched;
 }
+function normalizeIncomingTodo(item) {
+  const text = typeof item === 'string' ? item : (item && (item.text || item.task || item.title || item.name)) || '';
+  return String(text || '').replace(/\s+/g, ' ').trim();
+}
+function addIncomingTodo(item) {
+  const text = normalizeIncomingTodo(item);
+  if (!text) return false;
+  const key = text.toLowerCase();
+  const exists = todos.some(existing => String(existing.text || '').toLowerCase() === key);
+  if (exists) return false;
+  todos.push({ text, done: false, autoDone: false, tag: normalizeTodoTag('', text), createdAt: Date.now(), doneAt: null });
+  return true;
+}
+function repaintTodos() {
+  saveTodos();
+  const panel = document.getElementById('todo-panel');
+  if (panel && panel.classList.contains('open')) renderTodos();
+}
 function handleTodoUpdate(data) {
-  if (data.action === 'replace' && data.tasks) {
+  const incomingTasks = Array.isArray(data.tasks) ? data.tasks
+    : Array.isArray(data.todos) ? data.todos
+    : Array.isArray(data.items) ? data.items
+    : data.task ? [data.task]
+    : data.todo ? [data.todo]
+    : [];
+  if (data.action === 'replace' && incomingTasks.length) {
     const kept = todos.filter(t => t.done);
-    const newTasks = data.tasks.map(t => ({ text: t, done: false, autoDone: false, tag: normalizeTodoTag('', t), createdAt: Date.now(), doneAt: null }));
+    const newTasks = incomingTasks
+      .map(normalizeIncomingTodo)
+      .filter(Boolean)
+      .map(t => ({ text: t, done: false, autoDone: false, tag: normalizeTodoTag('', t), createdAt: Date.now(), doneAt: null }));
     todos = [...kept, ...newTasks];
-    saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
+    repaintTodos();
   }
-  if (data.action === 'add' && data.tasks) {
-    data.tasks.forEach(t => { if (!todos.find(existing => existing.text.toLowerCase() === t.toLowerCase())) { todos.push({ text: t, done: false, autoDone: false, tag: normalizeTodoTag('', t), createdAt: Date.now(), doneAt: null }); } });
-    saveTodos(); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
+  if (data.action === 'add' && incomingTasks.length) {
+    let changed = false;
+    incomingTasks.forEach(t => { changed = addIncomingTodo(t) || changed; });
+    if (changed) repaintTodos();
   }
   if (data.action === 'complete' && data.task) {
-    autoCompleteTodo(data.task); if (document.getElementById('todo-panel').classList.contains('open')) renderTodos();
+    if (autoCompleteTodo(data.task)) repaintTodos();
   }
 }
 
@@ -7906,7 +7937,7 @@ document.getElementById('todo-input') && document.getElementById('todo-input').a
 document.getElementById('inline-task-text') && document.getElementById('inline-task-text').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const txt = document.getElementById('inline-task-text').value.trim();
-    if (txt) { todos.push({ text:txt, done:false, autoDone:false, tag:normalizeTodoTag(newTodoTag, txt), createdAt:Date.now(), doneAt:null }); saveTodos(); document.getElementById('inline-task-text').value=''; document.getElementById('inline-task-input').style.display='none'; playBeep(700); }
+    if (txt) { todos.push({ text:txt, done:false, autoDone:false, tag:normalizeTodoTag(newTodoTag, txt), createdAt:Date.now(), doneAt:null }); saveTodos(); document.getElementById('inline-task-text').value=''; document.getElementById('inline-task-input').style.display='none'; playBeep(700); sendTaskAddToServer(txt); }
   }
   if (e.key === 'Escape') { document.getElementById('inline-task-input').style.display='none'; }
 });
