@@ -2633,7 +2633,9 @@ const BOOLEAN_DEFAULTS = {
   telemetryEndpointConfigured: undefined
 };
 const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
-const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
+const DEFAULT_NODE_RED_URL = window.location.protocol === 'https:'
+  ? window.location.origin
+  : 'http://' + (window.location.hostname || 'localhost') + ':1880';
 const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
@@ -3317,6 +3319,16 @@ function getNodeRedUrl() {
   let u = fieldUrl || (S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL;
   if (u.includes('[PI_IP]')) u = DEFAULT_NODE_RED_URL;
   if (u && !u.startsWith('http')) u = 'http://' + u;
+  if (window.location.protocol === 'https:' && window.location.origin) {
+    try {
+      const target = new URL(u);
+      const sameHost = target.hostname === window.location.hostname;
+      const localTarget = ['localhost','127.0.0.1','::1'].includes(target.hostname);
+      if (target.protocol === 'http:' && (sameHost || localTarget) && (!target.port || target.port === '1880')) {
+        u = window.location.origin;
+      }
+    } catch(e) {}
+  }
   if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(u)) u = DEFAULT_NODE_RED_URL;
   u = (u || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
   if (S) S.nodeRedUrl = u;

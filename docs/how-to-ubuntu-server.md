@@ -101,6 +101,20 @@ Example:
 http://192.168.1.60:8080/
 ```
 
+For microphone input and activation-word mode, use Chrome or Chromium and open the secure voice URL:
+
+```text
+https://SERVER-IP:8444/
+```
+
+Example:
+
+```text
+https://192.168.1.60:8444/
+```
+
+The browser will show a certificate warning because Caroline uses a local self-signed certificate. Accept it once for the Caroline host. Typing/chat remains available at the normal `http://SERVER-IP:8080/` URL.
+
 Node-RED is available at:
 
 ```text

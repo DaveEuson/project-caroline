@@ -15,6 +15,14 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
 
+For microphone input from another browser, use Chrome or Chromium with the secure voice URL printed by the installer:
+
+```text
+https://YOUR-CAROLINE-IP:8444/
+```
+
+The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat.
+
 ## Pick Your Setup
 
 | Platform | Status | Best For |
@@ -81,7 +89,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/u
 
 ## Safety
 
-Caroline is designed for your local network. Keep ports `8080`, `1880`, and SSH private unless you are using a VPN such as Tailscale or WireGuard.
+Caroline is designed for your local network. Keep ports `8080`, `1880`, `8443`, `8444`, and SSH private unless you are using a VPN such as Tailscale or WireGuard.
 
 ## Support
 

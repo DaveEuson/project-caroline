@@ -90,6 +90,7 @@ CAROLINE_VERSION="0.3.0-dev"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
+HTTPS_UI_PORT=8444
 AI_MODEL="anthropic/claude-haiku-4.5"
 OLLAMA_URL_DEFAULT="http://localhost:11434"
 CAROLINE_TELEMETRY_ENDPOINT="${CAROLINE_TELEMETRY_ENDPOINT:-}"
@@ -1161,6 +1162,7 @@ echo -e "${YELLOW}  ► Deploying kiosk interface on port ${KIOSK_PORT}...${RESE
 # Clear the port before nginx tries to bind it
 sudo fuser -k ${KIOSK_PORT}/tcp 2>/dev/null || true
 sudo fuser -k ${HTTPS_PROXY_PORT}/tcp 2>/dev/null || true
+sudo fuser -k ${HTTPS_UI_PORT}/tcp 2>/dev/null || true
 
 # nginx runs as www-data — needs execute permission on the home directory
 # to traverse into ~/caroline, and read access on the files themselves.
@@ -1224,6 +1226,62 @@ server {
         proxy_set_header Connection "upgrade";
     }
 }
+
+server {
+    listen ${HTTPS_UI_PORT} ssl;
+    server_name _;
+    root ${CAROLINE_DIR};
+    index index.html;
+    autoindex off;
+
+    ssl_certificate /etc/caroline/caroline-selfsigned.crt;
+    ssl_certificate_key /etc/caroline/caroline-selfsigned.key;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
+
+    location /ws/ {
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /admin/ {
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location /spotify/ {
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location ~ ^/(chat|health|system-resources|wifi-signal|restart)$ {
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
 EOF
 
 sudo ln -sf /etc/nginx/sites-available/caroline /etc/nginx/sites-enabled/caroline
@@ -1233,14 +1291,14 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo mkdir -p /etc/systemd/system/nginx.service.d
 sudo tee /etc/systemd/system/nginx.service.d/port-clear.conf > /dev/null << DROPIN_EOF
 [Service]
-ExecStartPre=/bin/sh -c 'fuser -k ${KIOSK_PORT}/tcp 2>/dev/null; fuser -k ${HTTPS_PROXY_PORT}/tcp 2>/dev/null; true'
+ExecStartPre=/bin/sh -c 'fuser -k ${KIOSK_PORT}/tcp 2>/dev/null; fuser -k ${HTTPS_PROXY_PORT}/tcp 2>/dev/null; fuser -k ${HTTPS_UI_PORT}/tcp 2>/dev/null; true'
 DROPIN_EOF
 sudo systemctl daemon-reload
 
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
-echo -e "${GREEN}  ✓ Web server ready on ${KIOSK_PORT}; HTTPS proxy ready on ${HTTPS_PROXY_PORT}${RESET}"
+echo -e "${GREEN}  ✓ Web server ready on ${KIOSK_PORT}; HTTPS proxy ready on ${HTTPS_PROXY_PORT}; secure voice UI ready on ${HTTPS_UI_PORT}${RESET}"
 
 # ── WRITE SETTINGS ───────────────────────────────────────────
 echo -e "${YELLOW}  ► Writing settings...${RESET}"
@@ -1305,6 +1363,8 @@ jq -n \
     meetingReminderMinutes: 0,
     ttsEnabled:      false,
     voiceMuted:      true,
+    wakeWordEnabled: false,
+    wakePhrases:     "hey caroline, hey ai",
     aiModel:         $model,
     aiProvider:      $provider,
     ollamaUrl:       $ollamaUrl,
@@ -1678,6 +1738,7 @@ echo -e "${CYAN}  ┌───────────────────�
 echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             │${RESET}"
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${BROWSER_HOST_FINAL}:${KIOSK_PORT}/${RESET}"
+echo -e "${CYAN}  │${RESET}  Voice URL:   ${BOLD}https://${BROWSER_HOST_FINAL}:${HTTPS_UI_PORT}/${RESET}"
 echo -e "${CYAN}  │${RESET}  Node-RED:    http://${BROWSER_HOST_FINAL}:${NODE_RED_PORT}"
 echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${BROWSER_HOST_FINAL}:${HTTPS_PROXY_PORT}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
@@ -1697,6 +1758,7 @@ echo -e "${CYAN}  │${RESET}  Pi display:        reboot and kiosk opens automat
 echo -e "${CYAN}  │${RESET}  Pi display:        use the desktop shortcut or browser"
   fi
   echo -e "${CYAN}  │${RESET}  On this Pi:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  Voice in Chromium: ${BOLD}https://${PI_IP_FINAL}:${HTTPS_UI_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  From another device: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  If the IP changes: run ${BOLD}hostname -I${RESET} on the Pi"
   echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
@@ -1715,6 +1777,7 @@ else
   echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
   echo -e "${CYAN}  │${RESET}  On this host:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  From client browser: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
+  echo -e "${CYAN}  │${RESET}  Voice in Chrome:     ${BOLD}https://${PI_IP_FINAL}:${HTTPS_UI_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  If the IP changes:   run ${BOLD}hostname -I${RESET} on this host"
   echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 fi

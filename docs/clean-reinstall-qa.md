@@ -64,12 +64,13 @@ Expected to work from the external client browser:
 - Weather, timezone, news, video, radio, Pomodoro, local tasks, calendar, Spotify, Hue, Discord/issues, update, reboot, and CPU/RAM monitor.
 - Google and Spotify setup, as long as the browser can reach the VM on ports `1880` and `8443`.
 - Spotify may need you to open `https://<vm-ip>:8443/` once and accept Caroline's local self-signed certificate before the OAuth callback can complete.
+- Browser microphone and wake-word input in Chrome/Chromium from `https://<vm-ip>:8444/` after accepting Caroline's local self-signed certificate.
 
 Expected limitations in server/client mode:
 
 - Boot-to-kiosk, local terminal launch, and exit-kiosk controls only make sense on a desktop/kiosk host.
-- Browser microphone and wake-word input usually will not work from `http://<vm-ip>:8080/` because browsers require HTTPS or localhost for mic access. Type/chat still works normally.
-- VM NAT networking may need port forwarding for `8080`, `1880`, and `8443`; bridged networking is easier for QA.
+- Browser microphone and wake-word input usually will not work from `http://<vm-ip>:8080/` because browsers require HTTPS or localhost for mic access. Use `https://<vm-ip>:8444/` for voice. Type/chat still works normally on HTTP.
+- VM NAT networking may need port forwarding for `8080`, `1880`, `8443`, and `8444`; bridged networking is easier for QA.
 
 ## Interactive Uninstall
 
