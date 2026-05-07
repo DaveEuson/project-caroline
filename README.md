@@ -45,6 +45,8 @@ The installer handles everything: Node.js, Node-RED, nginx, optional Ollama, and
 
 **First time?** Start with Raspberry Pi OS or Ubuntu Server. [Detailed setup guide →](docs/clean-reinstall-qa.md)
 
+**Before installing on a dedicated device:** enable SSH and give the device a stable local IP. [Network prep guide →](docs/network-prep.md)
+
 ---
 
 ## ⚙️ Optional Integrations
@@ -125,7 +127,8 @@ Caroline learns your vibe during setup. To go deeper:
 
 **Network:**
 - Internet during install
-- Stable local IP (use DHCP reservation or static IP)
+- Stable local IP (router DHCP reservation recommended)
+- SSH enabled for headless installs, troubleshooting, and updates
 
 **Avoid:**
 - 32-bit OS or systems
