@@ -34,6 +34,14 @@ Open Caroline from a browser:
 http://DEVICE-IP:8080/
 ```
 
+For microphone input or activation word from another computer, use Chrome or Chromium and open:
+
+```text
+https://DEVICE-IP:8444/
+```
+
+Accept the local certificate warning once. The normal HTTP URL remains best for typing/chat.
+
 Then open **Settings** and add only what you need:
 
 - **AI:** OpenRouter API key for fast cloud AI

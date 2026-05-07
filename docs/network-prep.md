@@ -22,6 +22,12 @@ Then open Caroline from another browser:
 http://DEVICE-IP:8080/
 ```
 
+For browser microphone and activation-word mode from another computer, use Chrome or Chromium at:
+
+```text
+https://DEVICE-IP:8444/
+```
+
 ## Enable SSH on Raspberry Pi OS
 
 ### During Imaging
@@ -130,4 +136,4 @@ If the device disappears from the network, plug in a keyboard/monitor and revert
 - Do not port-forward Caroline, Node-RED, or SSH to the public internet.
 - Use strong passwords or SSH keys.
 - Keep Caroline on your LAN, or use a VPN such as Tailscale/WireGuard for remote access.
-- Caroline URLs should look like `http://192.168.x.x:8080/`, `http://10.x.x.x:8080/`, or another private LAN address.
+- Caroline URLs should look like `http://192.168.x.x:8080/`, `https://192.168.x.x:8444/`, or another private LAN address.

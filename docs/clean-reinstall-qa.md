@@ -4,7 +4,7 @@ Use this when you want to wipe a Pi or disposable Linux VM back to a clean Carol
 
 This guide has two reset levels:
 
-- **Recommended reset:** removes Caroline services, launchers, profiles, app data, and source clone. It leaves shared packages such as Node.js, Node-RED, nginx, Firefox, and Ollama installed.
+- **Recommended reset:** removes Caroline services, launchers, profiles, app data, and source clone. It leaves shared packages such as Node.js, Node-RED, nginx, Chromium/Firefox, and Ollama installed.
 - **Full package purge:** optional destructive cleanup for disposable QA machines only. Do this only if you are sure those packages are not used by anything else.
 
 ## Before You Start
@@ -26,6 +26,7 @@ Ports used by Caroline:
 | Kiosk web UI | `8080` |
 | Node-RED backend | `1880` |
 | HTTPS OAuth proxy | `8443` |
+| Secure voice UI | `8444` |
 | Ollama, when installed | `11434` |
 
 ## Quick Clean Reinstall
@@ -121,7 +122,7 @@ sudo systemctl stop caroline nginx ollama 2>/dev/null || true
 sudo systemctl disable caroline nginx ollama 2>/dev/null || true
 
 sudo npm uninstall -g node-red 2>/dev/null || true
-sudo apt-get purge -y nodejs npm nginx firefox firefox-esr
+sudo apt-get purge -y nodejs npm nginx chromium chromium-browser firefox firefox-esr
 
 sudo rm -f /usr/local/bin/ollama
 sudo rm -f /etc/systemd/system/ollama.service
@@ -139,6 +140,8 @@ command -v node || true
 command -v npm || true
 command -v node-red || true
 command -v nginx || true
+command -v chromium || true
+command -v chromium-browser || true
 command -v firefox || true
 command -v firefox-esr || true
 command -v ollama || true
@@ -172,6 +175,7 @@ systemctl status caroline --no-pager
 systemctl status nginx --no-pager
 curl -I http://localhost:8080/
 curl -s http://localhost:1880/health
+curl -k -I https://localhost:8444/
 ls -l ~/caroline/index.html ~/caroline/flows.json ~/caroline/caroline_settings.json
 ```
 
@@ -180,6 +184,7 @@ Expected:
 - `caroline` service is active.
 - `nginx` service is active.
 - `http://localhost:8080/` returns an HTTP response.
+- `https://localhost:8444/` returns an HTTPS response with `curl -k`.
 - `~/caroline/caroline_settings.json` exists and is owned by your user.
 
 ## Browser QA Checklist
@@ -225,6 +230,7 @@ After reboot:
 - `nginx` service restarted.
 - Desktop shortcuts exist on Raspberry Pi OS Desktop or Ubuntu Desktop if a desktop environment was used.
 - Kiosk autostart works if kiosk mode was enabled on a desktop environment.
+- Raspberry Pi kiosk opens in Chromium when available; Firefox fallback is typing/chat only for voice purposes.
 - Ubuntu Server VM remains reachable from an external browser at `http://<vm-ip>:8080/`.
 - SSH or Raspberry Pi Connect still works for recovery.
 
@@ -266,14 +272,17 @@ When reporting a bug, include:
 - Browser used.
 - Relevant log snippets.
 
-## Ubuntu Firefox Already Running Dialog
+## Ubuntu Browser Already Running Dialog
 
-If Ubuntu shows `Firefox is already running, but is not responding` after kiosk autostart, clear the stale Caroline browser lock and rerun the installer:
+If Ubuntu shows `Firefox is already running, but is not responding`, or Chromium refuses to open after kiosk autostart, clear the stale Caroline browser lock and rerun the installer:
 
 ```bash
 pkill -f 'firefox.*caroline' 2>/dev/null || true
+pkill -f 'chromium.*caroline' 2>/dev/null || true
+pkill -f 'chrome.*caroline' 2>/dev/null || true
 rm -rf "/tmp/caroline-kiosk-$(id -u).lock"
 rm -f ~/.mozilla/firefox/caroline-kiosk/parent.lock ~/.mozilla/firefox/caroline-kiosk/lock ~/.mozilla/firefox/caroline-kiosk/.parentlock
+rm -rf ~/.config/caroline/chromium-kiosk ~/.config/caroline/chromium-window
 rm -f ~/.local/bin/caroline-window ~/.local/bin/caroline-kiosk
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
 sudo reboot

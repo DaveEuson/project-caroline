@@ -249,6 +249,13 @@ USERJS
   chown -R "$REAL_USER:$REAL_USER" "$_profile_dir" 2>/dev/null || true
 }
 
+configure_chromium_profile() {
+  local _profile_dir="$1"
+  [ -n "$_profile_dir" ] || return 0
+  mkdir -p "$_profile_dir"
+  chown -R "$REAL_USER:$REAL_USER" "$_profile_dir" 2>/dev/null || true
+}
+
 desktop_dir_for_user() {
   local _desktop="$REAL_HOME/Desktop"
   local _xdg_file="$REAL_HOME/.config/user-dirs.dirs"
@@ -319,16 +326,63 @@ write_browser_launchers() {
   mkdir -p "$_bin_dir"
   WINDOWED_LAUNCHER="$_bin_dir/caroline-window"
   KIOSK_LAUNCHER="$_bin_dir/caroline-kiosk"
-  FIREFOX_SNAP_MODE="false"
-  if command -v snap >/dev/null 2>&1 && snap list firefox >/dev/null 2>&1; then
-    FIREFOX_SNAP_MODE="true"
-  elif readlink -f "$BROWSER_BIN" 2>/dev/null | grep -q '/snap/'; then
-    FIREFOX_SNAP_MODE="true"
-  elif dpkg-query -W -f='${Version}' firefox 2>/dev/null | grep -qi 'snap'; then
-    FIREFOX_SNAP_MODE="true"
-  fi
 
-  cat > "$WINDOWED_LAUNCHER" << EOF
+  if [ "${BROWSER_FAMILY:-}" = "chromium" ]; then
+    cat > "$WINDOWED_LAUNCHER" << EOF
+#!/bin/bash
+BROWSER="${BROWSER_BIN}"
+URL="${KIOSK_URL}"
+PROFILE="${CHROMIUM_WINDOWED_PROFILE_DIR}"
+mkdir -p "\$PROFILE"
+exec "\$BROWSER" \\
+  --user-data-dir="\$PROFILE" \\
+  --no-first-run \\
+  --no-default-browser-check \\
+  --disable-session-crashed-bubble \\
+  --disable-infobars \\
+  --autoplay-policy=no-user-gesture-required \\
+  --new-window "\$URL"
+EOF
+
+    cat > "$KIOSK_LAUNCHER" << EOF
+#!/bin/bash
+BROWSER="${BROWSER_BIN}"
+PROFILE="${CHROMIUM_PROFILE_DIR}"
+URL="${KIOSK_URL}"
+LOCKDIR="/tmp/caroline-kiosk-\$(id -u).lock"
+mkdir -p "\$PROFILE"
+
+if [ -d "\$LOCKDIR" ]; then
+  if pgrep -u "\$(id -u)" -f "caroline/chromium-kiosk" >/dev/null 2>&1; then
+    exit 0
+  fi
+  rmdir "\$LOCKDIR" 2>/dev/null || true
+fi
+
+mkdir "\$LOCKDIR" 2>/dev/null || exit 0
+"\$BROWSER" \\
+  --user-data-dir="\$PROFILE" \\
+  --no-first-run \\
+  --no-default-browser-check \\
+  --disable-session-crashed-bubble \\
+  --disable-infobars \\
+  --autoplay-policy=no-user-gesture-required \\
+  --kiosk "\$URL"
+status=\$?
+rmdir "\$LOCKDIR" 2>/dev/null || true
+exit \$status
+EOF
+  else
+    FIREFOX_SNAP_MODE="false"
+    if command -v snap >/dev/null 2>&1 && snap list firefox >/dev/null 2>&1; then
+      FIREFOX_SNAP_MODE="true"
+    elif readlink -f "$BROWSER_BIN" 2>/dev/null | grep -q '/snap/'; then
+      FIREFOX_SNAP_MODE="true"
+    elif dpkg-query -W -f='${Version}' firefox 2>/dev/null | grep -qi 'snap'; then
+      FIREFOX_SNAP_MODE="true"
+    fi
+
+    cat > "$WINDOWED_LAUNCHER" << EOF
 #!/bin/bash
 BROWSER="${BROWSER_BIN}"
 URL="${KIOSK_URL}"
@@ -346,7 +400,7 @@ fi
 exec "\$BROWSER" --no-remote --new-instance --profile "\$PROFILE" --new-window "\$URL"
 EOF
 
-  cat > "$KIOSK_LAUNCHER" << EOF
+    cat > "$KIOSK_LAUNCHER" << EOF
 #!/bin/bash
 BROWSER="${BROWSER_BIN}"
 PROFILE="${FIREFOX_PROFILE_DIR}"
@@ -379,6 +433,7 @@ status=\$?
 rmdir "\$LOCKDIR" 2>/dev/null || true
 exit \$status
 EOF
+  fi
 
   chmod +x "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER"
   chown "$REAL_USER:$REAL_USER" "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER" 2>/dev/null || true
@@ -522,30 +577,44 @@ telemetry_emit() {
   rm -f "$_payload_path"
 }
 
+detect_browser() {
+  local _cmd
+  for _cmd in google-chrome-stable google-chrome chrome chromium-browser chromium; do
+    if command -v "$_cmd" >/dev/null 2>&1; then
+      BROWSER_BIN=$(command -v "$_cmd")
+      BROWSER_FAMILY="chromium"
+      return 0
+    fi
+  done
+  for _cmd in firefox-esr firefox; do
+    if command -v "$_cmd" >/dev/null 2>&1; then
+      BROWSER_BIN=$(command -v "$_cmd")
+      BROWSER_FAMILY="firefox"
+      return 0
+    fi
+  done
+  return 1
+}
+
 ensure_browser() {
-  if command -v firefox-esr >/dev/null 2>&1; then
-    BROWSER_BIN=$(command -v firefox-esr)
-    return 0
-  fi
-  if command -v firefox >/dev/null 2>&1; then
-    BROWSER_BIN=$(command -v firefox)
+  if detect_browser; then
     return 0
   fi
 
+  sudo apt-get install -y -q chromium-browser >/tmp/caroline-browser-apt.log 2>&1 || \
+  sudo apt-get install -y -q chromium >/tmp/caroline-browser-apt.log 2>&1 || \
   sudo apt-get install -y -q firefox-esr >/tmp/caroline-browser-apt.log 2>&1 || \
   sudo apt-get install -y -q firefox >/tmp/caroline-browser-apt.log 2>&1 || {
     echo -e "${YELLOW}  ⚠ Browser install failed. Check: cat /tmp/caroline-browser-apt.log${RESET}"
     BROWSER_BIN=""
+    BROWSER_FAMILY=""
     return 1
   }
 
-  if command -v firefox-esr >/dev/null 2>&1; then
-    BROWSER_BIN=$(command -v firefox-esr)
-  elif command -v firefox >/dev/null 2>&1; then
-    BROWSER_BIN=$(command -v firefox)
-  else
-    echo -e "${YELLOW}  ⚠ Browser package installed but no Firefox command was found.${RESET}"
+  if ! detect_browser; then
+    echo -e "${YELLOW}  ⚠ Browser package installed but no supported browser command was found.${RESET}"
     BROWSER_BIN=""
+    BROWSER_FAMILY=""
     return 1
   fi
   return 0
@@ -1608,7 +1677,10 @@ fi
 # ── DESKTOP SHORTCUTS ────────────────────────────────────────
 KIOSK_URL="http://localhost:${KIOSK_PORT}/"
 FIREFOX_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-kiosk"
-WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
+FIREFOX_WINDOWED_PROFILE_DIR="$REAL_HOME/.mozilla/firefox/caroline-window"
+WINDOWED_PROFILE_DIR="$FIREFOX_WINDOWED_PROFILE_DIR"
+CHROMIUM_PROFILE_DIR="$REAL_HOME/.config/caroline/chromium-kiosk"
+CHROMIUM_WINDOWED_PROFILE_DIR="$REAL_HOME/.config/caroline/chromium-window"
 
 echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
 if is_wsl; then
@@ -1616,8 +1688,13 @@ if is_wsl; then
   echo -e "${DIM}  Open: http://localhost:${KIOSK_PORT}/${RESET}"
 elif has_desktop_environment; then
   if ensure_browser; then
-    configure_firefox_profile "$FIREFOX_PROFILE_DIR"
-    configure_firefox_profile "$WINDOWED_PROFILE_DIR"
+    if [ "${BROWSER_FAMILY:-}" = "chromium" ]; then
+      configure_chromium_profile "$CHROMIUM_PROFILE_DIR"
+      configure_chromium_profile "$CHROMIUM_WINDOWED_PROFILE_DIR"
+    else
+      configure_firefox_profile "$FIREFOX_PROFILE_DIR"
+      configure_firefox_profile "$FIREFOX_WINDOWED_PROFILE_DIR"
+    fi
     write_browser_launchers
     DESKTOP_DIR=$(desktop_dir_for_user)
     write_desktop_shortcuts "$DESKTOP_DIR"
@@ -1653,17 +1730,29 @@ if [ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ]; then
 
     if [ "$KIOSK_BROWSER_READY" = "true" ]; then
 
-      # ── FIREFOX PROFILE: suppress first-run and crash-recovery screens ──
-      configure_firefox_profile
+      # ── BROWSER PROFILE: suppress first-run and crash-recovery screens ──
+      if [ "${BROWSER_FAMILY:-}" = "chromium" ]; then
+        configure_chromium_profile "$CHROMIUM_PROFILE_DIR"
+        configure_chromium_profile "$CHROMIUM_WINDOWED_PROFILE_DIR"
+      else
+        configure_firefox_profile "$FIREFOX_PROFILE_DIR"
+        configure_firefox_profile "$FIREFOX_WINDOWED_PROFILE_DIR"
+      fi
       write_browser_launchers
-      echo -e "${GREEN}  ✓ Firefox kiosk profile configured${RESET}"
+      echo -e "${GREEN}  ✓ Browser kiosk profile configured (${BROWSER_FAMILY})${RESET}"
 
-      # Remove any pre-existing Firefox autostart entries to prevent double-launch
-      rm -f "$REAL_HOME/.config/autostart/firefox"*.desktop 2>/dev/null || true
+      # Remove pre-existing Caroline browser autostart entries to prevent double-launch.
+      for _autostart_file in "$REAL_HOME/.config/autostart/"*.desktop; do
+        [ -f "$_autostart_file" ] || continue
+        if grep -qi 'caroline' "$_autostart_file" 2>/dev/null; then
+          rm -f "$_autostart_file" 2>/dev/null || true
+        fi
+      done
+      unset _autostart_file
       [ -f "$REAL_HOME/.config/labwc/autostart" ] && \
-        sed -i '/firefox/Id' "$REAL_HOME/.config/labwc/autostart" 2>/dev/null || true
+        sed -i '/caroline/Id' "$REAL_HOME/.config/labwc/autostart" 2>/dev/null || true
       [ -f "$REAL_HOME/.config/wayfire.ini" ] && \
-        sed -i '/firefox/Id' "$REAL_HOME/.config/wayfire.ini" 2>/dev/null || true
+        sed -i '/caroline/Id' "$REAL_HOME/.config/wayfire.ini" 2>/dev/null || true
 
       # XDG autostart — primary launch method across all Pi OS window managers
       mkdir -p "$REAL_HOME/.config/autostart"
@@ -1758,7 +1847,12 @@ echo -e "${CYAN}  │${RESET}  Pi display:        reboot and kiosk opens automat
 echo -e "${CYAN}  │${RESET}  Pi display:        use the desktop shortcut or browser"
   fi
   echo -e "${CYAN}  │${RESET}  On this Pi:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
-  echo -e "${CYAN}  │${RESET}  Voice in Chromium: ${BOLD}https://${PI_IP_FINAL}:${HTTPS_UI_PORT}/${RESET}"
+  if [ "${BROWSER_FAMILY:-}" = "chromium" ]; then
+    echo -e "${CYAN}  │${RESET}  Kiosk browser:    Chromium-compatible"
+  elif [ "${BROWSER_FAMILY:-}" = "firefox" ]; then
+    echo -e "${CYAN}  │${RESET}  Kiosk browser:    Firefox fallback (typing/chat)"
+  fi
+  echo -e "${CYAN}  │${RESET}  Remote voice:     ${BOLD}https://${PI_IP_FINAL}:${HTTPS_UI_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  From another device: ${BOLD}http://${PI_IP_FINAL}:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  If the IP changes: run ${BOLD}hostname -I${RESET} on the Pi"
   echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"

@@ -21,6 +21,8 @@ For microphone input from another browser, use Chrome or Chromium with the secur
 https://YOUR-CAROLINE-IP:8444/
 ```
 
+On a Raspberry Pi kiosk, the installer prefers Chromium because Firefox does not support Caroline's browser wake-word input.
+
 The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat.
 
 ## Pick Your Setup

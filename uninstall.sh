@@ -41,7 +41,7 @@ DESKTOP_DIR="$REAL_HOME/Desktop"
 remove_caroline_path() {
   local _target="$1"
   case "$_target" in
-    "$CAROLINE_DIR"|"$CLONE_DIR"|"$REAL_HOME/.mozilla/firefox/caroline-kiosk"|"$REAL_HOME/.mozilla/firefox/caroline-window")
+    "$CAROLINE_DIR"|"$CLONE_DIR"|"$REAL_HOME/.mozilla/firefox/caroline-kiosk"|"$REAL_HOME/.mozilla/firefox/caroline-window"|"$REAL_HOME/.config/caroline/chromium-kiosk"|"$REAL_HOME/.config/caroline/chromium-window")
       sudo rm -rf -- "$_target"
       ;;
     *)
@@ -60,7 +60,7 @@ fi
 echo ""
 echo -e "${CYAN}  Project: Caroline uninstall${RESET}"
 echo -e "${DIM}  This removes Caroline services, launchers, nginx site config, and app files.${RESET}"
-echo -e "${DIM}  Shared packages like Node.js, nginx, Firefox, Node-RED, and Ollama are left installed.${RESET}"
+echo -e "${DIM}  Shared packages like Node.js, nginx, Chromium/Firefox, Node-RED, and Ollama are left installed.${RESET}"
 echo ""
 
 if [ "$YES" != "true" ]; then
@@ -75,6 +75,10 @@ if [ "$YES" != "true" ]; then
 fi
 
 echo -e "${YELLOW}  ► Stopping services and kiosk browser...${RESET}"
+pkill -TERM -f 'chromium.*--user-data-dir=.*/caroline/chromium-kiosk' 2>/dev/null || true
+pkill -TERM -f 'chromium.*--user-data-dir=.*/caroline/chromium-window' 2>/dev/null || true
+pkill -TERM -f 'chrome.*--user-data-dir=.*/caroline/chromium-kiosk' 2>/dev/null || true
+pkill -TERM -f 'chrome.*--user-data-dir=.*/caroline/chromium-window' 2>/dev/null || true
 pkill -TERM -f 'firefox-esr --kiosk --profile .*/caroline-kiosk' 2>/dev/null || true
 pkill -TERM -f 'firefox-esr --profile .*/caroline-window' 2>/dev/null || true
 pkill -TERM -f 'firefox --kiosk --profile .*/caroline-kiosk' 2>/dev/null || true
@@ -86,8 +90,12 @@ echo -e "${YELLOW}  ► Removing system service and nginx site...${RESET}"
 sudo rm -f /etc/systemd/system/caroline.service
 sudo rm -f /etc/nginx/sites-enabled/caroline
 sudo rm -f /etc/nginx/sites-available/caroline
-sudo rm -rf /etc/systemd/system/nginx.service.d/port-clear.conf
+sudo rm -f /etc/systemd/system/nginx.service.d/port-clear.conf
+sudo rmdir /etc/systemd/system/nginx.service.d 2>/dev/null || true
 sudo rm -rf /etc/caroline
+sudo rm -f /etc/sudoers.d/caroline-reboot
+sudo rm -f /etc/sudoers.d/caroline-update
+sudo rm -f /usr/local/sbin/caroline-update
 sudo systemctl daemon-reload 2>/dev/null || true
 sudo nginx -t >/tmp/caroline-uninstall-nginx.log 2>&1 && sudo systemctl reload nginx 2>/dev/null || true
 
@@ -95,6 +103,8 @@ echo -e "${YELLOW}  ► Removing desktop and autostart launchers...${RESET}"
 rm -f "$DESKTOP_DIR/Project Caroline.desktop"
 rm -f "$DESKTOP_DIR/Project Caroline Kiosk.desktop"
 rm -f "$REAL_HOME/.config/autostart/caroline-kiosk.desktop"
+rm -f "$REAL_HOME/.local/bin/caroline-window"
+rm -f "$REAL_HOME/.local/bin/caroline-kiosk"
 if [ -f "$REAL_HOME/.config/labwc/autostart" ]; then
   sed -i '/caroline/Id' "$REAL_HOME/.config/labwc/autostart" 2>/dev/null || true
 fi
@@ -112,6 +122,9 @@ fi
 
 remove_caroline_path "$REAL_HOME/.mozilla/firefox/caroline-kiosk"
 remove_caroline_path "$REAL_HOME/.mozilla/firefox/caroline-window"
+remove_caroline_path "$REAL_HOME/.config/caroline/chromium-kiosk"
+remove_caroline_path "$REAL_HOME/.config/caroline/chromium-window"
+rmdir "$REAL_HOME/.config/caroline" 2>/dev/null || true
 
 echo ""
 echo -e "${GREEN}  ✓ Caroline uninstall complete${RESET}"

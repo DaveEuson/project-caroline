@@ -2633,13 +2633,34 @@ const BOOLEAN_DEFAULTS = {
   telemetryEndpointConfigured: undefined
 };
 const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
+const NODE_RED_CONFIG_PORT = 1880;
+const SECURE_VOICE_PORT = 8444;
+const DEFAULT_NODE_RED_CONFIG_URL = 'http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT;
 const DEFAULT_NODE_RED_URL = window.location.protocol === 'https:'
   ? window.location.origin
-  : 'http://' + (window.location.hostname || 'localhost') + ':1880';
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+  : DEFAULT_NODE_RED_CONFIG_URL;
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
+
+function normalizeConfiguredNodeRedUrl(value) {
+  let u = String(value || '').trim();
+  if (!u || u.includes('[PI_IP]')) u = DEFAULT_NODE_RED_CONFIG_URL;
+  if (u && !u.startsWith('http')) u = 'http://' + u;
+  try {
+    const target = new URL(u);
+    const sameHost = target.hostname === window.location.hostname;
+    const localTarget = ['localhost','127.0.0.1','::1','[::1]'].includes(target.hostname);
+    if (target.protocol === 'https:' && (sameHost || localTarget) && target.port === String(SECURE_VOICE_PORT)) {
+      u = 'http://' + (target.hostname || window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT;
+    }
+  } catch(e) {}
+  if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(u)) {
+    u = DEFAULT_NODE_RED_CONFIG_URL;
+  }
+  return (u || DEFAULT_NODE_RED_CONFIG_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_CONFIG_URL;
+}
 
 function parseFeatureBool(value, fallback) {
   if (value === true || value === false) return value;
@@ -2707,9 +2728,7 @@ if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 normalizeSettingsBooleans(S);
 S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
 S.calendarId = normalizeCalendarIdInput(S.calendarId);
-if (!S.nodeRedUrl || S.nodeRedUrl.includes('[PI_IP]')) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
-if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(S.nodeRedUrl)) S.nodeRedUrl = DEFAULT_NODE_RED_URL;
-S.nodeRedUrl = (S.nodeRedUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
+S.nodeRedUrl = normalizeConfiguredNodeRedUrl(S.nodeRedUrl);
 handleSpotifyCallback(); // handle ?code= redirect from Spotify OAuth
 localStorage.setItem('caro_settings', JSON.stringify(S));
 
@@ -2734,7 +2753,7 @@ function clearBrowserInstallState(reason) {
     'spotify_refresh_token',
     'spotify_token_expires'
   ].forEach(k => localStorage.removeItem(k));
-  const keepNodeRedUrl = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
+  const keepNodeRedUrl = normalizeConfiguredNodeRedUrl(S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL);
   const keepPiIp = S.piIp || '';
   S = Object.assign({}, DEFAULTS, { nodeRedUrl: keepNodeRedUrl, piIp: keepPiIp });
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
@@ -2756,6 +2775,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
+  if (d.nodeRedUrl) d.nodeRedUrl = normalizeConfiguredNodeRedUrl(d.nodeRedUrl);
   if (d.features) d.features = normalizeFeatureState(d.features, { repairAllOff: false });
   normalizeSettingsBooleans(d);
   Object.keys(d).forEach(k => {
@@ -2914,7 +2934,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   const modelEl = document.getElementById('set-model');
   if (modelEl) modelEl.value = S.aiModel || 'anthropic/claude-haiku-4.5';
   setInputValue('set-orkey', S.openrouterKey || '', { allowBlank });
-  setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_URL, { allowBlank });
+  setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL, { allowBlank });
   setInputValue('set-hueip', S.hueIp || '', { allowBlank });
   setInputValue('set-huekey', S.hueKey || '', { allowBlank });
   setInputValue('set-spotify-id', S.spotifyClientId || '', { allowBlank });
@@ -3317,9 +3337,8 @@ let googleDevicePollTimer = null;
 
 function getNodeRedUrl() {
   const fieldUrl = (document.getElementById('set-nodered-url')?.value || '').trim();
-  let u = fieldUrl || (S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL;
-  if (u.includes('[PI_IP]')) u = DEFAULT_NODE_RED_URL;
-  if (u && !u.startsWith('http')) u = 'http://' + u;
+  const configured = normalizeConfiguredNodeRedUrl(fieldUrl || (S && S.nodeRedUrl) || DEFAULT_NODE_RED_CONFIG_URL);
+  let u = configured;
   if (window.location.protocol === 'https:' && window.location.origin) {
     try {
       const target = new URL(u);
@@ -3330,11 +3349,10 @@ function getNodeRedUrl() {
       }
     } catch(e) {}
   }
-  if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(u)) u = DEFAULT_NODE_RED_URL;
   u = (u || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
-  if (S) S.nodeRedUrl = u;
+  if (S) S.nodeRedUrl = configured;
   const field = document.getElementById('set-nodered-url');
-  if (field && !field.value.trim()) field.value = u;
+  if (field && !field.value.trim()) field.value = configured;
   return u;
 }
 function isLocalHostName(host) {
@@ -3372,7 +3390,7 @@ function getPreferredPiHost(allowLocal=false) {
 function getPiHost() {
   return getPreferredPiHost(true);
 }
-const NODE_RED_PORT = 1880;
+const NODE_RED_PORT = NODE_RED_CONFIG_PORT;
 const NODE_RED_TIMEOUT_MS = 10000;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const CADDY_PORT = 8443;
@@ -3911,9 +3929,8 @@ async function testNodeRedUrl() {
   const field = document.getElementById('set-nodered-url');
   if (status) { status.textContent = '…'; status.className = 'nodered-status'; }
   if (field && field.value.trim()) {
-    let raw = field.value.trim();
-    if (!raw.startsWith('http')) raw = 'http://' + raw;
-    S.nodeRedUrl = raw.replace(/\/+$/, '');
+    S.nodeRedUrl = normalizeConfiguredNodeRedUrl(field.value.trim());
+    field.value = S.nodeRedUrl;
     try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
   }
   const base = getNodeRedUrl();
@@ -3942,7 +3959,7 @@ function toggleSettings() {
     document.getElementById('set-auto-theme').checked = parseSettingBool(S.autoTheme, BOOLEAN_DEFAULTS.autoTheme);
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
     document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
-    document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_URL;
+    document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL;
     setTimeout(testNodeRedUrl, 80);
     applySettingsToForm({ allowBlank: true });
     const frBanner = document.getElementById('settings-first-run-banner');
@@ -5381,12 +5398,13 @@ async function saveSettings() {
   try {
 
   // Node-RED URL — normalise and keep piIp in sync for backward compat
-  const prevNrUrl = ((S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL).replace(/\/+$/, '');
+  const prevRuntimeNrUrl = getNodeRedUrl();
   let rawNrUrl = document.getElementById('set-nodered-url').value.trim();
-  if (rawNrUrl && !rawNrUrl.startsWith('http')) rawNrUrl = 'http://' + rawNrUrl;
-  S.nodeRedUrl = (rawNrUrl || DEFAULT_NODE_RED_URL).replace(/\/+$/, '');
+  S.nodeRedUrl = normalizeConfiguredNodeRedUrl(rawNrUrl || S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL);
+  const nrField = document.getElementById('set-nodered-url');
+  if (nrField) nrField.value = S.nodeRedUrl;
   try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) {}
-  const needReconnect = getNodeRedUrl() !== prevNrUrl;
+  const needReconnect = getNodeRedUrl() !== prevRuntimeNrUrl;
   if (orkeyVal) S.openrouterKey = orkeyVal; // never clear key by switching providers
   S.aiProvider = (document.getElementById('set-ai-provider') || {}).value || 'openrouter';
   S.ollamaUrl = ((document.getElementById('set-ollama-url') || {}).value || 'http://localhost:11434').trim();
@@ -6186,8 +6204,8 @@ function pollCarolineUpdateStatus(btn, originalText) {
 
 // ── KIOSK SYSTEM CONTROLS ─────────────────────
 function exitKiosk(){
-  if(!confirm('Exit kiosk? This will close Firefox.')) return;
-  // Firefox ESR --kiosk on Wayland doesn't set fullscreenElement — try all APIs
+  if(!confirm('Exit kiosk? This will close the kiosk browser.')) return;
+  // Kiosk browsers on Wayland may not set fullscreenElement — try all APIs.
   if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
   else if(document.mozCancelFullScreen) document.mozCancelFullScreen();
   else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -8367,9 +8385,9 @@ const ONB_WIDGETS = [
 ];
 
 function onboardingHomeBaseUrl() {
-  let url = (S && S.nodeRedUrl) || DEFAULT_NODE_RED_URL;
+  let url = (S && S.nodeRedUrl) || DEFAULT_NODE_RED_CONFIG_URL;
   url = String(url || '').trim();
-  if (!url) url = DEFAULT_NODE_RED_URL;
+  if (!url) url = DEFAULT_NODE_RED_CONFIG_URL;
   if (!/^https?:\/\//i.test(url)) url = 'http://' + url.replace(/\/+$/, '') + ':1880';
   return url.replace(/\/+$/, '');
 }
@@ -8494,7 +8512,7 @@ function _onbLoadConfig(){
   const widgets = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
   ONB_WIDGETS.forEach(w=>{ if(widgets[w.id] === undefined) widgets[w.id] = w.defaultOn !== false; });
   S.onboardingModules = m;
-  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', cityName: S.cityName||'', lat: S.lat||0, lng: S.lng||0, tidesStation: S.tidesStation||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_URL, modules: m, widgets };
+  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', cityName: S.cityName||'', lat: S.lat||0, lng: S.lng||0, tidesStation: S.tidesStation||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_CONFIG_URL, modules: m, widgets };
 }
 function _onbModuleReady(id){
   const def = ONB_MODULES.find(m=>m.id===id);
@@ -9099,7 +9117,7 @@ async function finalizeOnboarding(){
   S.timezone         = onbState.config.timezone     || S.timezone   || Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   const _onbHost = onbState.config.host || '';
   if (_onbHost) {
-    S.nodeRedUrl = _onbHost.startsWith('http') ? _onbHost.replace(/\/+$/, '') : 'http://' + _onbHost + ':1880';
+    S.nodeRedUrl = normalizeConfiguredNodeRedUrl(_onbHost.startsWith('http') ? _onbHost : 'http://' + _onbHost + ':1880');
     try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) { S.piIp = _onbHost; }
   }
   const _avIdx = ONB_AVATARS.findIndex(a=>a.id===onbState.avatarId);

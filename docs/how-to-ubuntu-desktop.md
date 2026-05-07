@@ -101,6 +101,14 @@ From another computer:
 http://UBUNTU-IP:8080/
 ```
 
+For microphone input or activation-word mode from another computer, use Chrome or Chromium and open:
+
+```text
+https://UBUNTU-IP:8444/
+```
+
+Accept the local certificate warning once. The normal HTTP URL still works for typing/chat.
+
 ## 7. First Setup in Caroline
 
 Open **Settings**:

@@ -91,6 +91,8 @@ sudo reboot
 
 If kiosk mode is enabled, Caroline should open fullscreen after reboot.
 
+The kiosk launcher prefers Chromium so browser microphone and activation-word input can work on the Pi display. Firefox is not a reliable voice-input browser for Caroline.
+
 ## 6. Open Caroline from Another Browser
 
 From another computer on the same network:
@@ -104,6 +106,14 @@ Example:
 ```text
 http://192.168.1.50:8080/
 ```
+
+For microphone input or activation-word mode from another computer, use Chrome or Chromium and open the secure voice URL:
+
+```text
+https://PI-IP-ADDRESS:8444/
+```
+
+Accept the local certificate warning once. Typing/chat still works at the normal `http://PI-IP-ADDRESS:8080/` URL.
 
 ## 7. First Setup in Caroline
 
