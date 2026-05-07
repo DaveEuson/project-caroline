@@ -181,6 +181,10 @@ Coming soon, Caroline will run on more platforms and devices:
 - **Containerization:** Docker support for quick cloud deployment
 - **Visual Themes:** Brighter cybercore mode, dark terminal/archive variants, anime-themed UI
 
+### 🎬 Looking for Animators
+
+We're seeking talented animators to help bring Caroline to life! If you're interested in creating custom avatars, idle animations, and character interactions for Project: Caroline, [reach out on GitHub Discussions](https://github.com/DaveEuson/project-caroline/discussions) or contact Dave directly.
+
 ---
 
 ## 📜 License & Terms
