@@ -2486,6 +2486,7 @@
         <button class="quick-btn" onclick="quickSend('What do I have on today? Give me a heads up on my schedule.')"><i class="ti ti-calendar"></i> Schedule</button>
         <button class="quick-btn" onclick="quickSend('Give me a quick motivation boost and one focus tip for right now.')"><i class="ti ti-bolt"></i> Motivate</button>
         <button class="quick-btn" onclick="toggleTodo(); playBeep(700);"><i class="ti ti-checkbox"></i> Tasks</button>
+        <button class="quick-btn" id="feedback-quick-btn" onclick="startFeedbackCapture()" style="display:none;"><i class="ti ti-message-report"></i> Feedback</button>
       </div>
     </div>
   </div>
@@ -2624,7 +2625,11 @@ const BOOLEAN_DEFAULTS = {
   setupComplete: false,
   highContrastText: true,
   reduceMonoLabels: true,
-  kioskMode: false
+  kioskMode: false,
+  telemetryInstallCount: undefined,
+  telemetryTroubleshooting: undefined,
+  telemetryOptOutPing: undefined,
+  telemetryEndpointConfigured: undefined
 };
 const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
 const DEFAULT_NODE_RED_URL = 'http://' + (window.location.hostname || 'localhost') + ':1880';
@@ -3005,12 +3010,14 @@ async function syncSettingsFromServer() {
     if (wcl) wcl.textContent = S.cityName || S.location || '';
     fetchWeather();
     fetchTides();
+    updateFeedbackQuickButton();
     return true;
   } catch(e) {
     console.warn('[Caroline] /admin/get-settings failed:', e);
     return false;
   } finally {
     settingsHydrated = true;
+    updateFeedbackQuickButton();
   }
 }
 // ── EVENT LOG ─────────────────────────────────
@@ -5465,10 +5472,11 @@ async function saveSettings() {
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   localStorage.setItem('caro_settings', JSON.stringify(S));
   renderIntegrationStatus();
+  updateFeedbackQuickButton();
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, features: S.features, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -6407,7 +6415,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','setupComplete','features'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       normalizeSettingsBooleans(_payload, { fillDefaults: false });
@@ -6527,6 +6535,65 @@ updateAiConfigIndicator();
 const input=document.getElementById('msg-input');
 let _lastSendMs = 0;
 const SEND_COOLDOWN_MS = 1500;
+let pendingFeedbackCapture = false;
+
+function feedbackOptedIn() {
+  return parseSettingBool(S.telemetryTroubleshooting, false);
+}
+
+function updateFeedbackQuickButton() {
+  const btn = document.getElementById('feedback-quick-btn');
+  if (!btn) return;
+  btn.style.display = feedbackOptedIn() ? '' : 'none';
+  btn.title = feedbackOptedIn()
+    ? 'Send beta feedback to Dave'
+    : 'Feedback button appears when troubleshooting diagnostics are opted in';
+}
+
+function startFeedbackCapture() {
+  playBeep(850);
+  if (!feedbackOptedIn()) {
+    addMessage('Feedback sending is off. Opt in to troubleshooting diagnostics during setup if you want beta notes saved for Dave.', 'caroline', 'display');
+    return;
+  }
+  pendingFeedbackCapture = true;
+  addMessage("What's your feedback?", 'caroline', 'display');
+  speak("What's your feedback?");
+  const field = document.getElementById('msg-input');
+  if (field) {
+    field.placeholder = 'Type beta feedback for Dave...';
+    field.focus();
+  }
+}
+
+async function submitBetaFeedback(text) {
+  showTyping();
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'feedback: ' + text,
+        source: 'feedback_button',
+        aiName: S.aiName || 'Caroline',
+        userName: S.userName || '',
+        aiProvider: S.aiProvider || 'openrouter'
+      }),
+      timeoutMs: 30000
+    }, 'Beta feedback');
+    let data = {};
+    try { data = await resp.json(); } catch(e) {}
+    if (!resp.ok) throw new Error((data && (data.error || data.reply)) || ('HTTP ' + resp.status));
+    addMessage(cleanDisplayText(data.reply || 'Saved that feedback for Dave. Thank you - beta notes like this are gold.'), 'caroline', 'display');
+  } catch(e) {
+    clog('err', 'Feedback save failed: ' + e.message);
+    addMessage('I could not save that feedback locally. Check Node-RED, then try again.', 'caroline', 'display');
+  } finally {
+    const field = document.getElementById('msg-input');
+    if (field) field.placeholder = 'Say something to ' + (S.aiName || 'Caroline') + '...';
+  }
+}
+
 async function sendAiHttpMessage(text, context) {
   const provider = S.aiProvider || 'openrouter';
   try {
@@ -6578,6 +6645,12 @@ function sendMessage(){
   }
   _lastSendMs = now;
   input.value='';
+  if (pendingFeedbackCapture) {
+    pendingFeedbackCapture = false;
+    addMessage(t, 'user', 'display');
+    submitBetaFeedback(t);
+    return;
+  }
   const memFact = checkRememberCommand(t);
   if (memFact) {
     addMessage(t,'user','display'); saveToMemory(memFact);
