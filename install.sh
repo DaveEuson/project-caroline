@@ -771,24 +771,39 @@ node_apt_candidate() {
   apt-cache policy nodejs 2>/dev/null | awk '/Candidate:/ {print $2; exit}'
 }
 
+node_candidate_bundles_npm() {
+  local _candidate="${1:-}"
+  [[ "$_candidate" == *nodesource* ]]
+}
+
 install_node_from_apt() {
-  local _candidate _candidate_major
+  local _candidate _candidate_major _log
+  _log="${1:-/tmp/caroline-node-apt.log}"
   _candidate=$(node_apt_candidate)
   _candidate_major=$(node_major_from_version "$_candidate")
   if [ "$_candidate_major" -lt 18 ]; then
-    echo -e "${RED}  ✗ This OS repository offers Node.js ${_candidate:-unknown}, but Node-RED 4.x needs Node.js 18+.${RESET}"
+    echo -e "${RED}  ✗ The apt repositories offer Node.js ${_candidate:-unknown}, but Node-RED 4.x needs Node.js 18+.${RESET}"
     echo -e "${DIM}    Use a real Pi running Raspberry Pi OS 64-bit, or a 64-bit Ubuntu/Debian/Linux VM or desktop.${RESET}"
     echo -e "${DIM}    32-bit i386 VM images often only provide old Node.js packages and are not a reliable QA target.${RESET}"
     exit 1
   fi
-  echo -e "${DIM}    Installing Node.js from OS package repositories...${RESET}"
+  echo -e "${DIM}    Installing Node.js from apt package repositories...${RESET}"
   sudo dpkg --configure -a >/tmp/caroline-dpkg-configure.log 2>&1 || true
   sudo apt-get -f install -y >/tmp/caroline-apt-fix.log 2>&1 || true
-  sudo apt-get install -y nodejs npm >/tmp/caroline-node-apt.log 2>&1 || {
-    echo -e "${RED}  ✗ Node.js apt install failed. Check: cat /tmp/caroline-node-apt.log${RESET}"
-    echo -e "${DIM}    If the log mentions out-of-memory, give the VM 2GB+ RAM or add swap, then rerun the installer.${RESET}"
-    exit 1
-  }
+  if node_candidate_bundles_npm "$_candidate"; then
+    echo -e "${DIM}    NodeSource candidate detected; npm is bundled with nodejs.${RESET}"
+    sudo apt-get install -y nodejs >"$_log" 2>&1 || {
+      echo -e "${RED}  ✗ Node.js apt install failed. Check: cat $_log${RESET}"
+      echo -e "${DIM}    If the log mentions out-of-memory, give the VM 2GB+ RAM or add swap, then rerun the installer.${RESET}"
+      exit 1
+    }
+  else
+    sudo apt-get install -y nodejs npm >"$_log" 2>&1 || {
+      echo -e "${RED}  ✗ Node.js/npm apt install failed. Check: cat $_log${RESET}"
+      echo -e "${DIM}    If the log mentions out-of-memory, give the VM 2GB+ RAM or add swap, then rerun the installer.${RESET}"
+      exit 1
+    }
+  fi
 }
 
 install_node_runtime() {
@@ -800,12 +815,13 @@ install_node_runtime() {
   else
     echo -e "${DIM}    Node.js not found — installing via NodeSource...${RESET}"
     if curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - >/tmp/caroline-nodesource.log 2>&1; then
-      sudo apt-get install -y nodejs >/tmp/caroline-node-apt.log 2>&1 || {
-        echo -e "${YELLOW}  ⚠ NodeSource package install failed — falling back to OS packages.${RESET}"
+      sudo apt-get install -y nodejs >/tmp/caroline-node-nodesource-apt.log 2>&1 || {
+        echo -e "${YELLOW}  ⚠ NodeSource package install failed — retrying with apt candidate detection.${RESET}"
+        echo -e "${DIM}    First log: cat /tmp/caroline-node-nodesource-apt.log${RESET}"
         install_node_from_apt
       }
     else
-      echo -e "${YELLOW}  ⚠ NodeSource setup failed — falling back to OS packages.${RESET}"
+      echo -e "${YELLOW}  ⚠ NodeSource setup failed — falling back to apt repositories.${RESET}"
       echo -e "${DIM}    Log: cat /tmp/caroline-nodesource.log${RESET}"
       install_node_from_apt
     fi
@@ -828,6 +844,12 @@ if [ "$NODE_MAJOR" -lt 18 ]; then
 fi
 if ! command -v npm &> /dev/null; then
   install_node_from_apt
+fi
+if ! command -v npm &> /dev/null; then
+  echo -e "${RED}  ✗ npm was not found after Node.js install.${RESET}"
+  echo -e "${DIM}    Check: cat /tmp/caroline-node-apt.log${RESET}"
+  echo -e "${DIM}    NodeSource packages include npm; Ubuntu/Debian OS packages may install npm separately.${RESET}"
+  exit 1
 fi
 echo -e "${GREEN}  ✓ Node.js $(node --version) ready${RESET}"
 

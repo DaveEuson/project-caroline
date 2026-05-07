@@ -159,3 +159,5 @@ sudo systemctl status caroline
 Make sure you are using the server's LAN IP, not `127.0.0.1`, from another computer.
 
 If the installer says `Killed` during `apt-get install`, the VM probably ran out of usable memory or swap during package setup. Increase the VM memory, disable very-low Dynamic Memory minimums, then rerun the installer.
+
+If `/tmp/caroline-node-apt.log` says `nodejs : Conflicts: npm`, rerun the installer from the latest `master`. NodeSource bundles npm inside its `nodejs` package, so older installers that ask apt for both packages can confuse Ubuntu's dependency solver.
