@@ -31,6 +31,10 @@ This is the recommended beta setup if you want Caroline on a dedicated screen.
 
 Use **Raspberry Pi OS Desktop**, not Lite, if you want the fullscreen kiosk on the Pi screen.
 
+Need more detail on Raspberry Pi Imager?
+
+[How to create a VM, USB installer, or Raspberry Pi SD card](how-to-create-install-media.md)
+
 ## 2. Find the Pi Address
 
 On the Pi, open Terminal:

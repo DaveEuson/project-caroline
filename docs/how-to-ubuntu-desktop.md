@@ -23,6 +23,10 @@ For the most reliable Ubuntu setup, use [Ubuntu Server](how-to-ubuntu-server.md)
 5. Create a username and password.
 6. Finish install and reboot.
 
+Need help creating the USB installer or VM first?
+
+[How to create a VM, USB installer, or Raspberry Pi SD card](how-to-create-install-media.md)
+
 ## 2. Open Terminal
 
 Press:

@@ -18,6 +18,10 @@ Do these first if you can:
 2. Enable SSH so you can reach the device from another computer.
 3. Give the device a stable IP address or router reservation.
 
+Need help creating the VM, USB installer, or Raspberry Pi SD card first?
+
+[How to create a VM, USB installer, or Raspberry Pi SD card](how-to-create-install-media.md)
+
 Guide:
 
 [How to set up SSH and a stable IP](network-prep.md)

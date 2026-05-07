@@ -27,6 +27,10 @@ If you are using Hyper-V, give the VM 4GB or more as the startup memory. If Dyna
 
 You do not need a desktop environment for Caroline server/client mode.
 
+Need help creating a Hyper-V VM or writing the Ubuntu ISO to USB?
+
+[How to create a VM, USB installer, or Raspberry Pi SD card](how-to-create-install-media.md)
+
 ## 2. Log In
 
 After reboot, log in on the server console.
