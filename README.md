@@ -158,7 +158,28 @@ v1.0 — Multi-platform (Windows, Mac, tablet)      [░░░░░░░░░
 v2.0 — Virtual Sidekick (moods, adaptive)         [░░░░░░░░░░]
 ```
 
-**Coming soon:** More Hue presets, Discord DMs, multi-calendar reads, visual themes, and curated anime/cybercore video channels.
+---
+
+## 🧩 Upcoming Modules
+
+New integrations and features coming to Caroline:
+
+| Module | Purpose | Status |
+|---|---|---|
+| **Telegram** | Direct messaging & notifications | 🔜 Planned |
+| **Nano Leaf** | Smart light panels & ambience | 🔜 Planned |
+| **iTunes / Apple Music** | Music control & library sync | 🔜 Planned |
+| **Stream Deck** | Physical button integration | 🔜 Planned |
+| **Extended Hue Profiles** | Focus, calm, morning, evening, cybercore themes | 🔜 Planned |
+
+### Platform Expansion
+
+Coming soon, Caroline will run on more platforms and devices:
+
+- **Server Platforms:** Windows (native), macOS (native), EC2 & remote servers
+- **Display Clients:** Android & iOS native apps (in addition to web browser)
+- **Containerization:** Docker support for quick cloud deployment
+- **Visual Themes:** Brighter cybercore mode, dark terminal/archive variants, anime-themed UI
 
 ---
 
