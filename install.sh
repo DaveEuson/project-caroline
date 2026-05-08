@@ -164,6 +164,9 @@ SETTINGS_PATH="$CAROLINE_DIR/caroline_settings.json"
 TELEMETRY_LOG_PATH="$CAROLINE_DIR/caroline_telemetry.jsonl"
 CAROLINE_TEMP_SWAP="/var/tmp/caroline-install.swap"
 CAROLINE_TEMP_SWAP_CREATED="false"
+CAROLINE_AUTH_DIR="/etc/caroline"
+CAROLINE_HTPASSWD_PATH="$CAROLINE_AUTH_DIR/caroline.htpasswd"
+CAROLINE_ADMIN_PASSWORD_PATH="$CAROLINE_DIR/caroline_admin_password.txt"
 
 cleanup_install_swap() {
   tput cnorm 2>/dev/null || true
@@ -229,6 +232,7 @@ protect_secret_files() {
     "$CAROLINE_DIR/google_oauth.json" \
     "$CAROLINE_DIR/caroline_tasks.json" \
     "$CAROLINE_DIR/caroline_mind.json" \
+    "$CAROLINE_DIR/caroline_admin_password.txt" \
     "$CAROLINE_DIR/spotify_auth.json" \
     "$CAROLINE_DIR/caroline-calendar.json" \
     "$CAROLINE_DIR/service-account.json"; do
@@ -236,6 +240,28 @@ protect_secret_files() {
     sudo chown "$REAL_USER":"$REAL_USER" "$_secret" 2>/dev/null || true
     chmod 600 "$_secret" 2>/dev/null || true
   done
+}
+
+configure_admin_auth() {
+  local _password="${CAROLINE_ADMIN_PASSWORD:-}"
+  local _hash
+
+  sudo mkdir -p "$CAROLINE_AUTH_DIR"
+  if [ -z "$_password" ] && [ -s "$CAROLINE_ADMIN_PASSWORD_PATH" ]; then
+    _password="$(cat "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true)"
+  fi
+  if [ -z "$_password" ]; then
+    _password="$(openssl rand -base64 24 2>/dev/null || date +%s-%N-$RANDOM)"
+  fi
+
+  _hash="$(openssl passwd -apr1 "$_password")"
+  printf 'caroline:%s\n' "$_hash" | sudo tee "$CAROLINE_HTPASSWD_PATH" >/dev/null
+  sudo chown root:www-data "$CAROLINE_HTPASSWD_PATH" 2>/dev/null || sudo chown root:root "$CAROLINE_HTPASSWD_PATH"
+  sudo chmod 640 "$CAROLINE_HTPASSWD_PATH" 2>/dev/null || sudo chmod 600 "$CAROLINE_HTPASSWD_PATH"
+
+  printf '%s\n' "$_password" > "$CAROLINE_ADMIN_PASSWORD_PATH"
+  sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true
+  chmod 600 "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true
 }
 
 configure_firefox_profile() {
@@ -1155,8 +1181,21 @@ for _gif in "$CAROLINE_DIR/assets/"*.gif; do
     echo -e "${YELLOW}    ⚠ Skipped placeholder GIF: $(basename "$_gif")${RESET}"
 done
 unset _gif
-# Ensure nginx (www-data) can read all files
-sudo chmod -R 755 "$CAROLINE_DIR"
+# Ensure nginx can traverse the app directory and read public assets.
+# Secret files are tightened immediately afterward by protect_secret_files.
+sudo find "$CAROLINE_DIR" -type d -exec chmod 755 {} + 2>/dev/null || true
+sudo find "$CAROLINE_DIR" -type f \
+  ! -name 'caroline_settings.json' \
+  ! -name 'caroline_telemetry.jsonl' \
+  ! -name 'caroline_feedback.jsonl' \
+  ! -name 'google_oauth.json' \
+  ! -name 'caroline_tasks.json' \
+  ! -name 'caroline_mind.json' \
+  ! -name 'caroline_admin_password.txt' \
+  ! -name 'spotify_auth.json' \
+  ! -name 'caroline-calendar.json' \
+  ! -name 'service-account.json' \
+  -exec chmod 644 {} + 2>/dev/null || true
 sudo chown -R www-data:www-data "$CAROLINE_DIR/assets" 2>/dev/null || true
 protect_secret_files
 
@@ -1217,6 +1256,8 @@ if [ -f "$CAROLINE_DIR/caroline-wonder-loop.json" ]; then
 fi
 
 cp "$FLOWS_FILE" "$CAROLINE_DIR/flows.json"
+ESCAPED_CAROLINE_DIR="$(printf '%s' "$CAROLINE_DIR" | sed 's/[\/&]/\\&/g')"
+sed -i "s/\/home\/davee\/caroline/${ESCAPED_CAROLINE_DIR}/g" "$CAROLINE_DIR/flows.json"
 
 echo -e "${GREEN}  ✓ Flows imported${RESET}"
 
@@ -1251,20 +1292,34 @@ sudo fuser -k ${HTTPS_UI_PORT}/tcp 2>/dev/null || true
 # nginx runs as www-data — needs execute permission on the home directory
 # to traverse into ~/caroline, and read access on the files themselves.
 sudo chmod o+x "$REAL_HOME"
-sudo chmod -R o+rX "$CAROLINE_DIR"
+sudo find "$CAROLINE_DIR" -type d -exec chmod o+rx {} + 2>/dev/null || true
+sudo find "$CAROLINE_DIR" -type f \
+  ! -name 'caroline_settings.json' \
+  ! -name 'caroline_telemetry.jsonl' \
+  ! -name 'caroline_feedback.jsonl' \
+  ! -name 'google_oauth.json' \
+  ! -name 'caroline_tasks.json' \
+  ! -name 'caroline_mind.json' \
+  ! -name 'caroline_admin_password.txt' \
+  ! -name 'spotify_auth.json' \
+  ! -name 'caroline-calendar.json' \
+  ! -name 'service-account.json' \
+  -exec chmod o+r {} + 2>/dev/null || true
 protect_secret_files
 
-sudo mkdir -p /etc/caroline
-if [ ! -f /etc/caroline/caroline-selfsigned.crt ] || [ ! -f /etc/caroline/caroline-selfsigned.key ]; then
+configure_admin_auth
+
+sudo mkdir -p "$CAROLINE_AUTH_DIR"
+if [ ! -f "$CAROLINE_AUTH_DIR/caroline-selfsigned.crt" ] || [ ! -f "$CAROLINE_AUTH_DIR/caroline-selfsigned.key" ]; then
   sudo openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
-    -keyout /etc/caroline/caroline-selfsigned.key \
-    -out /etc/caroline/caroline-selfsigned.crt \
+    -keyout "$CAROLINE_AUTH_DIR/caroline-selfsigned.key" \
+    -out "$CAROLINE_AUTH_DIR/caroline-selfsigned.crt" \
     -subj "/CN=project-caroline.local" >/tmp/caroline-openssl.log 2>&1 || {
       echo -e "${YELLOW}  ⚠ HTTPS certificate generation failed${RESET}"
     }
-  sudo chmod 600 /etc/caroline/caroline-selfsigned.key 2>/dev/null || true
+  sudo chmod 600 "$CAROLINE_AUTH_DIR/caroline-selfsigned.key" 2>/dev/null || true
 fi
-if [ ! -f /etc/caroline/caroline-selfsigned.crt ] || [ ! -f /etc/caroline/caroline-selfsigned.key ]; then
+if [ ! -f "$CAROLINE_AUTH_DIR/caroline-selfsigned.crt" ] || [ ! -f "$CAROLINE_AUTH_DIR/caroline-selfsigned.key" ]; then
   echo -e "${RED}  ✗ HTTPS certificate is missing; nginx would fail to start.${RESET}"
   echo -e "${DIM}    Log: cat /tmp/caroline-openssl.log${RESET}"
   exit 1
@@ -1283,6 +1338,8 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "no-referrer" always;
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
+    auth_basic "Caroline";
+    auth_basic_user_file ${CAROLINE_HTPASSWD_PATH};
 
     location /ws/ {
         if (\$http_sec_fetch_site = "cross-site") { return 403; }
@@ -1332,8 +1389,8 @@ server {
     listen ${HTTPS_PROXY_PORT} ssl;
     server_name _;
 
-    ssl_certificate /etc/caroline/caroline-selfsigned.crt;
-    ssl_certificate_key /etc/caroline/caroline-selfsigned.key;
+    ssl_certificate ${CAROLINE_AUTH_DIR}/caroline-selfsigned.crt;
+    ssl_certificate_key ${CAROLINE_AUTH_DIR}/caroline-selfsigned.key;
 
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -1366,14 +1423,16 @@ server {
     index index.html;
     autoindex off;
 
-    ssl_certificate /etc/caroline/caroline-selfsigned.crt;
-    ssl_certificate_key /etc/caroline/caroline-selfsigned.key;
+    ssl_certificate ${CAROLINE_AUTH_DIR}/caroline-selfsigned.crt;
+    ssl_certificate_key ${CAROLINE_AUTH_DIR}/caroline-selfsigned.key;
 
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "no-referrer" always;
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
+    auth_basic "Caroline";
+    auth_basic_user_file ${CAROLINE_HTPASSWD_PATH};
 
     location /ws/ {
         if (\$http_sec_fetch_site = "cross-site") { return 403; }
@@ -1910,6 +1969,8 @@ echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${BROWSER_HOST_FINAL}:
 echo -e "${CYAN}  │${RESET}  Voice URL:   ${BOLD}https://${BROWSER_HOST_FINAL}:${HTTPS_UI_PORT}/${RESET}"
 echo -e "${CYAN}  │${RESET}  Backend:     Node-RED on localhost:${NODE_RED_PORT}"
 echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${BROWSER_HOST_FINAL}:${HTTPS_PROXY_PORT}"
+echo -e "${CYAN}  │${RESET}  Login user:  ${BOLD}caroline${RESET}"
+echo -e "${CYAN}  │${RESET}  Login pass:  ${BOLD}cat ${CAROLINE_ADMIN_PASSWORD_PATH}${RESET}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
 else

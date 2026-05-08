@@ -10,7 +10,7 @@ This guide has two reset levels:
 ## Before You Start
 
 - Confirm you have SSH, Raspberry Pi Connect, or VM console access before enabling kiosk mode.
-- For Ubuntu VM QA, use Ubuntu Server 64-bit when possible, choose **No** for kiosk mode, and open Caroline from another machine at `http://<vm-ip>:8080/`.
+- For Ubuntu VM QA, use Ubuntu Server 64-bit when possible, choose **No** for kiosk mode, and open Caroline from another machine at `http://<vm-ip>:8080/`. Log in as `caroline`; the installer prints the password file path.
 - Use Ubuntu Desktop VM only if you specifically want to test experimental local fullscreen kiosk behavior.
 - Ubuntu-based distributions such as Pop!_OS, Linux Mint, Zorin OS, and elementary OS are expected to work best in server/client mode, but treat them as unverified until install, reboot, update, and integration checks pass.
 - For Ubuntu Server, VM, or server/client installs, give the Caroline host a stable local IP. A router DHCP reservation is recommended because it keeps setup simple; a manual static IP also works if you know your network settings.
@@ -43,6 +43,12 @@ After reboot, open:
 
 ```text
 http://<pi-or-vm-ip>:8080/
+```
+
+The browser will ask for Caroline's local login. Username is `caroline`; on the Caroline host, view the generated password with:
+
+```bash
+cat ~/caroline/caroline_admin_password.txt
 ```
 
 On an Ubuntu Server VM, open that URL from your Windows/macOS/Linux host browser. The VM does not need to run a local GUI. The installer prints the exact client URL at the end:
@@ -174,7 +180,7 @@ Run:
 systemctl status caroline --no-pager
 systemctl status nginx --no-pager
 curl -I http://localhost:8080/
-curl -s http://localhost:8080/health
+curl -s -u "caroline:$(cat ~/caroline/caroline_admin_password.txt)" http://localhost:8080/health
 curl -k -I https://localhost:8444/
 ls -l ~/caroline/index.html ~/caroline/flows.json ~/caroline/caroline_settings.json
 ```
@@ -183,9 +189,9 @@ Expected:
 
 - `caroline` service is active.
 - `nginx` service is active.
-- `http://localhost:8080/` returns an HTTP response.
+- `http://localhost:8080/` returns `401 Unauthorized` without credentials or an HTTP response after browser login.
 - `http://localhost:8080/health` returns Caroline's backend health JSON through nginx.
-- `https://localhost:8444/` returns an HTTPS response with `curl -k`.
+- `https://localhost:8444/` returns `401 Unauthorized` without credentials or an HTTPS response after browser login with `curl -k`.
 - `~/caroline/caroline_settings.json` exists and is owned by your user.
 
 ## Browser QA Checklist

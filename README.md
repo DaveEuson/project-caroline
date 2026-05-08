@@ -24,6 +24,7 @@ https://YOUR-CAROLINE-IP:8444/
 On a Raspberry Pi kiosk, the installer prefers Chromium because Firefox does not support Caroline's browser wake-word input.
 
 The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat.
+Caroline protects the web UI and proxied local admin APIs with a local browser login. Username is `caroline`; on the Caroline host, read the generated password with `cat ~/caroline/caroline_admin_password.txt`.
 
 ## Pick Your Setup
 

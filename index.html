@@ -4778,19 +4778,91 @@ async function testAiConnection(btn) {
   }
 }
 
-async function probeHueBridgeIp(ip) {
-  const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-probe?ip=' + encodeURIComponent(ip), { timeoutMs: 3500 }, 'Hue probe');
+async function probeHueBridgeIp(ip, timeoutMs = 3500) {
+  const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-probe?ip=' + encodeURIComponent(ip), { timeoutMs }, 'Hue probe');
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
+}
+
+function isLikelyIpv4(ip) {
+  const parts = String(ip || '').trim().split('.');
+  return parts.length === 4 && parts.every(part => {
+    if (!/^\d{1,3}$/.test(part)) return false;
+    const n = Number(part);
+    return n >= 0 && n <= 255;
+  });
+}
+
+function setHueStatus(text, ok = false) {
+  const statusEl = document.getElementById('hue-pair-status');
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.style.color = ok ? 'rgba(52,211,153,0.9)' : '#f87171';
+  statusEl.style.display = 'block';
 }
 
 function saveHueBridgeIp(ip, details = {}) {
   S.hueIp = ip;
   localStorage.setItem('caro_settings', JSON.stringify(S));
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'settings_update', hueIp: ip }));
+  }
   const ipEl = document.getElementById('set-hueip');
   if (ipEl) ipEl.value = ip;
   renderIntegrationStatus();
   return details.name ? ' at ' + ip + ' (' + details.name + ')' : ' at ' + ip;
+}
+
+function clearSavedHueBridgeIp(ip) {
+  if (ip && S.hueIp && ip !== S.hueIp) return;
+  S.hueIp = '';
+  S.hueGroup = '';
+  S.hueGroupName = '';
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'settings_update', clearHueBridge: true }));
+  }
+  const ipEl = document.getElementById('set-hueip');
+  if (ipEl && (!ip || ipEl.value.trim() === ip)) ipEl.value = '';
+  renderIntegrationStatus();
+}
+
+async function confirmHueCandidate(ip, timeoutMs = 3500) {
+  if (!isLikelyIpv4(ip)) return null;
+  try {
+    const probed = await probeHueBridgeIp(ip, timeoutMs);
+    return probed && probed.ok ? Object.assign({ ip }, probed) : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function fetchHueDiscoveryCandidates() {
+  const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-discover', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Hue discover');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  const raw = [];
+  if (Array.isArray(d.bridges)) d.bridges.forEach(b => raw.push(b && (b.ip || b.internalipaddress)));
+  if (d.ip) raw.push(d.ip);
+  return Array.from(new Set(raw.filter(isLikelyIpv4)));
+}
+
+async function scanLocalHueBridge() {
+  const r = await fetchJsonWithTimeout(httpBase() + '/admin/network-prefixes', { timeoutMs: 3500 }, 'Network scan');
+  if (!r.ok) return null;
+  const d = await r.json();
+  const prefixes = Array.from(new Set(Array.isArray(d.prefixes) ? d.prefixes : []))
+    .filter(prefix => /^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(prefix));
+  for (const prefix of prefixes) {
+    const candidates = Array.from({ length: 254 }, (_, i) => prefix + '.' + (i + 1));
+    const batchSize = 24;
+    for (let i = 0; i < candidates.length; i += batchSize) {
+      const batch = candidates.slice(i, i + batchSize);
+      const found = await Promise.all(batch.map(ip => confirmHueCandidate(ip, 1000))).then(results => results.find(Boolean));
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 async function detectHueBridge(btn) {
@@ -4798,26 +4870,53 @@ async function detectHueBridge(btn) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   if (statusEl) { statusEl.style.display = 'none'; }
   try {
-    const manualIp = (document.getElementById('set-hueip')?.value || '').trim();
-    if (manualIp) {
+    const ipEl = document.getElementById('set-hueip');
+    const manualIp = (ipEl?.value || '').trim();
+    const savedIp = String(S.hueIp || '').trim();
+    const manualOverride = manualIp && manualIp !== savedIp;
+
+    if (manualOverride) {
+      if (!isLikelyIpv4(manualIp)) throw new Error('Enter a valid bridge IP');
       const probed = await probeHueBridgeIp(manualIp);
       if (!probed.ok) throw new Error(probed.error || 'No Hue bridge at ' + manualIp);
       const label = saveHueBridgeIp(manualIp, probed);
-      if (statusEl) { statusEl.textContent = '✓ Bridge confirmed' + label; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
+      setHueStatus('✓ Bridge confirmed' + label, true);
       return;
     }
-    const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-discover', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Hue discover');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    if (d.ip) {
-      const probed = await probeHueBridgeIp(d.ip).catch(() => ({ ok: true }));
-      const label = saveHueBridgeIp(d.ip, probed);
-      if (statusEl) { statusEl.textContent = '✓ Bridge found' + label; statusEl.style.color = 'rgba(52,211,153,0.9)'; statusEl.style.display = 'block'; }
-    } else {
-      throw new Error(d.error || 'No bridge found');
+
+    if (savedIp) {
+      setHueStatus('Checking saved bridge...', true);
+      const saved = await confirmHueCandidate(savedIp);
+      if (saved) {
+        const label = saveHueBridgeIp(savedIp, saved);
+        setHueStatus('✓ Bridge confirmed' + label, true);
+        return;
+      }
+      clearSavedHueBridgeIp(savedIp);
+      setHueStatus('Saved Hue IP is stale - scanning...', false);
     }
+
+    const cloudCandidates = await fetchHueDiscoveryCandidates().catch(() => []);
+    for (const ip of cloudCandidates) {
+      const found = await confirmHueCandidate(ip);
+      if (found) {
+        const label = saveHueBridgeIp(ip, found);
+        setHueStatus('✓ Bridge found' + label, true);
+        return;
+      }
+    }
+
+    setHueStatus('Cloud discovery did not verify a bridge - scanning local network...', true);
+    const localFound = await scanLocalHueBridge();
+    if (localFound) {
+      const label = saveHueBridgeIp(localFound.ip, localFound);
+      setHueStatus('✓ Bridge found' + label, true);
+      return;
+    }
+
+    throw new Error('No Hue bridge found on network - enter the bridge IP manually');
   } catch(e) {
-    if (statusEl) { statusEl.textContent = '✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network — enter the bridge IP manually' : e.message); statusEl.style.color = '#f87171'; statusEl.style.display = 'block'; }
+    setHueStatus('✗ ' + (e.message === 'No bridge found' ? 'No Hue bridge found on network - enter the bridge IP manually' : e.message), false);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Detect'; }
   }
@@ -4831,8 +4930,12 @@ async function pairHueBridge(btn) {
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  if (statusEl) { statusEl.textContent = 'Waiting for bridge… press the link button now'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
+  if (statusEl) { statusEl.textContent = 'Checking bridge...'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
   try {
+    if (!isLikelyIpv4(ip)) throw new Error('Enter a valid bridge IP');
+    const verified = await confirmHueCandidate(ip);
+    if (!verified) throw new Error('No Hue bridge at ' + ip);
+    if (statusEl) { statusEl.textContent = 'Waiting for bridge... press the link button now'; statusEl.style.color = 'rgba(251,191,36,0.9)'; statusEl.style.display = 'block'; }
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/hue-pair', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
