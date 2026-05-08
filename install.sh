@@ -174,6 +174,11 @@ cleanup_install_swap() {
 }
 trap cleanup_install_swap EXIT
 
+reset_install_logs() {
+  rm -f /tmp/caroline-*.log /tmp/caroline-merged-flows.json /tmp/caroline-merged-flows.json.tmp 2>/dev/null || true
+  sudo rm -f /tmp/caroline-*.log /tmp/caroline-merged-flows.json /tmp/caroline-merged-flows.json.tmp 2>/dev/null || true
+}
+
 ensure_install_swap() {
   local _required_mb="${1:-1800}"
   local _target_mb="${2:-1536}"
@@ -764,6 +769,7 @@ sleep 1
 # ── DEPENDENCIES ─────────────────────────────────────────────
 phase "REACTIVATION 1/6 — SYSTEM DEPENDENCIES"
 
+reset_install_logs
 ensure_install_swap 1800 1536 1024
 
 echo -e "${YELLOW}  ► Installing system dependencies...${RESET}"
