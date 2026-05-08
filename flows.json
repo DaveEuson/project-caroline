@@ -373,7 +373,8 @@
     "y": 940,
     "wires": [
       [
-        "1f1f522ed0b2f628"
+        "1f1f522ed0b2f628",
+        "8539672d625cb517"
       ]
     ]
   },
@@ -401,7 +402,8 @@
         "c42d6bce64249c45"
       ],
       [
-        "c03d0791fc9f64ea"
+        "c03d0791fc9f64ea",
+        "594137aa6e50151c"
       ],
       [
         "0cbd504f3c3054fd"
@@ -448,7 +450,8 @@
     "y": 940,
     "wires": [
       [
-        "c03d0791fc9f64ea"
+        "c03d0791fc9f64ea",
+        "594137aa6e50151c"
       ],
       [
         "0cbd504f3c3054fd"
@@ -669,7 +672,7 @@
     "type": "function",
     "z": "e9526774295cef13",
     "name": "Echo Kiosk to Discord",
-    "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst discordToken = String(flow.get('discordToken') || '').trim();\nconst discordChannelId = String(flow.get('discordChannelId') || '').trim();\n\nif (!discordEnabled || !discordToken || !discordChannelId) return null;\nif (!/^\\d{16,22}$/.test(discordChannelId)) {\n  node.warn('[Caroline] Discord channel ID looks invalid; paste the numeric channel ID, not an API key.');\n  return null;\n}\nconst discordTokenValue = discordToken.replace(/^Bot\\s+/i, '');\nif (/^\\d{16,22}$/.test(discordTokenValue) || discordTokenValue.length < 45) {\n  node.warn('[Caroline] Discord token looks invalid - paste the bot token, not the app/client/channel ID');\n  return null;\n}\n\nlet parsed;\ntry { parsed = JSON.parse(msg.payload); } catch (e) { return null; }\nif (!parsed || parsed.type !== 'user_message' || !parsed.content) return null;\n\nfunction discordAuthHeader(raw) {\n  const token = String(raw || '').trim().replace(/^Bot\\s+/i, '');\n  return token ? 'Bot ' + token : '';\n}\nmsg.method = 'POST';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(discordChannelId) + '/messages';\nmsg.headers = {\n  'Authorization': discordAuthHeader(discordToken),\n  'Content-Type': 'application/json'\n};\nmsg.payload = { content: ('Kiosk: ' + parsed.content).slice(0, 1900) };\nreturn msg;",
+    "func": "const discordEnabled = flow.get('discordEnabled') === true || flow.get('discordEnabled') === 'true';\nconst discordToken = String(flow.get('discordToken') || '').trim();\nconst discordChannelId = String(flow.get('discordChannelId') || '').trim();\n\nif (!discordEnabled || !discordToken || !discordChannelId) return null;\nif (!/^\\d{16,22}$/.test(discordChannelId)) {\n  node.warn('[Caroline] Discord channel ID looks invalid; paste the numeric channel ID, not an API key.');\n  return null;\n}\nconst discordTokenValue = discordToken.replace(/^Bot\\s+/i, '');\nif (/^\\d{16,22}$/.test(discordTokenValue) || discordTokenValue.length < 45) {\n  node.warn('[Caroline] Discord token looks invalid - paste the bot token, not the app/client/channel ID');\n  return null;\n}\n\nlet parsed = msg.payload;\nif (typeof parsed === 'string') {\n  try { parsed = JSON.parse(parsed); } catch (e) { return null; }\n}\nif (!parsed || typeof parsed !== 'object') return null;\nif (parsed.type && parsed.type !== 'user_message') return null;\nif (parsed.source === 'discord' || msg.source === 'discord') return null;\nconst content = parsed.content || parsed.message || msg.userMessage || '';\nif (!String(content || '').trim()) return null;\n\nfunction discordAuthHeader(raw) {\n  const token = String(raw || '').trim().replace(/^Bot\\s+/i, '');\n  return token ? 'Bot ' + token : '';\n}\nmsg.method = 'POST';\nmsg.url = 'https://discord.com/api/v10/channels/' + encodeURIComponent(discordChannelId) + '/messages';\nmsg.headers = {\n  'Authorization': discordAuthHeader(discordToken),\n  'Content-Type': 'application/json'\n};\nmsg.payload = { content: ('Kiosk: ' + content).slice(0, 1900) };\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
