@@ -786,6 +786,11 @@ sudo apt-get install -y -q curl git ca-certificates gnupg jq nginx python3-pip p
   echo -e "${DIM}    Try: sudo apt-get update && sudo apt-get install -y curl git jq nginx python3-pip psmisc openssl${RESET}"
   exit 1
 }
+sudo apt-get install -y -q fontconfig fonts-noto-color-emoji >/tmp/caroline-fonts-apt.log 2>&1 || {
+  echo -e "${YELLOW}  ⚠ Emoji font package unavailable; continuing with core install.${RESET}"
+  echo -e "${DIM}    Some decorative emoji may render as boxes on kiosk displays.${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-fonts-apt.log${RESET}"
+}
 echo -e "${GREEN}  ✓ System dependencies online${RESET}"
 
 # ── PRIVACY / TELEMETRY CHOICE ──────────────────────────────
