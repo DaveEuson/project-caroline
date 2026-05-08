@@ -1464,6 +1464,7 @@ jq -n \
 if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
   SETTINGS_BACKUP="$SETTINGS_PATH.bak.$(date +%Y%m%d-%H%M%S)"
   cp -p "$SETTINGS_PATH" "$SETTINGS_BACKUP" 2>/dev/null || true
+  CURRENT_KIOSK_MODE="$([ "$KIOSK_MODE" = "y" ] || [ "$KIOSK_MODE" = "Y" ] && echo true || echo false)"
   jq -s '
     .[0] as $defaults | .[1] as $existing |
     ($defaults * $existing)
@@ -1488,7 +1489,11 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
     | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
     | .telemetryEndpointConfigured = $defaults.telemetryEndpointConfigured
-  ' "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
+    | if $preserveKiosk then . else .kioskMode = $currentKiosk end
+  ' \
+    --argjson preserveKiosk "$([ "$CAROLINE_NONINTERACTIVE" = "true" ] && echo true || echo false)" \
+    --argjson currentKiosk "$CURRENT_KIOSK_MODE" \
+    "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
   mv "$MERGED_SETTINGS_PATH" "$SETTINGS_PATH"
   echo -e "${DIM}    Existing settings preserved; backup: ${SETTINGS_BACKUP}${RESET}"
 else
