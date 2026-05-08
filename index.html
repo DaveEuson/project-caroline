@@ -6535,6 +6535,7 @@ function connectWS(){
       playBeep(600);
       addMessage(t, 'caroline', d.source || 'display');
       speak(t);
+      setTimeout(maybeAskToRemember, 800);
       _trackRecv(t);
       clog('recv', t.length > 60 ? t.slice(0,60)+'…' : t);
     }
@@ -6707,7 +6708,9 @@ async function sendAiHttpMessage(text, context) {
     if (!reply) throw new Error('Empty AI reply');
     addMessage(reply, 'caroline', 'display');
     speak(reply);
+    setTimeout(maybeAskToRemember, 800);
   } catch(e) {
+    queuedMemorySuggestion = null;
     clearLocalAiThinkingStatus();
     clog('err', 'AI chat failed: ' + e.message);
     const local = provider === 'ollama';
@@ -6734,6 +6737,10 @@ function sendMessage(){
     submitBetaFeedback(t);
     return;
   }
+  if (handlePendingMemoryAnswer(t)) {
+    input.value = '';
+    return;
+  }
   const memFact = checkRememberCommand(t);
   if (memFact) {
     addMessage(t,'user','display'); saveToMemory(memFact);
@@ -6754,6 +6761,7 @@ function sendMessage(){
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
   const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
   if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
+  queuedMemorySuggestion = suggestMemoryCandidate(t);
   sendAiHttpMessage(t, ctx);
 }
 input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ playBeep(600); sendMessage(); } });
@@ -8182,6 +8190,76 @@ function checkRememberCommand(text) {
   for (const p of pats) { const m = text.match(p); if (m) return m[1].trim(); }
   return null;
 }
+let pendingMemoryAsk = null;
+let queuedMemorySuggestion = null;
+
+function cleanMemoryCandidate(text) {
+  return String(text || '')
+    .replace(/^(?:hey\s+caroline|caroline)[, ]+/i, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[.!?]+$/g, '')
+    .trim();
+}
+
+function suggestMemoryCandidate(text) {
+  const fact = cleanMemoryCandidate(text);
+  if (fact.length < 8 || fact.length > 180) return null;
+  if (/[?]$/.test(String(text || '').trim())) return null;
+  if (/^(?:yes|no|ok|okay|thanks|thank you|hi|hello|hey)\b/i.test(fact)) return null;
+  if (/^(?:add|create|delete|remove|cancel|schedule|turn|switch|dim|brighten|play|pause|open|search|find|show|tell me|what|when|where|why|how|can you|could you|please)\b/i.test(fact)) return null;
+  if (/^i\s+need\s+to\b/i.test(fact)) return null;
+  if (/\b(?:today|tomorrow|tonight|this morning|this afternoon|this evening|right now|currently|at the moment|for now)\b/i.test(fact)) return null;
+  if (checkRememberCommand(fact)) return null;
+
+  const durablePatterns = [
+    /\bmy\s+(?:favorite|favourite|preferred|preference|birthday|anniversary|timezone|zip|postcode|address|email|phone|wife|husband|partner|kid|child|son|daughter|boss|manager|team|company|role|job|schedule|routine)\b/i,
+    /\bi\s+(?:prefer|like|love|hate|need|work best|do best|usually|always|never|tend to|struggle with|get overwhelmed by|am allergic to|am based in|live in|work at|use)\b/i,
+    /\b(?:call me|my name is|i go by)\b/i
+  ];
+  if (!durablePatterns.some(p => p.test(fact))) return null;
+  return fact.charAt(0).toUpperCase() + fact.slice(1);
+}
+
+function isMemoryAccept(text) {
+  return /^(?:y|yes|yeah|yep|sure|ok|okay|please do|do it|save it|remember it|remember that|add it)$/i.test(String(text || '').trim());
+}
+
+function isMemoryReject(text) {
+  return /^(?:n|no|nope|nah|skip|don't|do not|forget it|not now)$/i.test(String(text || '').trim());
+}
+
+function maybeAskToRemember() {
+  if (!queuedMemorySuggestion || pendingMemoryAsk) return;
+  pendingMemoryAsk = { fact: queuedMemorySuggestion, ts: Date.now() };
+  queuedMemorySuggestion = null;
+  const prompt = 'Want me to remember this? "' + pendingMemoryAsk.fact + '" Reply yes or no.';
+  addMessage(prompt, 'caroline', 'display');
+}
+
+function handlePendingMemoryAnswer(text) {
+  if (!pendingMemoryAsk) return false;
+  const fact = pendingMemoryAsk.fact;
+  if (isMemoryAccept(text)) {
+    pendingMemoryAsk = null;
+    addMessage(text, 'user', 'display');
+    saveToMemory(fact);
+    const reply = 'Saved to memory: "' + fact + '"';
+    setTimeout(() => { addMessage(reply, 'caroline', 'display'); speak(reply); }, 250);
+    return true;
+  }
+  if (isMemoryReject(text)) {
+    pendingMemoryAsk = null;
+    addMessage(text, 'user', 'display');
+    const reply = 'No problem. I will leave that out of memory.';
+    setTimeout(() => { addMessage(reply, 'caroline', 'display'); speak(reply); }, 250);
+    return true;
+  }
+  pendingMemoryAsk = null;
+  return false;
+}
+
 var stickyNotes = JSON.parse(localStorage.getItem('caro_notes') || '[]');
 async function saveToMemory(fact) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'remember', content:fact }));
