@@ -166,7 +166,11 @@ CAROLINE_TEMP_SWAP="/var/tmp/caroline-install.swap"
 CAROLINE_TEMP_SWAP_CREATED="false"
 
 cleanup_install_swap() {
-  tput cnorm >/dev/tty 2>&1 || true
+  if [ -w /dev/tty ]; then
+    tput cnorm >/dev/tty 2>&1 || true
+  else
+    tput cnorm 2>/dev/null || true
+  fi
   if [ "$CAROLINE_TEMP_SWAP_CREATED" = "true" ]; then
     sudo swapoff "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
     sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
@@ -620,7 +624,7 @@ ensure_browser() {
   return 0
 }
 
-clear
+clear 2>/dev/null || true
 
 echo ""
 echo -e "${CYAN}  ____            _           _        ____                 _ _            ${RESET}"
