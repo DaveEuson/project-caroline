@@ -7066,8 +7066,22 @@ async function hydrateLocationFromZip() {
   const query = String(S.location || S.cityName || savedPlace || '').trim();
   console.log('[Caroline] Weather location:', query || '(none)', 'lat/lng:', S.lat, S.lng);
   if (S.lat && S.lng) return true;
-  if (!query) return false;
-  const found = await _onbLookupPlace(query);
+  const candidates = [];
+  if (/^\d{5}$/.test(savedPlace)) candidates.push(savedPlace);
+  if (query) candidates.push(query);
+  const simpleCity = query.replace(/,\s*[A-Z]{2}(?:,\s*(?:US|USA|United States))?$/i, '').trim();
+  if (simpleCity && simpleCity !== query) candidates.push(simpleCity);
+  if (savedPlace && !candidates.includes(savedPlace)) candidates.push(savedPlace);
+  if (!candidates.length) return false;
+  let found = null;
+  for (const candidate of [...new Set(candidates)]) {
+    try {
+      found = await _onbLookupPlace(candidate);
+      if (found) break;
+    } catch(e) {
+      console.warn('[Caroline] Location candidate failed:', candidate, e.message);
+    }
+  }
   if (!found) return false;
   S.zipcode = savedPlace || query;
   S.zipCode = S.zipcode;
@@ -8783,7 +8797,11 @@ async function _onbLookupPlace(query) {
   const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=1&language=en&format=json', { signal: AbortSignal.timeout(7000) });
   if (!r.ok) throw new Error('Location lookup HTTP ' + r.status);
   const d = await r.json();
-  const place = d.results && d.results[0];
+  let place = d.results && d.results[0];
+  if (!place && /,\s*[A-Z]{2}(?:,\s*(?:US|USA|United States))?$/i.test(q)) {
+    const cityOnly = q.replace(/,\s*[A-Z]{2}(?:,\s*(?:US|USA|United States))?$/i, '').trim();
+    if (cityOnly && cityOnly !== q) return _onbLookupPlace(cityOnly);
+  }
   if (!place) throw new Error('Location not found');
 
   const city = place.name || q;
