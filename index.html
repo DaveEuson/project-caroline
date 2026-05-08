@@ -2655,6 +2655,12 @@ function normalizeConfiguredNodeRedUrl(value) {
     if (target.protocol === 'https:' && (sameHost || localTarget) && target.port === String(SECURE_VOICE_PORT)) {
       u = 'http://' + (target.hostname || window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT;
     }
+    const browserHost = window.location.hostname || '';
+    const browserHostIsRemote = browserHost && !['localhost','127.0.0.1','::1','[::1]'].includes(browserHost);
+    const nodeRedPort = !target.port || target.port === String(NODE_RED_CONFIG_PORT);
+    if (browserHostIsRemote && nodeRedPort && target.hostname !== browserHost && isPrivateIpHost(target.hostname)) {
+      u = DEFAULT_NODE_RED_CONFIG_URL;
+    }
   } catch(e) {}
   if ((window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)) && /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(u)) {
     u = DEFAULT_NODE_RED_CONFIG_URL;

@@ -1490,6 +1490,14 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
     | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
     | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
+    | ($existing.piIp // "") as $oldPiIp
+    | ($existing.nodeRedUrl // "") as $oldNodeRedUrl
+    | if (($oldPiIp != "")
+          and ($oldPiIp != $defaults.piIp)
+          and (($oldNodeRedUrl == "")
+               or ($oldNodeRedUrl | contains("://" + $oldPiIp + ":"))
+               or ($oldNodeRedUrl | contains("://" + $oldPiIp + "/"))))
+      then .piIp = $defaults.piIp | .nodeRedUrl = $defaults.nodeRedUrl else . end
     | .telemetryEndpointConfigured = $defaults.telemetryEndpointConfigured
     | if $preserveKiosk then . else .kioskMode = $currentKiosk end
   ' \
