@@ -34,6 +34,10 @@ The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat.
 | Ubuntu Desktop 64-bit | Works, less tested | Desktop testing or local browser use |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
+## Beta Kits
+
+DIY install is the main path for now. I am also considering a small run of ready-to-go Project Caroline Raspberry Pi kits for people who want a turnkey setup. If that would be useful to you, reach out so I can gauge demand.
+
 ## Beginner Guides
 
 - [Start here: choose the right install guide](docs/how-to.md)
