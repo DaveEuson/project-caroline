@@ -343,6 +343,7 @@ exec "\$BROWSER" \\
   --user-data-dir="\$PROFILE" \\
   --no-first-run \\
   --no-default-browser-check \\
+  --password-store=basic \\
   --disable-session-crashed-bubble \\
   --disable-infobars \\
   --autoplay-policy=no-user-gesture-required \\
@@ -369,6 +370,7 @@ mkdir "\$LOCKDIR" 2>/dev/null || exit 0
   --user-data-dir="\$PROFILE" \\
   --no-first-run \\
   --no-default-browser-check \\
+  --password-store=basic \\
   --disable-session-crashed-bubble \\
   --disable-infobars \\
   --autoplay-policy=no-user-gesture-required \\
