@@ -2744,9 +2744,22 @@ const SAVED_SECRET_FIELDS = {
   discordToken: { id: 'set-discord-token', placeholder: 'Bot token saved on device' },
   googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on device' }
 };
+const SAVED_SECRET_KEYS = Object.keys(SAVED_SECRET_FIELDS);
 let integrationHealth = {};
 
+function getBrowserSecretSnapshot() {
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem('caro_settings') || '{}') || {}; } catch(e) {}
+  const out = {};
+  SAVED_SECRET_KEYS.forEach(k => {
+    const value = String((S && S[k]) || stored[k] || '').trim();
+    if (value) out[k] = value;
+  });
+  return out;
+}
+
 function clearBrowserInstallState(reason) {
+  const keepSecrets = getBrowserSecretSnapshot();
   [
     'caro_settings',
     'caro_onboarded',
@@ -2761,10 +2774,12 @@ function clearBrowserInstallState(reason) {
   ].forEach(k => localStorage.removeItem(k));
   const keepNodeRedUrl = normalizeConfiguredNodeRedUrl(S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL);
   const keepPiIp = S.piIp || '';
-  S = Object.assign({}, DEFAULTS, { nodeRedUrl: keepNodeRedUrl, piIp: keepPiIp });
+  S = Object.assign({}, DEFAULTS, { nodeRedUrl: keepNodeRedUrl, piIp: keepPiIp }, keepSecrets);
+  Object.keys(keepSecrets).forEach(k => { S[k + 'Configured'] = true; });
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
   console.log('[Caroline] Browser install state reset:', reason || 'fresh install');
+  return keepSecrets;
 }
 
 function mergeServerSettings(d, options = {}) {
@@ -2773,8 +2788,9 @@ function mergeServerSettings(d, options = {}) {
   const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
+  let restoredSecrets = {};
   if (d.installId && localInstallId && localInstallId !== d.installId) {
-    clearBrowserInstallState('installId changed from ' + localInstallId + ' to ' + d.installId);
+    restoredSecrets = clearBrowserInstallState('installId changed from ' + localInstallId + ' to ' + d.installId);
   } else if (serverLooksPreOnboarding && localOnboardingComplete) {
     skip.add('setupComplete');
   }
@@ -2802,6 +2818,14 @@ function mergeServerSettings(d, options = {}) {
   S.calendarId = normalizeCalendarIdInput(S.calendarId);
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
   localStorage.setItem('caro_settings', JSON.stringify(S));
+  const restoreKeys = Object.keys(restoredSecrets).filter(k => restoredSecrets[k] && !d[k] && !d[k + 'Configured']);
+  if (restoreKeys.length && typeof postSettingsToNodeRed === 'function') {
+    const payload = {};
+    restoreKeys.forEach(k => { payload[k] = restoredSecrets[k]; });
+    setTimeout(() => {
+      postSettingsToNodeRed(payload, 5000).catch(e => console.warn('[Caroline] Local secret restore failed:', e));
+    }, 500);
+  }
   return true;
 }
 
