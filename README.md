@@ -95,7 +95,7 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/u
 
 ## Safety
 
-Caroline is designed for your local network. Keep ports `8080`, `1880`, `8443`, `8444`, and SSH private unless you are using a VPN such as Tailscale or WireGuard.
+Caroline is designed for your local network. Keep ports `8080`, `8443`, `8444`, and SSH private unless you are using a VPN such as Tailscale or WireGuard. Node-RED runs as a localhost-only backend behind Caroline's web server.
 
 ## Support
 

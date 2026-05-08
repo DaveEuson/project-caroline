@@ -1834,9 +1834,9 @@
         <div class="settings-section">
           <h3>Connection</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">http://ip:1880</div></div>
+            <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">Auto-detected through Caroline</div></div>
             <div class="input-detect-row">
-              <input class="settings-input" id="set-nodered-url" type="text" placeholder="http://localhost:1880" style="width:200px" oninput="updateSpotifyRedirectDisplay()"/>
+              <input class="settings-input" id="set-nodered-url" type="text" placeholder="Auto" style="width:200px" oninput="updateSpotifyRedirectDisplay()"/>
               <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
               <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
             </div>
@@ -2640,10 +2640,11 @@ const BOOLEAN_DEFAULTS = {
 const BOOLEAN_KEYS = Object.keys(BOOLEAN_DEFAULTS);
 const NODE_RED_CONFIG_PORT = 1880;
 const SECURE_VOICE_PORT = 8444;
-const DEFAULT_NODE_RED_CONFIG_URL = 'http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT;
-const DEFAULT_NODE_RED_URL = window.location.protocol === 'https:'
+const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(window.location.protocol))
   ? window.location.origin
-  : DEFAULT_NODE_RED_CONFIG_URL;
+  : '';
+const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
+const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
 const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'gemma3:1b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
@@ -2657,8 +2658,11 @@ function normalizeConfiguredNodeRedUrl(value) {
     const target = new URL(u);
     const sameHost = target.hostname === window.location.hostname;
     const localTarget = ['localhost','127.0.0.1','::1','[::1]'].includes(target.hostname);
+    if (SAME_ORIGIN_NODE_RED_URL && target.protocol === 'http:' && sameHost && (!target.port || target.port === String(NODE_RED_CONFIG_PORT))) {
+      u = SAME_ORIGIN_NODE_RED_URL;
+    }
     if (target.protocol === 'https:' && (sameHost || localTarget) && target.port === String(SECURE_VOICE_PORT)) {
-      u = 'http://' + (target.hostname || window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT;
+      u = SAME_ORIGIN_NODE_RED_URL || ('http://' + (target.hostname || window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
     }
     const browserHost = window.location.hostname || '';
     const browserHostIsRemote = browserHost && !['localhost','127.0.0.1','::1','[::1]'].includes(browserHost);
@@ -2801,7 +2805,7 @@ function mergeServerSettings(d, options = {}) {
   }
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
-  if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = 'http://' + d.piIp + ':1880';
+  if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = SAME_ORIGIN_NODE_RED_URL || ('http://' + d.piIp + ':8080');
   if (d.nodeRedUrl) d.nodeRedUrl = normalizeConfiguredNodeRedUrl(d.nodeRedUrl);
   if (d.features) d.features = normalizeFeatureState(d.features, { repairAllOff: false });
   normalizeSettingsBooleans(d);
@@ -3374,13 +3378,13 @@ function getNodeRedUrl() {
   const fieldUrl = (document.getElementById('set-nodered-url')?.value || '').trim();
   const configured = normalizeConfiguredNodeRedUrl(fieldUrl || (S && S.nodeRedUrl) || DEFAULT_NODE_RED_CONFIG_URL);
   let u = configured;
-  if (window.location.protocol === 'https:' && window.location.origin) {
+  if (SAME_ORIGIN_NODE_RED_URL) {
     try {
       const target = new URL(u);
       const sameHost = target.hostname === window.location.hostname;
       const localTarget = ['localhost','127.0.0.1','::1'].includes(target.hostname);
       if (target.protocol === 'http:' && (sameHost || localTarget) && (!target.port || target.port === '1880')) {
-        u = window.location.origin;
+        u = SAME_ORIGIN_NODE_RED_URL;
       }
     } catch(e) {}
   }
@@ -3455,7 +3459,7 @@ async function refreshPiNetworkIdentity() {
 
     const currentNodeHost = normalizeHostCandidate(S.nodeRedUrl);
     const shouldRepairNodeUrl = !S.nodeRedUrl || isLocalHostName(currentNodeHost) || String(S.nodeRedUrl).includes('[PI_IP]');
-    const repairedNodeUrl = 'http://' + ip + ':' + NODE_RED_PORT;
+    const repairedNodeUrl = SAME_ORIGIN_NODE_RED_URL || ('http://' + ip + ':8080');
     const changed = S.piIp !== ip || (shouldRepairNodeUrl && S.nodeRedUrl !== repairedNodeUrl);
 
     S.piIp = ip;
@@ -6294,7 +6298,7 @@ const HOWTO_CONTENT = {
 <li>Copy the <strong>Client ID</strong> from your app settings</li>
 <li>In Caroline Settings → Connect → paste the Client ID → click <strong>Connect Spotify</strong></li>
 </ol>
-<div class="howto-note">No HTTPS proxy needed. Caroline opens Spotify in a popup and returns through Node-RED at port 1880, so the kiosk stays put.</div>`
+<div class="howto-note">No HTTPS proxy needed. Caroline opens Spotify in a popup and returns through the Caroline web URL, so the kiosk stays put.</div>`
   },
   hue: {
     title:'PHILIPS HUE LIGHTS',
@@ -8526,8 +8530,8 @@ function onboardingHomeBaseUrl() {
   let url = (S && S.nodeRedUrl) || DEFAULT_NODE_RED_CONFIG_URL;
   url = String(url || '').trim();
   if (!url) url = DEFAULT_NODE_RED_CONFIG_URL;
-  if (!/^https?:\/\//i.test(url)) url = 'http://' + url.replace(/\/+$/, '') + ':1880';
-  return url.replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(url)) url = 'http://' + url.replace(/\/+$/, '') + ':8080';
+  return normalizeConfiguredNodeRedUrl(url).replace(/\/+$/, '');
 }
 
 function onboardingHomeBaseHost() {
@@ -9259,7 +9263,7 @@ async function finalizeOnboarding(){
   S.timezone         = onbState.config.timezone     || S.timezone   || Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   const _onbHost = onbState.config.host || '';
   if (_onbHost) {
-    S.nodeRedUrl = normalizeConfiguredNodeRedUrl(_onbHost.startsWith('http') ? _onbHost : 'http://' + _onbHost + ':1880');
+    S.nodeRedUrl = normalizeConfiguredNodeRedUrl(_onbHost.startsWith('http') ? _onbHost : 'http://' + _onbHost + ':8080');
     try { S.piIp = new URL(S.nodeRedUrl).hostname; } catch(e) { S.piIp = _onbHost; }
   }
   const _avIdx = ONB_AVATARS.findIndex(a=>a.id===onbState.avatarId);

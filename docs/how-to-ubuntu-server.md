@@ -115,10 +115,10 @@ https://192.168.1.60:8444/
 
 The browser will show a certificate warning because Caroline uses a local self-signed certificate. Accept it once for the Caroline host. Typing/chat remains available at the normal `http://SERVER-IP:8080/` URL.
 
-Node-RED is available at:
+Node-RED runs as Caroline's local backend and is not exposed directly on the LAN by default. If you need to debug flows on the host itself, use:
 
 ```text
-http://SERVER-IP:1880/
+http://127.0.0.1:1880/
 ```
 
 You normally do not need Node-RED unless you are debugging or customizing flows.

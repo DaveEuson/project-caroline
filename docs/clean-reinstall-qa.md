@@ -24,10 +24,10 @@ Ports used by Caroline:
 | Service | Port |
 |---|---:|
 | Kiosk web UI | `8080` |
-| Node-RED backend | `1880` |
+| Node-RED backend | `1880` localhost only |
 | HTTPS OAuth proxy | `8443` |
 | Secure voice UI | `8444` |
-| Ollama, when installed | `11434` |
+| Ollama, when installed | `11434` localhost only |
 
 ## Quick Clean Reinstall
 
@@ -62,8 +62,8 @@ Expected to work from the external client browser:
 - First-run setup and Settings save/reload.
 - Chat through OpenRouter or Ollama running on the Caroline host.
 - Ollama on another LAN machine if **Settings -> AI -> Ollama URL** points to it.
-- Weather, timezone, news, video, radio, Pomodoro, local tasks, calendar, Spotify, Hue, Discord/issues, update, reboot, and CPU/RAM monitor.
-- Google and Spotify setup, as long as the browser can reach the VM on ports `1880` and `8443`.
+- Weather, timezone, news, video, radio, Pomodoro, local tasks, calendar, Spotify, Hue, Discord, update, reboot, and CPU/RAM monitor.
+- Google and Spotify setup, as long as the browser can reach the VM on ports `8080` and `8443`.
 - Spotify may need you to open `https://<vm-ip>:8443/` once and accept Caroline's local self-signed certificate before the OAuth callback can complete.
 - Browser microphone and wake-word input in Chrome/Chromium from `https://<vm-ip>:8444/` after accepting Caroline's local self-signed certificate.
 
@@ -71,7 +71,7 @@ Expected limitations in server/client mode:
 
 - Boot-to-kiosk, local terminal launch, and exit-kiosk controls only make sense on a desktop/kiosk host.
 - Browser microphone and wake-word input usually will not work from `http://<vm-ip>:8080/` because browsers require HTTPS or localhost for mic access. Use `https://<vm-ip>:8444/` for voice. Type/chat still works normally on HTTP.
-- VM NAT networking may need port forwarding for `8080`, `1880`, `8443`, and `8444`; bridged networking is easier for QA.
+- VM NAT networking may need port forwarding for `8080`, `8443`, and `8444`; bridged networking is easier for QA.
 
 ## Interactive Uninstall
 
@@ -174,7 +174,7 @@ Run:
 systemctl status caroline --no-pager
 systemctl status nginx --no-pager
 curl -I http://localhost:8080/
-curl -s http://localhost:1880/health
+curl -s http://localhost:8080/health
 curl -k -I https://localhost:8444/
 ls -l ~/caroline/index.html ~/caroline/flows.json ~/caroline/caroline_settings.json
 ```
@@ -184,6 +184,7 @@ Expected:
 - `caroline` service is active.
 - `nginx` service is active.
 - `http://localhost:8080/` returns an HTTP response.
+- `http://localhost:8080/health` returns Caroline's backend health JSON through nginx.
 - `https://localhost:8444/` returns an HTTPS response with `curl -k`.
 - `~/caroline/caroline_settings.json` exists and is owned by your user.
 

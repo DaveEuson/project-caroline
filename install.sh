@@ -983,7 +983,9 @@ mkdir -p "$CAROLINE_DIR"
 cat > "$CAROLINE_DIR/settings.js" << 'SETTINGS_EOF'
 module.exports = {
     uiPort: process.env.PORT || 1880,
-    uiHost: "0.0.0.0",
+    // Node-RED is a local backend for Caroline. Nginx exposes only the routes
+    // the UI needs, so the full editor/admin surface is not open on the LAN.
+    uiHost: "127.0.0.1",
     flowFile: 'flows.json',
     httpRequestTimeout: 120000,
     httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE,OPTIONS" },
@@ -1034,8 +1036,8 @@ if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
     sudo mkdir -p /etc/systemd/system/ollama.service.d/
     sudo tee /etc/systemd/system/ollama.service.d/env.conf > /dev/null << 'OLLAMA_ENV_EOF'
 [Service]
-Environment="OLLAMA_HOST=0.0.0.0"
-Environment="OLLAMA_ORIGINS=*"
+Environment="OLLAMA_HOST=127.0.0.1:11434"
+Environment="OLLAMA_ORIGINS=http://localhost:8080,http://127.0.0.1:8080"
 OLLAMA_ENV_EOF
 
     echo -e "${YELLOW}  ► Starting Ollama service...${RESET}"
@@ -1282,6 +1284,45 @@ server {
     add_header Referrer-Policy "no-referrer" always;
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
 
+    location /ws/ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /admin/ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location /spotify/ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location ~ ^/(chat|health|system-resources|wifi-signal|restart)$ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
+        proxy_pass http://127.0.0.1:${NODE_RED_PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Proto http;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
     location / {
         try_files \$uri \$uri/ /index.html;
     }
@@ -1297,7 +1338,7 @@ server {
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
 
-    location / {
+    location /spotify/ {
         proxy_pass http://127.0.0.1:${NODE_RED_PORT};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
@@ -1306,6 +1347,15 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+    }
+
+    location = / {
+        default_type text/plain;
+        return 200 "Caroline OAuth proxy is ready.\n";
+    }
+
+    location / {
+        return 404;
     }
 }
 
@@ -1326,6 +1376,7 @@ server {
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
 
     location /ws/ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
         proxy_pass http://127.0.0.1:${NODE_RED_PORT};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
@@ -1337,6 +1388,7 @@ server {
     }
 
     location /admin/ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
         proxy_pass http://127.0.0.1:${NODE_RED_PORT};
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Host \$host;
@@ -1345,6 +1397,7 @@ server {
     }
 
     location /spotify/ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
         proxy_pass http://127.0.0.1:${NODE_RED_PORT};
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Host \$host;
@@ -1353,6 +1406,7 @@ server {
     }
 
     location ~ ^/(chat|health|system-resources|wifi-signal|restart)$ {
+        if (\$http_sec_fetch_site = "cross-site") { return 403; }
         proxy_pass http://127.0.0.1:${NODE_RED_PORT};
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Host \$host;
@@ -1411,7 +1465,7 @@ jq -n \
   --arg ollamaModel  "$OLLAMA_MODEL" \
   --arg ollamaUrl    "$OLLAMA_URL_DEFAULT" \
   --arg piIp         "$PI_IP" \
-  --arg nrUrl        "http://${BROWSER_HOST_IP}:${NODE_RED_PORT}" \
+  --arg nrUrl        "http://${BROWSER_HOST_IP}:${KIOSK_PORT}" \
   --arg installId    "$INSTALL_ID" \
   --argjson telemetryInstallCount "$(bool_json "$TELEMETRY_INSTALL_COUNT")" \
   --argjson telemetryTroubleshooting "$(bool_json "$TELEMETRY_TROUBLESHOOTING")" \
@@ -1494,7 +1548,7 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | if (.zipCode and ((.zipcode // "") == "")) then .zipcode = .zipCode else . end
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
     | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
-    | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
+    | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | test(":1880/?$")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
     | ($existing.piIp // "") as $oldPiIp
     | ($existing.nodeRedUrl // "") as $oldNodeRedUrl
     | if (($oldPiIp != "")
@@ -1854,7 +1908,7 @@ echo -e "${CYAN}  │  PROJECT: CAROLINE — ONLINE                             
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${BROWSER_HOST_FINAL}:${KIOSK_PORT}/${RESET}"
 echo -e "${CYAN}  │${RESET}  Voice URL:   ${BOLD}https://${BROWSER_HOST_FINAL}:${HTTPS_UI_PORT}/${RESET}"
-echo -e "${CYAN}  │${RESET}  Node-RED:    http://${BROWSER_HOST_FINAL}:${NODE_RED_PORT}"
+echo -e "${CYAN}  │${RESET}  Backend:     Node-RED on localhost:${NODE_RED_PORT}"
 echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${BROWSER_HOST_FINAL}:${HTTPS_PROXY_PORT}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
