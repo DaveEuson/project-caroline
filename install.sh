@@ -166,11 +166,7 @@ CAROLINE_TEMP_SWAP="/var/tmp/caroline-install.swap"
 CAROLINE_TEMP_SWAP_CREATED="false"
 
 cleanup_install_swap() {
-  if [ -w /dev/tty ]; then
-    tput cnorm >/dev/tty 2>&1 || true
-  else
-    tput cnorm 2>/dev/null || true
-  fi
+  tput cnorm 2>/dev/null || true
   if [ "$CAROLINE_TEMP_SWAP_CREATED" = "true" ]; then
     sudo swapoff "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
     sudo rm -f "$CAROLINE_TEMP_SWAP" >/dev/null 2>&1 || true
