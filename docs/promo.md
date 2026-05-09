@@ -10,6 +10,10 @@ Use these when you need README art, social posts, kit previews, or release notes
 
 ![Project: Caroline interface](../Screenshots/Screenshot_7.png)
 
+## Offline Demo
+
+Open [demo/index.html](../demo/index.html) directly in a browser for a no-network clickable walkthrough. It uses bundled local assets and simulated responses, so it is safe to share for quick first impressions.
+
 ## Short Copy
 
 Project: Caroline is a local-first AI sidekick kiosk for home dashboards, calendar help, reminders, music, lights, and everyday automation.
