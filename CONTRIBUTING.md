@@ -36,7 +36,7 @@ By contributing, you agree your contribution can be used in Project: Caroline un
 
 ## Reporting Bugs
 
-Open an issue at [github.com/DaveEuson/project-caroline/issues](https://github.com/DaveEuson/project-caroline/issues) with:
+Open an issue at [github.com/Project-Caroline/project-caroline/issues](https://github.com/Project-Caroline/project-caroline/issues) with:
 - What happened vs. what you expected
 - Pi model and OS version
 - Relevant logs: `sudo journalctl -u caroline --since today`

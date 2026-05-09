@@ -11,4 +11,4 @@ competing packaged derivative without written permission.
 
 Official repository:
 
-https://github.com/DaveEuson/project-caroline
+https://github.com/Project-Caroline/project-caroline

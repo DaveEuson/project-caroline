@@ -74,7 +74,7 @@ Use this guide:
 Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
 ```
 
 Recommended answers:

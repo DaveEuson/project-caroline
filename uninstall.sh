@@ -3,7 +3,7 @@
 # ============================================================
 #   PROJECT: CAROLINE
 #   Uninstall helper
-#   github.com/DaveEuson/project-caroline
+#   github.com/Project-Caroline/project-caroline
 # ============================================================
 
 set -e
@@ -129,5 +129,5 @@ rmdir "$REAL_HOME/.config/caroline" 2>/dev/null || true
 echo ""
 echo -e "${GREEN}  ✓ Caroline uninstall complete${RESET}"
 echo -e "${DIM}  For a clean reinstall:${RESET}"
-echo -e "${BOLD}    curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash${RESET}"
+echo -e "${BOLD}    curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash${RESET}"
 echo ""

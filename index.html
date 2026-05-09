@@ -3129,7 +3129,7 @@ function commitMatches(localCommit, remoteCommit) {
 }
 
 async function fetchLatestBuildInfo() {
-  const resp = await fetch('https://api.github.com/repos/DaveEuson/project-caroline/commits/master', {
+  const resp = await fetch('https://api.github.com/repos/Project-Caroline/project-caroline/commits/master', {
     cache: 'no-store',
     headers: { 'Accept': 'application/vnd.github+json' }
   });
@@ -3249,7 +3249,7 @@ function buildIssueReportUrl() {
     '',
     '<!-- Do not paste API keys, OAuth tokens, Discord tokens, private calendar details, or passwords. -->'
   ].join('\n');
-  const url = 'https://github.com/DaveEuson/project-caroline/issues/new?' + new URLSearchParams({
+  const url = 'https://github.com/Project-Caroline/project-caroline/issues/new?' + new URLSearchParams({
     title: '[Bug] ',
     body
   }).toString();
@@ -6226,7 +6226,7 @@ function _wipeReset(){
 }
 
 function showUninstallCommand(btn) {
-  const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | bash';
+  const cmd = 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | bash';
   const status = document.getElementById('uninstall-command-status');
   const message = 'Fine. If you need a clean break, run this in the device terminal: ' + cmd;
   if (status) {
@@ -6242,7 +6242,7 @@ function showUninstallCommand(btn) {
 }
 
 function showUpdateCommand(btn) {
-  const cmd = 'curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash';
+  const cmd = 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash';
   const status = document.getElementById('update-command-status');
   const message = 'Manual fallback: run this in the device terminal if the GUI cannot verify or start the update. Settings and saved credentials are preserved: ' + cmd;
   if (status) {

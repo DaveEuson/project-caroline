@@ -12,13 +12,13 @@ Use this when promoting Caroline from the moving `master` branch to a public bet
 The regular install command follows `master`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
 ```
 
 A tagged release can be installed by replacing `master` with the tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/v0.3.0-beta.1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.1/install.sh | bash
 ```
 
 ## Release Checklist

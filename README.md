@@ -10,13 +10,13 @@ Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, m
 Recommended public beta build:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/v0.3.0-beta.1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.1/install.sh | bash
 ```
 
 Nightly/dev build from `master`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
@@ -90,7 +90,7 @@ Add these later in **Settings**:
 Use **Settings > About > Update**, or rerun:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
 ```
 
 Settings, API keys, tasks, and memory are preserved.
@@ -105,7 +105,7 @@ For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/r
 ## Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/uninstall.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | sudo bash
 ```
 
 ## Safety

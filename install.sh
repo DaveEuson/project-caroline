@@ -3,7 +3,7 @@
 # ============================================================
 #   PROJECT: CAROLINE
 #   Personal AI Kiosk — install.sh
-#   github.com/DaveEuson/project-caroline
+#   github.com/Project-Caroline/project-caroline
 # ============================================================
 
 set -e
@@ -1203,7 +1203,7 @@ if [ -d "$CLONE_DIR/.git" ]; then
   git -C "$CLONE_DIR" pull --ff-only 2>/tmp/caroline-git.log || \
     echo -e "${YELLOW}    ⚠ git pull failed — using existing clone${RESET}"
 else
-  git clone "https://github.com/DaveEuson/project-caroline.git" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
+  git clone "https://github.com/Project-Caroline/project-caroline.git" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
     echo -e "${RED}  ✗ Git clone failed. Check your internet connection.${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
     exit 1
@@ -1233,7 +1233,7 @@ unset _json CAROLINE_DIR_SED
 
 BUILD_COMMIT="$(git -C "$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 BUILD_BRANCH="$(git -C "$CLONE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
-BUILD_REPO="$(git -C "$CLONE_DIR" config --get remote.origin.url 2>/dev/null || echo https://github.com/DaveEuson/project-caroline.git)"
+BUILD_REPO="$(git -C "$CLONE_DIR" config --get remote.origin.url 2>/dev/null || echo https://github.com/Project-Caroline/project-caroline.git)"
 BUILD_INSTALLED_AT="$(date -Iseconds)"
 jq -n \
   --arg version "$CAROLINE_VERSION" \
@@ -1786,7 +1786,7 @@ set -Eeuo pipefail
 LOG="/tmp/caroline-update.log"
 LOCK="/tmp/caroline-update.lock"
 INSTALLER="/tmp/caroline-install.sh"
-REPO_INSTALL_URL="https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh"
+REPO_INSTALL_URL="https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh"
 trap 'code=$?; echo "$(date -Is) Project: Caroline GUI update failed (exit $code)" >> "$LOG"; exit $code' ERR
 
 exec 9>"$LOCK"
@@ -1830,7 +1830,7 @@ fi
 if [ -z "$LOCAL_COMMIT" ] && [ -d "$TARGET_HOME/project-caroline/.git" ]; then
   LOCAL_COMMIT="$(git -C "$TARGET_HOME/project-caroline" rev-parse --short HEAD 2>/dev/null || true)"
 fi
-REMOTE_COMMIT="$(git ls-remote https://github.com/DaveEuson/project-caroline.git refs/heads/master 2>/dev/null | awk '{print $1}' | head -1 || true)"
+REMOTE_COMMIT="$(git ls-remote https://github.com/Project-Caroline/project-caroline.git refs/heads/master 2>/dev/null | awk '{print $1}' | head -1 || true)"
 if [ -z "$REMOTE_COMMIT" ]; then
   echo "$(date -Is) Project: Caroline GUI update check unavailable (could not reach GitHub)" >> "$LOG"
   exit 0
