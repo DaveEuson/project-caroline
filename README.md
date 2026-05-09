@@ -1,6 +1,8 @@
 # Project: Caroline
 
-Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, music, lights, local tasks, and a little cyberpunk companionship.
+Your local AI sidekick for your desk, kiosk, or smart home: a cyberpunk assistant console with persistent chat, widgets, tasks, music, lights, reminders, and more.
+
+Caroline runs on your own Raspberry Pi or Ubuntu box. Cloud is optional: use a private local model through Ollama, or connect OpenRouter for faster access to stronger hosted models.
 
 ![Project: Caroline interface](Screenshots/Screenshot_7.png)
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
@@ -12,6 +14,22 @@ Open the simulated dashboard here:
 [Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/demo/)
 
 The demo is a static, no-account walkthrough. It runs from [demo/index.html](demo/index.html) with bundled assets and simulated responses, so it is safe to share as a first look.
+
+## Core Modules
+
+- AI chat with memory using local Ollama or cloud models through OpenRouter
+- Google Calendar event add, read, and delete support
+- Local task management
+- Philips Hue smart lighting control
+- Spotify playback controls
+- Weather, news, video, tides, radio, Pomodoro, memory, and system widgets
+- Fullscreen kiosk mode or server/client mode from another browser
+
+## Calling Artists And Animators
+
+The current Caroline avatars are AI generated, but the long-term goal is original character art and expressive animations. Character artists, animators, 2D/3D designers, and creative collaborators are welcome.
+
+Interested in helping shape Caroline's visual identity? Start a conversation in [GitHub Discussions](https://github.com/Project-Caroline/project-caroline/discussions).
 
 ## Install
 
