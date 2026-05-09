@@ -4,6 +4,7 @@ Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, m
 
 ![Project: Caroline avatar](assets/caroline.gif)
 ![Project: Caroline interface](Screenshot_7.png)
+![Project: Caroline dashboard](Screenshot_1.jpg)
 
 ## Install
 
