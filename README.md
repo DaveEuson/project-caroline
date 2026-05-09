@@ -89,6 +89,13 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 
 Settings, API keys, tasks, and memory are preserved.
 
+## Release Channels
+
+- **Nightly/dev:** the `master` install URL gets the newest pushed work first.
+- **Stable/beta:** GitHub release tags are the solid builds to recommend publicly.
+
+For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md).
+
 ## Uninstall
 
 ```bash

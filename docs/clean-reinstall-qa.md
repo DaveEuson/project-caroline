@@ -39,6 +39,12 @@ curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/i
 sudo reboot
 ```
 
+To force Caroline's optional local browser login off during reinstall:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | CAROLINE_LOCAL_AUTH=false bash
+```
+
 After reboot, open:
 
 ```text

@@ -1,0 +1,95 @@
+name: Release Readiness
+
+on:
+  push:
+    branches: ["master", "main", "nightly", "release/**"]
+  pull_request:
+    branches: ["master", "main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "23 9 * * *"
+
+jobs:
+  sanity:
+    name: Ubuntu sanity checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shell syntax
+        run: |
+          bash -n install.sh
+          bash -n uninstall.sh
+
+      - name: Validate JSON files
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const files = [
+            'flows.json',
+            'caroline-agent-loop.json',
+            'caroline-auto-tasks.json',
+            'caroline-wonder-loop.json'
+          ];
+          for (const file of files) {
+            JSON.parse(fs.readFileSync(file, 'utf8'));
+            console.log(`${file} OK`);
+          }
+          NODE
+
+      - name: Compile browser JavaScript
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
+            .map(match => match[1]);
+          for (let i = 0; i < scripts.length; i++) {
+            try {
+              new Function(scripts[i]);
+            } catch (error) {
+              console.error(`Inline script ${i + 1} failed: ${error.message}`);
+              process.exit(1);
+            }
+          }
+          console.log(`Inline scripts OK: ${scripts.length}`);
+          NODE
+
+      - name: Compile Node-RED function bodies
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const flows = JSON.parse(fs.readFileSync('flows.json', 'utf8'));
+          let checked = 0;
+          for (const node of flows) {
+            if (node.type !== 'function' || typeof node.func !== 'string') continue;
+            try {
+              new Function(
+                'msg',
+                'node',
+                'flow',
+                'global',
+                'context',
+                'RED',
+                'fs',
+                'crypto',
+                'Buffer',
+                'URLSearchParams',
+                node.func
+              );
+            } catch (error) {
+              console.error(`${node.id} ${node.name || ''}: ${error.message}`);
+              process.exit(1);
+            }
+            checked++;
+          }
+          console.log(`Node-RED functions OK: ${checked}`);
+          NODE
+
+      - name: Check release-critical install behavior
+        run: |
+          grep -q 'normalize_auth_choice "$CAROLINE_LOCAL_AUTH"' install.sh
+          grep -q 'localAuthEnabled' install.sh
+          grep -q 'sed -i "s#/home/davee/caroline#' install.sh
+          grep -q 'CAROLINE_VERSION=' install.sh
