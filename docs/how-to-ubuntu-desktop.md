@@ -70,7 +70,7 @@ Guide:
 Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 ```
 
 Recommended answers:

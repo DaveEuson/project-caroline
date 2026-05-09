@@ -5,18 +5,32 @@ Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, m
 ![Project: Caroline interface](Screenshots/Screenshot_7.png)
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
 
+## Try The Demo
+
+Open the simulated dashboard here:
+
+[Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/demo/)
+
+The demo is a static, no-account walkthrough. It runs from [demo/index.html](demo/index.html) with bundled assets and simulated responses, so it is safe to share as a first look.
+
 ## Install
 
 Recommended public beta build:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 ```
 
-Nightly/dev build from `master`:
+Nightly/dev build:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install.sh | bash -s -- --nightly
+```
+
+Exact frozen beta tag:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.1/install.sh | bash -s -- --channel v0.3.0-beta.1
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
@@ -48,7 +62,7 @@ DIY install is the main path for now. I am also considering a small run of ready
 ## Beginner Guides
 
 - [Start here: choose the right install guide](docs/how-to.md)
-- [Offline clickable demo](demo/index.html)
+- [Offline clickable demo](https://project-caroline.github.io/project-caroline/demo/)
 - [Promo screenshots and short copy](docs/promo.md)
 - [How to create a VM, USB installer, or Raspberry Pi SD card](docs/how-to-create-install-media.md)
 - [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
@@ -91,22 +105,23 @@ Add these later in **Settings**:
 Use **Settings > About > Update**, or rerun:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 ```
 
 Settings, API keys, tasks, and memory are preserved.
 
 ## Release Channels
 
-- **Nightly/dev:** the `master` install URL gets the newest pushed work first.
-- **Stable/beta:** `v0.3.0-beta.1` is the first public beta build to recommend publicly.
+- **Release:** the `release` branch is the recommended public beta channel.
+- **Nightly/dev:** the `nightly` branch gets the newest tested work first.
+- **Frozen tags:** tags such as `v0.3.0-beta.1` are exact snapshots.
 
 For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.1 notes](docs/releases/v0.3.0-beta.1.md).
 
 ## Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash
 ```
 
 ## Safety

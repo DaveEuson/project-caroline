@@ -34,15 +34,15 @@ Ports used by Caroline:
 Run this on the Pi or Linux VM:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | sudo bash -s -- --yes
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash -s -- --yes
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 sudo reboot
 ```
 
 To force Caroline's optional local browser login off during reinstall:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | CAROLINE_LOCAL_AUTH=false bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | CAROLINE_LOCAL_AUTH=false bash
 ```
 
 After reboot, open:
@@ -90,7 +90,7 @@ Expected limitations in server/client mode:
 Use this when you want the safety prompt:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash
 ```
 
 Type exactly:
@@ -104,7 +104,7 @@ UNINSTALL CAROLINE
 Use this if you want to preserve `~/caroline` while removing services and launchers:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | sudo bash -s -- --keep-data
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash -s -- --keep-data
 ```
 
 ## Verify Uninstall
@@ -166,7 +166,7 @@ If these commands print no paths, the package purge is clean enough for installe
 Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 ```
 
 During install, record:
@@ -254,7 +254,7 @@ After reboot:
 Rerun the installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 ```
 
 Check:
@@ -299,7 +299,7 @@ rm -rf "/tmp/caroline-kiosk-$(id -u).lock"
 rm -f ~/.mozilla/firefox/caroline-kiosk/parent.lock ~/.mozilla/firefox/caroline-kiosk/lock ~/.mozilla/firefox/caroline-kiosk/.parentlock
 rm -rf ~/.config/caroline/chromium-kiosk ~/.config/caroline/chromium-window
 rm -f ~/.local/bin/caroline-window ~/.local/bin/caroline-kiosk
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
 sudo reboot
 ```
 

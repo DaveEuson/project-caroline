@@ -129,5 +129,5 @@ rmdir "$REAL_HOME/.config/caroline" 2>/dev/null || true
 echo ""
 echo -e "${GREEN}  ✓ Caroline uninstall complete${RESET}"
 echo -e "${DIM}  For a clean reinstall:${RESET}"
-echo -e "${BOLD}    curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash${RESET}"
+echo -e "${BOLD}    curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash${RESET}"
 echo ""

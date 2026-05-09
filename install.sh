@@ -21,13 +21,40 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 CAROLINE_NONINTERACTIVE="${CAROLINE_NONINTERACTIVE:-false}"
+CAROLINE_CHANNEL="${CAROLINE_CHANNEL:-release}"
+_expect_channel_value="false"
 for _arg in "$@"; do
+  if [ "$_expect_channel_value" = "true" ]; then
+    CAROLINE_CHANNEL="$_arg"
+    _expect_channel_value="false"
+    continue
+  fi
   case "$_arg" in
     --noninteractive|--update)
       CAROLINE_NONINTERACTIVE="true"
       ;;
+    --nightly)
+      CAROLINE_CHANNEL="nightly"
+      ;;
+    --release)
+      CAROLINE_CHANNEL="release"
+      ;;
+    --channel)
+      _expect_channel_value="true"
+      ;;
+    --channel=*)
+      CAROLINE_CHANNEL="${_arg#--channel=}"
+      ;;
   esac
 done
+unset _expect_channel_value
+
+case "$CAROLINE_CHANNEL" in
+  ''|*[!A-Za-z0-9._/-]*)
+    echo "Invalid CAROLINE_CHANNEL: $CAROLINE_CHANNEL" >&2
+    exit 1
+    ;;
+esac
 
 can_prompt() {
   [ "$CAROLINE_NONINTERACTIVE" != "true" ] && [ -r /dev/tty ] && [ -w /dev/tty ]
@@ -119,6 +146,8 @@ bool_json() {
 
 # ── CONFIG ───────────────────────────────────────────────────
 CAROLINE_VERSION="0.3.0-beta.1"
+CAROLINE_REPO_URL="https://github.com/Project-Caroline/project-caroline.git"
+CAROLINE_RAW_BASE="https://raw.githubusercontent.com/Project-Caroline/project-caroline"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
@@ -1193,21 +1222,42 @@ phase "REACTIVATION 4/6 — APPLICATION FILES"
 mkdir -p "$CAROLINE_DIR"
 
 echo -e "${YELLOW}  ► Cloning Caroline from GitHub...${RESET}"
-echo -e "${DIM}    Fetching the latest project files.${RESET}"
+echo -e "${DIM}    Fetching Project Caroline ${CAROLINE_CHANNEL}.${RESET}"
 
 CLONE_DIR="$REAL_HOME/project-caroline"
 
 if [ -d "$CLONE_DIR/.git" ]; then
-  echo -e "${DIM}    Repo already present — pulling latest...${RESET}"
+  echo -e "${DIM}    Repo already present — syncing ${CAROLINE_CHANNEL}...${RESET}"
   git config --global --add safe.directory "$CLONE_DIR" >/dev/null 2>&1 || true
-  git -C "$CLONE_DIR" pull --ff-only 2>/tmp/caroline-git.log || \
-    echo -e "${YELLOW}    ⚠ git pull failed — using existing clone${RESET}"
+  git -C "$CLONE_DIR" remote set-url origin "$CAROLINE_REPO_URL" >/tmp/caroline-git.log 2>&1 || true
+  git -C "$CLONE_DIR" fetch --tags origin >>/tmp/caroline-git.log 2>&1 || {
+    echo -e "${YELLOW}    ⚠ git fetch failed — using existing clone${RESET}"
+  }
 else
-  git clone "https://github.com/Project-Caroline/project-caroline.git" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
+  git clone --no-checkout "$CAROLINE_REPO_URL" "$CLONE_DIR" >/tmp/caroline-git.log 2>&1 || {
     echo -e "${RED}  ✗ Git clone failed. Check your internet connection.${RESET}"
     echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
     exit 1
   }
+fi
+
+if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/remotes/origin/${CAROLINE_CHANNEL}"; then
+  git -C "$CLONE_DIR" checkout -B "$CAROLINE_CHANNEL" "origin/${CAROLINE_CHANNEL}" >>/tmp/caroline-git.log 2>&1 || {
+    echo -e "${RED}  ✗ Could not check out ${CAROLINE_CHANNEL}.${RESET}"
+    echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
+    exit 1
+  }
+elif git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL}"; then
+  git -C "$CLONE_DIR" checkout --detach "refs/tags/${CAROLINE_CHANNEL}" >>/tmp/caroline-git.log 2>&1 || {
+    echo -e "${RED}  ✗ Could not check out tag ${CAROLINE_CHANNEL}.${RESET}"
+    echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
+    exit 1
+  }
+else
+  echo -e "${RED}  ✗ Project Caroline channel not found: ${CAROLINE_CHANNEL}${RESET}"
+  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.1.${RESET}"
+  echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
+  exit 1
 fi
 sudo chown -R "$REAL_USER":"$REAL_USER" "$CLONE_DIR" 2>/dev/null || true
 
@@ -1233,18 +1283,22 @@ unset _json CAROLINE_DIR_SED
 
 BUILD_COMMIT="$(git -C "$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 BUILD_BRANCH="$(git -C "$CLONE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
-BUILD_REPO="$(git -C "$CLONE_DIR" config --get remote.origin.url 2>/dev/null || echo https://github.com/Project-Caroline/project-caroline.git)"
+BUILD_REPO="$(git -C "$CLONE_DIR" config --get remote.origin.url 2>/dev/null || echo "$CAROLINE_REPO_URL")"
 BUILD_INSTALLED_AT="$(date -Iseconds)"
 jq -n \
   --arg version "$CAROLINE_VERSION" \
   --arg commit "$BUILD_COMMIT" \
   --arg branch "$BUILD_BRANCH" \
+  --arg channel "$CAROLINE_CHANNEL" \
   --arg repo "$BUILD_REPO" \
   --arg installedAt "$BUILD_INSTALLED_AT" \
   --arg hostname "$(hostname)" \
-  '{ version: $version, commit: $commit, branch: $branch, repo: $repo, installedAt: $installedAt, hostname: $hostname }' \
+  '{ version: $version, commit: $commit, branch: $branch, channel: $channel, repo: $repo, installedAt: $installedAt, hostname: $hostname }' \
   > "$CAROLINE_DIR/caroline_build.json"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_build.json"
+printf '%s\n' "$CAROLINE_CHANNEL" > "$CAROLINE_DIR/caroline_channel"
+sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_channel" 2>/dev/null || true
+chmod 600 "$CAROLINE_DIR/caroline_channel" 2>/dev/null || true
 
 # Flatten avatar GIFs to root — skip any placeholder stub (43 bytes); only copy files > 1 KB
 for _gif in "$CAROLINE_DIR/assets/"*.gif; do
@@ -1786,7 +1840,9 @@ set -Eeuo pipefail
 LOG="/tmp/caroline-update.log"
 LOCK="/tmp/caroline-update.lock"
 INSTALLER="/tmp/caroline-install.sh"
-REPO_INSTALL_URL="https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh"
+REPO_OWNER="Project-Caroline"
+REPO_NAME="project-caroline"
+REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
 trap 'code=$?; echo "$(date -Is) Project: Caroline GUI update failed (exit $code)" >> "$LOG"; exit $code' ERR
 
 exec 9>"$LOCK"
@@ -1811,12 +1867,28 @@ if [ -z "$TARGET_HOME" ] || [ ! -d "$TARGET_HOME" ]; then
   echo "$(date -Is) could not determine home for $TARGET_USER" | tee -a "$LOG"
   exit 1
 fi
+REPO_CHANNEL="${CAROLINE_UPDATE_CHANNEL:-}"
+if [ -z "$REPO_CHANNEL" ] && [ -s "$TARGET_HOME/caroline/caroline_channel" ]; then
+  REPO_CHANNEL="$(head -n 1 "$TARGET_HOME/caroline/caroline_channel" | tr -d '[:space:]' || true)"
+fi
+if [ -z "$REPO_CHANNEL" ] && [ -f "$TARGET_HOME/caroline/caroline_build.json" ] && command -v jq >/dev/null 2>&1; then
+  REPO_CHANNEL="$(jq -r '.channel // .branch // ""' "$TARGET_HOME/caroline/caroline_build.json" 2>/dev/null || true)"
+fi
+REPO_CHANNEL="${REPO_CHANNEL:-release}"
+case "$REPO_CHANNEL" in
+  ''|*[!A-Za-z0-9._/-]*)
+    echo "$(date -Is) invalid Caroline update channel: $REPO_CHANNEL" | tee -a "$LOG"
+    exit 1
+    ;;
+esac
+REPO_INSTALL_URL="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_CHANNEL}/install.sh"
 
 {
   echo "============================================================"
   echo "$(date -Is) Project: Caroline GUI update requested"
   echo "Target user: $TARGET_USER"
   echo "Target home: $TARGET_HOME"
+  echo "Channel: $REPO_CHANNEL"
 } > "$LOG"
 
 curl -fsSL "$REPO_INSTALL_URL" -o "$INSTALLER" >> "$LOG" 2>&1
@@ -1830,7 +1902,10 @@ fi
 if [ -z "$LOCAL_COMMIT" ] && [ -d "$TARGET_HOME/project-caroline/.git" ]; then
   LOCAL_COMMIT="$(git -C "$TARGET_HOME/project-caroline" rev-parse --short HEAD 2>/dev/null || true)"
 fi
-REMOTE_COMMIT="$(git ls-remote https://github.com/Project-Caroline/project-caroline.git refs/heads/master 2>/dev/null | awk '{print $1}' | head -1 || true)"
+REMOTE_COMMIT="$(git ls-remote "$REPO_URL" "refs/heads/${REPO_CHANNEL}" 2>/dev/null | awk '{print $1}' | head -1 || true)"
+if [ -z "$REMOTE_COMMIT" ]; then
+  REMOTE_COMMIT="$(git ls-remote "$REPO_URL" "refs/tags/${REPO_CHANNEL}" 2>/dev/null | awk '{print $1}' | head -1 || true)"
+fi
 if [ -z "$REMOTE_COMMIT" ]; then
   echo "$(date -Is) Project: Caroline GUI update check unavailable (could not reach GitHub)" >> "$LOG"
   exit 0
@@ -1840,7 +1915,7 @@ if [ -n "$LOCAL_COMMIT" ] && [ -n "$REMOTE_COMMIT" ] && [ "${REMOTE_COMMIT#${LOC
   exit 0
 fi
 echo "$(date -Is) Update available: ${LOCAL_COMMIT:-unknown} -> ${REMOTE_COMMIT:0:7}" >> "$LOG"
-SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
+SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true CAROLINE_CHANNEL="$REPO_CHANNEL" bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
 echo "$(date -Is) Project: Caroline GUI update complete" >> "$LOG"
 EOF
 sudo chmod 755 /usr/local/sbin/caroline-update

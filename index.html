@@ -3115,7 +3115,20 @@ async function refreshBuildInfo(options = {}) {
 function shortBuildLabel(info = buildInfo) {
   const commit = String(info.commit || info.gitCommit || BUILD_FALLBACK).trim();
   const branch = String(info.branch || '').trim();
-  return commit + (branch ? ' / ' + branch : '');
+  const channel = String(info.channel || '').trim();
+  return commit + (channel || branch ? ' / ' + (channel || branch) : '');
+}
+
+function currentReleaseChannel() {
+  const channel = String(buildInfo.channel || buildInfo.branch || 'release').trim();
+  if (!channel || channel === 'HEAD' || channel === 'unknown') return 'release';
+  return channel;
+}
+
+function installCommandForChannel(channel = currentReleaseChannel()) {
+  const safeChannel = /^[A-Za-z0-9._/-]+$/.test(channel) ? channel : 'release';
+  const suffix = safeChannel === 'release' ? '' : ' -s -- --channel ' + safeChannel;
+  return 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/' + safeChannel + '/install.sh | bash' + suffix;
 }
 
 function normalizeCommit(value) {
@@ -3129,7 +3142,8 @@ function commitMatches(localCommit, remoteCommit) {
 }
 
 async function fetchLatestBuildInfo() {
-  const resp = await fetch('https://api.github.com/repos/Project-Caroline/project-caroline/commits/master', {
+  const channel = encodeURIComponent(currentReleaseChannel());
+  const resp = await fetch('https://api.github.com/repos/Project-Caroline/project-caroline/commits/' + channel, {
     cache: 'no-store',
     headers: { 'Accept': 'application/vnd.github+json' }
   });
@@ -6226,7 +6240,7 @@ function _wipeReset(){
 }
 
 function showUninstallCommand(btn) {
-  const cmd = 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/uninstall.sh | bash';
+  const cmd = 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | bash';
   const status = document.getElementById('uninstall-command-status');
   const message = 'Fine. If you need a clean break, run this in the device terminal: ' + cmd;
   if (status) {
@@ -6242,7 +6256,7 @@ function showUninstallCommand(btn) {
 }
 
 function showUpdateCommand(btn) {
-  const cmd = 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/master/install.sh | bash';
+  const cmd = installCommandForChannel();
   const status = document.getElementById('update-command-status');
   const message = 'Manual fallback: run this in the device terminal if the GUI cannot verify or start the update. Settings and saved credentials are preserved: ' + cmd;
   if (status) {
