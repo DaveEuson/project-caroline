@@ -6492,11 +6492,18 @@ function clearLocalAiThinkingStatus() {
 function startLocalAiThinkingStatus() {
   clearLocalAiThinkingStatus();
   if (!voiceStatus) return;
-  voiceStatus.textContent = '● LOCAL AI THINKING...';
+  const model = getActiveResponderLabel();
+  voiceStatus.textContent = '● ' + model + ' is responding...';
   _localThinkingTimers = [
-    setTimeout(() => { if (voiceStatus) voiceStatus.textContent = '● LOCAL AI STILL THINKING... FIRST PI REPLIES CAN BE SLOW'; }, 10000),
-    setTimeout(() => { if (voiceStatus) voiceStatus.textContent = '● LOCAL AI WORKING... TRY A SMALLER MODEL IF THIS OFTEN PASSES 60S'; }, 30000)
+    setTimeout(() => { if (voiceStatus) voiceStatus.textContent = '● ' + model + ' is still responding... first Pi replies can be slow'; }, 10000),
+    setTimeout(() => { if (voiceStatus) voiceStatus.textContent = '● ' + model + ' is still working... try a smaller model if this often passes 60s'; }, 30000)
   ];
+}
+function getActiveResponderLabel() {
+  const provider = String(S.aiProvider || 'openrouter').toLowerCase();
+  if (provider === 'ollama') return String(S.ollamaModel || 'local model').trim() || 'local model';
+  const model = String(S.aiModel || 'cloud model').trim();
+  return model.split('/').pop() || model || 'cloud model';
 }
 function scrollChatToBottom() {
   const scroll = document.getElementById('caro-chat-scroll');
@@ -6542,12 +6549,23 @@ function addMessage(text, role, source){
     updateIdleRecentText(text);
   }
 }
-function showTyping(){
+function showTyping(source){
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), subtitleLike=document.getElementById('subtitle-like');
-  clearTimeout(subtitleTimeout); content.textContent=''; sender.textContent=(S.aiName||'Caroline').toUpperCase()+' IS THINKING...';
+  clearTimeout(subtitleTimeout);
+  clearTimeout(_typingTimeout);
+  _typingTimeout = null;
+  const label = (S.aiName || 'Caroline').toUpperCase();
+  const model = getActiveResponderLabel().toUpperCase();
+  content.textContent = source === 'discord' ? 'Replying from Discord...' : '';
+  sender.textContent = label + ' (' + model + ') IS RESPONDING...';
   box.classList.remove('has-like');
   if (subtitleLike) subtitleLike.onclick = null;
   box.classList.remove('hidden'); document.getElementById('typing').classList.add('show');
+  _typingTimeout = setTimeout(() => {
+    if (document.getElementById('typing')?.classList.contains('show')) {
+      content.textContent = getActiveResponderLabel() + ' is still working...';
+    }
+  }, 15000);
 }
 
 // ── NETWORK STATUS PILLS ──────────────────────
@@ -6671,6 +6689,10 @@ function connectWS(){
     }
     else if (d.type === 'user_discord') {
       addMessage(d.content, 'user', 'discord');
+    }
+    else if (d.type === 'assistant_typing') {
+      showTyping(d.source || 'display');
+      if ((S.aiProvider || 'openrouter') === 'ollama') startLocalAiThinkingStatus();
     }
     else if (d.type === 'system_stats') {
       updateCpuTemp(d.cpu_temp_f, d.cpu_temp_c);
