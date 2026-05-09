@@ -53,7 +53,39 @@ phase() {
   echo -e "${CYAN}  ╔══════════════════════════════════════════════════════════╗${RESET}"
   echo -e "${CYAN}  ║  ${MAGENTA}$1${CYAN}$(printf '%*s' $((55 - ${#1})) '')║${RESET}"
   echo -e "${CYAN}  ╚══════════════════════════════════════════════════════════╝${RESET}"
+  case "$1" in
+    *"SYSTEM DEPENDENCIES"*)
+      echo -e "${DIM}      [SYS]---[APT]---[NODE]        checking the old lab bench${RESET}"
+      ;;
+    *"NODE-RED RUNTIME"*)
+      echo -e "${DIM}      [FLOW BUS] ===> [EVENT CORE]  wiring the nervous system${RESET}"
+      ;;
+    *"LOCAL AI"*)
+      echo -e "${DIM}      [MODEL BAY] >>> [WARM BOOT]   waking the local fallback${RESET}"
+      ;;
+    *"APPLICATION FILES"*)
+      echo -e "${DIM}      [ARCHIVE] -> [KIOSK SHELL]    restoring Caroline payload${RESET}"
+      ;;
+    *"WEB INTERFACE"*)
+      echo -e "${DIM}      [NGINX] <-> [UI] <-> [WS]     opening the console window${RESET}"
+      ;;
+    *"SYSTEM SERVICE"*)
+      echo -e "${DIM}      [SYSTEMD] :: [AUTOSTART]      pinning Caroline to boot${RESET}"
+      ;;
+    *"COMPLETE"*)
+      echo -e "${DIM}      [ONLINE]  <3  [OPERATOR]      assistant core is stable${RESET}"
+      ;;
+  esac
   echo ""
+}
+
+archive_panel() {
+  echo -e "${CYAN}  /==========================================================\\${RESET}"
+  echo -e "${CYAN}  |${RESET} ${MAGENTA}CAROLINE ARCHIVE TERMINAL${RESET} ${DIM}:: recovered assistant core${RESET}       ${CYAN}|${RESET}"
+  echo -e "${CYAN}  |----------------------------------------------------------|${RESET}"
+  echo -e "${CYAN}  |${RESET} ${DIM}[01] memory vault    [02] home signals    [03] kiosk UI${RESET} ${CYAN}|${RESET}"
+  echo -e "${CYAN}  |${RESET} ${DIM}[04] AI relay        [05] widgets         [06] automation${RESET}${CYAN}|${RESET}"
+  echo -e "${CYAN}  \\==========================================================/${RESET}"
 }
 
 ask_yes_no() {
@@ -674,6 +706,8 @@ echo -e "${CYAN}              |__/                                              
 echo ""
 echo -e "${BOLD}${CYAN}  Project: Caroline${RESET}  ${DIM}v${CAROLINE_VERSION}${RESET}"
 echo -e "${DIM}  Recovered research terminal. Assistant interface and home automation host.${RESET}"
+echo ""
+archive_panel
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -2003,6 +2037,13 @@ if is_wsl; then
 fi
 echo ""
 echo -e "${CYAN}  ════════════════════════════════════════════════════════════${RESET}"
+echo ""
+echo -e "${MAGENTA}       .------------------.      .------------------.${RESET}"
+echo -e "${MAGENTA}      /  SIGNALS ONLINE  /|     /  MEMORY WARM     /|${RESET}"
+echo -e "${CYAN}     /------------------/ |    /------------------/ |${RESET}"
+echo -e "${CYAN}     |  UI READY        | |    |  FLOWS LOADED    | |${RESET}"
+echo -e "${CYAN}     |  HOME LINKED     | /    |  CORE AWAKE      | /${RESET}"
+echo -e "${CYAN}     |------------------|/     |------------------|/${RESET}"
 echo ""
 echo -e "${BOLD}${GREEN}  Project: Caroline is online. Assistant core is running.${RESET}"
 echo ""
