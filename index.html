@@ -4258,12 +4258,13 @@ async function testDiscordConnection() {
     if (token) S.discordToken = token;
     localStorage.setItem('caro_settings', JSON.stringify(S));
     renderIntegrationStatus();
-    const r = await fetchJsonWithTimeout(httpBase() + '/admin/discord-test', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Discord test');
+    const testNonce = Date.now();
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/discord-test?t=' + testNonce, { timeoutMs: NODE_RED_TIMEOUT_MS, cache: 'no-store' }, 'Discord test');
     const data = await r.json();
     if (data.ok) {
       let inbound = null;
       try {
-        const inboxRes = await fetchJsonWithTimeout(httpBase() + '/admin/discord-inbox-test', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Discord inbox test');
+        const inboxRes = await fetchJsonWithTimeout(httpBase() + '/admin/discord-inbox-test?t=' + testNonce, { timeoutMs: NODE_RED_TIMEOUT_MS, cache: 'no-store' }, 'Discord inbox test');
         inbound = await inboxRes.json();
       } catch (inboxErr) {
         setDiscordTestStatus('Send works. Inbound test failed: ' + (inboxErr.message || 'unknown error'), true);
