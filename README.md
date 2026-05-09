@@ -7,7 +7,13 @@ Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, m
 
 ## Install
 
-Run this on Raspberry Pi OS or Ubuntu:
+Recommended public beta build:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/v0.3.0-beta.1/install.sh | bash
+```
+
+Nightly/dev build from `master`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daveeuson/project-caroline/master/install.sh | bash
@@ -92,9 +98,9 @@ Settings, API keys, tasks, and memory are preserved.
 ## Release Channels
 
 - **Nightly/dev:** the `master` install URL gets the newest pushed work first.
-- **Stable/beta:** GitHub release tags are the solid builds to recommend publicly.
+- **Stable/beta:** `v0.3.0-beta.1` is the first public beta build to recommend publicly.
 
-For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md).
+For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.1 notes](docs/releases/v0.3.0-beta.1.md).
 
 ## Uninstall
 

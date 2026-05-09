@@ -118,7 +118,7 @@ bool_json() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="0.3.0-dev"
+CAROLINE_VERSION="0.3.0-beta.1"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443

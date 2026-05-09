@@ -16,6 +16,10 @@ Project: Caroline is a local-first AI sidekick kiosk for home dashboards, calend
 
 Built for Raspberry Pi and Ubuntu, Caroline runs as a fullscreen cyberpunk dashboard or as a small home server you open from another browser.
 
+## v0.3.0-beta.1 Release Blurb
+
+Project: Caroline v0.3.0-beta.1 is the first public beta: a Raspberry Pi / Ubuntu AI kiosk with chat, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, and dashboard widgets. It is built for local-network use, with OpenRouter recommended for the most polished AI responses and local Ollama available as a private fallback.
+
 ## One-Liners
 
 - A personal AI kiosk for the little control room in your home.
