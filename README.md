@@ -2,9 +2,8 @@
 
 Your personal AI sidekick kiosk for home dashboards, reminders, calendar help, music, lights, local tasks, and a little cyberpunk companionship.
 
-![Project: Caroline avatar](assets/caroline.gif)
-![Project: Caroline interface](Screenshot_7.png)
-![Project: Caroline dashboard](Screenshot_1.jpg)
+![Project: Caroline interface](Screenshots/Screenshot_7.png)
+![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
 
 ## Install
 
@@ -43,6 +42,7 @@ DIY install is the main path for now. I am also considering a small run of ready
 ## Beginner Guides
 
 - [Start here: choose the right install guide](docs/how-to.md)
+- [Promo screenshots and short copy](docs/promo.md)
 - [How to create a VM, USB installer, or Raspberry Pi SD card](docs/how-to-create-install-media.md)
 - [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
 - [How to install on Ubuntu Server](docs/how-to-ubuntu-server.md)
