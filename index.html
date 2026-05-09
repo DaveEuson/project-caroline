@@ -2908,8 +2908,7 @@ function renderIntegrationStatus() {
   const discordChannelValue = String(S.discordChannelId || '').trim();
   const discordChannelSaved = !!discordChannelValue && looksLikeDiscordChannelId(discordChannelValue);
   const discordChannelLooksWrong = !!discordChannelValue && !discordChannelSaved;
-  const discordEnabled = integrationHealth.discord ? parseSettingBool(integrationHealth.discord.enabled) : parseSettingBool(S.discordEnabled);
-  if (integrationHealth.discord) S.discordEnabled = discordEnabled;
+  const discordEnabled = parseSettingBool(S.discordEnabled, integrationHealth.discord ? parseSettingBool(integrationHealth.discord.enabled) : false);
   setSettingsSubStatus('discord-enabled-status', discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
   setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on device' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('discord-channel-status', discordChannelLooksWrong ? 'Looks wrong - clear it and paste the numeric channel ID' : (discordChannelSaved ? 'Saved on device: ' + maskDiscordChannelId(discordChannelValue) : 'Not configured'), discordChannelLooksWrong ? 'warn' : (discordChannelSaved ? 'ok' : 'neutral'));
@@ -2946,7 +2945,6 @@ async function refreshIntegrationHealth() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     integrationHealth = await r.json();
     if (integrationHealth.google) S.googleConnected = parseSettingBool(integrationHealth.google.connected, parseSettingBool(S.googleConnected));
-    if (integrationHealth.discord) S.discordEnabled = parseSettingBool(integrationHealth.discord.enabled, parseSettingBool(S.discordEnabled));
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
     if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
     if (integrationHealth.ollamaModel) S.ollamaModel = integrationHealth.ollamaModel;
@@ -4263,7 +4261,23 @@ async function testDiscordConnection() {
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/discord-test', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Discord test');
     const data = await r.json();
     if (data.ok) {
-      setDiscordTestStatus('Discord test sent');
+      let inbound = null;
+      try {
+        const inboxRes = await fetchJsonWithTimeout(httpBase() + '/admin/discord-inbox-test', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Discord inbox test');
+        inbound = await inboxRes.json();
+      } catch (inboxErr) {
+        setDiscordTestStatus('Send works. Inbound test failed: ' + (inboxErr.message || 'unknown error'), true);
+        return;
+      }
+      if (inbound && inbound.ok) {
+        setDiscordTestStatus('Discord send + inbound read working');
+      } else if (inbound && inbound.warning) {
+        setDiscordTestStatus('Send works. ' + inbound.warning + ' ' + (inbound.advice || ''), true);
+      } else if (inbound && inbound.error) {
+        setDiscordTestStatus('Send works. ' + inbound.error + ' ' + (inbound.advice || ''), true);
+      } else {
+        setDiscordTestStatus('Discord test sent');
+      }
       return;
     }
     const status = Number(data.discordStatus || 0);
