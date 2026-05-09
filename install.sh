@@ -167,6 +167,7 @@ CAROLINE_TEMP_SWAP_CREATED="false"
 CAROLINE_AUTH_DIR="/etc/caroline"
 CAROLINE_HTPASSWD_PATH="$CAROLINE_AUTH_DIR/caroline.htpasswd"
 CAROLINE_ADMIN_PASSWORD_PATH="$CAROLINE_DIR/caroline_admin_password.txt"
+CAROLINE_LOCAL_AUTH="${CAROLINE_LOCAL_AUTH:-}"
 
 cleanup_install_swap() {
   tput cnorm 2>/dev/null || true
@@ -262,6 +263,14 @@ configure_admin_auth() {
   printf '%s\n' "$_password" > "$CAROLINE_ADMIN_PASSWORD_PATH"
   sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true
   chmod 600 "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true
+}
+
+normalize_auth_choice() {
+  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
+    y|yes|true|1|on|enabled) printf 'true' ;;
+    n|no|false|0|off|disabled) printf 'false' ;;
+    *) printf '' ;;
+  esac
 }
 
 configure_firefox_profile() {
@@ -862,6 +871,35 @@ else
   echo ""
 fi
 
+LOCAL_AUTH_ENABLED="$(normalize_auth_choice "$CAROLINE_LOCAL_AUTH")"
+if [ -z "$LOCAL_AUTH_ENABLED" ] && [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
+  LOCAL_AUTH_ENABLED="$(jq -r 'if (.localAuthEnabled | type) == "boolean" then .localAuthEnabled else empty end' "$SETTINGS_PATH" 2>/dev/null || true)"
+fi
+if [ -z "$LOCAL_AUTH_ENABLED" ]; then
+  if [ "$CAROLINE_NONINTERACTIVE" = "true" ]; then
+    LOCAL_AUTH_ENABLED="false"
+  else
+    echo ""
+    echo -e "${MAGENTA}  // LOCAL ACCESS${RESET}"
+    echo ""
+    echo -e "${DIM}  Optional browser login protects Caroline's local admin controls from other devices on your LAN.${RESET}"
+    echo -e "${DIM}  Choose No for a private test box or dedicated home kiosk where sign-in friction matters more.${RESET}"
+    echo ""
+    if ask_yes_no "Require a local browser login for Caroline?" "n"; then
+      LOCAL_AUTH_ENABLED="true"
+    else
+      LOCAL_AUTH_ENABLED="false"
+    fi
+    echo ""
+  fi
+fi
+if [ "$LOCAL_AUTH_ENABLED" = "true" ]; then
+  echo -e "${DIM}  Local browser login: enabled${RESET}"
+else
+  echo -e "${DIM}  Local browser login: disabled${RESET}"
+fi
+echo ""
+
 # ── NODE.JS ──────────────────────────────────────────────────
 echo -e "${YELLOW}  ► Checking Node.js runtime...${RESET}"
 
@@ -1307,7 +1345,12 @@ sudo find "$CAROLINE_DIR" -type f \
   -exec chmod o+r {} + 2>/dev/null || true
 protect_secret_files
 
-configure_admin_auth
+NGINX_AUTH_DIRECTIVES=""
+if [ "$LOCAL_AUTH_ENABLED" = "true" ]; then
+  configure_admin_auth
+  NGINX_AUTH_DIRECTIVES="    auth_basic \"Caroline\";
+    auth_basic_user_file ${CAROLINE_HTPASSWD_PATH};"
+fi
 
 sudo mkdir -p "$CAROLINE_AUTH_DIR"
 if [ ! -f "$CAROLINE_AUTH_DIR/caroline-selfsigned.crt" ] || [ ! -f "$CAROLINE_AUTH_DIR/caroline-selfsigned.key" ]; then
@@ -1338,8 +1381,7 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "no-referrer" always;
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
-    auth_basic "Caroline";
-    auth_basic_user_file ${CAROLINE_HTPASSWD_PATH};
+${NGINX_AUTH_DIRECTIVES}
 
     location /ws/ {
         if (\$http_sec_fetch_site = "cross-site") { return 403; }
@@ -1431,8 +1473,7 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "no-referrer" always;
     add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: data: blob: https: http:;" always;
-    auth_basic "Caroline";
-    auth_basic_user_file ${CAROLINE_HTPASSWD_PATH};
+${NGINX_AUTH_DIRECTIVES}
 
     location /ws/ {
         if (\$http_sec_fetch_site = "cross-site") { return 403; }
@@ -1526,6 +1567,7 @@ jq -n \
   --arg piIp         "$PI_IP" \
   --arg nrUrl        "http://${BROWSER_HOST_IP}:${KIOSK_PORT}" \
   --arg installId    "$INSTALL_ID" \
+  --argjson localAuth "$(bool_json "$LOCAL_AUTH_ENABLED")" \
   --argjson telemetryInstallCount "$(bool_json "$TELEMETRY_INSTALL_COUNT")" \
   --argjson telemetryTroubleshooting "$(bool_json "$TELEMETRY_TROUBLESHOOTING")" \
   --argjson telemetryOptOutPing "$(bool_json "$TELEMETRY_OPT_OUT_PING")" \
@@ -1537,6 +1579,7 @@ jq -n \
     telemetryTroubleshooting: $telemetryTroubleshooting,
     telemetryOptOutPing: $telemetryOptOutPing,
     telemetryEndpointConfigured: $telemetryEndpointConfigured,
+    localAuthEnabled: $localAuth,
     userName:        $name,
     aiName:          "Caroline",
     userMood:        7,
@@ -1617,6 +1660,7 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
                or ($oldNodeRedUrl | contains("://" + $oldPiIp + "/"))))
       then .piIp = $defaults.piIp | .nodeRedUrl = $defaults.nodeRedUrl else . end
     | .telemetryEndpointConfigured = $defaults.telemetryEndpointConfigured
+    | .localAuthEnabled = $defaults.localAuthEnabled
     | if $preserveKiosk then . else .kioskMode = $currentKiosk end
   ' \
     --argjson preserveKiosk "$([ "$CAROLINE_NONINTERACTIVE" = "true" ] && echo true || echo false)" \
@@ -1969,8 +2013,12 @@ echo -e "${CYAN}  │${RESET}  Kiosk URL:   ${BOLD}http://${BROWSER_HOST_FINAL}:
 echo -e "${CYAN}  │${RESET}  Voice URL:   ${BOLD}https://${BROWSER_HOST_FINAL}:${HTTPS_UI_PORT}/${RESET}"
 echo -e "${CYAN}  │${RESET}  Backend:     Node-RED on localhost:${NODE_RED_PORT}"
 echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${BROWSER_HOST_FINAL}:${HTTPS_PROXY_PORT}"
+if [ "$LOCAL_AUTH_ENABLED" = "true" ]; then
 echo -e "${CYAN}  │${RESET}  Login user:  ${BOLD}caroline${RESET}"
 echo -e "${CYAN}  │${RESET}  Login pass:  ${BOLD}cat ${CAROLINE_ADMIN_PASSWORD_PATH}${RESET}"
+else
+echo -e "${CYAN}  │${RESET}  Login:       disabled for this local install"
+fi
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
 else
