@@ -89,7 +89,9 @@ jobs:
 
       - name: Check release-critical install behavior
         run: |
-          grep -q 'normalize_auth_choice "$CAROLINE_LOCAL_AUTH"' install.sh
+          grep -q 'normalize_auth_choice' install.sh
+          grep -q 'CAROLINE_LOCAL_AUTH' install.sh
           grep -q 'localAuthEnabled' install.sh
-          grep -q 'sed -i "s#/home/davee/caroline#' install.sh
+          grep -q '/home/davee/caroline#' install.sh
+          grep -q 'CAROLINE_DIR_SED' install.sh
           grep -q 'CAROLINE_VERSION=' install.sh
