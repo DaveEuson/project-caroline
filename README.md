@@ -152,3 +152,8 @@ This is a static, no-account walkthrough from [demo/index.html](demo/index.html)
 Caroline is free to use. If you enjoy it and want to support future builds:
 
 https://buymeacoffee.com/daveeuson
+
+Made by Dave Euson
+
+- Website: https://daveeuson.github.io/
+- LinkedIn: https://www.linkedin.com/in/daveeusonpost/
