@@ -7,16 +7,6 @@ Caroline runs on your own Raspberry Pi or Ubuntu box. Cloud is optional: use a p
 
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
 
-## Try The Demo
-
-Open the simulated dashboard here:
-
-[Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/)
-
-The demo is a static, no-account walkthrough. It runs from [demo/index.html](demo/index.html) with bundled assets and simulated responses, so it is safe to share as a first look.
-
-![Project Caroline offline demo preview](Screenshots/demo-offline.png)
-
 ## Core Modules
 
 - AI chat with memory using local Ollama or cloud models through OpenRouter
@@ -82,7 +72,6 @@ DIY install is the main path for now. I am also considering a small run of ready
 ## Beginner Guides
 
 - [Start here: choose the right install guide](docs/how-to.md)
-- [Offline clickable demo](https://project-caroline.github.io/project-caroline/)
 - [Promo screenshots and short copy](docs/promo.md)
 - [How to create a VM, USB installer, or Raspberry Pi SD card](docs/how-to-create-install-media.md)
 - [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
@@ -147,6 +136,16 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/r
 ## Safety
 
 Caroline is designed for your local network. Keep ports `8080`, `8443`, `8444`, and SSH private unless you are using a VPN such as Tailscale or WireGuard. Node-RED runs as a localhost-only backend behind Caroline's web server.
+
+## Try The Demo
+
+The simulated dashboard is available here:
+
+[Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/)
+
+This is a static, no-account walkthrough from [demo/index.html](demo/index.html). It uses bundled assets and canned responses, so it is safe to share, but the real installed kiosk is the primary experience.
+
+![Project Caroline offline demo preview](Screenshots/demo-offline.png)
 
 ## Support
 
