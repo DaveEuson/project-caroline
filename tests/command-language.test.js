@@ -132,6 +132,7 @@ for (const [surface, nodeId] of buildNodes) {
   test(`${surface}: calendar delete variants`, () => {
     const cases = [
       ['Cancel Team standup from my calendar', { type: 'calendar_delete', title: 'Team standup' }],
+      ['Delete Codex qwen model smoke test from my calendar tomorrow', { type: 'calendar_delete', title: 'Codex qwen model smoke test' }],
       ['delete the calendar event "Dentist appointment"', { type: 'calendar_delete', title: 'Dentist appointment' }],
       ['remove clean install notes off my schedule', { type: 'calendar_delete', title: 'clean install notes' }],
     ];
@@ -206,6 +207,12 @@ for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http pars
       type: 'add_task',
       task: 'Check beta links',
     }, `${surface} JSON task`);
+
+    const deleteReply = 'Working on it. [ACTION]{"type":"calendar_delete","title":"Codex qwen model smoke test from my calendar tomorrow"}[/ACTION]';
+    expectAction(parseAction(nodeId, 'Delete Codex qwen model smoke test from my calendar tomorrow', deleteReply), {
+      type: 'calendar_delete',
+      title: 'Codex qwen model smoke test',
+    }, `${surface} JSON calendar delete`);
   });
 }
 
@@ -223,8 +230,8 @@ test('final action router sanitizes and routes all action types', () => {
   const hue = handleAction({ type: 'hue', mode: 'party' }, { hueIp: '192.168.1.2', hueKey: 'abc', hueGroup: '1' });
   assert.strictEqual(hue[3], null, 'Hue should safely skip without configured shared state in this isolated harness');
 
-  const deleteEvent = handleAction({ type: 'calendar_delete', title: 'Team standup' });
-  assert.strictEqual(deleteEvent[4].calDeleteAction.title, 'Team standup');
+  const deleteEvent = handleAction({ type: 'calendar_delete', title: 'Codex qwen model smoke test from my calendar tomorrow' });
+  assert.strictEqual(deleteEvent[4].calDeleteAction.title, 'Codex qwen model smoke test');
 });
 
 let passed = 0;
