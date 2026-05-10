@@ -145,7 +145,7 @@ bool_json() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="0.3.0-beta.1"
+CAROLINE_VERSION="0.3.0-beta.2"
 CAROLINE_REPO_URL="https://github.com/Project-Caroline/project-caroline.git"
 CAROLINE_RAW_BASE="https://raw.githubusercontent.com/Project-Caroline/project-caroline"
 NODE_RED_PORT=1880
@@ -1255,7 +1255,7 @@ elif git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL
   }
 else
   echo -e "${RED}  ✗ Project Caroline channel not found: ${CAROLINE_CHANNEL}${RESET}"
-  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.1.${RESET}"
+  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.2.${RESET}"
   echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
   exit 1
 fi

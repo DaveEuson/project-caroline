@@ -50,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/n
 Exact frozen beta tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.1/install.sh | bash -s -- --channel v0.3.0-beta.1
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.2/install.sh | bash -s -- --channel v0.3.0-beta.2
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
@@ -134,9 +134,9 @@ Settings, API keys, tasks, and memory are preserved.
 
 - **Release:** the `release` branch is the recommended public beta channel.
 - **Nightly/dev:** the `nightly` branch gets the newest tested work first.
-- **Frozen tags:** tags such as `v0.3.0-beta.1` are exact snapshots.
+- **Frozen tags:** tags such as `v0.3.0-beta.2` are exact snapshots.
 
-For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.1 notes](docs/releases/v0.3.0-beta.1.md).
+For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.2 notes](docs/releases/v0.3.0-beta.2.md).
 
 ## Uninstall
 
