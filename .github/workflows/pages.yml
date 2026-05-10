@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-      - release
-      - nightly
   workflow_dispatch:
 
 permissions:
@@ -19,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
