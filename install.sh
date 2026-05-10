@@ -162,12 +162,11 @@ PALETTE_NODES=(
   "node-red-contrib-google-sheets"
 )
 
-OLLAMA_MODEL_VALUES=("gemma3:1b" "qwen3:0.6b" "smollm2:360m" "tinyllama")
+OLLAMA_MODEL_VALUES=("qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
 OLLAMA_MODEL_LABELS=(
-  "Recommended default; friendliest local replies"
-  "Faster and smaller; good when Gemma feels too heavy"
-  "Tiny emergency fallback; fast, but lower quality"
-  "Legacy fallback; small, but more likely to wander"
+  "Recommended local quality; best Caroline balance"
+  "Fast local fallback; quickest on small hardware"
+  "Safe/legacy default; stable older-install choice"
 )
 
 choose_ollama_model() {
@@ -175,7 +174,7 @@ choose_ollama_model() {
   local key rest i
 
   if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
-    printf '%s' "gemma3:1b"
+    printf '%s' "qwen2.5:1.5b"
     return 0
   fi
 
@@ -780,9 +779,10 @@ echo ""
 
 echo -e "${MAGENTA}  // CAROLINE ARCHIVE — ASSISTANT CORE${RESET}"
 echo ""
-echo -e "${DIM}  OpenRouter = recommended. Fast, coherent, and usually costs pennies per month.${RESET}"
-echo -e "${DIM}  Ollama = experimental local fallback. Private and free, but CPU will spike and replies can be rough.${RESET}"
-echo -e "${DIM}  Device note: tiny local models are best for demos/offline mode, not the polished Caroline experience.${RESET}"
+echo -e "${DIM}  Best experience: OpenRouter. Fast, coherent, and usually costs pennies per month.${RESET}"
+echo -e "${DIM}  Recommended local quality: qwen2.5:1.5b. Best Caroline balance from local testing.${RESET}"
+echo -e "${DIM}  Fast local fallback: qwen2.5:0.5b. Quickest on small hardware.${RESET}"
+echo -e "${DIM}  Safe/legacy default: gemma3:1b. Stable older-install choice.${RESET}"
 if is_wsl; then
   WSL_WINDOWS_HOST_IP="$(wsl_windows_host_ip)"
   if [ -n "$WSL_WINDOWS_HOST_IP" ]; then
@@ -795,10 +795,9 @@ if is_wsl; then
 fi
 echo ""
 echo -e "${DIM}  Local model options you can type if you install Ollama:${RESET}"
-echo -e "${DIM}    gemma3:1b     default; friendliest local replies, still slower than cloud.${RESET}"
-echo -e "${DIM}    qwen3:0.6b    faster/smaller; good when Gemma feels too heavy.${RESET}"
-echo -e "${DIM}    smollm2:360m  tiny emergency fallback; fast, but lower quality.${RESET}"
-echo -e "${DIM}    tinyllama     legacy fallback; small, but more likely to wander.${RESET}"
+echo -e "${DIM}    qwen2.5:1.5b  recommended local quality; best Caroline balance.${RESET}"
+echo -e "${DIM}    qwen2.5:0.5b  fast local fallback; quickest on small hardware.${RESET}"
+echo -e "${DIM}    gemma3:1b      safe/legacy default; stable older-install choice.${RESET}"
 echo ""
 
 # Warn if RAM is low
@@ -824,14 +823,14 @@ echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  echo -e "${DIM}  Choose a local model. gemma3:1b is selected by default.${RESET}"
-  echo -e "${DIM}  OpenRouter is still recommended for the polished Caroline experience.${RESET}"
+  echo -e "${DIM}  Choose a local model. qwen2.5:1.5b is selected by default.${RESET}"
+  echo -e "${DIM}  OpenRouter is still the best Caroline experience.${RESET}"
   OLLAMA_MODEL="$(choose_ollama_model)"
   echo ""
   echo -e "${DIM}  Selected ${OLLAMA_MODEL}. The installer will download it after the core services are ready.${RESET}"
 else
   AI_PROVIDER="openrouter"
-  OLLAMA_MODEL="gemma3:1b"
+  OLLAMA_MODEL="qwen2.5:1.5b"
   echo -e "${DIM}  Skipping local Ollama. You can add an OpenRouter key or point Ollama at another computer later in Settings.${RESET}"
 fi
 echo ""
@@ -1727,7 +1726,7 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
                or ($existing.ollamaModel == "gemma2:2b")
                or ($existing.ollamaModel == "llama3.2")
                or ($existing.ollamaModel == "llama3.2:1b")
-               or ($existing.ollamaModel == "qwen2.5:0.5b")
+               or ($existing.ollamaModel == "qwen3:0.6b")
                or ($existing.ollamaModel == "smollm2:360m")
                or ($existing.ollamaModel == "tinyllama")))
       then .ollamaModel = $defaults.ollamaModel else . end

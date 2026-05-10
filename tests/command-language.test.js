@@ -33,7 +33,7 @@ function findNode(id) {
 function createStore(initial = {}) {
   return Object.assign({
     aiProvider: 'ollama',
-    ollamaModel: 'gemma3:1b',
+    ollamaModel: 'qwen2.5:1.5b',
     timezone: 'America/Los_Angeles',
     userName: 'Dave',
     aiName: 'Caroline',

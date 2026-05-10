@@ -44,7 +44,7 @@ Accept the local certificate warning once. The normal HTTP URL remains best for 
 
 Then open **Settings** and add only what you need:
 
-- **AI:** OpenRouter API key for fast cloud AI
+- **AI:** OpenRouter API key for the best experience, or local Ollama with `qwen2.5:1.5b` for recommended quality
 - **Connect:** Google Calendar, Spotify, Hue, or Discord
 - **Widgets:** location, weather, tides, and video channels
 

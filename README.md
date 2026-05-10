@@ -102,12 +102,19 @@ DIY install is the main path for now. I am also considering a small run of ready
 
 Add these later in **Settings**:
 
-- OpenRouter API key for fast cloud AI
+- OpenRouter API key for the best AI experience
 - Google Calendar OAuth
 - Spotify client ID
 - Philips Hue bridge/key
 - Discord bot token and channel ID
 - NOAA tide station
+
+## AI Model Guidance
+
+- Best experience: **OpenRouter**
+- Recommended local quality: **qwen2.5:1.5b**
+- Fast local fallback: **qwen2.5:0.5b**
+- Safe/legacy default: **gemma3:1b**
 
 ## Update
 

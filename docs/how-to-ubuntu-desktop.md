@@ -79,6 +79,8 @@ Recommended answers:
 - Kiosk mode: **No** for testing
 - Kiosk mode: **Yes** only if this is a dedicated display machine
 
+For local Ollama, use `qwen2.5:1.5b` for recommended quality, `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice.
+
 If kiosk or XRDP behaves strangely on Ubuntu Desktop, use server/client mode instead:
 
 ```text

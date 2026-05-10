@@ -80,6 +80,7 @@ Recommended answers:
 - Telemetry: your choice; it is optional
 
 You can add an OpenRouter API key later in Caroline Settings for faster, better replies.
+For local Ollama, use `qwen2.5:1.5b` for recommended quality, `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice.
 
 ## 5. Reboot
 

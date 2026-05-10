@@ -22,7 +22,7 @@ Built for Raspberry Pi and Ubuntu, Caroline runs as a fullscreen cyberpunk dashb
 
 ## v0.3.0-beta.2 Release Blurb
 
-Project: Caroline v0.3.0-beta.2 is the public beta hotfix build: a Raspberry Pi / Ubuntu AI kiosk with chat, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, and dashboard widgets. It includes a calendar-title cleanup fix for natural requests like "add dinner to my calendar at 9pm." It is built for local-network use, with OpenRouter recommended for the most polished AI responses and local Ollama available as a private fallback.
+Project: Caroline v0.3.0-beta.2 is the public beta hotfix build: a Raspberry Pi / Ubuntu AI kiosk with chat, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, and dashboard widgets. It includes a calendar-title cleanup fix for natural requests like "add dinner to my calendar at 9pm." It is built for local-network use, with OpenRouter recommended for the best AI experience and local Ollama available as a private fallback. For local AI, qwen2.5:1.5b is the recommended quality pick, qwen2.5:0.5b is the fast fallback, and gemma3:1b remains the safe legacy choice.
 
 ## One-Liners
 
