@@ -1,0 +1,8 @@
+[allowlist]
+description = "Project Caroline false-positive documentation examples"
+regexes = [
+  '''caroline:\$\(cat ~/caroline/caroline_admin_password\.txt\)'''
+]
+paths = [
+  '''docs/clean-reinstall-qa\.md'''
+]
