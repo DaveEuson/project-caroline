@@ -4,7 +4,7 @@ Your local AI sidekick for your desk, kiosk, or smart home: a cyberpunk assistan
 
 Caroline runs on your own Raspberry Pi or Ubuntu box. Cloud is optional: use a private local model through Ollama, or connect OpenRouter for faster access to stronger hosted models.
 
-![Project: Caroline interface](Screenshots/Screenshot_7.png)
+
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
 
 ## Try The Demo
