@@ -11,7 +11,7 @@ Caroline runs on your own Raspberry Pi or Ubuntu box. Cloud is optional: use a p
 
 Open the simulated dashboard here:
 
-[Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/demo/)
+[Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/)
 
 The demo is a static, no-account walkthrough. It runs from [demo/index.html](demo/index.html) with bundled assets and simulated responses, so it is safe to share as a first look.
 
@@ -82,7 +82,7 @@ DIY install is the main path for now. I am also considering a small run of ready
 ## Beginner Guides
 
 - [Start here: choose the right install guide](docs/how-to.md)
-- [Offline clickable demo](https://project-caroline.github.io/project-caroline/demo/)
+- [Offline clickable demo](https://project-caroline.github.io/project-caroline/)
 - [Promo screenshots and short copy](docs/promo.md)
 - [How to create a VM, USB installer, or Raspberry Pi SD card](docs/how-to-create-install-media.md)
 - [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
