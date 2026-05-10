@@ -6,685 +6,1005 @@
 <title>Project: Caroline Offline Demo</title>
 <style>
   :root {
-    --bg: #05070d;
-    --panel: rgba(7, 14, 24, 0.86);
-    --panel-2: rgba(10, 20, 34, 0.92);
-    --line: rgba(34, 211, 238, 0.24);
-    --line-soft: rgba(34, 211, 238, 0.12);
-    --cyan: #22d3ee;
-    --cyan-soft: rgba(34, 211, 238, 0.12);
-    --pink: #ec4899;
-    --green: #34d399;
+    --t-hex1: #22d3ee;
+    --t-hex2: #db2777;
+    --t-rgb1: 34, 211, 238;
+    --t-rgb2: 219, 39, 119;
+    --bg: #05050a;
+    --panel: rgba(255,255,255,0.02);
+    --panel-strong: rgba(5,5,10,0.92);
+    --line: rgba(var(--t-rgb1),0.14);
+    --line-strong: rgba(var(--t-rgb1),0.30);
+    --text: #e2e8f0;
+    --muted: rgba(226,232,240,0.58);
+    --dim: rgba(226,232,240,0.34);
     --yellow: #facc15;
+    --green: #34d399;
     --red: #fb7185;
-    --text: #e5edf7;
-    --muted: rgba(229, 237, 247, 0.58);
-    --dim: rgba(229, 237, 247, 0.34);
-    --mono: "Consolas", "Courier New", monospace;
-    --sans: "Segoe UI", Arial, sans-serif;
+    --mono: "Consolas", "JetBrains Mono", "Courier New", monospace;
+    --ui: "Segoe UI", Inter, Arial, sans-serif;
   }
 
   * { box-sizing: border-box; }
-  html, body { width: 100%; min-height: 100%; margin: 0; background: var(--bg); color: var(--text); }
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text); }
   body {
-    font-family: var(--sans);
-    overflow-x: hidden;
+    font-family: var(--ui);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
     background:
-      linear-gradient(rgba(34, 211, 238, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.035) 1px, transparent 1px),
-      radial-gradient(circle at 62% 58%, rgba(236, 72, 153, 0.13), transparent 34%),
-      linear-gradient(180deg, #06101a, #05070d 56%, #070712);
-    background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%;
+      linear-gradient(rgba(var(--t-rgb1),0.030) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--t-rgb1),0.030) 1px, transparent 1px),
+      radial-gradient(circle at 50% 56%, rgba(var(--t-rgb1),0.08), transparent 18%),
+      radial-gradient(circle at 74% 68%, rgba(var(--t-rgb2),0.18), transparent 24%),
+      linear-gradient(90deg, rgba(12,8,20,0.88), rgba(5,5,10,0.95));
+    background-size: 24px 24px, 24px 24px, 100% 100%, 100% 100%, 100% 100%;
   }
 
   button, input, select { font: inherit; }
   button { cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid rgba(var(--t-rgb1),0.55); outline-offset: 2px; }
 
-  .topbar {
+  #topbar {
     height: 40px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 0 14px;
-    border-bottom: 1px solid var(--line);
-    background: rgba(4, 9, 16, 0.96);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    border-bottom: 1px solid rgba(var(--t-rgb1),0.15);
+    background: linear-gradient(90deg, #0c0814, #05050a);
+    position: relative;
+    z-index: 20;
   }
-  .logo-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
-  .brand { font-weight: 700; letter-spacing: 0.06em; }
-  .version { color: var(--dim); font: 11px var(--mono); margin-right: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 9px rgba(250,204,21,0.7); animation: pulse 2s ease-in-out infinite; }
+  .topbar-name { font-size: 18px; font-weight: 600; letter-spacing: 0.18em; color: #f8fafc; }
+  .topbar-version { font: 9px var(--mono); color: rgba(var(--t-rgb1),0.52); letter-spacing: 0.1em; align-self: flex-end; margin-bottom: 3px; }
   .pill {
-    border: 1px solid var(--line);
-    background: var(--cyan-soft);
-    color: var(--cyan);
-    border-radius: 999px;
-    padding: 3px 8px;
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 2px 8px;
+    border: 1px solid rgba(var(--t-rgb1),0.30);
+    border-radius: 6px;
+    background: rgba(var(--t-rgb1),0.08);
+    color: var(--t-hex1);
     font: 11px var(--mono);
+    letter-spacing: 0.05em;
     white-space: nowrap;
   }
-  .pill.ok { color: var(--green); border-color: rgba(52, 211, 153, 0.32); background: rgba(52, 211, 153, 0.08); }
-  .pill.warn { color: var(--yellow); border-color: rgba(250, 204, 21, 0.32); background: rgba(250, 204, 21, 0.08); }
-  .clock { margin-left: auto; font: 18px var(--mono); color: rgba(229, 237, 247, 0.78); }
-  .icon-btn {
-    min-width: 36px;
-    height: 28px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(34, 211, 238, 0.08);
-    color: var(--cyan);
-  }
-
-  .ticker {
-    height: 27px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid var(--line-soft);
-    background: rgba(5, 9, 17, 0.88);
-    overflow: hidden;
+  .pill.ok { color: var(--green); border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.08); }
+  .pill.warn { color: var(--yellow); border-color: rgba(250,204,21,0.38); background: rgba(250,204,21,0.08); }
+  .pill.hot { color: #fda4af; border-color: rgba(251,113,133,0.40); background: rgba(251,113,133,0.09); }
+  .topbar-clock { margin-left: auto; font: 18px var(--mono); color: rgba(248,250,252,0.78); }
+  .top-icon {
+    min-width: 32px;
+    height: 24px;
+    border: 1px solid rgba(var(--t-rgb1),0.30);
+    border-radius: 7px;
+    background: rgba(var(--t-rgb1),0.07);
+    color: var(--t-hex1);
     font: 12px var(--mono);
   }
-  .ticker strong {
-    height: 100%;
-    display: grid;
-    place-items: center;
-    padding: 0 12px;
-    color: #05070d;
-    background: var(--yellow);
-    letter-spacing: 0.08em;
-  }
-  .ticker span { color: rgba(229, 237, 247, 0.76); white-space: nowrap; animation: ticker 28s linear infinite; }
+  .top-icon.danger { color: var(--red); border-color: rgba(244,63,94,0.25); background: rgba(244,63,94,0.08); padding-inline: 9px; }
 
-  .layout {
-    display: grid;
-    grid-template-columns: 280px minmax(360px, 1fr) 320px;
-    gap: 12px;
-    padding: 12px;
-    min-height: calc(100vh - 67px);
-  }
-  .rail, .center, .right { min-width: 0; }
-  .rail, .right {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .panel, .widget, .chat, .modal {
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--panel);
-    box-shadow: 0 0 22px rgba(34, 211, 238, 0.05);
-  }
-  .widget { padding: 10px; }
-  .widget-head {
+  #news-ticker {
+    height: 26px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(var(--t-rgb1),0.12);
+    background: linear-gradient(90deg, rgba(5,5,10,0.98), rgba(12,8,20,0.92));
+    font-family: var(--mono);
+    position: relative;
+    z-index: 18;
+  }
+  #news-label { flex: 0 0 auto; height: 100%; display: flex; align-items: center; padding: 0 10px 0 14px; border-right: 1px solid rgba(var(--t-rgb1),0.14); color: var(--yellow); font-size: 10px; letter-spacing: 0.20em; text-transform: uppercase; }
+  #ticker-track { flex: 1; min-width: 0; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  #ticker-text { display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; color: rgba(226,232,240,0.70); font-size: 12px; animation: ticker 32s linear infinite; }
+  .ticker-src { color: #05050a; background: var(--yellow); border-radius: 4px; padding: 1px 5px; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; }
+  #ticker-close { width: 24px; height: 24px; flex: 0 0 auto; border: 0; border-left: 1px solid rgba(var(--t-rgb1),0.12); background: rgba(0,0,0,0.18); color: rgba(226,232,240,0.52); }
+
+  #main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #left {
+    width: 240px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px 10px 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-right: 1px solid rgba(var(--t-rgb1),0.08);
+    background: linear-gradient(180deg, rgba(12,8,20,0.78), rgba(5,5,10,0.92));
+  }
+
+  #stage {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 24px 150px;
+    position: relative;
+    overflow: hidden;
+  }
+  #stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 42% 58%, rgba(var(--t-rgb1),0.14), transparent 3%),
+      radial-gradient(circle at 64% 72%, rgba(var(--t-rgb2),0.18), transparent 4%),
+      radial-gradient(circle at 78% 30%, rgba(var(--t-rgb1),0.10), transparent 3%);
+    filter: blur(4px);
+    pointer-events: none;
+  }
+
+  #right {
+    width: 312px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--line-soft);
-    font: 11px var(--mono);
-    color: var(--cyan);
-    letter-spacing: 0.16em;
+    padding: 10px 12px 120px 10px;
+    overflow-y: auto;
+    border-left: 1px solid rgba(var(--t-rgb1),0.08);
+    background: linear-gradient(180deg, rgba(12,8,20,0.80), rgba(5,5,10,0.92));
+  }
+
+  #left::-webkit-scrollbar, #right::-webkit-scrollbar, #bottom-chat-msgs::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 3px; }
+  #left::-webkit-scrollbar-thumb, #right::-webkit-scrollbar-thumb, #bottom-chat-msgs::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb { background: rgba(var(--t-rgb1),0.25); border-radius: 4px; }
+
+  .widget {
+    position: relative;
+    flex: 0 0 auto;
+    border: 1px solid rgba(var(--t-rgb1),0.12);
+    border-radius: 10px;
+    background: var(--panel);
+    padding: 8px 10px;
+    min-height: 0;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.01);
+  }
+  .widget-label {
+    font: 14px var(--mono);
+    color: rgba(250,204,21,0.88);
     text-transform: uppercase;
+    letter-spacing: 0.26em;
+    margin-bottom: 8px;
   }
-  .close-widget {
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--line-soft);
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.22);
-    color: var(--dim);
+  .widget-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(var(--t-rgb1),0.18);
+    border-radius: 5px;
+    background: rgba(0,0,0,0.38);
+    color: rgba(226,232,240,0.42);
+    line-height: 1;
   }
-  .close-widget:hover { color: var(--red); border-color: rgba(251, 113, 133, 0.4); }
+  .widget-close:hover { color: #f87171; border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.10); }
   .muted { color: var(--muted); }
   .dim { color: var(--dim); }
   .mono { font-family: var(--mono); }
-  .big-temp { font-size: 34px; font-weight: 300; }
-  .weather-row, .media-row, .cal-row, .task-row, .story-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .forecast { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; }
-  .forecast div {
-    border: 1px solid var(--line-soft);
-    border-radius: 7px;
-    padding: 6px 4px;
-    text-align: center;
-    color: var(--muted);
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .small { font-size: 11px; line-height: 1.35; }
+  .label-cyan { color: var(--t-hex1); }
+  .label-pink { color: var(--t-hex2); }
+  .big-temp { font-size: 28px; font-weight: 300; color: #67e8f9; }
+  .forecast { display: flex; gap: 2px; justify-content: space-between; margin-top: 7px; }
+  .fc { flex: 1; text-align: center; padding: 4px 1px; border-radius: 6px; background: rgba(0,0,0,0.20); font-family: var(--mono); }
+  .fc-name { font-size: 11px; color: var(--t-hex1); }
+  .fc-icon { font-size: 12px; color: #f8fafc; }
+  .fc-low { font-size: 11px; color: rgba(226,232,240,0.40); }
+  .meter { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,0.08); margin-top: 7px; }
+  .meter > span { display: block; height: 100%; width: var(--pct, 50%); border-radius: inherit; background: linear-gradient(90deg, var(--t-hex2), var(--t-hex1)); transition: width 0.25s ease; }
+  .round-btn, .small-btn {
+    border: 1px solid rgba(var(--t-rgb1),0.28);
+    background: rgba(var(--t-rgb1),0.08);
+    color: var(--t-hex1);
+    border-radius: 20px;
+    min-height: 28px;
+    padding: 4px 10px;
     font: 11px var(--mono);
   }
-
-  .center {
-    display: flex;
-    flex-direction: column;
-    min-height: 680px;
-    border-left: 1px solid var(--line-soft);
-    border-right: 1px solid var(--line-soft);
-    padding: 8px 10px 0;
+  .round-btn:hover, .small-btn:hover, .quick-btn:hover { background: rgba(var(--t-rgb1),0.17); color: #e0fbff; }
+  .art-thumb {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    border: 1px solid rgba(var(--t-rgb1),0.18);
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(var(--t-rgb1),0.25), rgba(var(--t-rgb2),0.24));
+    color: var(--t-hex1);
+    font: 12px var(--mono);
   }
-  .hero {
-    flex: 1;
+  .task-item, .memory-shard, .calendar-card, .story-item {
+    border: 1px solid rgba(var(--t-rgb1),0.10);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.18);
+    padding: 8px;
+  }
+  .task-item { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .task-check {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(var(--t-rgb1),0.36);
+    border-radius: 999px;
+    color: #05050a;
+    margin-top: 1px;
+  }
+  .task-item.done { opacity: 0.48; }
+  .task-item.done .task-title { text-decoration: line-through; color: rgba(226,232,240,0.48); }
+  .task-item.done .task-check { background: var(--t-hex1); }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(var(--t-rgb1),0.16);
+    border-radius: 999px;
+    padding: 2px 7px;
+    color: var(--t-hex1);
+    font: 9px var(--mono);
+    white-space: nowrap;
+  }
+  .video-frame {
+    aspect-ratio: 16 / 9;
+    border: 1px solid rgba(var(--t-rgb1),0.16);
+    border-radius: 9px;
+    overflow: hidden;
+    background:
+      linear-gradient(135deg, rgba(34,211,238,0.14), rgba(219,39,119,0.14)),
+      linear-gradient(45deg, #101827, #3b1d2d);
+    position: relative;
+  }
+  .video-frame::before {
+    content: "";
+    position: absolute;
+    inset: 16% 8% 18% 10%;
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.10), transparent 18%),
+      linear-gradient(135deg, #203446, #784452);
+    box-shadow: 0 0 24px rgba(0,0,0,0.30);
+  }
+  .video-frame::after {
+    content: "DW ENGLISH";
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    color: #e2e8f0;
+    font: 10px var(--mono);
+    letter-spacing: 0.12em;
+  }
+
+  .resolve-wrap {
+    position: relative;
+    width: min(820px, 96%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 430px;
-    position: relative;
+    z-index: 1;
   }
   .avatar-title {
     font: 12px var(--mono);
-    color: rgba(250, 204, 21, 0.8);
-    letter-spacing: 0.18em;
-    margin-bottom: 10px;
+    color: rgba(250,204,21,0.72);
+    letter-spacing: 0.20em;
+    margin-bottom: 9px;
+    text-align: center;
   }
+  .avatar-row {
+    display: grid;
+    grid-template-columns: 52px minmax(220px, 334px) 52px;
+    align-items: center;
+    gap: 12px;
+  }
+  .nav-arrow {
+    border: 0;
+    background: transparent;
+    color: rgba(var(--t-rgb1),0.46);
+    font-size: 58px;
+    font-family: var(--mono);
+  }
+  .nav-arrow:hover { color: var(--t-hex1); }
   .avatar-frame {
-    width: min(34vw, 285px);
-    min-width: 210px;
     aspect-ratio: 1;
-    border: 1px dashed rgba(250, 204, 21, 0.42);
-    border-radius: 8px;
-    padding: 12px;
-    background: rgba(34, 211, 238, 0.07);
+    border: 1px dashed rgba(250,204,21,0.42);
+    border-radius: 10px;
+    padding: 11px;
+    background: rgba(var(--t-rgb1),0.08);
+    box-shadow: 0 0 28px rgba(var(--t-rgb1),0.08);
     position: relative;
   }
   .avatar-frame::after {
     content: "";
     position: absolute;
-    inset: 22px;
-    border: 1px solid rgba(34, 211, 238, 0.45);
+    inset: 20px;
+    border: 1px solid rgba(var(--t-rgb1),0.58);
     border-radius: 8px;
     pointer-events: none;
-    box-shadow: inset 0 0 18px rgba(34, 211, 238, 0.14);
+    box-shadow: inset 0 0 18px rgba(var(--t-rgb1),0.18), 0 0 12px rgba(var(--t-rgb1),0.10);
   }
   .avatar-frame img {
     width: 100%;
     height: 100%;
+    display: block;
     object-fit: cover;
     border-radius: 8px;
-    display: block;
     filter: saturate(1.12) contrast(1.04);
   }
-  .status-line {
+  #status-line {
     margin-top: 18px;
-    color: var(--pink);
-    font: 15px var(--mono);
+    color: var(--t-hex2);
+    font: 16px var(--mono);
     letter-spacing: 0.18em;
     text-align: center;
+    min-height: 26px;
   }
-  .actions {
+  .quick-actions {
     display: grid;
-    grid-template-columns: repeat(5, minmax(120px, 1fr));
+    grid-template-columns: repeat(5, minmax(112px, 1fr));
     gap: 8px;
     width: min(860px, 100%);
-    margin: 24px auto 0;
+    margin-top: 96px;
   }
-  .action-btn, .small-btn, .send-btn, .tab-btn, .settings-save {
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(34, 211, 238, 0.09);
-    color: #8eefff;
-    min-height: 38px;
-    padding: 8px 12px;
-  }
-  .action-btn:hover, .small-btn:hover, .send-btn:hover, .tab-btn:hover {
-    background: rgba(34, 211, 238, 0.17);
-    color: #e0fbff;
-  }
-  .action-btn.active {
-    border-color: rgba(236, 72, 153, 0.5);
-    color: #f9a8d4;
-    background: rgba(236, 72, 153, 0.1);
-  }
-
-  .chat {
-    margin-top: 12px;
-    padding: 10px;
-    background: rgba(5, 10, 18, 0.95);
-  }
-  .chat-log {
-    height: 158px;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-right: 4px;
-  }
-  .msg {
-    border: 1px solid var(--line-soft);
-    border-radius: 8px;
-    padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.025);
-    line-height: 1.35;
-  }
-  .msg .who {
-    font: 11px var(--mono);
-    color: var(--cyan);
-    letter-spacing: 0.12em;
-    margin-bottom: 4px;
-  }
-  .msg.user { align-self: flex-end; border-color: rgba(236, 72, 153, 0.25); max-width: 78%; }
-  .msg.user .who { color: var(--pink); }
-  .chat-input-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; gap: 8px; margin-top: 10px; }
-  .chat-input {
-    width: 100%;
-    min-height: 42px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.46);
-    color: var(--text);
-    padding: 0 12px;
-  }
-
-  .art {
-    width: 58px;
-    height: 58px;
-    border-radius: 8px;
-    border: 1px solid var(--line-soft);
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(236, 72, 153, 0.28));
-    display: grid;
-    place-items: center;
-    font: 22px var(--mono);
-    color: var(--cyan);
-    flex: none;
-  }
-  .media-title, .story-title, .task-title { font-weight: 650; }
-  .progress {
-    height: 5px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    overflow: hidden;
-    margin-top: 8px;
-  }
-  .progress > span { display: block; height: 100%; width: 44%; background: var(--green); }
-  .cal-list, .task-list, .story-list, .memory-list { display: flex; flex-direction: column; gap: 8px; }
-  .cal-row, .task-row, .story-row {
-    border: 1px solid var(--line-soft);
+  .quick-btn {
+    border: 1px solid rgba(var(--t-rgb1),0.33);
     border-radius: 7px;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.18);
-  }
-  .tag {
-    border: 1px solid var(--line-soft);
-    border-radius: 999px;
-    padding: 2px 7px;
-    font: 10px var(--mono);
-    color: var(--cyan);
+    min-height: 54px;
+    padding: 8px 12px;
+    background: rgba(var(--t-rgb1),0.09);
+    color: #8eefff;
+    font: 18px var(--mono);
+    letter-spacing: 0.02em;
     white-space: nowrap;
   }
-  .task-check {
-    width: 18px;
-    height: 18px;
-    border-radius: 6px;
-    border: 1px solid var(--line);
-    display: grid;
-    place-items: center;
-    color: var(--green);
-    font-size: 12px;
-    flex: none;
-  }
+  .quick-btn.active { border-color: rgba(var(--t-rgb2),0.50); color: #f9a8d4; background: rgba(var(--t-rgb2),0.09); }
 
-  .settings-overlay {
-    position: fixed;
+  #bottom-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 148px;
+    display: flex;
+    z-index: 16;
+    background:
+      linear-gradient(rgba(var(--t-rgb1),0.028) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(13,24,34,0.96), rgba(4,8,13,0.98));
+    background-size: 100% 4px, 100% 100%;
+    border-top: 1px solid rgba(var(--t-rgb1),0.20);
+    box-shadow: 0 -18px 48px rgba(0,0,0,0.28);
+  }
+  #recent {
+    width: 560px;
+    max-width: 42vw;
+    padding: 10px 14px;
+    border-right: 1px solid rgba(var(--t-rgb1),0.08);
+    min-width: 0;
+  }
+  #recent-label, #bottom-chat-label {
+    font: 10px var(--mono);
+    color: rgba(var(--t-rgb1),0.52);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  #recent-card {
+    max-width: 520px;
+    border: 1px solid rgba(var(--t-rgb1),0.18);
+    border-radius: 7px;
+    background: rgba(0,0,0,0.20);
+    padding: 8px 10px 8px 10px;
+    color: #e2e8f0;
+    font-size: 14px;
+    line-height: 1.38;
+  }
+  #recent-card .who { font: 10px var(--mono); color: var(--t-hex1); letter-spacing: 0.12em; margin-bottom: 3px; }
+  #bottom-chat {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px 8px;
+  }
+  #bottom-chat-msgs {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 5px;
+  }
+  .bc-msg {
+    max-width: min(720px, 78%);
+    padding: 7px 10px;
+    border: 1px solid rgba(var(--t-rgb1),0.18);
+    border-radius: 7px;
+    background: rgba(var(--t-rgb1),0.05);
+    color: rgba(226,232,240,0.88);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .bc-msg.user {
+    align-self: flex-end;
+    background: rgba(var(--t-rgb2),0.10);
+    border-color: rgba(var(--t-rgb2),0.26);
+  }
+  .bc-who { font: 9px var(--mono); letter-spacing: 0.12em; color: var(--t-hex1); margin-bottom: 3px; }
+  .bc-msg.user .bc-who { color: var(--t-hex2); }
+  .typing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: rgba(226,232,240,0.62);
+    font-family: var(--mono);
+  }
+  .typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--t-hex1); opacity: 0.35; animation: dotty 1s infinite ease-in-out; }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.30s; }
+  #input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    flex-shrink: 0;
+  }
+  #msg-input {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    border: 1px solid rgba(var(--t-rgb1),0.28);
+    border-radius: 7px;
+    background: rgba(0,0,0,0.56);
+    color: #f8fafc;
+    padding: 0 14px;
+    font-size: 16px;
+  }
+  #send-btn, .dock-btn {
+    width: 48px;
+    height: 44px;
+    border: 1px solid rgba(var(--t-rgb1),0.32);
+    border-radius: 10px;
+    background: rgba(var(--t-rgb1),0.10);
+    color: var(--t-hex1);
+    font: 16px var(--mono);
+  }
+  .dock-btn.muted { color: var(--red); border-color: rgba(244,63,94,0.24); background: rgba(244,63,94,0.08); }
+  #send-btn:hover, .dock-btn:hover { background: rgba(var(--t-rgb1),0.18); }
+
+  #history-panel {
+    position: absolute;
+    right: 18px;
+    top: 52px;
+    width: min(420px, calc(100vw - 36px));
+    max-height: 70vh;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    z-index: 60;
+    background: rgba(5,5,10,0.96);
+    border: 1px solid rgba(var(--t-rgb1),0.24);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    backdrop-filter: blur(18px);
+  }
+  #history-panel.open { display: flex; }
+  #history-head { display: flex; justify-content: space-between; gap: 10px; color: var(--t-hex1); font: 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
+  #history-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 4px; }
+
+  #settings-overlay {
+    position: absolute;
     inset: 0;
+    z-index: 80;
     display: none;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.78);
-    z-index: 50;
+    background: rgba(0,0,0,0.84);
+    backdrop-filter: blur(6px);
     padding: 16px;
   }
-  .settings-overlay.show { display: flex; }
-  .modal {
+  #settings-overlay.show { display: flex; }
+  #settings-modal {
     width: min(720px, 96vw);
-    max-height: 88vh;
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    background: rgba(6, 11, 20, 0.98);
+    border: 1px solid rgba(var(--t-rgb1),0.30);
+    border-radius: 14px;
+    background: #0c0814;
+    box-shadow: 0 20px 70px rgba(0,0,0,0.56);
   }
-  .modal-head {
+  #settings-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--line);
-    font: 12px var(--mono);
-    color: var(--cyan);
-    letter-spacing: 0.18em;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(var(--t-rgb1),0.12);
   }
-  .tabs {
+  #settings-head h2 { margin: 0; color: var(--t-hex1); font: 13px var(--mono); letter-spacing: 0.26em; }
+  #settings-close { min-width: 78px; }
+  #settings-tabs {
     display: flex;
     gap: 6px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--line-soft);
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(var(--t-rgb1),0.10);
     overflow-x: auto;
   }
-  .tab-btn { min-height: 30px; font: 11px var(--mono); text-transform: uppercase; }
-  .tab-btn.active { color: var(--yellow); border-color: rgba(250, 204, 21, 0.5); background: rgba(250, 204, 21, 0.08); }
-  .tab-panel { display: none; padding: 18px; overflow: auto; max-height: 58vh; }
-  .tab-panel.active { display: block; }
-  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .setting-row {
-    border: 1px solid var(--line-soft);
-    border-radius: 8px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.025);
+  .stab {
+    border: 1px solid rgba(var(--t-rgb1),0.20);
+    border-radius: 7px;
+    background: rgba(0,0,0,0.18);
+    color: rgba(226,232,240,0.45);
+    padding: 7px 13px;
+    font: 11px var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
-  .setting-row label { display: block; color: var(--muted); font: 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-  .setting-row input, .setting-row select {
+  .stab.active { color: var(--yellow); border-color: rgba(250,204,21,0.48); background: rgba(250,204,21,0.08); }
+  .modal-body { overflow-y: auto; padding: 18px 20px 22px; }
+  .stab-panel { display: none; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stab-panel.active { display: grid; }
+  .setting {
+    border: 1px solid rgba(var(--t-rgb1),0.12);
+    border-radius: 9px;
+    background: rgba(255,255,255,0.025);
+    padding: 11px 12px;
+  }
+  .setting label { display: block; color: rgba(250,204,21,0.82); font: 11px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 8px; }
+  .setting input, .setting select {
     width: 100%;
     height: 36px;
-    border: 1px solid var(--line);
+    border: 1px solid rgba(var(--t-rgb1),0.25);
     border-radius: 8px;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0,0,0,0.35);
     color: var(--text);
     padding: 0 10px;
   }
   .modal-foot {
     display: flex;
-    align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 18px 16px;
-    border-top: 1px solid var(--line-soft);
+    padding: 12px 20px 16px;
+    border-top: 1px solid rgba(var(--t-rgb1),0.10);
   }
-  .settings-save { min-width: 120px; color: #06101a; background: var(--cyan); font-weight: 700; }
 
-  .toast {
+  #toast {
     position: fixed;
     left: 50%;
-    bottom: 22px;
-    transform: translateX(-50%) translateY(20px);
+    bottom: 162px;
+    transform: translateX(-50%) translateY(18px);
     opacity: 0;
     pointer-events: none;
-    border: 1px solid var(--line);
+    border: 1px solid rgba(var(--t-rgb1),0.26);
     border-radius: 8px;
-    background: rgba(6, 11, 20, 0.96);
+    background: rgba(6,11,20,0.97);
     color: var(--text);
     padding: 10px 14px;
     font: 12px var(--mono);
     transition: opacity 0.2s, transform 0.2s;
-    z-index: 80;
+    z-index: 90;
   }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  .demo-ribbon {
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #demo-ribbon {
     position: fixed;
     right: 14px;
-    bottom: 14px;
-    z-index: 20;
-    color: var(--dim);
+    bottom: 158px;
+    z-index: 22;
+    color: rgba(226,232,240,0.36);
     font: 11px var(--mono);
-    border: 1px solid var(--line-soft);
+    border: 1px solid rgba(var(--t-rgb1),0.12);
     border-radius: 8px;
-    background: rgba(5, 9, 17, 0.82);
+    background: rgba(5,9,17,0.82);
     padding: 7px 9px;
   }
 
-  @keyframes ticker {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-120%); }
-  }
+  @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+  @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-125%); } }
+  @keyframes dotty { 0%,80%,100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
 
   @media (max-width: 1120px) {
-    .layout { grid-template-columns: 230px minmax(320px, 1fr); }
-    .right { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); }
-    .actions { grid-template-columns: repeat(3, 1fr); }
+    #left { width: 210px; }
+    #right { width: 260px; }
+    #recent { width: 390px; }
+    .quick-actions { grid-template-columns: repeat(3, minmax(112px, 1fr)); margin-top: 44px; }
+    .quick-btn { font-size: 15px; }
   }
-  @media (max-width: 760px) {
-    .topbar { height: auto; min-height: 40px; gap: 7px; padding: 6px 8px; overflow-x: auto; }
-    .brand { font-size: 15px; }
-    .version, .net-pill, .conn-pill, .clock { display: none; }
-    .pill { padding: 3px 7px; }
-    .icon-btn { min-width: 34px; }
-    .ticker span { animation: none; transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .layout { grid-template-columns: 1fr; padding: 8px; }
-    .right { display: flex; }
-    .center { min-height: auto; border: 0; padding: 0; }
-    .hero { min-height: 360px; }
-    .actions { grid-template-columns: 1fr 1fr; }
-    .settings-grid { grid-template-columns: 1fr; }
-    .demo-ribbon { display: none; }
+
+  @media (max-width: 820px) {
+    body { overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100%; }
+    #topbar { height: auto; min-height: 40px; flex-wrap: wrap; padding: 6px 8px; }
+    .topbar-clock, .topbar-version, .pill.ip, .pill.cpu, .pill.connected, #topbar .pill:not(#model-pill) { display: none; }
+    #news-ticker { height: 28px; }
+    #ticker-text { animation: none; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    #main { flex-direction: column; overflow: visible; }
+    #left, #right { width: 100%; max-height: none; padding: 8px; overflow: visible; border: 0; }
+    #left { display: grid; grid-template-columns: 1fr 1fr; }
+    #stage { min-height: 560px; padding: 18px 8px 18px; }
+    .avatar-row { grid-template-columns: 34px minmax(210px, 280px) 34px; gap: 4px; }
+    .nav-arrow { font-size: 38px; }
+    .quick-actions { grid-template-columns: 1fr 1fr; margin-top: 36px; }
+    #bottom-bar { position: relative; height: auto; min-height: 220px; flex-direction: column; }
+    #recent { width: 100%; max-width: none; border-right: 0; border-bottom: 1px solid rgba(var(--t-rgb1),0.08); }
+    #bottom-chat-msgs { min-height: 120px; }
+    #right { padding-bottom: 8px; }
+    #demo-ribbon { display: none; }
+    .stab-panel { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 520px) {
+    #left { grid-template-columns: 1fr; }
+    #topbar { gap: 7px; }
+    .topbar-name { font-size: 16px; letter-spacing: 0.12em; }
+    .top-icon { min-width: 30px; padding-inline: 7px; font-size: 11px; }
+    #stage { min-height: 520px; }
+    .quick-actions { grid-template-columns: 1fr; width: 100%; }
+    #input-row { gap: 5px; }
+    #headphones-btn, #mic-btn { display: none; }
   }
 </style>
 </head>
 <body>
-  <header class="topbar">
-    <span class="logo-dot"></span>
-    <span class="brand">Caroline</span>
-    <span class="version">v0.3.0-beta.2 demo</span>
-    <span class="pill ip-pill">IP: banana-uplink.local</span>
-    <span class="pill ok" id="model-pill">Tiny Pretend AI 9000</span>
-    <span class="pill ok net-pill">Internet: Offline OK</span>
-    <span class="pill ok conn-pill">Connected</span>
-    <span class="clock" id="clock">--:--</span>
-    <button class="icon-btn" id="history-btn" title="Chat history">CHAT</button>
-    <button class="icon-btn" id="settings-btn" title="Settings">SET</button>
+  <header id="topbar">
+    <span class="dot"></span>
+    <span class="topbar-name">Caroline</span>
+    <span class="topbar-version">v0.3.0-beta.2 demo</span>
+    <span class="pill ip">IP: project-caroline.github.io</span>
+    <span class="pill ok" id="model-pill">Haiku 4.5</span>
+    <span class="pill ok">Internet: Simulated</span>
+    <span class="pill cpu" id="resource-pill">CPU 42% RAM 33%</span>
+    <span class="pill connected">CONNECTED</span>
+    <span class="topbar-clock" id="clock">--:--</span>
+    <button class="top-icon" id="history-btn" title="History">CHAT</button>
+    <button class="top-icon" id="settings-btn" title="Settings">Settings</button>
+    <button class="top-icon danger" id="reboot-btn" title="Demo reboot">REBOOT</button>
   </header>
 
-  <div class="ticker">
-    <strong>DEMO</strong>
-    <span>Project Caroline offline walkthrough - no accounts, no API keys, no network calls - today's fake headline: tiny pretend AI successfully schedules snacks without overthinking it.</span>
+  <div id="news-ticker">
+    <div id="news-label">News</div>
+    <div id="ticker-track"><div id="ticker-text"><span class="ticker-src">BBC</span><span id="ticker-title">Offline demo says no network calls were harmed in the making of this kiosk.</span></div></div>
+    <button id="ticker-close" title="Hide ticker">x</button>
   </div>
 
-  <main class="layout">
-    <aside class="rail">
+  <main id="main">
+    <aside id="left">
       <section class="widget" id="widget-date">
-        <div class="widget-head"><span>Date</span><button class="close-widget" data-close="widget-date">x</button></div>
-        <div class="mono" id="date-line">Saturday, May 9</div>
-        <div class="muted">Evening demo session</div>
-        <div class="forecast">
-          <div>Moon<br><span class="muted">Gibbous</span></div>
-          <div>Focus<br><span class="muted">Spicy</span></div>
-          <div>Build<br><span class="muted">Beta</span></div>
-          <div>Vibe<br><span class="muted">Unreasonably ready</span></div>
+        <button class="widget-close" data-close="widget-date">x</button>
+        <div class="widget-label">Date</div>
+        <div id="date-text" class="mono label-cyan">05/09/2026</div>
+        <div class="small" style="color:rgba(250,204,21,0.90); margin-top:3px;">Studio Saturday</div>
+        <div class="row" style="border-top:1px solid rgba(var(--t-rgb1),0.08); margin-top:8px; padding-top:8px;">
+          <span class="mono label-cyan" style="font-size:14px;">MOON</span>
+          <div style="flex:1;">
+            <div>Last Quarter</div>
+            <div class="small muted">Day 22 of 29</div>
+          </div>
         </div>
       </section>
 
       <section class="widget" id="widget-weather">
-        <div class="widget-head"><span>Vista</span><button class="close-widget" data-close="widget-weather">x</button></div>
-        <div class="weather-row">
+        <button class="widget-close" data-close="widget-weather">x</button>
+        <div class="widget-label">Demo City</div>
+        <div class="row">
           <div>
-            <div class="big-temp">72F</div>
-            <div class="muted">Mostly productive, 20% snacks</div>
+            <div class="big-temp">66F</div>
+            <div class="muted">Mainly clear</div>
           </div>
-          <div class="art">WX</div>
+          <div class="art-thumb">WX</div>
         </div>
         <div class="forecast">
-          <div>Sun<br>Neon</div>
-          <div>Mon<br>Snacky</div>
-          <div>Tue<br>Laser fog</div>
-          <div>Wed<br>Clear-ish</div>
+          <div class="fc"><div class="fc-name">Sun</div><div class="fc-icon">sun</div><div>68</div><div class="fc-low">57</div></div>
+          <div class="fc"><div class="fc-name">Mon</div><div class="fc-icon">fog</div><div>78</div><div class="fc-low">55</div></div>
+          <div class="fc"><div class="fc-name">Tue</div><div class="fc-icon">cloud</div><div>76</div><div class="fc-low">64</div></div>
+          <div class="fc"><div class="fc-name">Wed</div><div class="fc-icon">sun</div><div>77</div><div class="fc-low">63</div></div>
         </div>
       </section>
 
       <section class="widget" id="widget-radio">
-        <div class="widget-head"><span>Radio</span><button class="close-widget" data-close="widget-radio">x</button></div>
-        <div class="media-row">
-          <div>
-            <div class="media-title">Moonbase Errands FM</div>
-            <div class="muted">Synthwave for folding laundry</div>
+        <button class="widget-close" data-close="widget-radio">x</button>
+        <div class="widget-label">Radio</div>
+        <div class="row">
+          <button class="round-btn" id="radio-btn">PLAY</button>
+          <div style="flex:1; min-width:0;">
+            <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Nightwave Plaza</div>
+            <div class="small muted">Synthwave / Retrowave</div>
           </div>
-          <button class="small-btn" id="radio-btn">PLAY</button>
+          <span class="dim mono">>>|</span>
         </div>
       </section>
 
-      <section class="widget" id="widget-pomo">
-        <div class="widget-head"><span>Pomodoro</span><button class="close-widget" data-close="widget-pomo">x</button></div>
-        <div class="media-row">
+      <section class="widget" id="widget-pomodoro">
+        <button class="widget-close" data-close="widget-pomodoro">x</button>
+        <div class="widget-label">Pomodoro</div>
+        <div class="row">
           <div>
-            <div class="media-title" id="pomo-time">25:00</div>
-            <div class="muted" id="pomo-label">Ready</div>
+            <div id="pomo-time" class="big-temp" style="font-size:24px;">25:00</div>
+            <div id="pomo-label" class="small muted">Focus session</div>
           </div>
-          <button class="small-btn" id="pomo-btn">START</button>
+          <button class="round-btn" id="pomo-btn">START</button>
         </div>
+        <div class="meter"><span id="pomo-meter" style="--pct: 0%;"></span></div>
+      </section>
+
+      <section class="widget" id="widget-tides">
+        <button class="widget-close" data-close="widget-tides">x</button>
+        <div class="widget-label">Tides</div>
+        <div class="row small">
+          <span class="muted">HIGH</span><span class="muted">LOW</span>
+        </div>
+        <div class="row mono"><span>7:20 AM</span><span>1:43 PM</span></div>
+      </section>
+
+      <section class="widget" id="widget-mood">
+        <button class="widget-close" data-close="widget-mood">x</button>
+        <div class="row">
+          <div class="widget-label" style="margin:0;">Your Mood</div>
+          <div class="mono label-cyan" id="user-mood-value">7 / 11</div>
+        </div>
+        <input id="user-mood" type="range" min="1" max="11" value="7" style="width:100%; accent-color:var(--t-hex1);">
+        <div class="small muted" id="user-mood-caption">Good</div>
       </section>
     </aside>
 
-    <section class="center">
-      <div class="hero">
+    <section id="stage">
+      <div class="resolve-wrap">
         <div class="avatar-title">CAROLINE / RESOLVE FRAME</div>
-        <div class="avatar-frame" id="avatar-frame">
-          <img src="../assets/caroline.gif" alt="Project Caroline avatar">
+        <div class="avatar-row">
+          <button class="nav-arrow" id="prev-avatar" title="Previous avatar">&lt;</button>
+          <div class="avatar-frame"><img id="avatar-img" src="../assets/caroline.gif" alt="Project Caroline avatar"></div>
+          <button class="nav-arrow" id="next-avatar" title="Next avatar">&gt;</button>
         </div>
-        <div class="status-line" id="status-line">[ PROJECT: CAROLINE // OFFLINE DEMO ]</div>
-        <div class="actions">
-          <button class="action-btn" data-action="brief">Brief me</button>
-          <button class="action-btn" data-action="schedule">Schedule</button>
-          <button class="action-btn" data-action="motivate">Motivate</button>
-          <button class="action-btn" data-action="tasks">Tasks</button>
-          <button class="action-btn" data-action="feedback">Feedback</button>
+        <div id="status-line">[ PROJECT: CAROLINE // UPLINK ACTIVE ]</div>
+        <div class="quick-actions">
+          <button class="quick-btn" data-action="brief">Brief me</button>
+          <button class="quick-btn" data-action="schedule">Schedule</button>
+          <button class="quick-btn" data-action="motivate">Motivate</button>
+          <button class="quick-btn" data-action="tasks">Tasks</button>
+          <button class="quick-btn" data-action="tour">Demo Tour</button>
         </div>
       </div>
-
-      <section class="chat">
-        <div class="chat-log" id="chat-log">
-          <div class="msg">
-            <div class="who">CAROLINE</div>
-            <div>Hey Dave. Offline demo active. I have fake weather, fake snacks, and extremely real enthusiasm.</div>
-          </div>
-        </div>
-        <div class="chat-input-row">
-          <input class="chat-input" id="chat-input" placeholder="Say something to Caroline..." autocomplete="off">
-          <button class="send-btn" id="send-btn" title="Send">SEND</button>
-          <button class="send-btn" id="keyboard-btn" title="Demo keyboard">KEY</button>
-          <button class="send-btn" id="mute-btn" title="Mute voice">MUTE</button>
-        </div>
-      </section>
     </section>
 
-    <aside class="right">
+    <aside id="right">
       <section class="widget" id="widget-video">
-        <div class="widget-head"><span>Video</span><button class="close-widget" data-close="widget-video">x</button></div>
-        <div class="art" style="width:100%;height:118px;">VIDEO</div>
-        <div class="muted" style="margin-top:8px;">Tiny briefing theater - offline preview</div>
+        <button class="widget-close" data-close="widget-video">x</button>
+        <div class="widget-label">Video</div>
+        <div class="row small muted" style="margin-bottom:7px;"><button class="small-btn" id="video-prev">&lt;</button><span>DW English</span><button class="small-btn" id="video-next">&gt;</button></div>
+        <div class="video-frame"></div>
       </section>
 
       <section class="widget" id="widget-spotify">
-        <div class="widget-head"><span>Now Playing</span><button class="close-widget" data-close="widget-spotify">x</button></div>
-        <div class="media-row">
-          <div class="art">SP</div>
-          <div style="min-width:0;flex:1;">
-            <div class="media-title" id="track-title">Bug Squash Boogie</div>
-            <div class="muted" id="track-artist">The Release Candidates</div>
-            <div class="progress"><span id="spotify-progress"></span></div>
+        <button class="widget-close" data-close="widget-spotify">x</button>
+        <div class="widget-label">Now Playing</div>
+        <div class="row">
+          <div class="art-thumb">SP</div>
+          <div style="flex:1; min-width:0;">
+            <div id="track-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Trying to Feel Alive</div>
+            <div id="track-artist" class="small muted">Porter Robinson</div>
+            <div class="meter"><span id="spotify-meter" style="--pct:44%;"></span></div>
           </div>
+        </div>
+        <div class="row" style="justify-content:center; margin-top:8px;">
+          <button class="small-btn" id="spotify-prev">|&lt;</button>
           <button class="small-btn" id="spotify-btn">PAUSE</button>
+          <button class="small-btn" id="spotify-next">&gt;|</button>
         </div>
       </section>
 
       <section class="widget" id="widget-calendar">
-        <div class="widget-head"><span>Upcoming</span><button class="close-widget" data-close="widget-calendar">x</button></div>
-        <div class="cal-list" id="calendar-list">
-          <div class="cal-row"><span>Eat dinner, not the calendar</span><span class="tag">9:00 PM</span></div>
-          <div class="cal-row"><span>Public beta victory lap</span><span class="tag">Tomorrow</span></div>
+        <button class="widget-close" data-close="widget-calendar">x</button>
+        <div class="row">
+          <div class="widget-label" style="margin:0;">Upcoming</div>
+          <button class="small-btn" id="calendar-refresh">SYNC</button>
+        </div>
+        <div id="calendar-list" style="display:flex; flex-direction:column; gap:7px; margin-top:8px;">
+          <div class="calendar-card"><div>Eat dinner</div><div class="small muted">Today 9:00 PM - 10:00 PM</div></div>
+          <div class="calendar-card"><div>Beta notes sweep</div><div class="small muted">Tomorrow 10:30 AM</div></div>
         </div>
       </section>
 
       <section class="widget" id="widget-memory">
-        <div class="widget-head"><span>Memory</span><button class="close-widget" data-close="widget-memory">x</button></div>
-        <div class="memory-list">
-          <div class="cal-row"><span>setup memory saved</span><span class="tag">core</span></div>
-          <div class="cal-row"><span>never add "to my calendar" to titles</span><span class="tag">wisdom</span></div>
+        <button class="widget-close" data-close="widget-memory">x</button>
+        <div class="row">
+          <div class="widget-label" style="margin:0;">08 Memory</div>
+          <span class="dim mono small">0 shards</span>
+        </div>
+        <div id="memory-list" style="display:flex; flex-direction:column; gap:7px; margin-top:8px;">
+          <div class="memory-shard"><div class="small">setup memory saved</div><div class="small dim mono" style="margin-top:5px;">core memory</div></div>
+          <div class="memory-shard"><div class="small">Dave likes concise beta notes</div><div class="small dim mono" style="margin-top:5px;">demo memory</div></div>
         </div>
       </section>
 
       <section class="widget" id="widget-smart">
-        <div class="widget-head"><span>Smart</span><button class="close-widget" data-close="widget-smart">x</button></div>
-        <div class="media-row">
+        <button class="widget-close" data-close="widget-smart">x</button>
+        <div class="widget-label">10 Smart</div>
+        <div class="row">
           <div>
-            <div class="media-title" id="hue-mode">Hue: Victory Cyan</div>
-            <div class="muted">Bridge pretend.lan</div>
+            <div id="hue-mode">Hue: Focus</div>
+            <div class="small muted">Demo bridge: pretend.lan</div>
           </div>
           <button class="small-btn" id="hue-btn">CYCLE</button>
         </div>
       </section>
+
+      <section class="widget" id="widget-tasks">
+        <button class="widget-close" data-close="widget-tasks">x</button>
+        <div class="widget-label">Tasks</div>
+        <div id="task-list" style="display:flex; flex-direction:column; gap:7px;">
+          <div class="task-item"><span class="task-check"></span><div><div class="task-title">Polish offline demo page</div><div class="small muted">public beta</div></div></div>
+          <div class="task-item"><span class="task-check"></span><div><div class="task-title">Share install command</div><div class="small muted">release</div></div></div>
+        </div>
+      </section>
     </aside>
+
+    <section id="bottom-bar">
+      <div id="recent">
+        <div id="recent-label">Recent Conversation</div>
+        <div id="recent-card"><div class="who">CAROLINE</div><div id="recent-text">You're back. I kept things warm for you.</div></div>
+      </div>
+      <div id="bottom-chat">
+        <div id="bottom-chat-label">Ready - Speaker Muted</div>
+        <div id="bottom-chat-msgs"></div>
+        <div id="input-row">
+          <button class="dock-btn" id="headphones-btn" title="Listen">HP</button>
+          <button class="dock-btn" id="mic-btn" title="Mic">MIC</button>
+          <input id="msg-input" placeholder="Say something to Caroline..." autocomplete="off">
+          <button id="send-btn" title="Send">&gt;</button>
+          <button class="dock-btn" id="keyboard-btn" title="Keyboard">KEY</button>
+          <button class="dock-btn muted" id="mute-btn" title="Mute">MUT</button>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <div class="settings-overlay" id="settings-overlay" aria-hidden="true">
-    <section class="modal">
-      <div class="modal-head">
-        <span>// PROJECT: CAROLINE SETTINGS</span>
-        <button class="icon-btn" id="settings-close">CLOSE</button>
+  <section id="history-panel" aria-hidden="true">
+    <div id="history-head"><span>Chat History</span><button class="small-btn" id="clear-history">Clear</button></div>
+    <div id="history-list"></div>
+  </section>
+
+  <section id="settings-overlay" aria-hidden="true">
+    <div id="settings-modal">
+      <div id="settings-head">
+        <h2>// PROJECT: CAROLINE SETTINGS</h2>
+        <button class="small-btn" id="settings-close">CLOSE</button>
       </div>
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="look">Look & Feel</button>
-        <button class="tab-btn" data-tab="ai">AI</button>
-        <button class="tab-btn" data-tab="connect">Connect</button>
-        <button class="tab-btn" data-tab="widgets">Widgets</button>
-        <button class="tab-btn" data-tab="system">System</button>
+      <div id="settings-tabs">
+        <button class="stab active" data-tab="look">Look & Feel</button>
+        <button class="stab" data-tab="ai">AI</button>
+        <button class="stab" data-tab="connect">Connect</button>
+        <button class="stab" data-tab="widgets">Widgets</button>
+        <button class="stab" data-tab="system">System</button>
+        <button class="stab" data-tab="about">About</button>
       </div>
-      <div class="tab-panel active" id="tab-look">
-        <div class="settings-grid">
-          <div class="setting-row"><label>Theme</label><select id="theme-select"><option>Cybercore</option><option>OVA Terminal</option><option>Afterglow</option></select></div>
-          <div class="setting-row"><label>Avatar</label><select id="avatar-select"><option>Caroline</option><option>Sleep Mode</option><option>Robot</option></select></div>
-          <div class="setting-row"><label>Density</label><select><option>Comfortable</option><option>Compact</option></select></div>
-          <div class="setting-row"><label>Voice</label><select><option>Muted in demo</option><option>Enabled on real kiosk</option></select></div>
+      <div class="modal-body">
+        <div class="stab-panel active" id="tab-look">
+          <div class="setting"><label>Theme</label><select id="theme-select"><option>Cybercore</option><option>OVA Terminal</option><option>Afterglow</option></select></div>
+          <div class="setting"><label>Avatar</label><select id="avatar-select"><option>Caroline</option><option>Sleep Mode</option><option>Robot</option><option>Cat Interference</option></select></div>
+          <div class="setting"><label>User Mood</label><input value="7 / 11 - good"></div>
+          <div class="setting"><label>Caroline Mood</label><input value="7 / 11 - steady"></div>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-ai">
-        <div class="settings-grid">
-          <div class="setting-row"><label>Provider</label><input value="Offline Demo" readonly></div>
-          <div class="setting-row"><label>Local Model</label><input value="Tiny Pretend AI 9000" readonly></div>
-          <div class="setting-row"><label>Personality</label><input value="Warm, direct, lightly ridiculous"></div>
-          <div class="setting-row"><label>Status</label><input value="Simulated responses" readonly></div>
+        <div class="stab-panel" id="tab-ai">
+          <div class="setting"><label>Provider</label><input value="Offline Demo" readonly></div>
+          <div class="setting"><label>Model</label><input id="settings-model" value="Haiku 4.5 simulator" readonly></div>
+          <div class="setting"><label>Response Style</label><input value="Warm, direct, lightly ridiculous"></div>
+          <div class="setting"><label>Status</label><input value="Canned responses only" readonly></div>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-connect">
-        <div class="settings-grid">
-          <div class="setting-row"><label>Hue Bridge IP</label><input value="pretend.lan"></div>
-          <div class="setting-row"><label>Spotify</label><input value="Playing fake bangers"></div>
-          <div class="setting-row"><label>Google</label><input value="Calendar sandbox only"></div>
-          <div class="setting-row"><label>Discord</label><input value="Demo relay smiling politely"></div>
+        <div class="stab-panel" id="tab-connect">
+          <div class="setting"><label>Hue Bridge IP</label><input value="pretend.lan"></div>
+          <div class="setting"><label>Spotify</label><input value="Demo playback connected"></div>
+          <div class="setting"><label>Google</label><input value="Calendar sandbox"></div>
+          <div class="setting"><label>Discord</label><input value="Demo relay available"></div>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-widgets">
-        <div class="settings-grid">
-          <div class="setting-row"><label>Weather</label><input value="Enabled"></div>
-          <div class="setting-row"><label>News</label><input value="Enabled"></div>
-          <div class="setting-row"><label>Calendar</label><input value="Enabled"></div>
-          <div class="setting-row"><label>Pomodoro</label><input value="Enabled"></div>
+        <div class="stab-panel" id="tab-widgets">
+          <div class="setting"><label>Weather</label><input value="Enabled"></div>
+          <div class="setting"><label>News</label><input value="Enabled"></div>
+          <div class="setting"><label>Memory</label><input value="Enabled"></div>
+          <div class="setting"><label>Pomodoro</label><input value="Enabled"></div>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-system">
-        <div class="settings-grid">
-          <div class="setting-row"><label>Build</label><input value="v0.3.0-beta.2 demo" readonly></div>
-          <div class="setting-row"><label>Network</label><input value="No network calls" readonly></div>
-          <div class="setting-row"><label>Install Mode</label><input value="Offline showcase" readonly></div>
-          <div class="setting-row"><label>Release</label><input value="Public beta" readonly></div>
+        <div class="stab-panel" id="tab-system">
+          <div class="setting"><label>Build</label><input value="v0.3.0-beta.2 demo" readonly></div>
+          <div class="setting"><label>Install Mode</label><input value="Offline showcase" readonly></div>
+          <div class="setting"><label>Network Calls</label><input value="None" readonly></div>
+          <div class="setting"><label>Repository</label><input value="Project-Caroline/project-caroline" readonly></div>
+        </div>
+        <div class="stab-panel" id="tab-about">
+          <div class="setting"><label>What This Is</label><input value="A static public demo of the kiosk UI" readonly></div>
+          <div class="setting"><label>What This Is Not</label><input value="A real Node-RED or AI connection" readonly></div>
         </div>
       </div>
       <div class="modal-foot">
-        <span class="muted mono" id="settings-note">Changes are simulated in this offline demo.</span>
-        <button class="settings-save" id="settings-save">SAVE</button>
+        <span class="small muted mono" id="settings-note">Changes are simulated in this offline demo.</span>
+        <button class="small-btn" id="settings-save">SAVE SETTINGS</button>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
 
-  <div class="toast" id="toast">Demo event</div>
-  <div class="demo-ribbon">OFFLINE DEMO</div>
+  <div id="toast">Demo event</div>
+  <div id="demo-ribbon">OFFLINE DEMO</div>
 
 <script>
 (() => {
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-  const chatLog = $("#chat-log");
-  const chatInput = $("#chat-input");
-  const toast = $("#toast");
+  const chat = [];
+  const avatars = [
+    "../assets/caroline.gif",
+    "../assets/caroline-sleeping.gif",
+    "../assets/robot.gif",
+    "../assets/cat.gif"
+  ];
+  const tracks = [
+    ["Trying to Feel Alive", "Porter Robinson"],
+    ["Bug Squash Boogie", "The Release Candidates"],
+    ["Moonbase Errands", "Nightwave Plaza"],
+    ["Tiny Victory Lap", "Public Beta Club"]
+  ];
+  const headlines = [
+    ["BBC", "Offline demo says no network calls were harmed in the making of this kiosk."],
+    ["Verge", "Local assistant practices calendar titles and refuses to eat the word calendar."],
+    ["Demo", "Tiny pretend AI schedules snacks without overthinking it."],
+    ["Caroline", "Release candidate reports mood: cautiously sparkly."]
+  ];
+  const hueModes = ["Focus", "Relax", "Night", "Party", "Off"];
+  const cannedGeneral = [
+    "I'm in demo mode, so I cannot really call Node-RED, but I can show you the flow.",
+    "Tiny demo brain says: one clean next step, then snacks.",
+    "I would answer with the live AI here. For now, imagine a tasteful little progress spinner.",
+    "Copy that. I logged the vibe in pretend memory and did not overcomplicate it.",
+    "That tracks. If this were the kiosk, I would route the intent and update the right widget."
+  ];
+  const tour = [
+    ["DAVE", "Can you brief me before I publish the beta?"],
+    ["CAROLINE", "Yep. Install path is stable, Pages demo is live, and the next risk is making sure docs point at the org repo."],
+    ["DAVE", "Add beta notes sweep to my calendar tomorrow at 10:30"],
+    ["CAROLINE", "Working on it - adding Beta notes sweep to your calendar."],
+    ["CAROLINE", "Added to your calendar: Beta notes sweep."],
+    ["DAVE", "Turn the lights into focus mode"],
+    ["CAROLINE", "Done - lights brightened up."],
+    ["DAVE", "Feedback: the demo should feel more like the real kiosk"],
+    ["CAROLINE", "Saved that feedback for Dave. Thank you - beta notes like this are gold."],
+    ["DAVE", "Okay, motivate me"],
+    ["CAROLINE", "No fireworks needed. You built the thing; now ship one clean beta and let the signal come back."]
+  ];
+
+  let avatarIndex = 0;
+  let trackIndex = 0;
+  let headlineIndex = 0;
+  let hueIndex = 0;
   let toastTimer = null;
   let spotifyPlaying = true;
   let radioPlaying = false;
   let pomoRunning = false;
   let pomoSeconds = 25 * 60;
   let pomoTimer = null;
-  let hueIndex = 0;
-  const hueModes = ["Focus", "Relax", "Night", "Party", "Off"];
+  let resourceTick = 42;
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
 
   function showToast(text) {
+    const toast = $("#toast");
     toast.textContent = text;
     toast.classList.add("show");
     clearTimeout(toastTimer);
@@ -694,63 +1014,83 @@
   function tickClock() {
     const now = new Date();
     $("#clock").textContent = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    $("#date-line").textContent = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    $("#date-text").textContent = now.toLocaleDateString([], { month: "2-digit", day: "2-digit", year: "numeric" });
+  }
+
+  function setStatus(text, hot = false) {
+    const el = $("#status-line");
+    el.textContent = text;
+    el.style.color = hot ? "#fda4af" : "var(--t-hex2)";
+  }
+
+  function updateRecent(who, text) {
+    $("#recent-card .who").textContent = who;
+    $("#recent-text").textContent = text;
+  }
+
+  function renderHistory() {
+    const list = $("#history-list");
+    list.innerHTML = "";
+    chat.slice(-14).forEach((entry) => {
+      const node = document.createElement("div");
+      node.className = "bc-msg" + (entry.user ? " user" : "");
+      node.style.maxWidth = "100%";
+      node.innerHTML = '<div class="bc-who">' + escapeHtml(entry.who) + '</div><div>' + escapeHtml(entry.text) + '</div>';
+      list.appendChild(node);
+    });
   }
 
   function addMessage(who, text, user = false) {
-    const msg = document.createElement("div");
-    msg.className = "msg" + (user ? " user" : "");
-    msg.innerHTML = `<div class="who">${who}</div><div>${escapeHtml(text)}</div>`;
-    chatLog.appendChild(msg);
-    chatLog.scrollTop = chatLog.scrollHeight;
+    chat.push({ who, text, user });
+    if (chat.length > 80) chat.shift();
+    const node = document.createElement("div");
+    node.className = "bc-msg" + (user ? " user" : "");
+    node.innerHTML = '<div class="bc-who">' + escapeHtml(who) + '</div><div>' + escapeHtml(text) + '</div>';
+    $("#bottom-chat-msgs").appendChild(node);
+    $("#bottom-chat-msgs").scrollTop = $("#bottom-chat-msgs").scrollHeight;
+    updateRecent(who, text);
+    renderHistory();
   }
 
-  function escapeHtml(text) {
-    return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function addTyping() {
+    const node = document.createElement("div");
+    node.className = "bc-msg typing-msg";
+    node.innerHTML = '<div class="bc-who">CAROLINE</div><div class="typing"><span></span><span></span><span></span> <b id="typing-label">Haiku 4.5 is responding</b></div>';
+    $("#bottom-chat-msgs").appendChild(node);
+    $("#bottom-chat-msgs").scrollTop = $("#bottom-chat-msgs").scrollHeight;
+    setStatus("[ CAROLINE // RESPONDING ]");
+    return node;
   }
 
-  function demoReply(text) {
-    const t = text.toLowerCase();
-    if (/calendar|schedule/.test(t)) return "I added a simulated beta check-in to the demo calendar.";
-    if (/task|todo|to-do/.test(t)) return "I added a demo task: Verify the public beta install URL.";
-    if (/hue|light/.test(t)) return "Hue demo switched to Relax mode.";
-    if (/spotify|music/.test(t)) return "Demo playback is queued up. On a real kiosk this talks to Spotify.";
-    if (/discord/.test(t)) return "Discord relay is simulated here; the real kiosk can send and receive channel messages.";
-    if (/release|beta|ship/.test(t)) return "The beta shape is strong: install, chat, calendar, Hue, Spotify, and Discord all have a clear path.";
-    if (/hello|hi|hey/.test(t)) return "Hey. Offline demo active, but the control-room feeling is real.";
-    return "Demo response: Caroline would answer here, and connected actions would run through the real kiosk.";
-  }
-
-  function sendChat() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-    addMessage("YOU", text, true);
-    chatInput.value = "";
-    $("#status-line").textContent = "[ CAROLINE // RESPONDING ]";
-    setTimeout(() => {
-      const reply = demoReply(text);
-      addMessage("CAROLINE", reply);
-      $("#status-line").textContent = "[ PROJECT: CAROLINE // OFFLINE DEMO ]";
-      if (/calendar|schedule/.test(text.toLowerCase())) addCalendar("Demo beta check-in", "Now");
-      if (/task|todo|to-do/.test(text.toLowerCase())) addTask("Verify public beta install URL");
-      if (/hue|light/.test(text.toLowerCase())) setHue("Relax");
-    }, 520);
+  function removeTyping(node) {
+    if (node && node.parentNode) node.parentNode.removeChild(node);
+    setStatus("[ PROJECT: CAROLINE // UPLINK ACTIVE ]");
   }
 
   function addCalendar(title, time) {
-    const row = document.createElement("div");
-    row.className = "cal-row";
-    row.innerHTML = `<span>${escapeHtml(title)}</span><span class="tag">${escapeHtml(time)}</span>`;
-    $("#calendar-list").prepend(row);
+    const item = document.createElement("div");
+    item.className = "calendar-card";
+    item.innerHTML = '<div>' + escapeHtml(title) + '</div><div class="small muted">' + escapeHtml(time) + '</div>';
+    $("#calendar-list").prepend(item);
   }
 
-  function addTask(title) {
-    const list = $("#task-list");
-    if (!list) return;
-    const row = document.createElement("div");
-    row.className = "task-row";
-    row.innerHTML = `<span class="task-check">+</span><span class="task-title">${escapeHtml(title)}</span>`;
-    list.prepend(row);
+  function addTask(title, meta = "demo") {
+    const item = document.createElement("div");
+    item.className = "task-item";
+    item.innerHTML = '<span class="task-check"></span><div><div class="task-title">' + escapeHtml(title) + '</div><div class="small muted">' + escapeHtml(meta) + '</div></div>';
+    $("#task-list").prepend(item);
+  }
+
+  function completeFirstTask() {
+    const item = $("#task-list .task-item:not(.done)");
+    if (item) item.classList.add("done");
+  }
+
+  function addMemory(text, tag = "demo memory") {
+    const item = document.createElement("div");
+    item.className = "memory-shard";
+    item.innerHTML = '<div class="small">' + escapeHtml(text) + '</div><div class="small dim mono" style="margin-top:5px;">' + escapeHtml(tag) + '</div>';
+    $("#memory-list").prepend(item);
   }
 
   function setHue(mode) {
@@ -758,141 +1098,279 @@
     showToast("Hue demo mode: " + mode);
   }
 
-  function action(kind) {
-    $$(".action-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.action === kind));
-    const responses = {
-      brief: "Brief: tagged beta is live, demo page is offline, and the next move is sharing the release.",
-      schedule: "Schedule demo: adding a review block to the right-side calendar.",
-      motivate: "No hype: you built the thing. One clean share, then listen for useful feedback.",
-      tasks: "Tasks demo: three launch tasks are staged below.",
-      feedback: "Feedback demo: notes are saved locally here; the real kiosk can relay beta notes."
-    };
-    addMessage("CAROLINE", responses[kind]);
-    if (kind === "schedule") addCalendar("Demo walkthrough", "Today");
-    if (kind === "tasks") {
-      addTask("Publish GitHub release page");
-      addTask("Share beta install command");
-    }
-    if (kind === "feedback") showToast("Feedback saved in demo memory");
+  function setTrack(index) {
+    trackIndex = (index + tracks.length) % tracks.length;
+    $("#track-title").textContent = tracks[trackIndex][0];
+    $("#track-artist").textContent = tracks[trackIndex][1];
   }
 
-  function initTaskWidget() {
-    const widget = document.createElement("section");
-    widget.className = "widget";
-    widget.id = "widget-tasks";
-    widget.innerHTML = `
-      <div class="widget-head"><span>Tasks</span><button class="close-widget" data-close="widget-tasks">x</button></div>
-      <div class="task-list" id="task-list">
-        <div class="task-row"><span class="task-check">+</span><span class="task-title">Create offline demo page</span></div>
-        <div class="task-row"><span class="task-check">+</span><span class="task-title">Publish release notes</span></div>
-      </div>`;
-    $(".right").appendChild(widget);
+  function routeDemoIntent(text) {
+    const t = text.toLowerCase();
+    if (/\b(calendar|schedule|calender|caliender|appointment|meeting)\b/.test(t) && /\b(add|put|schedule|book|make)\b/.test(t)) {
+      const title = /\bdinner\b/.test(t) ? "Eat dinner" : /\bbeta\b/.test(t) ? "Beta notes sweep" : "Demo calendar block";
+      addCalendar(title, /\btomorrow\b/.test(t) ? "Tomorrow 10:30 AM" : "Today 9:00 PM");
+      return "Working on it - adding " + title + " to your calendar. Demo confirmation: no real Google Calendar write happened.";
+    }
+    if (/\b(what|show|list|agenda|upcoming)\b/.test(t) && /\b(calendar|schedule|agenda)\b/.test(t)) {
+      return "On your demo calendar: Eat dinner at 9:00 PM, then Beta notes sweep tomorrow at 10:30 AM.";
+    }
+    if (/\b(task|todo|to-do|remind me|remember to)\b/.test(t) && /\b(add|put|create|remember|remind)\b/.test(t)) {
+      addTask("Verify public beta install URL", "auto-demo");
+      return "Added to your demo list: Verify public beta install URL.";
+    }
+    if (/\b(done|finished|complete|completed|check off|mark)\b/.test(t)) {
+      completeFirstTask();
+      return "Marked the first visible demo task done. Very satisfying little click.";
+    }
+    if (/\b(hue|light|lights|lighting|lamp)\b/.test(t)) {
+      const mode = /\b(off|dark|sleep)\b/.test(t) ? "Off" : /\bparty|disco|rainbow\b/.test(t) ? "Party" : /\brelax|cozy|warm\b/.test(t) ? "Relax" : "Focus";
+      setHue(mode);
+      return "Done - demo lights set to " + mode + ".";
+    }
+    if (/\b(spotify|music|song|track|play|pause)\b/.test(t)) {
+      spotifyPlaying = !/\bpause|stop\b/.test(t);
+      $("#spotify-btn").textContent = spotifyPlaying ? "PAUSE" : "PLAY";
+      if (/\bnext|skip\b/.test(t)) setTrack(trackIndex + 1);
+      return spotifyPlaying ? "Demo playback is rolling. The real kiosk talks to Spotify here." : "Demo playback paused.";
+    }
+    if (/\b(feedback|bug|issue|feature request|suggestion|idea)\b/.test(t)) {
+      addMemory(text.replace(/^feedback[:,-]?\s*/i, ""), "feedback");
+      return "Saved that feedback for Dave. Thank you - beta notes like this are gold.";
+    }
+    if (/\b(memory|remember this|remember that)\b/.test(t)) {
+      addMemory(text.replace(/^remember\s+(this|that)[:,-]?\s*/i, ""));
+      return "Saved to demo memory. Real Caroline stores local memory shards on the kiosk.";
+    }
+    if (/\b(discord)\b/.test(t)) {
+      return "Discord is simulated here. On the real kiosk, channel messages route through the same command parser.";
+    }
+    if (/\b(release|beta|ship|launch)\b/.test(t)) {
+      return "Release read: strong enough to share. Keep the installer simple, keep the demo honest, and let feedback guide the next module.";
+    }
+    if (/\b(slow|lag|local model|gemma|ollama)\b/.test(t)) {
+      return "Local models can be slower on small hardware. For the public demo, I show the typing state so the wait feels intentional.";
+    }
+    if (/\b(hi|hello|hey|morning|night)\b/.test(t)) {
+      return "Hey. Offline demo active, but the command-center feeling is real.";
+    }
+    return cannedGeneral[Math.floor(Math.random() * cannedGeneral.length)];
+  }
+
+  function sendChat(textOverride) {
+    const input = $("#msg-input");
+    const text = (textOverride || input.value).trim();
+    if (!text) return;
+    if (!textOverride) input.value = "";
+    addMessage("DAVE", text, true);
+    const typing = addTyping();
+    const delay = Math.min(1450, Math.max(620, 420 + text.length * 18));
+    setTimeout(() => {
+      removeTyping(typing);
+      addMessage("CAROLINE", routeDemoIntent(text));
+    }, delay);
+  }
+
+  function action(kind) {
+    $$(".quick-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.action === kind));
+    const responses = {
+      brief: "Brief: demo page is static, release branches are aligned, and command tests cover calendar, tasks, Hue, feedback, and parser fallbacks.",
+      schedule: "I staged a demo calendar event. Title sanitizer included, because we are not eating 'to my calendar' again.",
+      motivate: "No giant speech. Ship the beta, watch what people actually use, then polish the parts with signal.",
+      tasks: "I added three demo launch tasks. One at a time, nice and boring, very effective."
+    };
+    if (kind === "tour") return runTour();
+    const typing = addTyping();
+    setTimeout(() => {
+      removeTyping(typing);
+      addMessage("CAROLINE", responses[kind] || "Demo action handled.");
+      if (kind === "schedule") addCalendar("Demo walkthrough", "Today 5:30 PM");
+      if (kind === "tasks") {
+        addTask("Record one 30 second demo clip", "promo");
+        addTask("Check GitHub Pages link", "release");
+        addTask("Write the beta announcement", "launch");
+      }
+    }, 650);
+  }
+
+  function runTour() {
+    let i = 0;
+    showToast("Playing canned demo conversation");
+    function step() {
+      if (i >= tour.length) {
+        setStatus("[ PROJECT: CAROLINE // UPLINK ACTIVE ]");
+        return;
+      }
+      const [who, text] = tour[i++];
+      if (who === "DAVE") {
+        addMessage("DAVE", text, true);
+        setTimeout(step, 620);
+      } else {
+        const typing = addTyping();
+        setTimeout(() => {
+          removeTyping(typing);
+          addMessage("CAROLINE", text);
+          if (/calendar/i.test(text)) addCalendar("Beta notes sweep", "Tomorrow 10:30 AM");
+          if (/lights/i.test(text)) setHue("Focus");
+          if (/feedback/i.test(text)) addMemory("the demo should feel more like the real kiosk", "feedback");
+          setTimeout(step, 720);
+        }, 820);
+      }
+    }
+    step();
   }
 
   function switchTab(name) {
-    $$(".tab-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === name));
-    $$(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === "tab-" + name));
-  }
-
-  function formatPomo() {
-    const mins = String(Math.floor(pomoSeconds / 60)).padStart(2, "0");
-    const secs = String(pomoSeconds % 60).padStart(2, "0");
-    $("#pomo-time").textContent = `${mins}:${secs}`;
+    $$(".stab").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === name));
+    $$(".stab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === "tab-" + name));
   }
 
   function togglePomo() {
     pomoRunning = !pomoRunning;
     $("#pomo-btn").textContent = pomoRunning ? "PAUSE" : "START";
-    $("#pomo-label").textContent = pomoRunning ? "Focus running" : "Paused";
+    $("#pomo-label").textContent = pomoRunning ? "Focus running" : "Focus session";
     clearInterval(pomoTimer);
-    if (pomoRunning) {
-      pomoTimer = setInterval(() => {
-        pomoSeconds = Math.max(0, pomoSeconds - 1);
-        formatPomo();
-        if (pomoSeconds === 0) {
-          clearInterval(pomoTimer);
-          pomoRunning = false;
-          $("#pomo-label").textContent = "Break time";
-          showToast("Pomodoro complete");
-        }
-      }, 1000);
-    }
+    if (!pomoRunning) return;
+    pomoTimer = setInterval(() => {
+      pomoSeconds = Math.max(0, pomoSeconds - 1);
+      const mins = String(Math.floor(pomoSeconds / 60)).padStart(2, "0");
+      const secs = String(pomoSeconds % 60).padStart(2, "0");
+      $("#pomo-time").textContent = mins + ":" + secs;
+      $("#pomo-meter").style.setProperty("--pct", Math.round((1 - pomoSeconds / 1500) * 100) + "%");
+      if (pomoSeconds === 0) {
+        clearInterval(pomoTimer);
+        pomoRunning = false;
+        $("#pomo-label").textContent = "Break time";
+        showToast("Pomodoro complete");
+      }
+    }, 1000);
+  }
+
+  function rotateHeadline() {
+    headlineIndex = (headlineIndex + 1) % headlines.length;
+    $("#ticker-text").innerHTML = '<span class="ticker-src">' + escapeHtml(headlines[headlineIndex][0]) + '</span><span id="ticker-title">' + escapeHtml(headlines[headlineIndex][1]) + '</span>';
   }
 
   function bindEvents() {
-    $("#send-btn").addEventListener("click", sendChat);
-    chatInput.addEventListener("keydown", (event) => { if (event.key === "Enter") sendChat(); });
-    $$(".action-btn").forEach((btn) => btn.addEventListener("click", () => action(btn.dataset.action)));
+    $("#send-btn").addEventListener("click", () => sendChat());
+    $("#msg-input").addEventListener("keydown", (event) => { if (event.key === "Enter") sendChat(); });
+    $$(".quick-btn").forEach((btn) => btn.addEventListener("click", () => action(btn.dataset.action)));
     document.addEventListener("click", (event) => {
       const close = event.target.closest("[data-close]");
-      if (close) {
-        const el = document.getElementById(close.dataset.close);
-        if (el) el.style.display = "none";
+      if (!close) return;
+      const el = document.getElementById(close.dataset.close);
+      if (el) {
+        el.style.display = "none";
         showToast("Widget hidden");
       }
+    });
+    $$("#task-list .task-item").forEach((item) => item.addEventListener("click", () => item.classList.toggle("done")));
+    $("#history-btn").addEventListener("click", () => $("#history-panel").classList.toggle("open"));
+    $("#clear-history").addEventListener("click", () => {
+      chat.length = 0;
+      $("#bottom-chat-msgs").innerHTML = "";
+      renderHistory();
+      showToast("History cleared");
     });
     $("#settings-btn").addEventListener("click", () => $("#settings-overlay").classList.add("show"));
     $("#settings-close").addEventListener("click", () => $("#settings-overlay").classList.remove("show"));
     $("#settings-overlay").addEventListener("click", (event) => {
       if (event.target.id === "settings-overlay") $("#settings-overlay").classList.remove("show");
     });
-    $$(".tab-btn").forEach((btn) => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+    $$(".stab").forEach((btn) => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
     $("#settings-save").addEventListener("click", () => {
-      $("#settings-note").textContent = "Demo settings saved locally for this session.";
+      $("#settings-note").textContent = "Demo settings saved for this browser session.";
       showToast("Settings saved");
     });
-    $("#history-btn").addEventListener("click", () => {
-      addMessage("CAROLINE", "History panel demo: recent messages are already visible in the chat dock.");
+    $("#avatar-select").addEventListener("change", (event) => {
+      const map = { "Caroline": 0, "Sleep Mode": 1, "Robot": 2, "Cat Interference": 3 };
+      avatarIndex = map[event.target.value] || 0;
+      $("#avatar-img").src = avatars[avatarIndex];
     });
-    $("#keyboard-btn").addEventListener("click", () => showToast("Keyboard shortcut panel simulated"));
-    $("#mute-btn").addEventListener("click", () => {
-      $("#mute-btn").textContent = $("#mute-btn").textContent === "MUTE" ? "UNM" : "MUTE";
-      showToast("Voice state toggled");
+    $("#theme-select").addEventListener("change", (event) => {
+      if (event.target.value === "Afterglow") {
+        document.documentElement.style.setProperty("--t-hex1", "#f97316");
+        document.documentElement.style.setProperty("--t-rgb1", "249,115,22");
+      } else if (event.target.value === "OVA Terminal") {
+        document.documentElement.style.setProperty("--t-hex1", "#67e8f9");
+        document.documentElement.style.setProperty("--t-rgb1", "103,232,249");
+      } else {
+        document.documentElement.style.setProperty("--t-hex1", "#22d3ee");
+        document.documentElement.style.setProperty("--t-rgb1", "34,211,238");
+      }
+      showToast("Theme preview changed");
+    });
+    $("#prev-avatar").addEventListener("click", () => {
+      avatarIndex = (avatarIndex + avatars.length - 1) % avatars.length;
+      $("#avatar-img").src = avatars[avatarIndex];
+    });
+    $("#next-avatar").addEventListener("click", () => {
+      avatarIndex = (avatarIndex + 1) % avatars.length;
+      $("#avatar-img").src = avatars[avatarIndex];
     });
     $("#spotify-btn").addEventListener("click", () => {
       spotifyPlaying = !spotifyPlaying;
       $("#spotify-btn").textContent = spotifyPlaying ? "PAUSE" : "PLAY";
       showToast(spotifyPlaying ? "Spotify demo playing" : "Spotify demo paused");
     });
+    $("#spotify-prev").addEventListener("click", () => setTrack(trackIndex - 1));
+    $("#spotify-next").addEventListener("click", () => setTrack(trackIndex + 1));
     $("#radio-btn").addEventListener("click", () => {
       radioPlaying = !radioPlaying;
       $("#radio-btn").textContent = radioPlaying ? "STOP" : "PLAY";
       showToast(radioPlaying ? "Radio demo playing" : "Radio demo stopped");
     });
+    $("#pomo-btn").addEventListener("click", togglePomo);
     $("#hue-btn").addEventListener("click", () => {
       hueIndex = (hueIndex + 1) % hueModes.length;
       setHue(hueModes[hueIndex]);
     });
-    $("#pomo-btn").addEventListener("click", togglePomo);
-    $("#theme-select").addEventListener("change", (event) => {
-      document.body.style.setProperty("--cyan", event.target.value === "Afterglow" ? "#f97316" : "#22d3ee");
-      showToast("Theme preview changed");
+    $("#calendar-refresh").addEventListener("click", () => {
+      addCalendar("Tiny demo sync", "Just now");
+      showToast("Calendar demo synced");
     });
-    $("#avatar-select").addEventListener("change", (event) => {
-      const map = {
-        "Caroline": "../assets/caroline.gif",
-        "Sleep Mode": "../assets/caroline-sleeping.gif",
-        "Robot": "../assets/robot.gif"
-      };
-      $(".avatar-frame img").src = map[event.target.value] || "../assets/caroline.gif";
-      showToast("Avatar preview changed");
+    $("#ticker-close").addEventListener("click", () => $("#news-ticker").style.display = "none");
+    $("#keyboard-btn").addEventListener("click", () => showToast("Keyboard panel simulated"));
+    $("#headphones-btn").addEventListener("click", () => showToast("Listen mode simulated"));
+    $("#mic-btn").addEventListener("click", () => showToast("Mic input simulated"));
+    $("#mute-btn").addEventListener("click", () => {
+      $("#mute-btn").textContent = $("#mute-btn").textContent === "MUT" ? "UNM" : "MUT";
+      showToast("Speaker state toggled");
+    });
+    $("#reboot-btn").addEventListener("click", () => {
+      setStatus("[ DEMO // REBOOT SIMULATED ]", true);
+      showToast("No reboot in offline demo");
+      setTimeout(() => setStatus("[ PROJECT: CAROLINE // UPLINK ACTIVE ]"), 1200);
+    });
+    $("#video-prev").addEventListener("click", () => showToast("Previous video channel"));
+    $("#video-next").addEventListener("click", () => showToast("Next video channel"));
+    $("#user-mood").addEventListener("input", (event) => {
+      $("#user-mood-value").textContent = event.target.value + " / 11";
+      $("#user-mood-caption").textContent = Number(event.target.value) >= 8 ? "Bright" : Number(event.target.value) <= 4 ? "Tender" : "Good";
     });
   }
 
-  function animateProgress() {
-    let pct = 44;
+  function loops() {
+    let progress = 44;
     setInterval(() => {
-      if (!spotifyPlaying) return;
-      pct = (pct + 1) % 100;
-      $("#spotify-progress").style.width = pct + "%";
+      if (spotifyPlaying) {
+        progress = (progress + 1) % 100;
+        $("#spotify-meter").style.setProperty("--pct", progress + "%");
+      }
     }, 900);
+    setInterval(rotateHeadline, 9000);
+    setInterval(() => {
+      resourceTick = 35 + Math.round(Math.abs(Math.sin(Date.now() / 2800)) * 34);
+      $("#resource-pill").textContent = "CPU " + resourceTick + "% RAM 33%";
+    }, 1600);
   }
 
   tickClock();
   setInterval(tickClock, 1000);
-  initTaskWidget();
   bindEvents();
-  animateProgress();
+  loops();
+  addMessage("CAROLINE", "You're back. I kept things warm for you.");
+  addMessage("DAVE", "Can you show me what the public demo does?", true);
+  addMessage("CAROLINE", "Yep. Type anything, hit the quick buttons, or run Demo Tour for a canned conversation.");
 })();
 </script>
 </body>
