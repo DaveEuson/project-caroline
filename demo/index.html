@@ -134,7 +134,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px 24px 150px;
+    padding: 16px 24px 210px;
     position: relative;
     overflow: hidden;
   }
@@ -362,7 +362,7 @@
     grid-template-columns: repeat(5, minmax(112px, 1fr));
     gap: 8px;
     width: min(860px, 100%);
-    margin-top: 96px;
+    margin-top: 24px;
   }
   .quick-btn {
     border: 1px solid rgba(var(--t-rgb1),0.33);
@@ -382,7 +382,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: 148px;
+    height: 165px;
     display: flex;
     z-index: 16;
     background:
@@ -393,11 +393,7 @@
     box-shadow: 0 -18px 48px rgba(0,0,0,0.28);
   }
   #recent {
-    width: 560px;
-    max-width: 42vw;
-    padding: 10px 14px;
-    border-right: 1px solid rgba(var(--t-rgb1),0.08);
-    min-width: 0;
+    display: none;
   }
   #recent-label, #bottom-chat-label {
     font: 10px var(--mono);
@@ -423,6 +419,7 @@
     display: flex;
     flex-direction: column;
     padding: 10px 14px 8px;
+    width: 100%;
   }
   #bottom-chat-msgs {
     flex: 1;
@@ -464,8 +461,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-top: 8px;
+    padding-top: 4px;
     flex-shrink: 0;
+    width: 100%;
   }
   #msg-input {
     flex: 1;
@@ -626,7 +624,6 @@
   @media (max-width: 1120px) {
     #left { width: 210px; }
     #right { width: 260px; }
-    #recent { width: 390px; }
     .quick-actions { grid-template-columns: repeat(3, minmax(112px, 1fr)); margin-top: 44px; }
     .quick-btn { font-size: 15px; }
   }
@@ -645,7 +642,6 @@
     .nav-arrow { font-size: 38px; }
     .quick-actions { grid-template-columns: 1fr 1fr; margin-top: 36px; }
     #bottom-bar { position: relative; height: auto; min-height: 220px; flex-direction: column; }
-    #recent { width: 100%; max-width: none; border-right: 0; border-bottom: 1px solid rgba(var(--t-rgb1),0.08); }
     #bottom-chat-msgs { min-height: 120px; }
     #right { padding-bottom: 8px; }
     #demo-ribbon { display: none; }
@@ -863,7 +859,7 @@
         <div id="recent-card"><div class="who">CAROLINE</div><div id="recent-text">You're back. I kept things warm for you.</div></div>
       </div>
       <div id="bottom-chat">
-        <div id="bottom-chat-label">Ready - Speaker Muted</div>
+        <div id="bottom-chat-label">Recent Conversation</div>
         <div id="bottom-chat-msgs"></div>
         <div id="input-row">
           <button class="dock-btn" id="headphones-btn" title="Listen">HP</button>
