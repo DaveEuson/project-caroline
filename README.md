@@ -15,6 +15,8 @@ Open the simulated dashboard here:
 
 The demo is a static, no-account walkthrough. It runs from [demo/index.html](demo/index.html) with bundled assets and simulated responses, so it is safe to share as a first look.
 
+![Project Caroline offline demo preview](Screenshots/demo-offline.png)
+
 ## Core Modules
 
 - AI chat with memory using local Ollama or cloud models through OpenRouter
