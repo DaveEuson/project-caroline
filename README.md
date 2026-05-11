@@ -2,7 +2,7 @@
 
 Your local AI sidekick for your desk, kiosk, or smart home: a cyberpunk assistant console with persistent chat, widgets, tasks, music, lights, reminders, and more.
 
-Caroline runs on your own Raspberry Pi or Ubuntu box. Cloud is optional: use a private local model through Ollama, or connect OpenRouter for faster access to stronger hosted models.
+Caroline runs on your own Raspberry Pi, Ubuntu box, or experimental Steam Deck install. Cloud is optional: use a private local model through Ollama, or connect OpenRouter for faster access to stronger hosted models.
 
 
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
@@ -63,6 +63,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 | Raspberry Pi OS Desktop 64-bit | Primary beta | Dedicated kiosk screen |
 | Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
 | Ubuntu Desktop 64-bit | Works, less tested | Desktop testing or local browser use |
+| Steam Deck / SteamOS | Experimental nightly | Repurposed handheld desk terminal |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
 ## Beta Kits
@@ -77,13 +78,14 @@ DIY install is the main path for now. I am also considering a small run of ready
 - [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
 - [How to install on Ubuntu Server](docs/how-to-ubuntu-server.md)
 - [How to install on Ubuntu Desktop](docs/how-to-ubuntu-desktop.md)
+- [Experimental Steam Deck / SteamOS install](docs/how-to-steamos.md)
 - [How to set up SSH and a stable IP](docs/network-prep.md)
 - [How to set up Google Calendar OAuth](docs/google-oauth.md)
 - [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
 
 ## Requirements
 
-- 64-bit Raspberry Pi OS or Ubuntu
+- 64-bit Raspberry Pi OS or Ubuntu; SteamOS is experimental on nightly
 - 4GB RAM minimum; 6-8GB is better for local AI
 - Internet during install
 - A stable local IP address is strongly recommended
