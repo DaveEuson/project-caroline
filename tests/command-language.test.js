@@ -181,6 +181,20 @@ for (const [surface, nodeId] of buildNodes) {
     assertNoAction(nodeId, 'why are your responses so slow', 'local Ollama');
     assertNoAction(nodeId, 'hello', "I'm here");
   });
+
+  test(`${surface}: local Ollama disables thinking mode`, () => {
+    const out = runNode(nodeId, {
+      payload: {
+        content: 'Tell me one strange fact about retro computers',
+        aiProvider: 'ollama',
+        ollamaModel: 'gemma4:e2b',
+      },
+    }, { ollamaModel: 'gemma4:e2b' });
+    const msg = Array.isArray(out) ? out.find((item) => item && item.payload) : out;
+    assert(msg && msg.payload, `${surface}: expected Ollama request payload`);
+    const payload = JSON.parse(msg.payload);
+    assert.strictEqual(payload.think, false, `${surface}: Ollama request should disable thinking mode`);
+  });
 }
 
 for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http parse', NODES.httpParse]]) {
