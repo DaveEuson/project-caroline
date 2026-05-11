@@ -134,38 +134,81 @@ CAROLINE_DIR_SED="$(printf '%s' "$CAROLINE_DIR" | sed 's/[&#]/\\&/g')"
 for json in "$CAROLINE_DIR/flows.json" "$CAROLINE_DIR/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-wonder-loop.json"; do
   [ -f "$json" ] || continue
   sed -i "s#/home/davee/caroline#${CAROLINE_DIR_SED}#g" "$json"
+  sed -i "s#127\\.0\\.0\\.1:1880#127.0.0.1:${CAROLINE_PORT}#g; s#localhost:1880#localhost:${CAROLINE_PORT}#g" "$json"
 done
 
 node <<'NODE_MERGE'
 const fs = require('fs');
 const path = process.env.CAROLINE_DIR;
 const files = ['flows.json', 'caroline-agent-loop.json', 'caroline-auto-tasks.json', 'caroline-wonder-loop.json'];
+const unsupportedSteamOsTypes = new Set(['gauth', 'google-credentials']);
 const merged = [];
 for (const file of files) {
   const full = `${path}/${file}`;
   if (!fs.existsSync(full)) continue;
   const data = JSON.parse(fs.readFileSync(full, 'utf8'));
   if (!Array.isArray(data)) throw new Error(`${file} is not a flow array`);
-  merged.push(...data);
+  for (const node of data) {
+    if (!node || unsupportedSteamOsTypes.has(node.type)) continue;
+    if (node.type === 'global-config' && node.modules) {
+      delete node.modules['node-red-contrib-google-calendar'];
+      delete node.modules['node-red-contrib-google-sheets'];
+      if (Object.keys(node.modules).length === 0) delete node.modules;
+    }
+    merged.push(node);
+  }
 }
 fs.writeFileSync(`${path}/flows.json`, JSON.stringify(merged, null, 2) + '\n');
 NODE_MERGE
+rm -f "$CAROLINE_DIR/.config.nodes.json" "$CAROLINE_DIR/.config.nodes.json.backup"
 
 if [ ! -s "$CAROLINE_DIR/google_oauth.json" ]; then printf '{}\n' > "$CAROLINE_DIR/google_oauth.json"; fi
+if [ ! -s "$CAROLINE_DIR/spotify_auth.json" ]; then printf '{}\n' > "$CAROLINE_DIR/spotify_auth.json"; fi
+if [ ! -s "$CAROLINE_DIR/caroline_settings.json" ]; then printf '{}\n' > "$CAROLINE_DIR/caroline_settings.json"; fi
+if [ ! -s "$CAROLINE_DIR/.credential_secret" ]; then node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex') + '\n')" > "$CAROLINE_DIR/.credential_secret"; fi
+if [ ! -e "$CAROLINE_DIR/caroline_history.json" ]; then printf '[]\n' > "$CAROLINE_DIR/caroline_history.json"; fi
 if [ ! -s "$CAROLINE_DIR/caroline_tasks.json" ]; then printf '{\n  "tasks": [],\n  "updatedAt": null\n}\n' > "$CAROLINE_DIR/caroline_tasks.json"; fi
 if [ ! -s "$CAROLINE_DIR/caroline_mind.json" ]; then printf '{\n  "version": 1,\n  "mood": { "curiosity": 0.62, "energy": 0.55, "socialPull": 0.35, "frustration": 0.1, "trust": 0.5 },\n  "wonderQueue": [],\n  "findings": [],\n  "lastOutboundAt": 0,\n  "lastCouncil": null,\n  "updatedAt": null\n}\n' > "$CAROLINE_DIR/caroline_mind.json"; fi
-chmod 600 "$CAROLINE_DIR/google_oauth.json" "$CAROLINE_DIR/caroline_tasks.json" "$CAROLINE_DIR/caroline_mind.json" 2>/dev/null || true
+touch "$CAROLINE_DIR/caroline_feedback.jsonl" "$CAROLINE_DIR/caroline_telemetry.jsonl"
+chmod 700 "$CAROLINE_DIR" 2>/dev/null || true
+chmod 600 \
+  "$CAROLINE_DIR/google_oauth.json" \
+  "$CAROLINE_DIR/spotify_auth.json" \
+  "$CAROLINE_DIR/caroline_settings.json" \
+  "$CAROLINE_DIR/.credential_secret" \
+  "$CAROLINE_DIR/caroline_history.json" \
+  "$CAROLINE_DIR/caroline_tasks.json" \
+  "$CAROLINE_DIR/caroline_mind.json" \
+  "$CAROLINE_DIR/caroline_feedback.jsonl" \
+  "$CAROLINE_DIR/caroline_telemetry.jsonl" 2>/dev/null || true
 printf '%s\n' "$CAROLINE_CHANNEL" > "$CAROLINE_DIR/caroline_channel"
+chmod 600 "$CAROLINE_DIR/caroline_channel" 2>/dev/null || true
 say "${GREEN}  ✓ Caroline files ready at ${CAROLINE_DIR}${RESET}"
 say ""
 
 say "${MAGENTA}  // NODE-RED RUNTIME${RESET}"
 mkdir -p "$NODERED_RUNTIME"
-npm --prefix "$NODERED_RUNTIME" install --no-audit --no-fund node-red node-red-contrib-google-calendar node-red-contrib-google-sheets
+if [ -f "$NODERED_RUNTIME/package.json" ]; then
+  npm --prefix "$NODERED_RUNTIME" uninstall --no-audit --no-fund node-red-contrib-google-calendar node-red-contrib-google-sheets >/dev/null 2>&1 || true
+fi
+npm --prefix "$NODERED_RUNTIME" install --no-audit --no-fund node-red
 
 cat > "$CAROLINE_DIR/settings.js" <<SETTINGS_EOF
 const path = require('path');
+const fs = require('fs');
 const carolineDir = process.env.CAROLINE_DIR || __dirname;
+const credentialSecretPath = path.join(carolineDir, ".credential_secret");
+const allowedBrowserOrigin = /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/i;
+
+function localhostOriginGuard(req, res, next) {
+  const origin = req.headers && req.headers.origin;
+  if (origin && !allowedBrowserOrigin.test(origin)) {
+    res.statusCode = 403;
+    res.end("Forbidden");
+    return;
+  }
+  next();
+}
 
 module.exports = {
   uiPort: process.env.PORT || ${CAROLINE_PORT},
@@ -175,7 +218,13 @@ module.exports = {
   httpStatic: carolineDir,
   flowFile: "flows.json",
   httpRequestTimeout: 120000,
-  httpNodeCors: { origin: "*", methods: "GET,PUT,POST,DELETE,OPTIONS" },
+  httpNodeCors: {
+    origin: ["http://localhost:${CAROLINE_PORT}", "http://127.0.0.1:${CAROLINE_PORT}"],
+    methods: "GET,PUT,POST,DELETE,OPTIONS"
+  },
+  credentialSecret: fs.readFileSync(credentialSecretPath, "utf8").trim(),
+  httpNodeMiddleware: localhostOriginGuard,
+  httpAdminMiddleware: localhostOriginGuard,
   functionExternalModules: true,
   functionGlobalContext: {
     fs: require("fs"),
@@ -204,6 +253,7 @@ Environment=PATH=${NODE_CURRENT}/bin:/usr/local/bin:/usr/bin:/bin
 Environment=CAROLINE_DIR=${CAROLINE_DIR}
 Environment=PORT=${CAROLINE_PORT}
 ExecStart=${NODERED_RUNTIME}/node_modules/.bin/node-red --userDir ${CAROLINE_DIR} --port ${CAROLINE_PORT}
+UMask=0077
 Restart=on-failure
 RestartSec=5
 
@@ -266,7 +316,8 @@ cp -f "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" "$RE
 chmod +x "$REAL_HOME/Desktop/Project Caroline.desktop" "$REAL_HOME/Desktop/Project Caroline Kiosk.desktop" 2>/dev/null || true
 
 systemctl --user daemon-reload
-systemctl --user enable --now caroline.service
+systemctl --user enable caroline.service
+systemctl --user restart caroline.service
 
 if command -v sudo >/dev/null 2>&1; then
   if sudo -n true >/dev/null 2>&1; then

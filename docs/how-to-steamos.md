@@ -11,6 +11,7 @@ This path is experimental and installs everything under the `deck` user's home d
 - Installs Node-RED locally under `~/caroline/node-red-runtime`
 - Runs Caroline as a user systemd service
 - Serves the UI locally at `http://localhost:8080/`
+- Keeps the service bound to localhost and writes private settings/token files with owner-only permissions
 
 It does **not** install system packages with `pacman`, change SteamOS read-only mode, configure nginx, or install Ollama.
 
@@ -68,6 +69,8 @@ Then open this on your computer:
 ```text
 http://localhost:8088/
 ```
+
+The browser origin guard allows local Caroline pages and blocks non-local browser origins from calling the Deck's local Node-RED endpoints.
 
 ## Current Limits
 
