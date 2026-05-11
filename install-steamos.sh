@@ -36,6 +36,100 @@ need_cmd() {
     exit 1
   fi
 }
+can_prompt() {
+  [ "${CAROLINE_NONINTERACTIVE:-false}" != "true" ] && [ -r /dev/tty ] && [ -w /dev/tty ]
+}
+ask_yes_no() {
+  local prompt="$1"
+  local default="${2:-n}"
+  local hint answer
+  if [ "$default" = "y" ] || [ "$default" = "Y" ]; then
+    hint="Y/n"
+  else
+    hint="y/N"
+  fi
+  if ! can_prompt; then
+    [ "$default" = "y" ] || [ "$default" = "Y" ]
+    return $?
+  fi
+  read -r -p "  ${prompt} (${hint}): " answer </dev/tty
+  answer="${answer:-$default}"
+  case "$answer" in
+    y|Y|yes|YES) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+prompt_value() {
+  local prompt="$1"
+  local default="${2:-}"
+  local answer
+  if ! can_prompt; then
+    printf '%s' "$default"
+    return 0
+  fi
+  if [ -n "$default" ]; then
+    read -r -p "  ${prompt} [${default}]: " answer </dev/tty
+    printf '%s' "${answer:-$default}"
+  else
+    read -r -p "  ${prompt}: " answer </dev/tty
+    printf '%s' "$answer"
+  fi
+}
+bool_json() {
+  case "${1:-false}" in
+    true|TRUE|1|y|Y|yes|YES) printf 'true' ;;
+    *) printf 'false' ;;
+  esac
+}
+total_ram_mb() {
+  awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0
+}
+cpu_model_summary() {
+  awk -F: '/model name|Hardware|Processor/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null
+}
+
+OLLAMA_MODEL_VALUES=("qwen3:1.7b" "qwen3:0.6b" "qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
+OLLAMA_MODEL_LABELS=(
+  "Recommended Steam Deck quality; best Deck balance in Caroline tests"
+  "Fast Steam Deck fallback; very quick, weaker calendar parsing"
+  "Recommended Raspberry Pi quality; balanced local fallback"
+  "Tiny fallback for constrained hardware"
+  "Safe legacy fallback when Qwen is unavailable"
+)
+recommended_ollama_model() {
+  local ram_mb="${1:-$(total_ram_mb)}"
+  if [ "$ram_mb" -gt 0 ] && [ "$ram_mb" -lt 4096 ]; then
+    printf 'qwen2.5:0.5b'
+  else
+    printf 'qwen3:1.7b'
+  fi
+}
+choose_ollama_model() {
+  local recommended="${1:-qwen3:1.7b}"
+  local i choice
+  if ! can_prompt; then
+    printf '%s' "$recommended"
+    return 0
+  fi
+  say "${DIM}  Choose a tested Ollama model:${RESET}" >/dev/tty
+  for i in "${!OLLAMA_MODEL_VALUES[@]}"; do
+    if [ "${OLLAMA_MODEL_VALUES[$i]}" = "$recommended" ]; then
+      say "  $((i+1))) ${BOLD}${OLLAMA_MODEL_VALUES[$i]}${RESET} ${DIM}${OLLAMA_MODEL_LABELS[$i]}${RESET}" >/dev/tty
+    else
+      say "  $((i+1))) ${OLLAMA_MODEL_VALUES[$i]} ${DIM}${OLLAMA_MODEL_LABELS[$i]}${RESET}" >/dev/tty
+    fi
+  done
+  read -r -p "  Model number or exact Ollama name [${recommended}]: " choice </dev/tty
+  choice="${choice:-$recommended}"
+  case "$choice" in
+    1) printf '%s' "${OLLAMA_MODEL_VALUES[0]}" ;;
+    2) printf '%s' "${OLLAMA_MODEL_VALUES[1]}" ;;
+    3) printf '%s' "${OLLAMA_MODEL_VALUES[2]}" ;;
+    4) printf '%s' "${OLLAMA_MODEL_VALUES[3]}" ;;
+    5) printf '%s' "${OLLAMA_MODEL_VALUES[4]}" ;;
+    *) printf '%s' "$choice" ;;
+  esac
+}
 
 is_steamos() {
   [ -r /etc/os-release ] && . /etc/os-release && [ "${ID:-}" = "steamos" ]
@@ -108,6 +202,103 @@ say "${GREEN}  ✓ Node $(node --version) ready at ${NODE_CURRENT}${RESET}"
 say "${GREEN}  ✓ npm $(npm --version) ready${RESET}"
 say ""
 
+existing_setting() {
+  local key="$1"
+  node - "$CAROLINE_DIR/caroline_settings.json" "$key" <<'NODE_EXISTING'
+const fs = require('fs');
+const [file, key] = process.argv.slice(2);
+try {
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const value = data && data[key];
+  if (value !== undefined && value !== null) process.stdout.write(String(value));
+} catch (_) {}
+NODE_EXISTING
+}
+
+say "${MAGENTA}  // CAROLINE ARCHIVE - OPERATOR RECORD${RESET}"
+say "${DIM}  Press Enter to keep the suggested value.${RESET}"
+EXISTING_USER_NAME="$(existing_setting userName)"
+EXISTING_AI_NAME="$(existing_setting aiName)"
+USER_NAME="${CAROLINE_USER_NAME:-$(prompt_value "Your name" "$EXISTING_USER_NAME")}"
+AI_NAME="${CAROLINE_AI_NAME:-$(prompt_value "Assistant name" "${EXISTING_AI_NAME:-Caroline}")}"
+[ -n "$AI_NAME" ] || AI_NAME="Caroline"
+say ""
+
+say "${MAGENTA}  // CAROLINE ARCHIVE - ASSISTANT CORE${RESET}"
+TOTAL_RAM_MB="$(total_ram_mb)"
+CPU_MODEL="$(cpu_model_summary)"
+RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB")"
+say "${DIM}  Best experience: OpenRouter. Use your API key in Settings -> AI.${RESET}"
+say "${DIM}  Recommended Steam Deck local model: qwen3:1.7b.${RESET}"
+say "${DIM}  Fast Deck fallback: qwen3:0.6b.${RESET}"
+say "${DIM}  Safe/legacy fallback: gemma3:1b.${RESET}"
+say "${CYAN}  Detected hardware:${RESET} ${BOLD}Steam Deck / SteamOS${RESET} ${DIM}(${ARCH}, ${TOTAL_RAM_MB:-0}MB RAM)${RESET}"
+if [ -n "$CPU_MODEL" ]; then
+  say "${DIM}    CPU: ${CPU_MODEL}${RESET}"
+fi
+say "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
+say "${DIM}    SteamOS local model support is experimental; this installer configures Caroline but does not install Ollama yet.${RESET}"
+say ""
+if ask_yes_no "Configure Caroline to try local Ollama mode on this Deck?" "n"; then
+  AI_PROVIDER="ollama"
+  OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
+  say "${DIM}  Selected ${OLLAMA_MODEL}. Install or start Ollama separately, then use Settings -> AI -> Pull new model.${RESET}"
+else
+  AI_PROVIDER="openrouter"
+  OLLAMA_MODEL="$RECOMMENDED_OLLAMA_MODEL"
+  say "${DIM}  Using OpenRouter mode. Local Ollama remains available later in Settings.${RESET}"
+fi
+AI_MODEL="anthropic/claude-haiku-4.5"
+OLLAMA_URL_DEFAULT="http://localhost:11434"
+TIMEZONE="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
+[ -n "$TIMEZONE" ] || TIMEZONE="America/Los_Angeles"
+say ""
+
+TELEMETRY_INSTALL_COUNT="$(existing_setting telemetryInstallCount)"
+TELEMETRY_TROUBLESHOOTING="$(existing_setting telemetryTroubleshooting)"
+TELEMETRY_OPT_OUT_PING="$(existing_setting telemetryOptOutPing)"
+if [ "$TELEMETRY_INSTALL_COUNT" != "true" ] && [ "$TELEMETRY_INSTALL_COUNT" != "false" ]; then
+  say "${MAGENTA}  // PRIVACY BEACON${RESET}"
+  say "${DIM}  Caroline can optionally send Dave anonymous project-health pings.${RESET}"
+  say "${DIM}  Never sent: chat prompts, memory, settings text, IP address, location, calendar data, OAuth tokens, or API keys.${RESET}"
+  say "${DIM}  Remote sending is disabled unless a release telemetry endpoint is configured.${RESET}"
+  if ask_yes_no "Send an anonymous SteamOS install/update count to the maintainer?" "n"; then
+    TELEMETRY_INSTALL_COUNT="true"
+  else
+    TELEMETRY_INSTALL_COUNT="false"
+    if ask_yes_no "Send one anonymous opt-out count instead?" "n"; then
+      TELEMETRY_OPT_OUT_PING="true"
+    else
+      TELEMETRY_OPT_OUT_PING="false"
+    fi
+  fi
+  if ask_yes_no "Opt in to safe troubleshooting diagnostics for future bug reports?" "n"; then
+    TELEMETRY_TROUBLESHOOTING="true"
+  else
+    TELEMETRY_TROUBLESHOOTING="false"
+  fi
+else
+  say "${DIM}  Privacy choices preserved from existing settings.${RESET}"
+  [ "$TELEMETRY_TROUBLESHOOTING" = "true" ] || TELEMETRY_TROUBLESHOOTING="false"
+  [ "$TELEMETRY_OPT_OUT_PING" = "true" ] || TELEMETRY_OPT_OUT_PING="false"
+fi
+say ""
+
+LOCAL_AUTH_ENABLED="$(existing_setting localAuthEnabled)"
+if [ "$LOCAL_AUTH_ENABLED" != "true" ] && [ "$LOCAL_AUTH_ENABLED" != "false" ]; then
+  say "${MAGENTA}  // LOCAL ACCESS${RESET}"
+  say "${DIM}  SteamOS currently binds Caroline to localhost only, so LAN devices cannot reach it without an SSH tunnel.${RESET}"
+  say "${DIM}  This choice is saved for future SteamOS remote-access support.${RESET}"
+  if ask_yes_no "Require local browser login when remote access is added?" "n"; then
+    LOCAL_AUTH_ENABLED="true"
+  else
+    LOCAL_AUTH_ENABLED="false"
+  fi
+else
+  say "${DIM}  Local access choice preserved from existing settings.${RESET}"
+fi
+say ""
+
 say "${MAGENTA}  // PROJECT FILES${RESET}"
 if [ -d "$CLONE_DIR/.git" ]; then
   say "${DIM}  Existing repo found; syncing ${CAROLINE_CHANNEL}.${RESET}"
@@ -165,6 +356,61 @@ rm -f "$CAROLINE_DIR/.config.nodes.json" "$CAROLINE_DIR/.config.nodes.json.backu
 if [ ! -s "$CAROLINE_DIR/google_oauth.json" ]; then printf '{}\n' > "$CAROLINE_DIR/google_oauth.json"; fi
 if [ ! -s "$CAROLINE_DIR/spotify_auth.json" ]; then printf '{}\n' > "$CAROLINE_DIR/spotify_auth.json"; fi
 if [ ! -s "$CAROLINE_DIR/caroline_settings.json" ]; then printf '{}\n' > "$CAROLINE_DIR/caroline_settings.json"; fi
+SETTINGS_PATH="$CAROLINE_DIR/caroline_settings.json"
+SETTINGS_BACKUP="$SETTINGS_PATH.bak.$(date +%Y%m%d-%H%M%S)"
+cp -p "$SETTINGS_PATH" "$SETTINGS_BACKUP" 2>/dev/null || true
+export SETTINGS_PATH USER_NAME AI_NAME TIMEZONE AI_MODEL AI_PROVIDER OLLAMA_MODEL OLLAMA_URL_DEFAULT
+export TELEMETRY_INSTALL_COUNT TELEMETRY_TROUBLESHOOTING TELEMETRY_OPT_OUT_PING LOCAL_AUTH_ENABLED CAROLINE_PORT
+node <<'NODE_SETTINGS'
+const fs = require('fs');
+const crypto = require('crypto');
+const file = process.env.SETTINGS_PATH;
+let existing = {};
+try {
+  existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (!existing || typeof existing !== 'object' || Array.isArray(existing)) existing = {};
+} catch (_) {}
+const bool = (value) => String(value).toLowerCase() === 'true';
+const defaults = {
+  installId: existing.installId || crypto.randomBytes(16).toString('hex'),
+  telemetryInstallCount: bool(process.env.TELEMETRY_INSTALL_COUNT),
+  telemetryTroubleshooting: bool(process.env.TELEMETRY_TROUBLESHOOTING),
+  telemetryOptOutPing: bool(process.env.TELEMETRY_OPT_OUT_PING),
+  telemetryEndpointConfigured: false,
+  localAuthEnabled: bool(process.env.LOCAL_AUTH_ENABLED),
+  userName: process.env.USER_NAME || existing.userName || '',
+  aiName: process.env.AI_NAME || existing.aiName || 'Caroline',
+  userMood: existing.userMood ?? 7,
+  aiMood: existing.aiMood ?? 7,
+  timezone: process.env.TIMEZONE || existing.timezone || 'America/Los_Angeles',
+  timeFormat: existing.timeFormat || '12',
+  temperatureUnit: existing.temperatureUnit || 'fahrenheit',
+  piIp: '127.0.0.1',
+  nodeRedUrl: `http://localhost:${process.env.CAROLINE_PORT || 8080}`,
+  uiFont: existing.uiFont || 'Inter',
+  uiScale: existing.uiScale || 'large',
+  uiDensity: existing.uiDensity || 'comfortable',
+  highContrastText: existing.highContrastText ?? true,
+  reduceMonoLabels: existing.reduceMonoLabels ?? true,
+  defaultChannel: existing.defaultChannel ?? 0,
+  meetingReminderMinutes: existing.meetingReminderMinutes ?? 0,
+  ttsEnabled: existing.ttsEnabled ?? false,
+  voiceMuted: existing.voiceMuted ?? true,
+  wakeWordEnabled: existing.wakeWordEnabled ?? false,
+  wakePhrases: existing.wakePhrases || 'hey caroline, hey ai',
+  aiModel: process.env.AI_MODEL || existing.aiModel || 'anthropic/claude-haiku-4.5',
+  aiProvider: process.env.AI_PROVIDER || existing.aiProvider || 'openrouter',
+  ollamaUrl: process.env.OLLAMA_URL_DEFAULT || existing.ollamaUrl || 'http://localhost:11434',
+  ollamaModel: process.env.OLLAMA_MODEL || existing.ollamaModel || 'qwen3:1.7b',
+  calendarId: existing.calendarId || 'primary',
+  googleRedirectUri: existing.googleRedirectUri || 'http://127.0.0.1:8080/admin/google/callback',
+  googleConnected: existing.googleConnected ?? false,
+  kioskMode: existing.kioskMode ?? true,
+  setupComplete: existing.setupComplete ?? false
+};
+const merged = { ...existing, ...defaults };
+fs.writeFileSync(file, JSON.stringify(merged, null, 2) + '\n');
+NODE_SETTINGS
 if [ ! -s "$CAROLINE_DIR/.credential_secret" ]; then node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex') + '\n')" > "$CAROLINE_DIR/.credential_secret"; fi
 if [ ! -e "$CAROLINE_DIR/caroline_history.json" ]; then printf '[]\n' > "$CAROLINE_DIR/caroline_history.json"; fi
 if [ ! -s "$CAROLINE_DIR/caroline_tasks.json" ]; then printf '{\n  "tasks": [],\n  "updatedAt": null\n}\n' > "$CAROLINE_DIR/caroline_tasks.json"; fi

@@ -12,8 +12,11 @@ This path is experimental and installs everything under the `deck` user's home d
 - Runs Caroline as a user systemd service
 - Serves the UI locally at `http://localhost:8080/`
 - Keeps the service bound to localhost and writes private settings/token files with owner-only permissions
+- Asks the same first-run identity/privacy/AI questions as the main installer, adapted for SteamOS
 
 It does **not** install system packages with `pacman`, change SteamOS read-only mode, configure nginx, or install Ollama.
+
+The local model prompt is still useful: choosing local mode saves Caroline's Ollama URL/model preference. On SteamOS, install/start Ollama separately before using Settings -> AI -> Pull new model.
 
 ## Install
 
