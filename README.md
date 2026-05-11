@@ -111,6 +111,8 @@ Add these later in **Settings**:
 
 ## AI Model Guidance
 
+The installer detects your hardware, RAM, and platform, then preselects the local model it thinks fits best. You can still override the choice during setup.
+
 - Best experience: **OpenRouter**
 - Recommended local quality: **qwen2.5:1.5b**
 - Fast local fallback: **qwen2.5:0.5b**

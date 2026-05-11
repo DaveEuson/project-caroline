@@ -169,12 +169,26 @@ OLLAMA_MODEL_LABELS=(
   "Safe/legacy default; stable older-install choice"
 )
 
+ollama_model_index() {
+  local model="${1:-qwen2.5:1.5b}"
+  local i
+  for i in "${!OLLAMA_MODEL_VALUES[@]}"; do
+    if [ "${OLLAMA_MODEL_VALUES[$i]}" = "$model" ]; then
+      printf '%s' "$i"
+      return 0
+    fi
+  done
+  printf '0'
+}
+
 choose_ollama_model() {
-  local selected=0
+  local recommended="${1:-qwen2.5:1.5b}"
+  local selected
   local key rest i
+  selected="$(ollama_model_index "$recommended")"
 
   if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
-    printf '%s' "qwen2.5:1.5b"
+    printf '%s' "$recommended"
     return 0
   fi
 
@@ -552,6 +566,89 @@ safe_cmd_version() {
 caroline_device_model() {
   if [ -r /proc/device-tree/model ]; then
     tr -d '\0' < /proc/device-tree/model 2>/dev/null || true
+    return 0
+  fi
+  local _path
+  for _path in /sys/class/dmi/id/product_name /sys/class/dmi/id/board_name /sys/class/dmi/id/sys_vendor; do
+    if [ -r "$_path" ]; then
+      tr -d '\0' < "$_path" 2>/dev/null | head -1
+      return 0
+    fi
+  done
+}
+
+total_ram_mb() {
+  awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0
+}
+
+cpu_model_summary() {
+  awk -F: '/model name|Hardware|Processor/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null
+}
+
+is_steam_deck() {
+  local _facts
+  _facts="$(
+    cat /sys/class/dmi/id/product_name /sys/class/dmi/id/board_name /sys/class/dmi/id/sys_vendor 2>/dev/null || true
+    if [ -r /etc/os-release ]; then cat /etc/os-release 2>/dev/null || true; fi
+  )"
+  printf '%s' "$_facts" | grep -qiE 'steam deck|jupiter|valve|steamos'
+}
+
+caroline_hardware_profile() {
+  local _arch
+  _arch="$(uname -m 2>/dev/null || echo unknown)"
+  if is_wsl; then
+    printf 'WSL on Windows'
+  elif is_steam_deck; then
+    printf 'Steam Deck / SteamOS-compatible PC'
+  elif is_raspberry_pi; then
+    printf 'Raspberry Pi'
+  elif printf '%s' "$_arch" | grep -qiE '^(x86_64|amd64)$'; then
+    printf 'Ubuntu/Linux x86_64'
+  elif printf '%s' "$_arch" | grep -qiE '^(aarch64|arm64|armv)'; then
+    printf 'Linux ARM'
+  else
+    printf 'Linux %s' "$_arch"
+  fi
+}
+
+recommended_ollama_model() {
+  local _ram_mb="${1:-$(total_ram_mb)}"
+  local _arch
+  _arch="$(uname -m 2>/dev/null || echo unknown)"
+
+  if [ "$_ram_mb" -gt 0 ] && [ "$_ram_mb" -lt 4096 ]; then
+    printf 'qwen2.5:0.5b'
+  elif is_steam_deck; then
+    printf 'qwen2.5:1.5b'
+  elif is_raspberry_pi; then
+    if [ "$_ram_mb" -ge 6000 ]; then
+      printf 'qwen2.5:1.5b'
+    else
+      printf 'qwen2.5:0.5b'
+    fi
+  elif printf '%s' "$_arch" | grep -qiE '^(x86_64|amd64)$'; then
+    printf 'qwen2.5:1.5b'
+  else
+    printf 'qwen2.5:1.5b'
+  fi
+}
+
+recommended_ollama_reason() {
+  local _model="$1"
+  local _ram_mb="${2:-0}"
+  if is_wsl; then
+    printf 'WSL detected; use OpenRouter or Windows Ollama, but this is the best remote/local target.'
+  elif is_steam_deck; then
+    printf 'Steam Deck-class hardware should have enough RAM/CPU for the balanced local model.'
+  elif [ "$_ram_mb" -gt 0 ] && [ "$_ram_mb" -lt 4096 ]; then
+    printf 'Under 4GB RAM detected, so the fastest small local model is safer.'
+  elif is_raspberry_pi && [ "$_model" = "qwen2.5:0.5b" ]; then
+    printf 'Raspberry Pi with limited RAM detected, so responsiveness wins over quality.'
+  elif is_raspberry_pi; then
+    printf 'Raspberry Pi with enough RAM detected; this was the best local Caroline balance in testing.'
+  else
+    printf 'General Linux hardware detected; this is the best local Caroline balance in testing.'
   fi
 }
 
@@ -783,6 +880,13 @@ echo -e "${DIM}  Best experience: OpenRouter. Fast, coherent, and usually costs 
 echo -e "${DIM}  Recommended local quality: qwen2.5:1.5b. Best Caroline balance from local testing.${RESET}"
 echo -e "${DIM}  Fast local fallback: qwen2.5:0.5b. Quickest on small hardware.${RESET}"
 echo -e "${DIM}  Safe/legacy default: gemma3:1b. Stable older-install choice.${RESET}"
+TOTAL_RAM_MB="$(total_ram_mb)"
+SYSTEM_ARCH="$(uname -m 2>/dev/null || echo unknown)"
+DEVICE_MODEL="$(caroline_device_model)"
+CPU_MODEL="$(cpu_model_summary)"
+HARDWARE_PROFILE="$(caroline_hardware_profile)"
+RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB")"
+RECOMMENDED_OLLAMA_REASON="$(recommended_ollama_reason "$RECOMMENDED_OLLAMA_MODEL" "$TOTAL_RAM_MB")"
 if is_wsl; then
   WSL_WINDOWS_HOST_IP="$(wsl_windows_host_ip)"
   if [ -n "$WSL_WINDOWS_HOST_IP" ]; then
@@ -794,6 +898,16 @@ if is_wsl; then
   echo -e "${DIM}    ${OLLAMA_URL_DEFAULT}${RESET}"
 fi
 echo ""
+echo -e "${CYAN}  Detected hardware:${RESET} ${BOLD}${HARDWARE_PROFILE}${RESET} ${DIM}(${SYSTEM_ARCH}, ${TOTAL_RAM_MB:-0}MB RAM)${RESET}"
+if [ -n "$DEVICE_MODEL" ]; then
+  echo -e "${DIM}    ${DEVICE_MODEL}${RESET}"
+fi
+if [ -n "$CPU_MODEL" ]; then
+  echo -e "${DIM}    CPU: ${CPU_MODEL}${RESET}"
+fi
+echo -e "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
+echo -e "${DIM}    ${RECOMMENDED_OLLAMA_REASON}${RESET}"
+echo ""
 echo -e "${DIM}  Local model options you can type if you install Ollama:${RESET}"
 echo -e "${DIM}    qwen2.5:1.5b  recommended local quality; best Caroline balance.${RESET}"
 echo -e "${DIM}    qwen2.5:0.5b  fast local fallback; quickest on small hardware.${RESET}"
@@ -801,7 +915,6 @@ echo -e "${DIM}    gemma3:1b      safe/legacy default; stable older-install choi
 echo ""
 
 # Warn if RAM is low
-TOTAL_RAM_MB=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
 if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo -e "${YELLOW}  ⚠ ${TOTAL_RAM_MB}MB RAM detected. Ollama runs better with 4GB+.${RESET}"
   echo -e "${DIM}    Use OpenRouter for normal chat; local Ollama may feel slow or wander.${RESET}"
@@ -823,14 +936,14 @@ echo ""
 
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
-  echo -e "${DIM}  Choose a local model. qwen2.5:1.5b is selected by default.${RESET}"
+  echo -e "${DIM}  Choose a local model. ${RECOMMENDED_OLLAMA_MODEL} is selected for this hardware.${RESET}"
   echo -e "${DIM}  OpenRouter is still the best Caroline experience.${RESET}"
-  OLLAMA_MODEL="$(choose_ollama_model)"
+  OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
   echo ""
   echo -e "${DIM}  Selected ${OLLAMA_MODEL}. The installer will download it after the core services are ready.${RESET}"
 else
   AI_PROVIDER="openrouter"
-  OLLAMA_MODEL="qwen2.5:1.5b"
+  OLLAMA_MODEL="$RECOMMENDED_OLLAMA_MODEL"
   echo -e "${DIM}  Skipping local Ollama. You can add an OpenRouter key or point Ollama at another computer later in Settings.${RESET}"
 fi
 echo ""
