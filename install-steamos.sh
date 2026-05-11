@@ -222,6 +222,25 @@ exec xdg-open "\$URL"
 OPEN_EOF
 chmod +x "$REAL_HOME/.local/bin/caroline-steamos-open"
 
+cat > "$REAL_HOME/.local/bin/caroline-steamos-kiosk" <<KIOSK_EOF
+#!/usr/bin/env bash
+set -e
+URL="http://localhost:${CAROLINE_PORT}/"
+PROFILE="\$HOME/.local/share/caroline/firefox-kiosk"
+mkdir -p "\$PROFILE"
+if command -v flatpak >/dev/null 2>&1 && flatpak info org.mozilla.firefox >/dev/null 2>&1; then
+  exec flatpak run org.mozilla.firefox --kiosk --new-window "\$URL"
+fi
+if command -v firefox >/dev/null 2>&1; then
+  exec firefox --no-remote --new-instance --profile "\$PROFILE" --kiosk "\$URL"
+fi
+if command -v chromium >/dev/null 2>&1; then
+  exec chromium --kiosk --app="\$URL"
+fi
+exec xdg-open "\$URL"
+KIOSK_EOF
+chmod +x "$REAL_HOME/.local/bin/caroline-steamos-kiosk"
+
 cat > "$REAL_HOME/.local/share/applications/caroline-steamos.desktop" <<DESKTOP_EOF
 [Desktop Entry]
 Type=Application
@@ -231,6 +250,20 @@ Exec=${REAL_HOME}/.local/bin/caroline-steamos-open
 Terminal=false
 Categories=Utility;
 DESKTOP_EOF
+
+cat > "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" <<DESKTOP_EOF
+[Desktop Entry]
+Type=Application
+Name=Project Caroline Kiosk
+Comment=Open Project Caroline fullscreen
+Exec=${REAL_HOME}/.local/bin/caroline-steamos-kiosk
+Terminal=false
+Categories=Utility;
+DESKTOP_EOF
+
+cp -f "$REAL_HOME/.local/share/applications/caroline-steamos.desktop" "$REAL_HOME/Desktop/Project Caroline.desktop" 2>/dev/null || true
+cp -f "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" "$REAL_HOME/Desktop/Project Caroline Kiosk.desktop" 2>/dev/null || true
+chmod +x "$REAL_HOME/Desktop/Project Caroline.desktop" "$REAL_HOME/Desktop/Project Caroline Kiosk.desktop" 2>/dev/null || true
 
 systemctl --user daemon-reload
 systemctl --user enable --now caroline.service
@@ -267,6 +300,7 @@ say ""
 say "${BOLD}${GREEN}  Project: Caroline SteamOS experimental install complete.${RESET}"
 say "${CYAN}  URL on Steam Deck:${RESET} ${BOLD}http://localhost:${CAROLINE_PORT}/${RESET}"
 say "${CYAN}  Open command:${RESET} ${BOLD}caroline-steamos-open${RESET}"
+say "${CYAN}  Kiosk command:${RESET} ${BOLD}caroline-steamos-kiosk${RESET}"
 say "${CYAN}  Logs:${RESET} ${BOLD}journalctl --user -u caroline -f${RESET}"
 say "${CYAN}  Editor:${RESET} ${BOLD}http://localhost:${CAROLINE_PORT}/red${RESET}"
 say ""

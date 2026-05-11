@@ -28,6 +28,12 @@ Then open Caroline on the Deck:
 caroline-steamos-open
 ```
 
+For a fullscreen/kiosk-style launch:
+
+```bash
+caroline-steamos-kiosk
+```
+
 Or open Firefox and go to:
 
 ```text
@@ -67,6 +73,7 @@ http://localhost:8088/
 
 - Local Ollama is not installed by this experimental path yet.
 - HTTPS/voice proxy is not configured yet.
+- Kiosk mode is a fullscreen browser launcher, not a locked-down appliance mode yet.
 - Auto-start before login may require:
 
 ```bash
