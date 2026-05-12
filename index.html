@@ -2191,6 +2191,21 @@
           </div>
         </div>
         <div class="settings-section">
+          <h3>Privacy &amp; Data</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Delete messages after</div><div class="settings-sub">Auto-purge chat history older than this</div></div>
+            <select class="settings-input" id="set-history-retention" style="width:160px;">
+              <option value="0">Never</option>
+              <option value="3600000">1 hour</option>
+              <option value="21600000">6 hours</option>
+              <option value="86400000">24 hours</option>
+              <option value="604800000">7 days</option>
+              <option value="2592000000">30 days</option>
+              <option value="31536000000">1 year</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-section">
           <h3>Data &amp; Backup</h3>
           <div class="settings-row">
             <div><div class="settings-label">Export all settings</div><div class="settings-sub">Download settings, history &amp; tasks as JSON</div></div>
@@ -2679,7 +2694,7 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -3038,6 +3053,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (autoThemeEl) autoThemeEl.checked = parseSettingBool(S.autoTheme);
   const wakeEl = document.getElementById('set-wake-word-enabled');
   if (wakeEl) wakeEl.checked = parseSettingBool(S.wakeWordEnabled);
+  const histRetEl = document.getElementById('set-history-retention');
+  if (histRetEl) histRetEl.value = String(S.historyRetentionMs || 0);
   const grEl = document.getElementById('google-redirect-uri');
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const meetingReminderEl = document.getElementById('set-meeting-reminder');
@@ -5720,6 +5737,8 @@ async function saveSettings() {
   const wakePhrasesInp = document.getElementById('set-wake-phrases');
   if (wakeEnabledInp) S.wakeWordEnabled = wakeEnabledInp.checked;
   if (wakePhrasesInp) S.wakePhrases = wakePhrasesInp.value.trim() || DEFAULTS.wakePhrases;
+  const histRetInp = document.getElementById('set-history-retention');
+  if (histRetInp) S.historyRetentionMs = Number(histRetInp.value) || 0;
   if (typeof applyVoiceInputSettings === 'function') applyVoiceInputSettings();
   const personalityInp = document.getElementById('personalityPrompt');
   const profileInp = document.getElementById('userProfilePrompt');
@@ -5737,7 +5756,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
