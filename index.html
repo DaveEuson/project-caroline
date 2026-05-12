@@ -6716,7 +6716,7 @@ function connectWS(){
       normalizeSettingsBooleans(_payload, { fillDefaults: false });
       ws.send(JSON.stringify(_payload));
     })();
-    syncSettingsFromServer().then(() => refreshPiNetworkIdentity()).then(() => {
+    syncSettingsFromServer().then(() => refreshPiNetworkIdentity()).then(() => loadMemoryShards()).then(() => {
       if (shouldRunOnboarding() && !onboardingStarted) startBootSequence();
     });
   };
@@ -6923,6 +6923,9 @@ async function sendAiHttpMessage(text, context) {
     if (!resp.ok) throw new Error((data && (data.error || data.reply)) || ('HTTP ' + resp.status));
     let reply = cleanDisplayText(data.reply || data.content || '');
     if (!reply) throw new Error('Empty AI reply');
+    if (data.action && String(data.action.type || '').toLowerCase() === 'remember') {
+      rememberActionShard(data.action);
+    }
     const httpMoodMatch = reply.match(/\[SET_USER_MOOD:(\d+)\]/i);
     if (httpMoodMatch) {
       S.userMood = clampMood(parseInt(httpMoodMatch[1]));
@@ -8507,12 +8510,71 @@ function handlePendingMemoryAnswer(text) {
 }
 
 var stickyNotes = JSON.parse(localStorage.getItem('caro_notes') || '[]');
-async function saveToMemory(fact) {
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'remember', content:fact }));
-  stickyNotes.unshift({ text:'📌 '+fact, ts:Date.now() });
+function memoryShardId(text) {
+  return 'mem-' + String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 72);
+}
+function normalizeMemoryFact(text) {
+  return cleanMemoryText(text)
+    .replace(/^saved to memory:\s*/i, '')
+    .replace(/^["']+|["']+$/g, '')
+    .replace(/[?.!]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function upsertLocalMemoryShard(fact, opts = {}) {
+  const clean = normalizeMemoryFact(fact);
+  if (!clean) return null;
+  stickyNotes = Array.isArray(stickyNotes) ? stickyNotes : [];
+  const id = opts.id || memoryShardId(clean);
+  const existing = stickyNotes.findIndex(note => (note.id && note.id === id) || normalizeMemoryFact(note.text).toLowerCase() === clean.toLowerCase());
+  const shard = { id, text: clean, ts: opts.ts || Date.now(), source: opts.source || 'local' };
+  if (existing >= 0) stickyNotes.splice(existing, 1);
+  stickyNotes.unshift(shard);
   if (stickyNotes.length > 20) stickyNotes.pop();
   localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
   renderMemoryWidget();
+  return shard;
+}
+async function saveToMemory(fact) {
+  const shard = upsertLocalMemoryShard(fact, { source: 'manual' });
+  if (!shard) return;
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/memory-shards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fact: shard.text, id: shard.id }),
+      timeoutMs: 5000
+    }, 'Save memory shard');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json().catch(() => ({}));
+    if (data && data.shard) upsertLocalMemoryShard(data.shard.text || shard.text, { id: data.shard.id || shard.id, ts: Date.parse(data.shard.createdAt) || shard.ts, source: 'server' });
+  } catch(e) {
+    console.warn('[Caroline] memory shard save failed, using websocket fallback:', e.message);
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'remember', content:shard.text, id:shard.id }));
+  }
+}
+function rememberActionShard(action) {
+  const fact = action && (action.fact || action.content || action.text);
+  if (!fact) return;
+  upsertLocalMemoryShard(fact, { id: action.id, source: 'action' });
+}
+async function loadMemoryShards() {
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/memory-shards', { timeoutMs: 5000 }, 'Load memory shards');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const serverShards = Array.isArray(data.shards) ? data.shards : [];
+    serverShards.slice().reverse().forEach(shard => {
+      upsertLocalMemoryShard(shard.text || shard.fact || '', {
+        id: shard.id,
+        ts: Date.parse(shard.createdAt || shard.ts) || Date.now(),
+        source: shard.source || 'server'
+      });
+    });
+    renderMemoryWidget();
+  } catch(e) {
+    renderMemoryWidget();
+  }
 }
 
 function cleanMemoryText(text) {
@@ -8539,7 +8601,8 @@ function renderMemoryWidget() {
   const setupSaved = !!String(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '').trim();
   const importedSaved = !!(S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt'));
   const shards = stickyNotes.map((note, idx) => ({
-    id: idx,
+    id: note.id || memoryShardId(note.text),
+    index: idx,
     kind: 'note',
     text: cleanMemoryText(note.text),
     ts: note.ts
@@ -8568,11 +8631,11 @@ function renderMemoryWidget() {
     const deny = document.createElement('button');
     deny.type = 'button';
     deny.className = 'memory-deny';
-    deny.textContent = 'Not true';
+    deny.textContent = 'Delete';
     deny.title = 'Delete this local memory shard';
     deny.onclick = (ev) => {
       ev.stopPropagation();
-      markMemoryNotTrue(m.id);
+      markMemoryNotTrue(m.index);
     };
     meta.append(age, deny);
     item.append(text, meta);
@@ -8590,11 +8653,19 @@ function markMemoryNotTrue(idx) {
   const note = stickyNotes[idx];
   if (!note) return;
   const text = cleanMemoryText(note.text);
+  const id = note.id || memoryShardId(text);
   stickyNotes.splice(idx, 1);
   localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'memory_correction', action:'not_true', content:text }));
+  fetchJsonWithTimeout(httpBase() + '/admin/memory-shards/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, text }),
+    timeoutMs: 5000
+  }, 'Delete memory shard').catch(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'memory_correction', action:'not_true', id, content:text }));
+  });
   renderMemoryWidget();
-  addMessage('Memory marked not true. I removed that local shard.', 'caroline', 'display');
+  addMessage('Memory shard deleted.', 'caroline', 'display');
   playBeep(360);
 }
 
@@ -9617,8 +9688,9 @@ function maybeReturningGreeting(){
 
 updateSettingsStatus();
 // Sync from server first so fresh-install detection clears caro_onboarded before we check it
-syncSettingsFromServer().then(() => {
+syncSettingsFromServer().then(() => refreshPiNetworkIdentity()).then(() => {
   testNodeRedUrl();
+  loadMemoryShards();
   fetchWeather();
   if(shouldRunOnboarding() && !onboardingStarted){ startBootSequence(); } else { maybeReturningGreeting(); }
 });

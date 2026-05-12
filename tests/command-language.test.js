@@ -68,8 +68,11 @@ function runNode(id, msg, initialStore = {}) {
     Array,
     console,
   };
-  return vm.runInNewContext(`(function(){\n${node.func}\n})()`, sandbox, { timeout: 1500 });
+  const result = vm.runInNewContext(`(function(){\n${node.func}\n})()`, sandbox, { timeout: 1500 });
+  runNode.lastWrites = writes;
+  return result;
 }
+runNode.lastWrites = {};
 
 function directCommand(nodeId, text, payload = {}) {
   const out = runNode(nodeId, { payload: Object.assign({ content: text, aiProvider: 'ollama' }, payload) });
@@ -150,6 +153,14 @@ for (const [surface, nodeId] of buildNodes) {
     for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} task: ${text}`);
   });
 
+  test(`${surface}: remember variants`, () => {
+    const cases = [
+      ['Remember that Sarah is my wife', { type: 'remember', fact: 'Sarah is my wife' }],
+      ['Keep in mind that Dave drinks dark roast coffee', { type: 'remember', fact: 'Dave drinks dark roast coffee' }],
+    ];
+    for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} remember: ${text}`);
+  });
+
   test(`${surface}: Hue variants`, () => {
     const cases = [
       ['turn the Hue lights off', { type: 'hue', mode: 'off' }],
@@ -227,6 +238,12 @@ for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http pars
       type: 'calendar_delete',
       title: 'Codex qwen model smoke test',
     }, `${surface} JSON calendar delete`);
+
+    const rememberReply = 'Got it. [ACTION]{"type":"remember","fact":"Sarah is my wife"}[/ACTION]';
+    expectAction(parseAction(nodeId, 'Remember that Sarah is my wife', rememberReply), {
+      type: 'remember',
+      fact: 'Sarah is my wife',
+    }, `${surface} JSON remember`);
   });
 }
 
@@ -246,6 +263,11 @@ test('final action router sanitizes and routes all action types', () => {
 
   const deleteEvent = handleAction({ type: 'calendar_delete', title: 'Codex qwen model smoke test from my calendar tomorrow' });
   assert.strictEqual(deleteEvent[4].calDeleteAction.title, 'Codex qwen model smoke test');
+
+  handleAction({ type: 'remember', fact: 'Sarah is my wife' });
+  const savedContext = JSON.parse(runNode.lastWrites['/home/davee/caroline/caroline_context.json']);
+  assert.strictEqual(savedContext.memoryShards[0].text, 'Sarah is my wife');
+  assert.strictEqual(savedContext.dave.notes[0], 'Sarah is my wife');
 });
 
 let passed = 0;
