@@ -2193,16 +2193,58 @@
         <div class="settings-section">
           <h3>Privacy &amp; Data</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Delete messages after</div><div class="settings-sub">Auto-purge chat history older than this</div></div>
+            <div><div class="settings-label">Privacy mode</div><div class="settings-sub">Hide and stop saving chat history &amp; memory this session</div></div>
+            <input type="checkbox" id="set-privacy-mode" style="width:20px;height:20px;cursor:pointer;accent-color:#fb7185;" onchange="applyPrivacyMode()"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Delete messages after</div><div class="settings-sub">Auto-purge chat history older than this on load</div></div>
             <select class="settings-input" id="set-history-retention" style="width:160px;">
               <option value="0">Never</option>
-              <option value="3600000">1 hour</option>
-              <option value="21600000">6 hours</option>
-              <option value="86400000">24 hours</option>
-              <option value="604800000">7 days</option>
-              <option value="2592000000">30 days</option>
-              <option value="31536000000">1 year</option>
+              <optgroup label="Hours">
+                <option value="3600000">1 hour</option>
+                <option value="21600000">6 hours</option>
+                <option value="43200000">12 hours</option>
+              </optgroup>
+              <optgroup label="Days">
+                <option value="86400000">1 day</option>
+                <option value="259200000">3 days</option>
+              </optgroup>
+              <optgroup label="Weeks">
+                <option value="604800000">1 week</option>
+                <option value="1209600000">2 weeks</option>
+              </optgroup>
+              <optgroup label="Months">
+                <option value="2592000000">1 month</option>
+                <option value="7776000000">3 months</option>
+                <option value="15552000000">6 months</option>
+              </optgroup>
             </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Delete memory after</div><div class="settings-sub">Auto-purge memory shards older than this on load</div></div>
+            <select class="settings-input" id="set-memory-retention" style="width:160px;">
+              <option value="0">Never</option>
+              <optgroup label="Days">
+                <option value="86400000">1 day</option>
+                <option value="259200000">3 days</option>
+              </optgroup>
+              <optgroup label="Weeks">
+                <option value="604800000">1 week</option>
+                <option value="1209600000">2 weeks</option>
+              </optgroup>
+              <optgroup label="Months">
+                <option value="2592000000">1 month</option>
+                <option value="7776000000">3 months</option>
+                <option value="15552000000">6 months</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Clear now</div><div class="settings-sub">Immediately wipe chat history and memory shards</div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="sys-btn" onclick="clearHistory()">Clear Chat</button>
+              <button class="sys-btn" onclick="clearMemoryShards()">Clear Memory</button>
+            </div>
           </div>
         </div>
         <div class="settings-section">
@@ -2338,6 +2380,7 @@
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
   <span class="net-pill" id="resource-pill" title="Host CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
+  <span class="net-pill" id="privacy-pill" title="Privacy mode is on — history and memory are hidden and not saved" style="display:none;background:rgba(251,113,133,0.12);border-color:rgba(251,113,133,0.4);color:#fb7185;">🔒 PRIVATE</span>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI">AI KEY NEEDED</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
   <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
@@ -2694,7 +2737,7 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -3055,6 +3098,10 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (wakeEl) wakeEl.checked = parseSettingBool(S.wakeWordEnabled);
   const histRetEl = document.getElementById('set-history-retention');
   if (histRetEl) histRetEl.value = String(S.historyRetentionMs || 0);
+  const memRetEl = document.getElementById('set-memory-retention');
+  if (memRetEl) memRetEl.value = String(S.memoryRetentionMs || 0);
+  const privacyModeEl = document.getElementById('set-privacy-mode');
+  if (privacyModeEl) privacyModeEl.checked = !!S.privacyMode;
   const grEl = document.getElementById('google-redirect-uri');
   if (grEl) grEl.textContent = S.googleRedirectUri;
   const meetingReminderEl = document.getElementById('set-meeting-reminder');
@@ -3893,6 +3940,8 @@ function nudgeAiMoodForInteraction(weight = 1) {
   }
 }
 document.addEventListener('DOMContentLoaded', () => {
+  applyRetentionPurge();
+  applyPrivacyMode();
   S.userMood = clampMood(S.userMood);
   S.aiMood   = clampMood(S.aiMood);
   renderMoods();
@@ -5739,6 +5788,12 @@ async function saveSettings() {
   if (wakePhrasesInp) S.wakePhrases = wakePhrasesInp.value.trim() || DEFAULTS.wakePhrases;
   const histRetInp = document.getElementById('set-history-retention');
   if (histRetInp) S.historyRetentionMs = Number(histRetInp.value) || 0;
+  const memRetInp = document.getElementById('set-memory-retention');
+  if (memRetInp) S.memoryRetentionMs = Number(memRetInp.value) || 0;
+  const privacyModeInp = document.getElementById('set-privacy-mode');
+  if (privacyModeInp) S.privacyMode = privacyModeInp.checked;
+  applyRetentionPurge();
+  applyPrivacyMode();
   if (typeof applyVoiceInputSettings === 'function') applyVoiceInputSettings();
   const personalityInp = document.getElementById('personalityPrompt');
   const profileInp = document.getElementById('userProfilePrompt');
@@ -6214,6 +6269,7 @@ function nextChatEntryId() {
   return 'msg-' + Date.now().toString(36) + '-' + _chatEntrySeq.toString(36);
 }
 function saveChatLog() {
+  if (S.privacyMode) return;
   localStorage.setItem('caro_log', JSON.stringify(chatLog));
 }
 function toggleMessageLike(id, btn) {
@@ -6268,6 +6324,7 @@ function toggleHistory(){
 }
 function renderHistory(){
   const c=document.getElementById('history-messages'); if(!c) return; c.innerHTML='';
+  if(S.privacyMode){ c.innerHTML='<div class="hist-empty" style="color:#fb7185;">🔒 Privacy mode is on — history is hidden and not being saved.</div>'; return; }
   if(!chatLog.length){ c.innerHTML='<div class="hist-empty">No messages yet — say something!</div>'; return; }
   chatLog.forEach(e=>{
     const d=document.createElement('div'); d.className='hist-msg '+e.role+(e.role==='caroline'?' has-like':'');
@@ -6280,6 +6337,34 @@ function renderHistory(){
 }
 function clearHistory(){
   if(confirm('Clear all conversation history?')){ chatLog=[]; localStorage.removeItem('caro_log'); renderHistory(); }
+}
+function clearMemoryShards(){
+  if(confirm('Clear all memory shards?')){ stickyNotes=[]; localStorage.removeItem('caro_notes'); renderMemoryWidget(); }
+}
+function applyPrivacyMode() {
+  const el = document.getElementById('set-privacy-mode');
+  if (el) S.privacyMode = el.checked;
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  const pill = document.getElementById('privacy-pill');
+  if (pill) pill.style.display = S.privacyMode ? '' : 'none';
+  renderHistory();
+  renderMemoryWidget();
+}
+function applyRetentionPurge() {
+  const now = Date.now();
+  const histMs = S.historyRetentionMs || 0;
+  const memMs = S.memoryRetentionMs || 0;
+  if (histMs > 0) {
+    const before = chatLog.length;
+    chatLog = chatLog.filter(e => e && e.id && (!e.ts || (now - e.ts) < histMs));
+    if (chatLog.length !== before) { localStorage.setItem('caro_log', JSON.stringify(chatLog)); renderHistory(); }
+  }
+  if (memMs > 0) {
+    stickyNotes = Array.isArray(stickyNotes) ? stickyNotes : [];
+    const before = stickyNotes.length;
+    stickyNotes = stickyNotes.filter(n => n && (!n.ts || (now - n.ts) < memMs));
+    if (stickyNotes.length !== before) { localStorage.setItem('caro_notes', JSON.stringify(stickyNotes)); renderMemoryWidget(); }
+  }
 }
 
 // ── WIPE MEMORY ───────────────────────────────
@@ -6618,7 +6703,7 @@ function addMessage(text, role, source){
     : (source === 'discord' ? aiLabel + ' (DISCORD)' : source === 'telegram' ? aiLabel + ' (TELEGRAM)' : source === 'proactive' ? aiLabel + ' // AMBIENT' : aiLabel);
   box.classList.toggle('proactive', source==='proactive');
   sender.textContent=label; content.textContent=text;
-  const entry={id:nextChatEntryId(), role:role==='user'?'dave':'caroline', sender:label, text, liked:false};
+  const entry={id:nextChatEntryId(), role:role==='user'?'dave':'caroline', sender:label, text, ts:Date.now(), liked:false};
   box.classList.toggle('has-like', entry.role === 'caroline');
   if (subtitleLike) {
     subtitleLike.classList.remove('liked');
@@ -8550,7 +8635,7 @@ function upsertLocalMemoryShard(fact, opts = {}) {
   if (existing >= 0) stickyNotes.splice(existing, 1);
   stickyNotes.unshift(shard);
   if (stickyNotes.length > 20) stickyNotes.pop();
-  localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
+  if (!S.privacyMode) localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
   renderMemoryWidget();
   return shard;
 }
@@ -8616,6 +8701,15 @@ function renderMemoryWidget() {
   const list = document.getElementById('memory-list');
   const count = document.getElementById('memory-count');
   if (!list) return;
+  if (S.privacyMode) {
+    if (count) count.textContent = '-- SHARDS';
+    list.replaceChildren();
+    const msg = document.createElement('div');
+    msg.className = 'memory-shard';
+    msg.innerHTML = '<div class="memory-text" style="color:#fb7185;">🔒 Privacy mode is on — memory is hidden and not being saved.</div>';
+    list.appendChild(msg);
+    return;
+  }
   stickyNotes = Array.isArray(stickyNotes) ? stickyNotes : [];
   const setupSaved = !!String(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '').trim();
   const importedSaved = !!(S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt'));

@@ -26,6 +26,9 @@ CAROLINE_DIR="$REAL_HOME/caroline"
 CLONE_DIR="$REAL_HOME/project-caroline"
 NODE_ROOT="$REAL_HOME/.local/caroline-node"
 NODE_CURRENT="$NODE_ROOT/current"
+OLLAMA_ROOT="$REAL_HOME/.local/ollama"
+OLLAMA_BIN="$OLLAMA_ROOT/bin/ollama"
+OLLAMA_MODELS_DIR="$REAL_HOME/.local/share/ollama/models"
 NODERED_RUNTIME="$CAROLINE_DIR/node-red-runtime"
 export CAROLINE_DIR
 
@@ -130,6 +133,100 @@ choose_ollama_model() {
     *) printf '%s' "$choice" ;;
   esac
 }
+ollama_cli() {
+  if [ -x "$OLLAMA_BIN" ]; then
+    printf '%s' "$OLLAMA_BIN"
+  elif command -v ollama >/dev/null 2>&1; then
+    command -v ollama
+  fi
+}
+wait_for_ollama() {
+  local i
+  for i in $(seq 1 30); do
+    if curl -fsS "http://127.0.0.1:11434/api/tags" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+install_portable_ollama() {
+  local model="$1"
+  local tmp_dir tmp_tar cli_path
+  if curl -fsS "http://127.0.0.1:11434/api/tags" >/dev/null 2>&1; then
+    say "${GREEN}  ✓ Existing Ollama service is already responding at localhost:11434${RESET}"
+  else
+    mkdir -p "$OLLAMA_ROOT" "$OLLAMA_MODELS_DIR" "$REAL_HOME/.local/bin" "$REAL_HOME/.config/systemd/user"
+    if [ ! -x "$OLLAMA_BIN" ]; then
+      say "${YELLOW}  > Downloading portable Ollama for SteamOS...${RESET}"
+      say "${DIM}    This is a large download because Ollama bundles local runtime libraries.${RESET}"
+      tmp_dir="$(mktemp -d)"
+      tmp_tar="$tmp_dir/ollama-linux-amd64.tar.zst"
+      if ! curl -fL "https://ollama.com/download/ollama-linux-amd64.tar.zst" -o "$tmp_tar"; then
+        rm -rf "$tmp_dir"
+        say "${YELLOW}  ! Ollama download failed. Caroline will stay on OpenRouter for now.${RESET}"
+        return 1
+      fi
+      if ! tar -C "$tmp_dir" -xf "$tmp_tar"; then
+        rm -rf "$tmp_dir"
+        say "${YELLOW}  ! Ollama archive extraction failed. SteamOS may be missing zstd tar support.${RESET}"
+        return 1
+      fi
+      rm -rf "$OLLAMA_ROOT/bin" "$OLLAMA_ROOT/lib"
+      mv "$tmp_dir/bin" "$tmp_dir/lib" "$OLLAMA_ROOT/"
+      rm -rf "$tmp_dir"
+    fi
+    ln -sfn "$OLLAMA_BIN" "$REAL_HOME/.local/bin/ollama"
+
+    cat > "$REAL_HOME/.config/systemd/user/ollama.service" <<OLLAMA_SERVICE_EOF
+[Unit]
+Description=Ollama SteamOS portable service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=${REAL_HOME}
+Environment=OLLAMA_HOST=127.0.0.1:11434
+Environment=OLLAMA_ORIGINS=http://localhost:${CAROLINE_PORT},http://127.0.0.1:${CAROLINE_PORT}
+Environment=OLLAMA_MODELS=${OLLAMA_MODELS_DIR}
+Environment=PATH=${OLLAMA_ROOT}/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=${OLLAMA_BIN} serve
+UMask=0077
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+OLLAMA_SERVICE_EOF
+
+    systemctl --user daemon-reload
+    systemctl --user enable ollama.service >/dev/null 2>&1 || true
+    systemctl --user restart ollama.service >/dev/null 2>&1 || true
+    OLLAMA_USER_SERVICE_ENABLED="true"
+
+    if wait_for_ollama; then
+      say "${GREEN}  ✓ Ollama is responding at localhost:11434${RESET}"
+    else
+      say "${YELLOW}  ! Ollama did not respond yet. Check: journalctl --user -u ollama -n 80 --no-pager${RESET}"
+      return 1
+    fi
+  fi
+
+  cli_path="$(ollama_cli)"
+  if [ -z "$cli_path" ]; then
+    say "${YELLOW}  ! Ollama is running, but no ollama CLI was found for pulling ${model}.${RESET}"
+    return 0
+  fi
+  say "${YELLOW}  > Pulling ${model} for local AI...${RESET}"
+  if OLLAMA_HOST="http://127.0.0.1:11434" "$cli_path" pull "$model"; then
+    say "${GREEN}  ✓ Model ${model} ready${RESET}"
+    (timeout 45s env OLLAMA_HOST="http://127.0.0.1:11434" "$cli_path" run "$model" "hello" >/tmp/caroline-steamos-ollama-warmup.log 2>&1 || true) &
+  else
+    say "${YELLOW}  ! Model pull failed. You can retry later with: ollama pull ${model}${RESET}"
+  fi
+  return 0
+}
 
 is_steamos() {
   [ -r /etc/os-release ] && . /etc/os-release && [ "${ID:-}" = "steamos" ]
@@ -197,7 +294,7 @@ if [ ! -x "$NODE_CURRENT/bin/node" ] || [ ! -x "$NODE_CURRENT/bin/npm" ]; then
   tar -C "$NODE_ROOT" -xf "$TMP_NODE"
   ln -sfn "$NODE_ROOT/node-${NODE_VERSION}-linux-${NODE_ARCH}" "$NODE_CURRENT"
 fi
-export PATH="$NODE_CURRENT/bin:$PATH"
+export PATH="$NODE_CURRENT/bin:$OLLAMA_ROOT/bin:$REAL_HOME/.local/bin:$PATH"
 say "${GREEN}  ✓ Node $(node --version) ready at ${NODE_CURRENT}${RESET}"
 say "${GREEN}  ✓ npm $(npm --version) ready${RESET}"
 say ""
@@ -237,16 +334,31 @@ if [ -n "$CPU_MODEL" ]; then
   say "${DIM}    CPU: ${CPU_MODEL}${RESET}"
 fi
 say "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
-say "${DIM}    Ollama will be installed automatically. A model pull will be offered after setup.${RESET}"
+say "${DIM}    SteamOS local model support is experimental; Ollama can be installed as a user service without changing read-only mode.${RESET}"
 say ""
-if ask_yes_no "Configure Caroline to use local Ollama mode on this Deck?" "n"; then
+INSTALL_OLLAMA="n"
+OLLAMA_USER_SERVICE_ENABLED="false"
+if ask_yes_no "Configure Caroline to try local Ollama mode on this Deck?" "n"; then
   AI_PROVIDER="ollama"
   OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
-  say "${DIM}  Selected ${OLLAMA_MODEL}. The model will be pulled during setup.${RESET}"
+  if ask_yes_no "Install/start portable Ollama now and pull ${OLLAMA_MODEL}?" "y"; then
+    INSTALL_OLLAMA="y"
+    say "${MAGENTA}  // LOCAL AI - OLLAMA${RESET}"
+    if install_portable_ollama "$OLLAMA_MODEL"; then
+      say "${GREEN}  ✓ Ollama setup complete${RESET}"
+    else
+      AI_PROVIDER="openrouter"
+      INSTALL_OLLAMA="n"
+      say "${YELLOW}  ! Falling back to OpenRouter mode. Local Ollama remains available later in Settings.${RESET}"
+    fi
+    say ""
+  else
+    say "${DIM}  Selected ${OLLAMA_MODEL}. Start Ollama separately, then use Settings -> AI -> Pull new model.${RESET}"
+  fi
 else
   AI_PROVIDER="openrouter"
   OLLAMA_MODEL="$RECOMMENDED_OLLAMA_MODEL"
-  say "${DIM}  Using OpenRouter mode. Ollama is still installed; switch to it later in Settings -> AI.${RESET}"
+  say "${DIM}  Using OpenRouter mode. Local Ollama remains available later in Settings.${RESET}"
 fi
 AI_MODEL="anthropic/claude-haiku-4.5"
 OLLAMA_URL_DEFAULT="http://localhost:11434"
@@ -484,85 +596,19 @@ SETTINGS_EOF
 say "${GREEN}  ✓ Node-RED runtime installed locally${RESET}"
 say ""
 
-say "${MAGENTA}  // OLLAMA LOCAL LLM${RESET}"
-mkdir -p "$REAL_HOME/.local/bin"
-OLLAMA_BIN="$REAL_HOME/.local/bin/ollama"
-OLLAMA_INSTALLED=false
-if [ -x "$OLLAMA_BIN" ]; then
-  say "${GREEN}  ✓ Ollama already installed${RESET} ${DIM}($("$OLLAMA_BIN" --version 2>/dev/null | head -1 || true))${RESET}"
-  OLLAMA_INSTALLED=true
-else
-  say "${YELLOW}  > Fetching latest Ollama release...${RESET}"
-  OLLAMA_RELEASE="$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1 || true)"
-  if [ -z "$OLLAMA_RELEASE" ]; then
-    say "${YELLOW}  ! Could not resolve latest Ollama release — skipping install.${RESET}"
-    say "${DIM}    Install manually later; use Settings -> AI -> Pull new model when ready.${RESET}"
-  else
-    say "${YELLOW}  > Downloading Ollama ${OLLAMA_RELEASE}...${RESET}"
-    if curl -fL "https://github.com/ollama/ollama/releases/download/${OLLAMA_RELEASE}/ollama-linux-amd64.tar.zst" -o /tmp/ollama.tar.zst; then
-      tar -C "$REAL_HOME/.local" --use-compress-program=unzstd -xf /tmp/ollama.tar.zst
-      rm -f /tmp/ollama.tar.zst
-      say "${GREEN}  ✓ Ollama ${OLLAMA_RELEASE} installed${RESET}"
-      OLLAMA_INSTALLED=true
-    else
-      say "${YELLOW}  ! Ollama download failed — skipping install.${RESET}"
-      say "${DIM}    Install manually later; use Settings -> AI -> Pull new model when ready.${RESET}"
-      rm -f /tmp/ollama.tar.zst
-    fi
-  fi
-fi
-
-if [ "$OLLAMA_INSTALLED" = "true" ]; then
-  cat > "$REAL_HOME/.config/systemd/user/ollama.service" <<OLLAMA_SERVICE_EOF
-[Unit]
-Description=Ollama local LLM server
-After=network.target
-
-[Service]
-Type=simple
-Environment=HOME=${REAL_HOME}
-ExecStart=${OLLAMA_BIN} serve
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=default.target
-OLLAMA_SERVICE_EOF
-  systemctl --user daemon-reload
-  systemctl --user enable ollama.service
-  systemctl --user restart ollama.service
-  say "${GREEN}  ✓ Ollama service started${RESET}"
-
-  if [ "$AI_PROVIDER" = "ollama" ]; then
-    PULL_NOW=false
-    if can_prompt; then
-      if ask_yes_no "Pull ${OLLAMA_MODEL} now? (~1-2 GB, takes a few minutes)" "y"; then
-        PULL_NOW=true
-      fi
-    fi
-    if [ "$PULL_NOW" = "true" ]; then
-      say "${YELLOW}  > Pulling ${OLLAMA_MODEL}...${RESET}"
-      if "$OLLAMA_BIN" pull "$OLLAMA_MODEL"; then
-        say "${GREEN}  ✓ Model ${OLLAMA_MODEL} ready${RESET}"
-      else
-        say "${YELLOW}  ! Pull failed. Use Settings -> AI -> Pull new model later.${RESET}"
-      fi
-    else
-      say "${DIM}  Model pull skipped. Use Settings -> AI -> Pull new model when ready.${RESET}"
-    fi
-  else
-    say "${DIM}  OpenRouter mode selected. Pull a local model later via Settings -> AI.${RESET}"
-  fi
-fi
-say ""
-
 say "${MAGENTA}  // USER SERVICE${RESET}"
 mkdir -p "$REAL_HOME/.config/systemd/user" "$REAL_HOME/.local/bin" "$REAL_HOME/.local/share/applications"
+CAROLINE_SERVICE_AFTER="network-online.target"
+CAROLINE_SERVICE_WANTS="network-online.target"
+if [ "$AI_PROVIDER" = "ollama" ] && [ "$OLLAMA_USER_SERVICE_ENABLED" = "true" ]; then
+  CAROLINE_SERVICE_AFTER="network-online.target ollama.service"
+  CAROLINE_SERVICE_WANTS="network-online.target ollama.service"
+fi
 cat > "$REAL_HOME/.config/systemd/user/caroline.service" <<SERVICE_EOF
 [Unit]
 Description=Project: Caroline SteamOS experimental service
-After=network-online.target
-Wants=network-online.target
+After=${CAROLINE_SERVICE_AFTER}
+Wants=${CAROLINE_SERVICE_WANTS}
 
 [Service]
 Type=simple
@@ -664,6 +710,14 @@ else
   say "${YELLOW}  ! Caroline did not respond yet. Check logs:${RESET}"
   say "${DIM}    journalctl --user -u caroline -n 80 --no-pager${RESET}"
 fi
+if [ "$AI_PROVIDER" = "ollama" ]; then
+  if curl -fsS "http://127.0.0.1:11434/api/tags" >/dev/null 2>&1; then
+    say "${GREEN}  ✓ Ollama is responding for local AI${RESET}"
+  else
+    say "${YELLOW}  ! Ollama is selected but not responding yet. Check:${RESET}"
+    say "${DIM}    journalctl --user -u ollama -n 80 --no-pager${RESET}"
+  fi
+fi
 
 say ""
 say "${BOLD}${GREEN}  Project: Caroline SteamOS experimental install complete.${RESET}"
@@ -671,5 +725,8 @@ say "${CYAN}  URL on Steam Deck:${RESET} ${BOLD}http://localhost:${CAROLINE_PORT
 say "${CYAN}  Open command:${RESET} ${BOLD}caroline-steamos-open${RESET}"
 say "${CYAN}  Kiosk command:${RESET} ${BOLD}caroline-steamos-kiosk${RESET}"
 say "${CYAN}  Logs:${RESET} ${BOLD}journalctl --user -u caroline -f${RESET}"
+if [ "$AI_PROVIDER" = "ollama" ]; then
+  say "${CYAN}  Ollama logs:${RESET} ${BOLD}journalctl --user -u ollama -f${RESET}"
+fi
 say "${CYAN}  Editor:${RESET} ${BOLD}http://localhost:${CAROLINE_PORT}/red${RESET}"
 say ""

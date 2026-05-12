@@ -9,16 +9,15 @@ This path is experimental and installs everything under the `deck` user's home d
 - Clones Project: Caroline into `~/project-caroline`
 - Installs Caroline runtime files into `~/caroline`
 - Installs Node-RED locally under `~/caroline/node-red-runtime`
-- Installs Ollama into `~/.local` when possible and starts it as a user service
-- Offers tested local model choices such as `qwen3:1.7b` and `qwen3:0.6b`
 - Runs Caroline as a user systemd service
+- Optionally installs portable Ollama under `~/.local/ollama` and runs it as a user systemd service
 - Serves the UI locally at `http://localhost:8080/`
 - Keeps the service bound to localhost and writes private settings/token files with owner-only permissions
 - Asks the same first-run identity/privacy/AI questions as the main installer, adapted for SteamOS
 
 It does **not** install system packages with `pacman`, change SteamOS read-only mode, or configure nginx.
 
-If Ollama cannot be downloaded or started, Caroline still installs in OpenRouter mode and you can install or repair Ollama later before using Settings -> AI -> Pull new model.
+When you choose local AI, the installer can download Ollama's Linux archive into your home directory, start `ollama.service` with `systemctl --user`, and pull the selected model. This is experimental and can take a while because the Ollama runtime archive and first model pull are both large.
 
 ## Install
 
@@ -55,6 +54,15 @@ systemctl --user restart caroline
 systemctl --user stop caroline
 ```
 
+Ollama, when installed:
+
+```bash
+systemctl --user status ollama
+journalctl --user -u ollama -f
+~/.local/bin/ollama list
+~/.local/bin/ollama pull qwen3:1.7b
+```
+
 Node-RED editor:
 
 ```text
@@ -79,7 +87,7 @@ The browser origin guard allows local Caroline pages and blocks non-local browse
 
 ## Current Limits
 
-- Ollama install is best-effort and depends on the latest upstream Linux amd64 release being reachable.
+- Local Ollama on SteamOS is experimental and may be slower than OpenRouter on first replies.
 - HTTPS/voice proxy is not configured yet.
 - Kiosk mode is a fullscreen browser launcher, not a locked-down appliance mode yet.
 - Auto-start before login may require:
