@@ -237,16 +237,16 @@ if [ -n "$CPU_MODEL" ]; then
   say "${DIM}    CPU: ${CPU_MODEL}${RESET}"
 fi
 say "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
-say "${DIM}    SteamOS local model support is experimental; this installer configures Caroline but does not install Ollama yet.${RESET}"
+say "${DIM}    Ollama will be installed automatically. A model pull will be offered after setup.${RESET}"
 say ""
-if ask_yes_no "Configure Caroline to try local Ollama mode on this Deck?" "n"; then
+if ask_yes_no "Configure Caroline to use local Ollama mode on this Deck?" "n"; then
   AI_PROVIDER="ollama"
   OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
-  say "${DIM}  Selected ${OLLAMA_MODEL}. Install or start Ollama separately, then use Settings -> AI -> Pull new model.${RESET}"
+  say "${DIM}  Selected ${OLLAMA_MODEL}. The model will be pulled during setup.${RESET}"
 else
   AI_PROVIDER="openrouter"
   OLLAMA_MODEL="$RECOMMENDED_OLLAMA_MODEL"
-  say "${DIM}  Using OpenRouter mode. Local Ollama remains available later in Settings.${RESET}"
+  say "${DIM}  Using OpenRouter mode. Ollama is still installed; switch to it later in Settings -> AI.${RESET}"
 fi
 AI_MODEL="anthropic/claude-haiku-4.5"
 OLLAMA_URL_DEFAULT="http://localhost:11434"
@@ -482,6 +482,78 @@ module.exports = {
 }
 SETTINGS_EOF
 say "${GREEN}  ✓ Node-RED runtime installed locally${RESET}"
+say ""
+
+say "${MAGENTA}  // OLLAMA LOCAL LLM${RESET}"
+mkdir -p "$REAL_HOME/.local/bin"
+OLLAMA_BIN="$REAL_HOME/.local/bin/ollama"
+OLLAMA_INSTALLED=false
+if [ -x "$OLLAMA_BIN" ]; then
+  say "${GREEN}  ✓ Ollama already installed${RESET} ${DIM}($("$OLLAMA_BIN" --version 2>/dev/null | head -1 || true))${RESET}"
+  OLLAMA_INSTALLED=true
+else
+  say "${YELLOW}  > Fetching latest Ollama release...${RESET}"
+  OLLAMA_RELEASE="$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1 || true)"
+  if [ -z "$OLLAMA_RELEASE" ]; then
+    say "${YELLOW}  ! Could not resolve latest Ollama release — skipping install.${RESET}"
+    say "${DIM}    Install manually later; use Settings -> AI -> Pull new model when ready.${RESET}"
+  else
+    say "${YELLOW}  > Downloading Ollama ${OLLAMA_RELEASE}...${RESET}"
+    if curl -fL "https://github.com/ollama/ollama/releases/download/${OLLAMA_RELEASE}/ollama-linux-amd64.tar.zst" -o /tmp/ollama.tar.zst; then
+      tar -C "$REAL_HOME/.local" --use-compress-program=unzstd -xf /tmp/ollama.tar.zst
+      rm -f /tmp/ollama.tar.zst
+      say "${GREEN}  ✓ Ollama ${OLLAMA_RELEASE} installed${RESET}"
+      OLLAMA_INSTALLED=true
+    else
+      say "${YELLOW}  ! Ollama download failed — skipping install.${RESET}"
+      say "${DIM}    Install manually later; use Settings -> AI -> Pull new model when ready.${RESET}"
+      rm -f /tmp/ollama.tar.zst
+    fi
+  fi
+fi
+
+if [ "$OLLAMA_INSTALLED" = "true" ]; then
+  cat > "$REAL_HOME/.config/systemd/user/ollama.service" <<OLLAMA_SERVICE_EOF
+[Unit]
+Description=Ollama local LLM server
+After=network.target
+
+[Service]
+Type=simple
+Environment=HOME=${REAL_HOME}
+ExecStart=${OLLAMA_BIN} serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+OLLAMA_SERVICE_EOF
+  systemctl --user daemon-reload
+  systemctl --user enable ollama.service
+  systemctl --user restart ollama.service
+  say "${GREEN}  ✓ Ollama service started${RESET}"
+
+  if [ "$AI_PROVIDER" = "ollama" ]; then
+    PULL_NOW=false
+    if can_prompt; then
+      if ask_yes_no "Pull ${OLLAMA_MODEL} now? (~1-2 GB, takes a few minutes)" "y"; then
+        PULL_NOW=true
+      fi
+    fi
+    if [ "$PULL_NOW" = "true" ]; then
+      say "${YELLOW}  > Pulling ${OLLAMA_MODEL}...${RESET}"
+      if "$OLLAMA_BIN" pull "$OLLAMA_MODEL"; then
+        say "${GREEN}  ✓ Model ${OLLAMA_MODEL} ready${RESET}"
+      else
+        say "${YELLOW}  ! Pull failed. Use Settings -> AI -> Pull new model later.${RESET}"
+      fi
+    else
+      say "${DIM}  Model pull skipped. Use Settings -> AI -> Pull new model when ready.${RESET}"
+    fi
+  else
+    say "${DIM}  OpenRouter mode selected. Pull a local model later via Settings -> AI.${RESET}"
+  fi
+fi
 say ""
 
 say "${MAGENTA}  // USER SERVICE${RESET}"

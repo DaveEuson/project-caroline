@@ -6730,10 +6730,10 @@ function connectWS(){
       // Parse and strip mood-change tags before displaying
       const moodMatch = t.match(/\[SET_USER_MOOD:(\d+)\]/i);
       if (moodMatch) {
-        const newMood = clampMood(parseInt(moodMatch[1]));
-        S.userMood = newMood;
+        S.userMood = clampMood(parseInt(moodMatch[1]));
         localStorage.setItem('caro_settings', JSON.stringify(S));
         renderMoods();
+        ws.send(JSON.stringify({ type: 'settings_update', userMood: S.userMood, aiMood: S.aiMood }));
         t = t.replace(/\[SET_USER_MOOD:\d+\]/gi, '').trim();
       }
       const aiMoodMatch = t.match(/\[SET_AI_MOOD:(\d+)\]/i);
@@ -6741,6 +6741,7 @@ function connectWS(){
         S.aiMood = clampMood(parseInt(aiMoodMatch[1]));
         localStorage.setItem('caro_settings', JSON.stringify(S));
         renderMoods();
+        ws.send(JSON.stringify({ type: 'settings_update', userMood: S.userMood, aiMood: S.aiMood }));
         t = t.replace(/\[SET_AI_MOOD:\d+\]/gi, '').trim();
       }
       nudgeAiMoodForInteraction(1);
@@ -6920,8 +6921,23 @@ async function sendAiHttpMessage(text, context) {
     let data = {};
     try { data = await resp.json(); } catch(e) {}
     if (!resp.ok) throw new Error((data && (data.error || data.reply)) || ('HTTP ' + resp.status));
-    const reply = cleanDisplayText(data.reply || data.content || '');
+    let reply = cleanDisplayText(data.reply || data.content || '');
     if (!reply) throw new Error('Empty AI reply');
+    const httpMoodMatch = reply.match(/\[SET_USER_MOOD:(\d+)\]/i);
+    if (httpMoodMatch) {
+      S.userMood = clampMood(parseInt(httpMoodMatch[1]));
+      localStorage.setItem('caro_settings', JSON.stringify(S));
+      renderMoods();
+      reply = reply.replace(/\[SET_USER_MOOD:\d+\]/gi, '').trim();
+    }
+    const httpAiMoodMatch = reply.match(/\[SET_AI_MOOD:(\d+)\]/i);
+    if (httpAiMoodMatch) {
+      S.aiMood = clampMood(parseInt(httpAiMoodMatch[1]));
+      localStorage.setItem('caro_settings', JSON.stringify(S));
+      renderMoods();
+      reply = reply.replace(/\[SET_AI_MOOD:\d+\]/gi, '').trim();
+    }
+    nudgeAiMoodForInteraction(1);
     addMessage(reply, 'caroline', 'display');
     speak(reply);
     setTimeout(maybeAskToRemember, 800);
