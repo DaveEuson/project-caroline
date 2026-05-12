@@ -9,6 +9,7 @@ Start here if you are new to Raspberry Pi, Ubuntu, SSH, or home-server setup.
 | A Raspberry Pi with a screen | [How to install Caroline on Raspberry Pi OS](how-to-raspberry-pi-os.md) |
 | A spare PC, mini PC, VM, or server | [How to install Caroline on Ubuntu Server](how-to-ubuntu-server.md) |
 | A normal Ubuntu desktop computer | [How to install Caroline on Ubuntu Desktop](how-to-ubuntu-desktop.md) |
+| A Steam Deck in Desktop Mode | [Experimental Steam Deck / SteamOS install](how-to-steamos.md) |
 
 ## Before You Install
 
@@ -44,7 +45,7 @@ Accept the local certificate warning once. The normal HTTP URL remains best for 
 
 Then open **Settings** and add only what you need:
 
-- **AI:** OpenRouter API key for the best experience, or local Ollama with `qwen2.5:1.5b` for recommended quality
+- **AI:** OpenRouter API key for the best experience, or local Ollama with the installer-recommended model for your hardware
 - **Connect:** Google Calendar, Spotify, Hue, or Discord
 - **Widgets:** location, weather, tides, and video channels
 

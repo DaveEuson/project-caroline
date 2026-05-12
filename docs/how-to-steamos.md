@@ -9,14 +9,16 @@ This path is experimental and installs everything under the `deck` user's home d
 - Clones Project: Caroline into `~/project-caroline`
 - Installs Caroline runtime files into `~/caroline`
 - Installs Node-RED locally under `~/caroline/node-red-runtime`
+- Installs Ollama into `~/.local` when possible and starts it as a user service
+- Offers tested local model choices such as `qwen3:1.7b` and `qwen3:0.6b`
 - Runs Caroline as a user systemd service
 - Serves the UI locally at `http://localhost:8080/`
 - Keeps the service bound to localhost and writes private settings/token files with owner-only permissions
 - Asks the same first-run identity/privacy/AI questions as the main installer, adapted for SteamOS
 
-It does **not** install system packages with `pacman`, change SteamOS read-only mode, configure nginx, or install Ollama.
+It does **not** install system packages with `pacman`, change SteamOS read-only mode, or configure nginx.
 
-The local model prompt is still useful: choosing local mode saves Caroline's Ollama URL/model preference. On SteamOS, install/start Ollama separately before using Settings -> AI -> Pull new model.
+If Ollama cannot be downloaded or started, Caroline still installs in OpenRouter mode and you can install or repair Ollama later before using Settings -> AI -> Pull new model.
 
 ## Install
 
@@ -77,7 +79,7 @@ The browser origin guard allows local Caroline pages and blocks non-local browse
 
 ## Current Limits
 
-- Local Ollama is not installed by this experimental path yet.
+- Ollama install is best-effort and depends on the latest upstream Linux amd64 release being reachable.
 - HTTPS/voice proxy is not configured yet.
 - Kiosk mode is a fullscreen browser launcher, not a locked-down appliance mode yet.
 - Auto-start before login may require:

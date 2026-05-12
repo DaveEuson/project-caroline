@@ -1,13 +1,14 @@
 # Project: Caroline
 
-Your local AI sidekick for your desk, kiosk, or smart home: a cyberpunk assistant console with persistent chat, widgets, tasks, music, lights, reminders, and more.
+Project: Caroline is a local AI kiosk for your desk, wall screen, Raspberry Pi, Ubuntu box, or experimental Steam Deck setup.
 
-Caroline runs on your own Raspberry Pi, Ubuntu box, or experimental Steam Deck install. Cloud is optional: use a private local model through Ollama, or connect OpenRouter for faster access to stronger hosted models.
+It gives you a persistent assistant console with chat memory, calendar actions, local tasks, smart-home controls, music, weather, news, video, system status, and ambient widgets. It is built for your local network first: use OpenRouter for the smoothest AI experience, or run a private local model through Ollama.
 
+Caroline is not just a chatbot page. It is a small personal command center meant to stay open all day.
 
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
 
-## Core Modules
+## What Caroline Can Do
 
 - AI chat with memory using local Ollama or cloud models through OpenRouter
 - Google Calendar event add, read, and delete support
@@ -17,13 +18,7 @@ Caroline runs on your own Raspberry Pi, Ubuntu box, or experimental Steam Deck i
 - Weather, news, video, tides, radio, Pomodoro, memory, and system widgets
 - Fullscreen kiosk mode or server/client mode from another browser
 
-## Calling Artists And Animators
-
-The current Caroline avatars are AI generated, but the long-term goal is original character art and expressive animations. Character artists, animators, 2D/3D designers, and creative collaborators are welcome.
-
-Interested in helping shape Caroline's visual identity? Start a conversation in [GitHub Discussions](https://github.com/Project-Caroline/project-caroline/discussions).
-
-## Install
+## Quick Install
 
 Recommended public beta build:
 
@@ -56,7 +51,7 @@ On a Raspberry Pi kiosk, the installer prefers Chromium because Firefox does not
 The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat.
 The installer can optionally protect the web UI and proxied local admin APIs with a local browser login. If enabled, username is `caroline`; on the Caroline host, read the generated password with `cat ~/caroline/caroline_admin_password.txt`.
 
-## Pick Your Setup
+## Choose Your Setup
 
 | Platform | Status | Best For |
 |---|---|---|
@@ -66,9 +61,13 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 | Steam Deck / SteamOS | Experimental nightly | Repurposed handheld desk terminal |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
-## Beta Kits
+## Current Beta Reality
 
-DIY install is the main path for now. I am also considering a small run of ready-to-go Project Caroline Raspberry Pi kits for people who want a turnkey setup. If that would be useful to you, reach out so I can gauge demand.
+- Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
+- Steam Deck / SteamOS support is experimental and currently tracks nightly.
+- OpenRouter is the best AI experience for speed and answer quality.
+- Ollama is private and local, but small hardware can be slower and less polished.
+- Caroline is designed for trusted local networks. Do not expose it directly to the public internet.
 
 ## Beginner Guides
 
@@ -83,6 +82,17 @@ DIY install is the main path for now. I am also considering a small run of ready
 - [How to set up Google Calendar OAuth](docs/google-oauth.md)
 - [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
 
+## AI Options
+
+The installer detects your hardware, RAM, and platform, then preselects the local model it thinks fits best. You can still override the choice during setup.
+
+- Best experience: **OpenRouter**
+- Recommended Raspberry Pi / Ubuntu local quality: **qwen2.5:1.5b**
+- Fast Raspberry Pi / Ubuntu local fallback: **qwen2.5:0.5b**
+- Recommended Steam Deck local quality: **qwen3:1.7b**
+- Fast Steam Deck local fallback: **qwen3:0.6b**
+- Safe/legacy fallback: **gemma3:1b**
+
 ## Requirements
 
 - 64-bit Raspberry Pi OS or Ubuntu; SteamOS is experimental on nightly
@@ -90,15 +100,6 @@ DIY install is the main path for now. I am also considering a small run of ready
 - Internet during install
 - A stable local IP address is strongly recommended
 - Do not expose Caroline directly to the public internet
-
-## What Caroline Can Do
-
-- Chat with local Ollama or cloud models through OpenRouter
-- Add, read, and delete Google Calendar events
-- Manage local tasks
-- Control Philips Hue lights
-- Show weather, news, video, tides, radio, Pomodoro, memory, and system widgets
-- Run as a fullscreen kiosk or as a server opened from another browser
 
 ## Optional Integrations
 
@@ -110,15 +111,6 @@ Add these later in **Settings**:
 - Philips Hue bridge/key
 - Discord bot token and channel ID
 - NOAA tide station
-
-## AI Model Guidance
-
-The installer detects your hardware, RAM, and platform, then preselects the local model it thinks fits best. You can still override the choice during setup.
-
-- Best experience: **OpenRouter**
-- Recommended local quality: **qwen2.5:1.5b**
-- Fast local fallback: **qwen2.5:0.5b**
-- Safe/legacy default: **gemma3:1b**
 
 ## Update
 
@@ -148,6 +140,8 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/r
 
 Caroline is designed for your local network. Keep ports `8080`, `8443`, `8444`, and SSH private unless you are using a VPN such as Tailscale or WireGuard. Node-RED runs as a localhost-only backend behind Caroline's web server.
 
+Caroline stores settings, API tokens, OAuth data, task state, and chat memory on the device where it is installed. Optional telemetry prompts are opt-in and are intended for anonymous project-health counts and troubleshooting signals, not chat content or personal data.
+
 ## Try The Demo
 
 The simulated dashboard is available here:
@@ -157,6 +151,16 @@ The simulated dashboard is available here:
 This is a static, no-account walkthrough from [demo/index.html](demo/index.html). It uses bundled assets and canned responses, so it is safe to share, but the real installed kiosk is the primary experience.
 
 ![Project Caroline offline demo preview](Screenshots/demo-offline.png)
+
+## Calling Artists And Animators
+
+The current Caroline avatars are AI generated, but the long-term goal is original character art and expressive animations. Character artists, animators, 2D/3D designers, and creative collaborators are welcome.
+
+Interested in helping shape Caroline's visual identity? Start a conversation in [GitHub Discussions](https://github.com/Project-Caroline/project-caroline/discussions).
+
+## Beta Kits
+
+DIY install is the main path for now. I am also considering a small run of ready-to-go Project Caroline Raspberry Pi kits for people who want a turnkey setup. If that would be useful to you, reach out so I can gauge demand.
 
 ## Support
 
