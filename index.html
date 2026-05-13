@@ -1920,16 +1920,22 @@
         <div class="settings-section">
           <h3>Spotify</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Spotify Client ID</div><div class="settings-sub" id="spotify-status">Not connected</div></div>
+            <div><div class="settings-label">Spotify</div><div class="settings-sub" id="spotify-status">Not connected</div></div>
             <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-              <input class="settings-input" id="set-spotify-id" type="text" placeholder="Spotify Client ID"/>
               <button id="spotify-connect-btn" type="button" onclick="return handleSpotifyAuth(event)" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;">🔌 Connect Spotify</button>
+              <span onclick="toggleSpotifyAdvanced()" style="font-size:9px;color:rgba(226,232,240,0.3);cursor:pointer;font-family:'JetBrains Mono',monospace;" id="spotify-advanced-toggle">use my own app ▾</span>
             </div>
           </div>
-          <div style="margin-top:10px;padding:8px 10px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(var(--t-rgb1),0.1);">
-            <div style="font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this as a Redirect URI in your Spotify app:</div>
-            <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
-            <div style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;margin-top:4px;">Dashboard → Your App → Edit → Redirect URIs. The URI must match exactly. Use the 32-character Client ID, not the secret.</div>
+          <div id="spotify-advanced" style="display:none;margin-top:8px;">
+            <div class="settings-row">
+              <div><div class="settings-label" style="font-size:10px;opacity:.7">Custom Client ID</div></div>
+              <input class="settings-input" id="set-spotify-id" type="text" placeholder="32-char hex Client ID"/>
+            </div>
+            <div style="margin-top:10px;padding:8px 10px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(var(--t-rgb1),0.1);">
+              <div style="font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this as a Redirect URI in your Spotify app:</div>
+              <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
+              <div style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;margin-top:4px;">Dashboard → Your App → Edit → Redirect URIs. The URI must match exactly. Use the 32-character Client ID, not the secret.</div>
+            </div>
           </div>
         </div>
         <div class="settings-section">
@@ -3066,7 +3072,14 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL, { allowBlank });
   setInputValue('set-hueip', S.hueIp || '', { allowBlank });
   setInputValue('set-huekey', S.hueKey || '', { allowBlank });
-  setInputValue('set-spotify-id', S.spotifyClientId || '', { allowBlank });
+  const customSpotifyId = S.spotifyClientId && S.spotifyClientId !== CAROLINE_SPOTIFY_CLIENT_ID ? S.spotifyClientId : '';
+  setInputValue('set-spotify-id', customSpotifyId, { allowBlank });
+  if (customSpotifyId) {
+    const adv = document.getElementById('spotify-advanced');
+    const toggle = document.getElementById('spotify-advanced-toggle');
+    if (adv) adv.style.display = 'block';
+    if (toggle) toggle.textContent = 'use my own app ▴';
+  }
   setInputValue('set-timezone', S.timezone || '', { allowBlank });
   setInputValue('set-location', S.location || S.cityName || '', { allowBlank });
   setInputValue('set-zip', S.zipcode || S.zipCode || '', { allowBlank });
@@ -3544,6 +3557,8 @@ const NODE_RED_TIMEOUT_MS = 10000;
 let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const CADDY_PORT = 8443;
 const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callback';
+const CAROLINE_SPOTIFY_CLIENT_ID = '8a00b96c81ca4049bd4a684a80da4088';
+const CAROLINE_SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:1880/spotify/callback';
 
 function httpBase(port) {
   if (!port || port === NODE_RED_PORT) return getNodeRedUrl();
@@ -3782,24 +3797,28 @@ function showSpotifyAuthDialog(authUrl, clientId) {
   document.body.appendChild(wrap);
 }
 
+function toggleSpotifyAdvanced() {
+  const adv = document.getElementById('spotify-advanced');
+  const toggle = document.getElementById('spotify-advanced-toggle');
+  if (!adv) return;
+  const open = adv.style.display !== 'none';
+  adv.style.display = open ? 'none' : 'block';
+  if (toggle) toggle.textContent = open ? 'use my own app ▾' : 'use my own app ▴';
+}
+
 async function handleSpotifyAuth(event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
   const inputEl = document.getElementById('set-spotify-id');
-  const clientId = normalizeSpotifyClientId(inputEl?.value || '');
+  const rawInput = (inputEl?.value || '').trim();
+  const usingDefault = !rawInput;
+  const clientId = usingDefault ? CAROLINE_SPOTIFY_CLIENT_ID : normalizeSpotifyClientId(rawInput);
   const statusEl = document.getElementById('spotify-status');
   const btnEl = document.getElementById('spotify-connect-btn');
-  if (!clientId) {
-    if (statusEl) {
-      statusEl.textContent = 'Enter a Spotify Client ID first';
-      statusEl.style.color = '#fb7185';
-    }
-    showSettingsFeedback('Enter a Spotify Client ID first', true);
-    return false;
-  }
-  if (!/^[0-9a-f]{32}$/i.test(clientId)) {
+
+  if (!usingDefault && !/^[0-9a-f]{32}$/i.test(clientId)) {
     if (statusEl) {
       statusEl.textContent = 'Client ID should be 32 hex characters';
       statusEl.style.color = '#fb7185';
@@ -3807,17 +3826,19 @@ async function handleSpotifyAuth(event) {
     showSettingsFeedback('Spotify Client ID should be 32 hex characters', true);
     return false;
   }
-  if (inputEl) inputEl.value = clientId;
+
+  if (!usingDefault && inputEl) inputEl.value = clientId;
   S.spotifyClientId = clientId;
   localStorage.setItem('caro_settings', JSON.stringify(S));
   try { await postSettingsToNodeRed({ spotifyClientId: clientId }, NODE_RED_TIMEOUT_MS); } catch(e) {}
+
   if (statusEl) {
-    statusEl.textContent = 'Spotify login ready for Client ID ending ' + shortIdSuffix(clientId);
+    statusEl.textContent = 'Waiting for Spotify...';
     statusEl.style.color = '';
   }
   if (btnEl) btnEl.textContent = 'Waiting for Spotify...';
 
-  const redirectUri = getSpotifyServerRedirectUri();
+  const redirectUri = usingDefault ? CAROLINE_SPOTIFY_REDIRECT_URI : getSpotifyServerRedirectUri();
   const authUrl = httpBase() + '/spotify/start?' + new URLSearchParams({ clientId, redirectUri }).toString();
   showSpotifyAuthDialog(authUrl, clientId);
   return false;
