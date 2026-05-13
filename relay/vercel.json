@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "functions": {
+    "api/google.js": { "maxDuration": 15 }
+  }
+}
