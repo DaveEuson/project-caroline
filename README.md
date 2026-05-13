@@ -162,6 +162,10 @@ Interested in helping shape Caroline's visual identity? Start a conversation in 
 
 DIY install is the main path for now. I am also considering a small run of ready-to-go Project Caroline Raspberry Pi kits for people who want a turnkey setup. If that would be useful to you, reach out so I can gauge demand.
 
+## Roadmap
+
+See what's planned next: [docs/roadmap.md](docs/roadmap.md)
+
 ## Support
 
 Caroline is free to use. If you enjoy it and want to support future builds:

@@ -7081,6 +7081,20 @@ async function sendAiHttpMessage(text, context) {
 }
 function sendMessage(){
   const t=input.value.trim(); if(!t) return;
+  if (!serverSettingsLoaded) {
+    const sendBtn = document.getElementById('send-btn');
+    const origHTML = sendBtn?.innerHTML;
+    if (sendBtn) { sendBtn.innerHTML = '⏳'; sendBtn.disabled = true; }
+    const deadline = Date.now() + 5000;
+    const poll = setInterval(() => {
+      if (serverSettingsLoaded || Date.now() > deadline) {
+        clearInterval(poll);
+        if (sendBtn) { sendBtn.innerHTML = origHTML || '<i class="ti ti-send"></i>'; sendBtn.disabled = false; }
+        if (serverSettingsLoaded) sendMessage();
+      }
+    }, 100);
+    return;
+  }
   // Rate limiting
   const now = Date.now();
   if (now - _lastSendMs < SEND_COOLDOWN_MS) {
