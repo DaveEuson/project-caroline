@@ -1925,21 +1925,13 @@
           <h3>Spotify</h3>
           <div class="settings-row">
             <div><div class="settings-label">Spotify</div><div class="settings-sub" id="spotify-status">Not connected</div></div>
-            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-              <button id="spotify-connect-btn" type="button" onclick="return handleSpotifyAuth(event)" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;">🔌 Connect Spotify</button>
-              <span onclick="toggleSpotifyAdvanced()" style="font-size:9px;color:rgba(226,232,240,0.3);cursor:pointer;font-family:'JetBrains Mono',monospace;" id="spotify-advanced-toggle">use my own app ▾</span>
-            </div>
+            <button id="spotify-connect-btn" type="button" onclick="return handleSpotifyAuth(event)" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;">🔌 Connect Spotify</button>
           </div>
-          <div id="spotify-advanced" style="display:none;margin-top:8px;">
-            <div class="settings-row">
-              <div><div class="settings-label" style="font-size:10px;opacity:.7">Custom Client ID</div></div>
-              <input class="settings-input" id="set-spotify-id" type="text" placeholder="32-char hex Client ID"/>
-            </div>
-            <div style="margin-top:10px;padding:8px 10px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(var(--t-rgb1),0.1);">
-              <div style="font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this as a Redirect URI in your Spotify app:</div>
-              <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
-              <div style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;margin-top:4px;">Dashboard → Your App → Edit → Redirect URIs. The URI must match exactly. Use the 32-character Client ID, not the secret.</div>
-            </div>
+          <div style="margin-top:10px;padding:8px 10px;background:rgba(29,185,84,0.05);border-radius:8px;border:1px solid rgba(29,185,84,0.2);">
+            <div style="font-size:10px;color:rgba(226,232,240,0.7);font-family:'JetBrains Mono',monospace;margin-bottom:6px;">A Spotify Client ID is required. <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#1db954;">Create a free app at developer.spotify.com</a> → set app type to <strong style="color:rgba(226,232,240,0.9)">Web API</strong> → copy the Client ID (not the secret).</div>
+            <input class="settings-input" id="set-spotify-id" type="text" placeholder="Paste 32-character Client ID here" style="width:100%;box-sizing:border-box;margin-bottom:6px;"/>
+            <div style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Also add this Redirect URI in your Spotify app (Dashboard → Edit → Redirect URIs):</div>
+            <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;margin-bottom:2px;"></div>
           </div>
         </div>
         <div class="settings-section">
@@ -3106,12 +3098,6 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-huekey', S.hueKey || '', { allowBlank });
   const customSpotifyId = S.spotifyClientId && S.spotifyClientId !== CAROLINE_SPOTIFY_CLIENT_ID ? S.spotifyClientId : '';
   setInputValue('set-spotify-id', customSpotifyId, { allowBlank });
-  if (customSpotifyId) {
-    const adv = document.getElementById('spotify-advanced');
-    const toggle = document.getElementById('spotify-advanced-toggle');
-    if (adv) adv.style.display = 'block';
-    if (toggle) toggle.textContent = 'use my own app ▴';
-  }
   setInputValue('set-timezone', S.timezone || '', { allowBlank });
   setInputValue('set-location', S.location || S.cityName || '', { allowBlank });
   setInputValue('set-zip', S.zipcode || S.zipCode || '', { allowBlank });
