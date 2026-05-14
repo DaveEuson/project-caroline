@@ -2304,7 +2304,13 @@
           </div>
           <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status">Pulls the latest GitHub build; Refresh Build only rereads version info</div></div>
-            <button class="settings-boot-btn" type="button" onclick="startCarolineUpdate(this)">⟳ Update</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="update-channel-select" class="settings-select" style="font-size:10px;padding:5px 8px;">
+                <option value="release">Release</option>
+                <option value="nightly">Nightly</option>
+              </select>
+              <button class="settings-boot-btn" type="button" onclick="startCarolineUpdate(this)">⟳ Update</button>
+            </div>
           </div>
           <div id="issue-report-status" style="margin-top:8px;font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
         </div>
@@ -6521,6 +6527,7 @@ function setUpdateStatus(text, color = 'rgba(34,211,238,0.95)') {
 
 async function startCarolineUpdate(btn) {
   const originalText = btn ? btn.textContent : '⟳ Update';
+  const channel = (document.getElementById('update-channel-select')?.value || 'release').toLowerCase();
   if (btn) {
     btn.disabled = true;
     btn.textContent = 'Checking...';
@@ -6558,6 +6565,8 @@ async function startCarolineUpdate(btn) {
   try {
     const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/update', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel }),
       timeoutMs: 7000
     }, 'Caroline update');
     let data = {};
