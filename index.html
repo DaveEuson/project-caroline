@@ -1992,13 +1992,19 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Calendar ID</div><div class="settings-sub" id="google-calendar-status">Use primary, or Load Calendars to choose one</div></div>
+            <div><div class="settings-label">Read calendars</div><div class="settings-sub" id="google-calendar-status">Load to choose which calendars to show</div></div>
             <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <input class="settings-input" id="set-calendar-id" type="text" placeholder="primary" oninput="validateCalendarIdInput()" style="width:260px"/>
-              <select id="google-calendar-select" class="settings-input" onchange="selectGoogleCalendarFromList()" style="display:none;width:260px">
-                <option value="">Load calendars first</option>
-              </select>
+              <input type="hidden" id="set-calendar-id" value=""/>
+              <div id="google-calendar-read-list" style="display:none;width:260px;max-height:130px;overflow-y:auto;background:rgba(15,23,42,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px;"></div>
               <button type="button" onclick="loadGoogleCalendars()" style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.32);border-radius:10px;padding:6px 14px;color:#8ab4f8;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Load Calendars</button>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:8px">
+            <div><div class="settings-label">Write events to</div><div class="settings-sub" id="google-write-calendar-status">Where Caroline creates new events</div></div>
+            <div>
+              <select id="google-write-calendar-select" class="settings-input" onchange="selectWriteCalendar()" style="width:260px">
+                <option value="primary">Primary calendar (default)</option>
+              </select>
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -2748,7 +2754,7 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -2846,6 +2852,8 @@ if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 normalizeSettingsBooleans(S);
 S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
 S.calendarId = normalizeCalendarIdInput(S.calendarId);
+if (!Array.isArray(S.calendarIds) || !S.calendarIds.length) { S.calendarIds = S.calendarId ? [S.calendarId] : []; }
+if (!S.defaultWriteCalendarId && S.calendarId) S.defaultWriteCalendarId = S.calendarId;
 S.nodeRedUrl = normalizeConfiguredNodeRedUrl(S.nodeRedUrl);
 handleSpotifyCallback(); // handle ?code= redirect from Spotify OAuth
 localStorage.setItem('caro_settings', JSON.stringify(S));
@@ -2928,6 +2936,8 @@ function mergeServerSettings(d, options = {}) {
   S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.calendarId = normalizeCalendarIdInput(S.calendarId);
+  if (!Array.isArray(S.calendarIds) || !S.calendarIds.length) { S.calendarIds = S.calendarId ? [S.calendarId] : []; }
+  if (!S.defaultWriteCalendarId && S.calendarId) S.defaultWriteCalendarId = S.calendarId;
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
   localStorage.setItem('caro_settings', JSON.stringify(S));
   const restoreKeys = Object.keys(restoredSecrets).filter(k => restoredSecrets[k] && !d[k] && !d[k + 'Configured']);
@@ -3019,7 +3029,18 @@ function renderIntegrationStatus() {
   const googleConnected = integrationHealth.google ? parseSettingBool(integrationHealth.google.connected) : parseSettingBool(S.googleConnected);
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
   const googleSecretSaved = !!S.googleClientSecret || !!S.googleClientSecretConfigured || !!integrationHealth.google?.hasClientSecret;
-  setSettingsSubStatus('google-calendar-status', S.calendarId ? 'Saved on device: ' + S.calendarId : 'Defaults to primary', S.calendarId ? 'ok' : 'neutral');
+  const calCount = Array.isArray(S.calendarIds) ? S.calendarIds.length : 0;
+  setSettingsSubStatus('google-calendar-status', calCount > 0 ? calCount + ' calendar' + (calCount > 1 ? 's' : '') + ' selected' : 'Load Calendars to choose', calCount > 0 ? 'ok' : 'neutral');
+  const writeCalEl = document.getElementById('google-write-calendar-select');
+  if (writeCalEl && writeCalEl.options.length <= 1) {
+    const writeId = S.defaultWriteCalendarId || S.calendarId || 'primary';
+    if (writeId && writeId !== 'primary') {
+      const opt = document.createElement('option');
+      opt.value = writeId; opt.textContent = writeId; opt.selected = true;
+      writeCalEl.insertBefore(opt, writeCalEl.firstChild);
+    }
+  }
+  setSettingsSubStatus('google-write-calendar-status', (S.defaultWriteCalendarId || S.calendarId) ? 'Write to: ' + (S.defaultWriteCalendarId || S.calendarId || 'primary') : 'Defaults to primary', 'neutral');
   setSettingsSubStatus('google-client-id-status', googleClientSaved ? 'Saved on device' : 'Not configured', googleClientSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('google-secret-status', googleSecretSaved ? 'Saved on device' : 'Not configured', googleSecretSaved ? 'ok' : 'neutral');
   setSettingsSubStatus('google-auth-status', googleConnected ? 'Connected' : (googleClientSaved ? 'Client saved, not connected' : 'Not connected'), googleConnected ? 'ok' : (googleClientSaved ? 'warn' : 'neutral'));
@@ -3090,7 +3111,6 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-zip', S.zipcode || S.zipCode || '', { allowBlank });
   setInputValue('set-ainame', S.aiName || 'Caroline', { allowBlank });
   setInputValue('set-calendar-id', S.calendarId || 'primary', { allowBlank });
-  validateCalendarIdInput();
   setInputValue('set-sheet-id', S.sheetId || '', { allowBlank });
   setInputValue('set-discord-token', S.discordToken || '', { allowBlank });
   setInputValue('set-discord-channel', S.discordChannelId || '', { allowBlank });
@@ -3843,7 +3863,7 @@ async function handleSpotifyAuth(event) {
   }
   if (btnEl) btnEl.textContent = 'Waiting for Spotify...';
 
-  const redirectUri = usingDefault ? CAROLINE_SPOTIFY_REDIRECT_URI : getSpotifyServerRedirectUri();
+  const redirectUri = getSpotifyServerRedirectUri();
   const authUrl = httpBase() + '/spotify/start?' + new URLSearchParams({ clientId, redirectUri }).toString();
   showSpotifyAuthDialog(authUrl, clientId);
   return false;
@@ -5316,26 +5336,17 @@ async function refreshGoogleStatus() {
   }
 }
 
-function selectGoogleCalendarFromList() {
-  const sel = document.getElementById('google-calendar-select');
-  const input = document.getElementById('set-calendar-id');
-  const statusEl = document.getElementById('google-calendar-status');
+function selectWriteCalendar() {
+  const sel = document.getElementById('google-write-calendar-select');
   const value = (sel?.value || '').trim();
   if (!value) return;
-  if (sel.options[sel.selectedIndex]?.disabled) {
-    if (statusEl) { statusEl.textContent = 'That calendar is read-only'; statusEl.style.color = '#fbbf24'; }
-    return;
-  }
-  S.calendarId = value;
-  if (input) input.value = value;
+  S.defaultWriteCalendarId = value;
   localStorage.setItem('caro_settings', JSON.stringify(S));
-  if (statusEl) {
-    const label = sel.options[sel.selectedIndex]?.text || value;
-    statusEl.textContent = 'Selected: ' + label.replace(/\s+\([^)]*\)$/, '');
-    statusEl.style.color = 'rgba(52,211,153,0.9)';
-  }
-  postSettingsToNodeRed({ calendarId: normalizeCalendarIdInput(value) }, 5000).catch(e => console.warn('[Caroline] calendar selection save failed:', e));
+  setSettingsSubStatus('google-write-calendar-status', 'Write to: ' + (sel.options[sel.selectedIndex]?.text || value), 'ok');
+  postSettingsToNodeRed({ defaultWriteCalendarId: value }, 5000).catch(e => console.warn('[Caroline] write calendar save failed:', e));
 }
+
+function selectGoogleCalendarFromList() {}
 
 function looksLikeGoogleCalendarId(value) {
   const v = String(value || '').trim();
@@ -5362,7 +5373,8 @@ function validateCalendarIdInput() {
 
 async function loadGoogleCalendars() {
   const statusEl = document.getElementById('google-calendar-status');
-  const sel = document.getElementById('google-calendar-select');
+  const readList = document.getElementById('google-calendar-read-list');
+  const writeSel = document.getElementById('google-write-calendar-select');
   if (statusEl) { statusEl.textContent = 'Loading calendars...'; statusEl.style.color = 'rgba(226,232,240,0.55)'; }
   try {
     const resp = await fetchJsonWithTimeout(httpBase() + '/admin/google/calendars', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Google calendars');
@@ -5370,24 +5382,40 @@ async function loadGoogleCalendars() {
     if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
     const calendars = Array.isArray(data.calendars) ? data.calendars : [];
     if (!calendars.length) throw new Error('No calendars returned');
-    if (sel) {
-      sel.innerHTML = calendars.map(cal => {
+
+    const currentReadIds = Array.isArray(S.calendarIds) && S.calendarIds.length ? S.calendarIds : (S.calendarId ? [S.calendarId] : []);
+    const currentWriteId = S.defaultWriteCalendarId || S.calendarId || 'primary';
+
+    if (readList) {
+      readList.innerHTML = calendars.map(cal => {
         const id = spotifyHtmlEscape(cal.id || '');
         const name = spotifyHtmlEscape(cal.summary || cal.id || 'Untitled calendar');
-        const role = spotifyHtmlEscape(cal.accessRole || '');
-        const primary = cal.primary ? ' - primary' : '';
-        const disabled = cal.writable ? '' : ' disabled';
-        const selected = cal.writable && (cal.id === S.calendarId || (!S.calendarId && cal.primary)) ? ' selected' : '';
-        return `<option value="${id}"${selected}${disabled}>${name}${primary} (${role || 'unknown'})${cal.writable ? '' : ' - read only'}</option>`;
+        const primary = cal.primary ? ' (primary)' : '';
+        const readOnly = !cal.writable ? ' <span style="color:rgba(226,232,240,0.35);font-size:9px">read-only</span>' : '';
+        const checked = currentReadIds.includes(cal.id) || (!currentReadIds.length && cal.primary) ? ' checked' : '';
+        return `<label style="display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer;font-size:10px;color:rgba(226,232,240,0.8);font-family:'JetBrains Mono',monospace"><input type="checkbox" value="${id}"${checked} onchange="onReadCalendarToggle()" style="accent-color:#8ab4f8"/>${name}${primary}${readOnly}</label>`;
       }).join('');
-      sel.style.display = '';
+      readList.style.display = '';
     }
-    const writeableCount = calendars.filter(c => c.writable).length;
+
+    if (writeSel) {
+      const writable = calendars.filter(c => c.writable);
+      writeSel.innerHTML = writable.map(cal => {
+        const id = spotifyHtmlEscape(cal.id || '');
+        const name = spotifyHtmlEscape(cal.summary || cal.id || 'Untitled calendar');
+        const primary = cal.primary ? ' (primary)' : '';
+        const selected = cal.id === currentWriteId || (!S.defaultWriteCalendarId && cal.primary) ? ' selected' : '';
+        return `<option value="${id}"${selected}>${name}${primary}</option>`;
+      }).join('');
+      if (writeSel.value) { S.defaultWriteCalendarId = writeSel.value; }
+    }
+
+    const checked = readList ? readList.querySelectorAll('input:checked').length : 0;
     if (statusEl) {
-      statusEl.textContent = 'Loaded ' + calendars.length + ' calendars' + (writeableCount ? '' : ' - none writable');
-      statusEl.style.color = writeableCount ? 'rgba(52,211,153,0.9)' : '#fbbf24';
+      statusEl.textContent = checked + ' of ' + calendars.length + ' calendar' + (calendars.length > 1 ? 's' : '') + ' selected for reading';
+      statusEl.style.color = 'rgba(52,211,153,0.9)';
     }
-    selectGoogleCalendarFromList();
+    setSettingsSubStatus('google-write-calendar-status', 'Write to: ' + (writeSel?.options[writeSel.selectedIndex]?.text || currentWriteId), 'ok');
   } catch(e) {
     const message = e.message || 'connect Google first';
     if (statusEl) {
@@ -5398,6 +5426,21 @@ async function loadGoogleCalendars() {
     }
     if (/connect google first|google token missing|reconnect google/i.test(message)) refreshGoogleStatus();
   }
+}
+
+function onReadCalendarToggle() {
+  const readList = document.getElementById('google-calendar-read-list');
+  const statusEl = document.getElementById('google-calendar-status');
+  const checked = readList ? Array.from(readList.querySelectorAll('input:checked')).map(cb => cb.value) : [];
+  S.calendarIds = checked;
+  if (checked.length) S.calendarId = checked[0];
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  const total = readList ? readList.querySelectorAll('input').length : 0;
+  if (statusEl) {
+    statusEl.textContent = checked.length + ' of ' + total + ' calendar' + (total > 1 ? 's' : '') + ' selected for reading';
+    statusEl.style.color = checked.length ? 'rgba(52,211,153,0.9)' : '#fbbf24';
+  }
+  postSettingsToNodeRed({ calendarIds: checked, calendarId: checked[0] || 'primary' }, 5000).catch(e => console.warn('[Caroline] calendar read selection save failed:', e));
 }
 
 function googleRemoteCallbackHint() {
@@ -5662,7 +5705,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
   const preserveBlankKeys = new Set([
     'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret',
     'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
-    'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId',
+    'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId', 'defaultWriteCalendarId',
     'hueIp', 'tidesStation', 'spotifyClientId',
     'googleClientId', 'googleRedirectUri', 'sheetId', 'wakePhrases'
   ]);
@@ -5761,16 +5804,15 @@ async function saveSettings() {
   S.timeFormat = document.getElementById('set-time-format')?.value || '12';
   S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
   S.location = locationVal;
-  const calendarIdVal = document.getElementById('set-calendar-id').value.trim();
-  if (calendarIdVal || !S.calendarId) {
-    S.calendarId = normalizeCalendarIdInput(calendarIdVal);
-    const calEl = document.getElementById('set-calendar-id');
-    if (calEl) calEl.value = S.calendarId;
-    if (calendarIdVal && calendarIdVal !== S.calendarId) {
-      setSettingsSubStatus('google-calendar-status', 'Calendar names like "' + calendarIdVal + '" are not IDs; using primary', 'warn');
-      showSettingsFeedback('Calendar name was changed to primary; use Load Calendars to choose by name', true);
-    }
+  const readChecks = document.querySelectorAll('#google-calendar-read-list input[type=checkbox]:checked');
+  if (readChecks.length > 0) {
+    S.calendarIds = Array.from(readChecks).map(cb => cb.value).filter(Boolean);
+    S.calendarId = S.calendarIds[0] || 'primary';
+  } else if (!S.calendarIds || !S.calendarIds.length) {
+    S.calendarIds = [S.calendarId || 'primary'];
   }
+  const writeCalEl = document.getElementById('google-write-calendar-select');
+  if (writeCalEl && writeCalEl.value) S.defaultWriteCalendarId = writeCalEl.value;
   S.meetingReminderMinutes = normalizeMeetingReminderMinutes(document.getElementById('set-meeting-reminder')?.value || 0);
   const sheetInp = document.getElementById('set-sheet-id');
   if (sheetInp) {
@@ -6848,7 +6890,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       normalizeSettingsBooleans(_payload, { fillDefaults: false });
