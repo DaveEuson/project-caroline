@@ -1928,10 +1928,12 @@
             <button id="spotify-connect-btn" type="button" onclick="return handleSpotifyAuth(event)" style="background:rgba(29,185,84,0.1); border:1px solid #1db954; border-radius:10px; padding:6px 12px; color:#1db954; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer;">🔌 Connect Spotify</button>
           </div>
           <div style="margin-top:10px;padding:8px 10px;background:rgba(29,185,84,0.05);border-radius:8px;border:1px solid rgba(29,185,84,0.2);">
-            <div style="font-size:10px;color:rgba(226,232,240,0.7);font-family:'JetBrains Mono',monospace;margin-bottom:6px;">A Spotify Client ID is required. <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#1db954;">Create a free app at developer.spotify.com</a> → set app type to <strong style="color:rgba(226,232,240,0.9)">Web API</strong> → copy the Client ID (not the secret).</div>
-            <input class="settings-input" id="set-spotify-id" type="text" placeholder="Paste 32-character Client ID here" style="width:100%;box-sizing:border-box;margin-bottom:6px;"/>
-            <div style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Also add this Redirect URI in your Spotify app (Dashboard → Edit → Redirect URIs):</div>
-            <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;margin-bottom:2px;"></div>
+            <div style="font-size:10px;color:rgba(226,232,240,0.7);font-family:'JetBrains Mono',monospace;margin-bottom:6px;">Spotify works out of the box — no setup needed. To use a private app instead, paste your own Client ID from <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#1db954;">developer.spotify.com</a>.</div>
+            <input class="settings-input" id="set-spotify-id" type="text" placeholder="Custom Client ID (optional — leave blank to use built-in)" style="width:100%;box-sizing:border-box;margin-bottom:6px;" oninput="updateSpotifyRedirectDisplay()"/>
+            <div id="spotify-custom-redirect-hint" style="display:none;">
+              <div style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this Redirect URI in your Spotify app (Dashboard → Edit → Redirect URIs):</div>
+              <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;margin-bottom:2px;"></div>
+            </div>
           </div>
         </div>
         <div class="settings-section">
@@ -3575,7 +3577,7 @@ let todos = JSON.parse(localStorage.getItem('caro_todos') || '[]');
 const CADDY_PORT = 8443;
 const GOOGLE_LOOPBACK_REDIRECT_URI = 'http://127.0.0.1:1880/admin/google/callback';
 const CAROLINE_SPOTIFY_CLIENT_ID = '8a00b96c81ca4049bd4a684a80da4088';
-const CAROLINE_SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:1880/spotify/callback';
+const CAROLINE_SPOTIFY_REDIRECT_URI = 'https://project-caroline.vercel.app/api/spotify-callback';
 
 function httpBase(port) {
   if (!port || port === NODE_RED_PORT) return getNodeRedUrl();
@@ -3622,6 +3624,10 @@ async function refreshPiNetworkIdentity() {
 
 function updateSpotifyRedirectDisplay() {
   const rdEl = document.getElementById('spotify-redirect-display');
+  const hint = document.getElementById('spotify-custom-redirect-hint');
+  const inputEl = document.getElementById('set-spotify-id');
+  const hasCustom = !!(inputEl && inputEl.value.trim());
+  if (hint) hint.style.display = hasCustom ? 'block' : 'none';
   if (rdEl) rdEl.textContent = getSpotifyServerRedirectUri();
 }
 
@@ -3788,30 +3794,38 @@ function showSpotifyAuthDialog(authUrl, clientId, redirectUri) {
   closeSpotifyAuthDialog();
   spotifyPendingAuthUrl = authUrl;
   if (!redirectUri) redirectUri = getSpotifyServerRedirectUri();
+  const isRelay = (redirectUri === CAROLINE_SPOTIFY_REDIRECT_URI);
   const wrap = document.createElement('div');
   wrap.id = 'spotify-auth-dialog';
   wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box;';
+  const redirectSection = isRelay ? '' : `
+      <div style="font-size:11px;color:#94a3b8;margin:10px 0 6px;">Redirect URI your Spotify app must have:</div>
+      <div style="background:#05050a;border:1px solid rgba(29,185,84,.28);border-radius:8px;padding:10px;word-break:break-all;font-size:12px;color:#67e8f9;">${spotifyHtmlEscape(redirectUri)}</div>
+      <div style="margin-top:8px;font-size:10px;line-height:1.5;color:#94a3b8;">Server/client note: if your browser shows a certificate warning for port 8443, accept it once so Spotify can return to Caroline.</div>`;
+  const copyRedirectBtn = isRelay ? '' : `<button type="button" onclick="copySpotifyAuthText('${spotifyHtmlEscape(redirectUri)}','Redirect URI copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Redirect URI</button>`;
+  const footerNote = isRelay
+    ? `<div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Using the built-in Caroline integration. If you want a private app, enter a Custom Client ID in Spotify settings.</div>`
+    : `<div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Client ID ending ${spotifyHtmlEscape(shortIdSuffix(clientId))}. If Spotify says <strong style="color:#fca5a5;">redirect_uri mismatch</strong>, the URI above is not saved in your Spotify app yet, or the Node-RED URL changed.</div>`;
   wrap.innerHTML = `
     <div role="dialog" aria-modal="true" aria-labelledby="spotify-auth-title" style="width:min(620px,100%);background:#090713;border:1px solid rgba(29,185,84,.45);border-radius:14px;box-shadow:0 0 40px rgba(0,0,0,.6),0 0 28px rgba(29,185,84,.16);padding:22px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;">
         <div>
           <div id="spotify-auth-title" style="font-size:16px;color:#1db954;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Spotify Login</div>
-          <div id="spotify-auth-note" style="font-size:11px;color:#94a3b8;margin-top:6px;">First, add this exact Redirect URI in Spotify. Then open the login window.</div>
+          <div id="spotify-auth-note" style="font-size:11px;color:#94a3b8;margin-top:6px;">${isRelay ? 'A Spotify window will open. Log in and it will connect automatically.' : 'First, add this exact Redirect URI in Spotify. Then open the login window.'}</div>
         </div>
         <button type="button" onclick="closeSpotifyAuthDialog()" style="background:transparent;color:#cbd5e1;border:1px solid rgba(148,163,184,.35);border-radius:8px;padding:7px 10px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Close</button>
       </div>
-      <div style="font-size:11px;color:#94a3b8;margin:10px 0 6px;">Redirect URI Spotify must have:</div>
-      <div style="background:#05050a;border:1px solid rgba(29,185,84,.28);border-radius:8px;padding:10px;word-break:break-all;font-size:12px;color:#67e8f9;">${spotifyHtmlEscape(redirectUri)}</div>
-      <div style="margin-top:8px;font-size:10px;line-height:1.5;color:#94a3b8;">Server/client note: if your browser shows a certificate warning for port 8443, accept it once so Spotify can return to Caroline.</div>
+      ${redirectSection}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-        <button type="button" onclick="copySpotifyAuthText('${spotifyHtmlEscape(redirectUri)}','Redirect URI copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Redirect URI</button>
+        ${copyRedirectBtn}
         <button type="button" onclick="copySpotifyAuthText(spotifyPendingAuthUrl,'Spotify login link copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Login Link</button>
         <button type="button" onclick="openSpotifyAuthWindow()" style="background:rgba(29,185,84,.16);color:#86efac;border:1px solid rgba(29,185,84,.6);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Open Login Window</button>
       </div>
-      <div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Client ID ending ${spotifyHtmlEscape(shortIdSuffix(clientId))}. If Spotify says <strong style="color:#fca5a5;">redirect_uri mismatch</strong>, the URI above is not saved in your Spotify app yet, or the Node-RED URL changed from localhost to the device IP.</div>
+      ${footerNote}
     </div>`;
   wrap.addEventListener('click', (e) => { if (e.target === wrap) closeSpotifyAuthDialog(); });
   document.body.appendChild(wrap);
+  if (isRelay) setTimeout(openSpotifyAuthWindow, 80);
 }
 
 function toggleSpotifyAdvanced() {
@@ -3904,6 +3918,14 @@ async function handleSpotifyCallback() {
 
 window.addEventListener('message', async (event) => {
   const type = event && event.data && event.data.type;
+  if (type === 'caroline_spotify_code') {
+    const code = String(event.data.code || '').replace(/[^A-Za-z0-9._~+/-]/g, '');
+    if (!code) return;
+    try {
+      await fetch(getNodeRedUrl() + '/spotify/callback?' + new URLSearchParams({ code }).toString(), { signal: AbortSignal.timeout(10000) });
+    } catch(e) { console.warn('[Caroline] Spotify relay forward failed:', e); }
+    return;
+  }
   if (type !== 'caroline_spotify_connected' && type !== 'caroline_spotify_error') return;
   if (spotifyAuthPopupTimer) {
     clearInterval(spotifyAuthPopupTimer);

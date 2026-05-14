@@ -1,6 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "api/google.js": { "maxDuration": 15 }
+    "api/google.js": { "maxDuration": 15 },
+    "api/spotify-callback.js": { "maxDuration": 10 }
   }
 }
