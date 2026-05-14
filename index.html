@@ -3792,10 +3792,10 @@ function openSpotifyAuthWindow() {
   watchSpotifyAuthPopup(statusEl, btnEl);
 }
 
-function showSpotifyAuthDialog(authUrl, clientId) {
+function showSpotifyAuthDialog(authUrl, clientId, redirectUri) {
   closeSpotifyAuthDialog();
   spotifyPendingAuthUrl = authUrl;
-  const redirectUri = getSpotifyServerRedirectUri();
+  if (!redirectUri) redirectUri = getSpotifyServerRedirectUri();
   const wrap = document.createElement('div');
   wrap.id = 'spotify-auth-dialog';
   wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box;';
@@ -3863,9 +3863,9 @@ async function handleSpotifyAuth(event) {
   }
   if (btnEl) btnEl.textContent = 'Waiting for Spotify...';
 
-  const redirectUri = getSpotifyServerRedirectUri();
+  const redirectUri = usingDefault ? CAROLINE_SPOTIFY_REDIRECT_URI : getSpotifyServerRedirectUri();
   const authUrl = httpBase() + '/spotify/start?' + new URLSearchParams({ clientId, redirectUri }).toString();
-  showSpotifyAuthDialog(authUrl, clientId);
+  showSpotifyAuthDialog(authUrl, clientId, redirectUri);
   return false;
 }
 async function handleSpotifyCallback() {
