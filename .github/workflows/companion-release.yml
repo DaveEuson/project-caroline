@@ -1,0 +1,70 @@
+name: Build Caroline Companion
+
+# Triggers when you push a tag like: companion-v0.1.0
+# git tag companion-v0.1.0 && git push origin companion-v0.1.0
+on:
+  push:
+    tags:
+      - 'companion-v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows installer (.msi)
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+          # macOS — Intel + Rosetta 2 (runs on all Macs)
+          - os: macos-latest
+            target: x86_64-apple-darwin
+
+          # macOS — Apple Silicon native (M1/M2/M3)
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: caroline-companion/package-lock.json
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install frontend dependencies
+        working-directory: caroline-companion
+        run: npm ci
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: caroline-companion
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Caroline Companion ${{ github.ref_name }}'
+          releaseBody: |
+            ## Caroline Companion ${{ github.ref_name }}
+
+            A retro AIM-style chat window for your Caroline AI.
+
+            **Download the right file for your platform:**
+            - Windows → `.msi` file
+            - Mac (M1/M2/M3) → `aarch64.dmg`
+            - Mac (Intel) → `x86_64.dmg`
+
+            **First run on Mac:** Right-click the app → Open (bypasses the unsigned app warning).
+          releaseDraft: true
+          prerelease: false
+          args: --target ${{ matrix.target }}
