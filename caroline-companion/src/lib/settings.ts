@@ -7,23 +7,45 @@ export type SavedHost = {
   pairingCode: string;
 };
 
+export type AgentProfile = {
+  weekKey: string;
+  screenName: string;
+  headline: string;
+  body: string;
+  profileLines: string[];
+  songs: string[];
+  status: string;
+  warningLevel: number;
+  onlineMinutes: number;
+  idleMinutes: number;
+  theme: string;
+  writtenAt: string;
+  seed: string;
+};
+
 export type AppSettings = {
   socketUrl: string;
+  userName: string;
   companionName: string;
+  avatarId: string;
   pairingCode: string;
   darkMode: boolean;
   activeHostId: string;
   hosts: SavedHost[];
+  agentProfile: AgentProfile | null;
 };
 
 const DEFAULT_SOCKET_URL = "ws://192.168.1.50:8080/ws/caroline";
 
 const DEFAULTS: AppSettings = {
   socketUrl: DEFAULT_SOCKET_URL,
-  companionName: "Dave's Companion",
+  userName: "",
+  companionName: "",
+  avatarId: "caroline",
   pairingCode: "",
   darkMode: false,
   activeHostId: "default-host",
+  agentProfile: null,
   hosts: [
     {
       id: "default-host",
@@ -51,8 +73,18 @@ function hostNameFromUrl(url: string) {
   }
 }
 
+function deriveUserNameFromCompanionName(value: string) {
+  const match = String(value || "").trim().match(/^(.+?)'s Companion$/i);
+  return match ? match[1].trim() : "";
+}
+
 function normalizeHosts(settings: AppSettings): AppSettings {
   const socketUrl = migrateSocketUrl(settings.socketUrl);
+  const userName = String(settings.userName || deriveUserNameFromCompanionName(settings.companionName) || "").trim();
+  const companionName = String(settings.companionName || (userName ? `${userName}'s Companion` : "My Companion")).trim();
+  const avatarId = ["caroline", "carl"].includes(String(settings.avatarId || "").trim())
+    ? String(settings.avatarId).trim()
+    : DEFAULTS.avatarId;
   const hosts = (Array.isArray(settings.hosts) ? settings.hosts : [])
     .map((host, index) => {
       const hostUrl = migrateSocketUrl(host?.socketUrl || (index === 0 ? socketUrl : ""));
@@ -87,10 +119,14 @@ function normalizeHosts(settings: AppSettings): AppSettings {
 
   return {
     ...settings,
+    userName,
+    companionName,
+    avatarId,
     socketUrl: activeHost?.socketUrl || socketUrl,
     pairingCode: activeHost?.pairingCode ?? settings.pairingCode,
     activeHostId,
     hosts: uniqueHosts.length ? uniqueHosts : DEFAULTS.hosts,
+    agentProfile: settings.agentProfile || null,
   };
 }
 
@@ -109,11 +145,5 @@ export function loadSettings(): AppSettings {
 
 export function saveSettings(settings: AppSettings): void {
   const normalized = normalizeHosts(settings);
-  // Pairing codes are session-only credentials — don't persist them to disk.
-  const toSave = {
-    ...normalized,
-    pairingCode: "",
-    hosts: normalized.hosts.map((h) => ({ ...h, pairingCode: "" })),
-  };
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(toSave));
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(normalized));
 }

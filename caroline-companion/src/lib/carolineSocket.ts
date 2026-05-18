@@ -7,11 +7,21 @@ export type CarolineSocketMessage = {
   text: string;
   type?: string;
   raw: unknown;
+  role?: "assistant" | "user" | "system";
+  source?: string;
+  clientId?: string;
+  clientName?: string;
+  userName?: string;
+  aiName?: string;
+  origin?: string;
+  agentProfile?: string;
+  personalityHint?: string;
 };
 
 export type CompanionClientInfo = {
   clientId: string;
   displayName: string;
+  userName?: string;
   pairingCode?: string;
 };
 
@@ -63,6 +73,11 @@ function summarizeCalendarUpdate(record: Record<string, unknown>) {
   return when ? `Calendar updated: ${title} (${when})` : `Calendar updated: ${title}`;
 }
 
+function stringField(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
   if (typeof data !== "string") {
     return { text: String(data ?? ""), raw: data };
@@ -76,7 +91,7 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
 
       const msgType = typeof record.type === "string" ? record.type : undefined;
 
-      if (msgType === "system_stats" || msgType === "client_heartbeat") {
+      if (msgType === "system_stats" || msgType === "client_heartbeat" || msgType === "assistant_typing") {
         return null;
       }
 
@@ -86,7 +101,68 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
           (typeof record.name === "string" ? record.name : null) ??
           "Caroline";
 
-        return { text: hostName, type: msgType, raw: parsed };
+        return {
+          text: hostName,
+          type: msgType,
+          raw: parsed,
+          role: "system",
+          aiName: stringField(record, "aiName") || hostName,
+          userName: stringField(record, "userName"),
+          agentProfile: stringField(record, "agentProfile"),
+          personalityHint: stringField(record, "personalityHint"),
+        };
+      }
+
+      if (msgType === "pairing_rejected") {
+        const reason = stringField(record, "reason") || "Pairing code rejected";
+        return { text: reason, type: msgType, raw: parsed, role: "system" };
+      }
+
+      if (msgType === "conversation_event") {
+        const roleValue = stringField(record, "role");
+        const role =
+          roleValue === "user"
+            ? "user"
+            : roleValue === "assistant"
+            ? "assistant"
+            : "system";
+        const text =
+          stringField(record, "content") ||
+          stringField(record, "message") ||
+          stringField(record, "text");
+
+        if (!text) return null;
+
+        return {
+          text,
+          type: msgType,
+          raw: parsed,
+          role,
+          source: stringField(record, "source"),
+          clientId: stringField(record, "clientId"),
+          clientName: stringField(record, "clientName"),
+          userName: stringField(record, "userName"),
+          aiName: stringField(record, "aiName"),
+          origin: stringField(record, "origin"),
+        };
+      }
+
+      if (msgType === "user_discord" || msgType === "user_telegram") {
+        const text =
+          stringField(record, "content") ||
+          stringField(record, "message") ||
+          stringField(record, "text");
+
+        if (!text) return null;
+
+        return {
+          text,
+          type: msgType,
+          raw: parsed,
+          role: "user",
+          source: msgType === "user_discord" ? "discord" : "telegram",
+          userName: stringField(record, "userName"),
+        };
       }
 
       if (msgType === "todo_update") {
@@ -115,7 +191,15 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
         (typeof record.text === "string" ? record.text : null) ??
         data;
 
-      return { text: String(text), type: msgType, raw: parsed };
+      return {
+        text: String(text),
+        type: msgType,
+        raw: parsed,
+        role: msgType === "reply" ? "assistant" : undefined,
+        source: stringField(record, "source"),
+        aiName: stringField(record, "aiName"),
+        origin: stringField(record, "origin"),
+      };
     }
 
     return { text: String(parsed), raw: parsed };
@@ -127,6 +211,7 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
 export function createCarolineSocket(options: CarolineSocketOptions) {
   let socket: WebSocket | null = null;
   let heartbeatTimer: number | undefined;
+  let rejectedClose = false;
   const url = options.url || DEFAULT_CAROLINE_SOCKET_URL;
 
   function setStatus(status: CarolineSocketStatus) {
@@ -145,13 +230,14 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
     }
 
     socket.onopen = () => {
+      rejectedClose = false;
       setStatus("online");
       announceClient();
       heartbeatTimer = window.setInterval(sendHeartbeat, 30_000);
     };
     socket.onclose = () => {
       clearHeartbeat();
-      setStatus("offline");
+      setStatus(rejectedClose ? "rejected" : "offline");
     };
     socket.onerror = () => setStatus("offline");
     socket.onmessage = (event) => {
@@ -162,6 +248,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
       // Disconnect immediately so the user knows to fix the code in Settings.
       if (msg.type === "pairing_rejected") {
         clearHeartbeat();
+        rejectedClose = true;
         socket?.close();
         setStatus("rejected");
       }
@@ -182,6 +269,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         source: "caroline-companion",
         clientId: client.clientId,
         clientName: client.displayName,
+        userName: client.userName,
       })
     );
 
@@ -201,8 +289,9 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         source: "caroline-companion",
         clientId: client.clientId,
         clientName: client.displayName,
+        userName: client.userName,
         pairingCode: client.pairingCode || undefined,
-        appVersion: "0.1.0",
+        appVersion: "0.1.4",
       })
     );
   }
@@ -218,6 +307,8 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         source: "caroline-companion",
         clientId: client.clientId,
         clientName: client.displayName,
+        userName: client.userName,
+        pairingCode: client.pairingCode || undefined,
         sentAt: new Date().toISOString(),
       })
     );

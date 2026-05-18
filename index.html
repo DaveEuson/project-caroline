@@ -433,10 +433,12 @@
   body.idle-mode #avatar-carousel .nav-btn { display:none; }
   body.idle-mode #avatar-outer { transform: scale(1.2); }
   body.idle-mode #avatar-outer::before { display:none; }
-  #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
+  #avatar-wrap #av-sleeping,
+  #avatar-wrap #av-carl-sleeping { opacity: 0; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
-  body.idle-mode.idle-night #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
-  body.idle-mode.idle-day #avatar-wrap #av-gif { opacity: 1 !important; pointer-events: none; }
+  body.idle-mode.idle-night:not(.avatar-carl) #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-night.avatar-carl #avatar-wrap #av-carl-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-day #avatar-wrap .avatar-svg:not(.hidden):not(#av-sleeping):not(#av-carl-sleeping) { opacity: 1 !important; pointer-events: none; }
   body.idle-mode .nav-btn { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
   body.idle-mode #bottom-bar { opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
   #screensaver-overlay { display:none; position:fixed; inset:0; background:rgba(2,3,5,0); z-index:5; pointer-events:none; transition:background 2s ease; }
@@ -1661,6 +1663,7 @@
               <option value="3">Neko Cat</option>
               <option value="4">Ghost</option>
               <option value="5">Samurai</option>
+              <option value="6">Carl (GIF)</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -2523,8 +2526,10 @@
             <path d="M42 60 Q50 65 58 60" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <line x1="15" y1="48" x2="85" y2="48" stroke="var(--t-hex1)" stroke-width="0.5" opacity="0.3"/>
           </svg>
+          <img id="av-carl" src="assets/Carl-awake.gif" class="avatar-svg hidden" alt="Carl" onerror="this.style.display='none'"/>
           <img id="av-custom" src="" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
           <img id="av-sleeping" src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-carl-sleeping" src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -5851,7 +5856,8 @@ const companions = [
   { id:'av-cat',     hex1:'#a855f7', hex2:'#ec4899', rgb1:'168, 85, 247',  rgb2:'236, 72, 153' },
   { id:'av-ghost',   hex1:'#67e8f9', hex2:'#a5f3fc', rgb1:'103, 232, 249', rgb2:'165, 243, 252' },
   { id:'av-samurai', hex1:'#f43f5e', hex2:'#fb923c', rgb1:'244, 63, 94',   rgb2:'251, 146, 60' },
-  { id:'av-custom',  hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' }
+  { id:'av-carl',    hex1:'#22d3ee', hex2:'#fb923c', rgb1:'34, 211, 238',  rgb2:'251, 146, 60' },
+  { id:'av-custom',  hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119', isCustom:true }
 ];
 const THEME_PRESETS = [
   { hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119', ova:false, cybercore:true },
@@ -5923,6 +5929,7 @@ function applyAutoTheme() {
 setInterval(applyAutoTheme, 60000);
 
 function applyAvatar(idx) {
+  idx = Math.max(0, Math.min(Number(idx) || 0, companions.length - 1));
   companions.forEach((c,i) => {
     const el = document.getElementById(c.id);
     if (el) { el.classList.toggle('hidden', i !== idx); el.style.display = ''; }
@@ -5931,15 +5938,17 @@ function applyAvatar(idx) {
   const customEl = document.getElementById('av-custom');
   if (customEl) {
     const src = localStorage.getItem('caro_custom_avatar');
-    if (idx === 6 && src) { customEl.src = src; customEl.style.display = ''; customEl.classList.remove('hidden'); }
+    const customIdx = companions.findIndex(c => c.isCustom);
+    if (idx === customIdx && src) { customEl.src = src; customEl.style.display = ''; customEl.classList.remove('hidden'); }
   }
+  document.body.classList.toggle('avatar-carl', companions[idx]?.id === 'av-carl');
   currentAvatarIndex = idx;
 }
 
 function changeAvatar(dir) {
-  document.getElementById(companions[currentAvatarIndex].id).classList.add('hidden');
   currentAvatarIndex = (currentAvatarIndex + dir + companions.length) % companions.length;
-  document.getElementById(companions[currentAvatarIndex].id).classList.remove('hidden');
+  S.avatar = currentAvatarIndex;
+  applyAvatar(currentAvatarIndex);
   applyTheme(S.theme);
   resetIdle();
 }
@@ -8749,7 +8758,7 @@ setInterval(updateWifi, 30000);
 
 (function() {
   const ts = Date.now();
-  ['av-gif','av-cat'].forEach(id => {
+  ['av-gif','av-cat','av-carl','av-carl-sleeping'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el.src) el.src = el.src.split('?')[0] + '?v=' + ts;
   });
@@ -8838,6 +8847,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
   { id:'pilot', title:'Red Pilot',      desc:'Curious, grounded, warm. Default sync profile.', src:'assets/caroline.gif' },
+  { id:'carl',  title:'Carl',           desc:'Calm co-pilot energy with awake and asleep loops.', src:'assets/Carl-awake.gif' },
   { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with warm dashboard energy.', src:'assets/robot.gif' },
   { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'assets/cat.gif' },
   { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, a little time-displaced.', src:'assets/ghost.gif' }
