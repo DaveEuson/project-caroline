@@ -8,7 +8,7 @@ export type AppSettings = {
 };
 
 const DEFAULTS: AppSettings = {
-  socketUrl: "ws://192.168.1.50:1880/ws/caroline",
+  socketUrl: "ws://192.168.1.50:8080/ws/caroline",
   companionName: "Dave's Companion",
   pairingCode: "",
   darkMode: false,

@@ -10,7 +10,8 @@ function unique(values: string[]) {
 }
 
 function urlFromHost(host: string) {
-  return `ws://${host}:1880/ws/caroline`;
+  // 8080 = nginx (externally reachable). Node-RED's 1880 is typically firewall-blocked.
+  return `ws://${host}:8080/ws/caroline`;
 }
 
 function parseHost(url: string) {

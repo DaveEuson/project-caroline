@@ -1,4 +1,5 @@
-export const DEFAULT_CAROLINE_SOCKET_URL = "ws://192.168.1.50:1880/ws/caroline";
+// Port 8080 = nginx proxy (externally accessible). Port 1880 = Node-RED direct (firewall-blocked).
+export const DEFAULT_CAROLINE_SOCKET_URL = "ws://192.168.1.50:8080/ws/caroline";
 
 export type CarolineSocketStatus = "connecting" | "online" | "offline" | "rejected";
 

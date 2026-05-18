@@ -326,9 +326,13 @@ button, input { font: inherit; }
 
 .discovered-hosts {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 5px;
   margin-top: 4px;
+}
+
+.discovered-label {
+  margin: 4px 0 2px;
 }
 
 .discovered-hosts button {

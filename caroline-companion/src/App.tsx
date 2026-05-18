@@ -16,12 +16,12 @@ const initialMessages: ChatMessage[] = [
   {
     id: 1,
     from: "caroline",
-    text: "Hey! Open Settings (⚙) to connect me to your Caroline backend.",
+    text: "Hey! Open Settings (⚙) to connect to your Project: Caroline host.",
   },
   {
     id: 2,
     from: "system",
-    text: "Enter the WebSocket URL and, if required, the pairing code shown on the kiosk screen.",
+    text: "Tap ⚙ → enter the WebSocket URL → enter the pairing code shown at the top of the kiosk screen → Connect.",
   },
 ];
 
@@ -174,7 +174,7 @@ export default function App() {
         {
           id: Date.now() + 1,
           from: "system",
-          text: "Caroline is offline. Open Settings to connect first.",
+          text: "Project: Caroline is offline. Open Settings (⚙), enter the WebSocket URL, and click Connect.",
         },
       ]);
     }
@@ -190,10 +190,19 @@ export default function App() {
         <header className="title-bar">
           <div className="title-left">
             <span className="window-dot" />
-            <strong>Caroline</strong>
+            <strong>Project: Caroline</strong>
           </div>
           <div className="title-right">
             <span className="title-version">Companion 0.1b</span>
+            <button
+              type="button"
+              className="settings-btn"
+              onClick={() => setSettings({ ...settings, darkMode: !settings.darkMode })}
+              aria-label="Toggle dark mode"
+              title={settings.darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {settings.darkMode ? "☀" : "☾"}
+            </button>
             <button
               type="button"
               className={`settings-btn${settingsOpen ? " active" : ""}`}
@@ -282,13 +291,17 @@ export default function App() {
               </button>
               {discoveredHosts.length > 0 && (
                 <div className="discovered-hosts">
+                  <p className="settings-note discovered-label">
+                    Tap a host to connect:
+                  </p>
                   {discoveredHosts.map((h) => (
                     <button
                       type="button"
                       key={h.url}
                       onClick={() => handleUseDiscoveredHost(h)}
+                      title={h.url}
                     >
-                      {h.label}
+                      Project: Caroline @ {h.label}
                     </button>
                   ))}
                 </div>
