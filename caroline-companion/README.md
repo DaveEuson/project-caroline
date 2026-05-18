@@ -2,7 +2,7 @@
 
 Small retro messenger-style desktop companion for Project Caroline.
 
-This app is intentionally simple: one chat window, a configurable WebSocket URL, and a small helper that can talk to a future Node-RED WebSocket flow.
+This app is intentionally simple: one chat window, saved Caroline host profiles, and a small helper that talks to the Node-RED WebSocket flow.
 
 ## Scripts
 
@@ -21,12 +21,14 @@ npm run build
 The default WebSocket URL is:
 
 ```text
-ws://192.168.1.50:1880/ws/caroline
+ws://192.168.1.50:8080/ws/caroline
 ```
 
 Change it in the app UI or in `src/lib/carolineSocket.ts`.
 
-In Node-RED, create a WebSocket endpoint at `/ws/caroline`, parse messages with a `message` field, send them through Caroline's existing chat handler, and send the reply back over the socket.
+Port 8080 is the Caroline kiosk/nginx proxy. Port 1880 is Node-RED direct and is commonly blocked by the host firewall, so the companion should always connect through 8080.
+
+In Node-RED, expose a WebSocket endpoint at `/ws/caroline` through the kiosk proxy, parse messages with a `message` field, send them through Caroline's existing chat handler, and send the reply back over the socket.
 
 ## Host Visibility
 
@@ -58,5 +60,7 @@ In Node-RED, store those messages in flow/global context. That is the simple sta
 ## Host Discovery
 
 The **Find Hosts** button probes likely local WebSocket URLs, including the default `192.168.1.x` network and common home LAN ranges.
+
+Discovered hosts can be saved as separate profiles. Each saved host keeps its own WebSocket URL and pairing code so the desktop companion can switch between multiple Caroline hosts without retyping setup details.
 
 This is a first-pass desktop-friendly scan. The more polished future version should advertise Caroline hosts with mDNS, SSDP, or a small UDP beacon from the Caroline host, then have the Tauri backend listen for those announcements.

@@ -4,7 +4,8 @@ import {
   type CarolineSocketStatus,
 } from "./lib/carolineSocket";
 import { discoverCarolineHosts, type DiscoveredHost } from "./lib/hostDiscovery";
-import { loadSettings, saveSettings, type AppSettings } from "./lib/settings";
+import { loadSettings, saveSettings, type AppSettings, type SavedHost } from "./lib/settings";
+import carolineAvatar from "../src-tauri/icons/64x64.png";
 
 type ChatMessage = {
   id: number;
@@ -16,12 +17,12 @@ const initialMessages: ChatMessage[] = [
   {
     id: 1,
     from: "caroline",
-    text: "Hey! Open Settings (⚙) to connect to your Project: Caroline host.",
+    text: "Hey! I am ready when your Project: Caroline host is.",
   },
   {
     id: 2,
     from: "system",
-    text: "Tap ⚙ → enter the WebSocket URL → enter the pairing code shown at the top of the kiosk screen → Connect.",
+    text: "Use Settings to change the WebSocket URL or pairing code.",
   },
 ];
 
@@ -34,15 +35,29 @@ function getOrCreateClientId() {
   return created;
 }
 
-function statusLabel(status: CarolineSocketStatus) {
-  if (status === "online") return "Caroline is online";
+function statusLabel(status: CarolineSocketStatus, aiName: string) {
+  if (status === "online") return `${aiName} is online`;
   if (status === "connecting") return "Connecting...";
   if (status === "rejected") return "Pairing code rejected";
-  return "Caroline is offline";
+  return `${aiName} is offline`;
+}
+
+function hostNameFromUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname ? `Project: Caroline @ ${parsed.hostname}` : "Project: Caroline";
+  } catch {
+    return "Project: Caroline";
+  }
+}
+
+function newHostId() {
+  return `host-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
 }
 
 export default function App() {
   const [settings, setSettingsRaw] = useState<AppSettings>(loadSettings);
+  const [aiName, setAiName] = useState("Caroline");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeSocketUrl, setActiveSocketUrl] = useState(() => loadSettings().socketUrl);
   const [status, setStatus] = useState<CarolineSocketStatus>("offline");
@@ -82,6 +97,24 @@ export default function App() {
     saveSettings(next);
   }
 
+  function activeHost() {
+    return settings.hosts.find((host) => host.id === settings.activeHostId) || settings.hosts[0];
+  }
+
+  function updateActiveHost(fields: Partial<SavedHost>) {
+    const current = activeHost();
+    if (!current) return;
+    const hosts = settings.hosts.map((host) =>
+      host.id === current.id ? { ...host, ...fields } : host
+    );
+    setSettings({
+      ...settings,
+      socketUrl: fields.socketUrl ?? settings.socketUrl,
+      pairingCode: fields.pairingCode ?? settings.pairingCode,
+      hosts,
+    });
+  }
+
   // Only recreates (and reconnects) when the active URL changes
   const socket = useMemo(
     () =>
@@ -90,6 +123,37 @@ export default function App() {
         getClient: () => clientRef.current,
         onStatusChange: setStatus,
         onMessage: (msg) => {
+          if (msg.type === "host_hello") {
+            const raw = msg.raw && typeof msg.raw === "object" ? msg.raw as Record<string, unknown> : {};
+            const nextName =
+              (typeof raw.aiName === "string" ? raw.aiName : null) ??
+              (typeof raw.name === "string" ? raw.name : null) ??
+              msg.text;
+            const nextHostName =
+              (typeof raw.hostName === "string" ? raw.hostName : null) ??
+              (typeof raw.host === "string" ? raw.host : null);
+
+            if (nextName.trim()) setAiName(nextName.trim());
+            if (nextHostName?.trim()) {
+              const hostName = nextHostName.trim();
+              setSettingsRaw((previous) => {
+                let changed = false;
+                const hosts = previous.hosts.map((host) => {
+                  if (host.id !== previous.activeHostId || host.name === hostName) return host;
+                  changed = true;
+                  return { ...host, name: hostName };
+                });
+
+                if (!changed) return previous;
+
+                const next = { ...previous, hosts };
+                saveSettings(next);
+                return next;
+              });
+            }
+            return;
+          }
+
           if (msg.type === "pairing_rejected") {
             setMessages((m) => [
               ...m,
@@ -126,11 +190,68 @@ export default function App() {
 
   function handleConnect() {
     const url = settings.socketUrl.trim();
+    if (url && !/^wss?:\/\//i.test(url)) {
+      setMessages((m) => [
+        ...m,
+        { id: Date.now(), from: "system", text: "WebSocket URL must start with ws:// or wss://" },
+      ]);
+      return;
+    }
+    updateActiveHost({ socketUrl: url, pairingCode: settings.pairingCode });
     if (url && url !== activeSocketUrl) {
       setActiveSocketUrl(url);
     } else {
       socketRef.current?.connect();
     }
+  }
+
+  function handleSelectHost(hostId: string) {
+    const host = settings.hosts.find((h) => h.id === hostId);
+    if (!host) return;
+    setSettings({
+      ...settings,
+      activeHostId: host.id,
+      socketUrl: host.socketUrl,
+      pairingCode: host.pairingCode,
+    });
+    setActiveSocketUrl(host.socketUrl);
+    setAiName("Caroline");
+    setMessages((m) => [
+      ...m,
+      {
+        id: Date.now(),
+        from: "system",
+        text: `Switched to ${host.name}.`,
+      },
+    ]);
+  }
+
+  function handleAddHost() {
+    const host: SavedHost = {
+      id: newHostId(),
+      name: hostNameFromUrl(settings.socketUrl),
+      socketUrl: settings.socketUrl,
+      pairingCode: settings.pairingCode,
+    };
+    setSettings({
+      ...settings,
+      activeHostId: host.id,
+      hosts: [...settings.hosts, host],
+    });
+  }
+
+  function handleRemoveHost() {
+    if (settings.hosts.length <= 1) return;
+    const remaining = settings.hosts.filter((host) => host.id !== settings.activeHostId);
+    const nextHost = remaining[0];
+    setSettings({
+      ...settings,
+      activeHostId: nextHost.id,
+      socketUrl: nextHost.socketUrl,
+      pairingCode: nextHost.pairingCode,
+      hosts: remaining,
+    });
+    setActiveSocketUrl(nextHost.socketUrl);
   }
 
   async function handleDiscoverHosts() {
@@ -155,8 +276,23 @@ export default function App() {
   }
 
   function handleUseDiscoveredHost(host: DiscoveredHost) {
-    setSettings({ ...settings, socketUrl: host.url });
+    const existing = settings.hosts.find((saved) => saved.socketUrl === host.url);
+    const nextHost = existing || {
+      id: newHostId(),
+      name: `Project: Caroline @ ${host.label}`,
+      socketUrl: host.url,
+      pairingCode: settings.pairingCode,
+    };
+    const hosts = existing ? settings.hosts : [...settings.hosts, nextHost];
+    setSettings({
+      ...settings,
+      activeHostId: nextHost.id,
+      socketUrl: nextHost.socketUrl,
+      pairingCode: nextHost.pairingCode,
+      hosts,
+    });
     setActiveSocketUrl(host.url);
+    setAiName("Caroline");
     setDiscoveredHosts([]);
   }
 
@@ -218,12 +354,44 @@ export default function App() {
         {/* ── Status row ────────────────────────────────────── */}
         <div className="status-row">
           <span className={`status-light ${status}`} />
-          <span>{statusLabel(status)}</span>
+          <span>{statusLabel(status, aiName)}</span>
         </div>
 
         {/* ── Settings panel (shown when settingsOpen) ──────── */}
         {settingsOpen && (
           <section className="settings-panel" aria-label="Settings">
+
+            <div className="settings-group">
+              <label htmlFor="saved-host">Saved Host</label>
+              <div className="settings-row">
+                <select
+                  id="saved-host"
+                  value={settings.activeHostId}
+                  onChange={(e) => handleSelectHost(e.target.value)}
+                >
+                  {settings.hosts.map((host) => (
+                    <option value={host.id} key={host.id}>
+                      {host.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" onClick={handleAddHost}>
+                  New
+                </button>
+                <button type="button" onClick={handleRemoveHost} disabled={settings.hosts.length <= 1}>
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-group">
+              <label htmlFor="host-name">Host Name</label>
+              <input
+                id="host-name"
+                value={activeHost()?.name || ""}
+                onChange={(e) => updateActiveHost({ name: e.target.value })}
+              />
+            </div>
 
             <div className="settings-group">
               <label htmlFor="socket-url">WebSocket URL</label>
@@ -232,7 +400,7 @@ export default function App() {
                   id="socket-url"
                   className="mono"
                   value={settings.socketUrl}
-                  onChange={(e) => setSettings({ ...settings, socketUrl: e.target.value })}
+                  onChange={(e) => updateActiveHost({ socketUrl: e.target.value })}
                   spellCheck={false}
                 />
                 <button type="button" onClick={handleConnect}>
@@ -264,7 +432,7 @@ export default function App() {
               <input
                 id="pairing-code"
                 value={settings.pairingCode}
-                onChange={(e) => setSettings({ ...settings, pairingCode: e.target.value })}
+                onChange={(e) => updateActiveHost({ pairingCode: e.target.value })}
                 placeholder="Code from kiosk screen"
                 maxLength={16}
               />
@@ -287,7 +455,7 @@ export default function App() {
                 onClick={handleDiscoverHosts}
                 disabled={isDiscovering}
               >
-                {isDiscovering ? "Searching network..." : "Find Caroline Hosts on Network"}
+                {isDiscovering ? "Searching network..." : "Find Project: Caroline Hosts on Network"}
               </button>
               {discoveredHosts.length > 0 && (
                 <div className="discovered-hosts">
@@ -308,10 +476,6 @@ export default function App() {
               )}
             </div>
 
-            <p className="settings-note">
-              Node-RED: handle <code>client_hello</code> → validate <code>pairingCode</code> →
-              reply <code>{"{ type: \"pairing_rejected\" }"}</code> if wrong, else store client.
-            </p>
           </section>
         )}
 
@@ -321,14 +485,14 @@ export default function App() {
             <div className="buddy-heading">Buddies</div>
             <div className={`buddy${isOnline ? " active" : ""}`}>
               <img
-                src="/caroline.gif"
-                alt="Caroline"
+                src={carolineAvatar}
+                alt={aiName}
                 className="buddy-avatar"
                 width={32}
                 height={32}
               />
               <div>
-                <strong>Caroline</strong>
+                <strong>{aiName}</strong>
                 <small>{isOnline ? "available" : "offline"}</small>
               </div>
             </div>
@@ -342,7 +506,7 @@ export default function App() {
                     {msg.from === "you"
                       ? settings.companionName || "You"
                       : msg.from === "caroline"
-                      ? "Caroline"
+                      ? aiName
                       : "System"}
                   </span>
                   <p>{msg.text}</p>
@@ -353,7 +517,7 @@ export default function App() {
             <form className="compose" onSubmit={handleSubmit}>
               <input
                 aria-label="Message Caroline"
-                placeholder={isOnline ? "Type a message..." : "Caroline is offline..."}
+                placeholder={isOnline ? "Type a message..." : `${aiName} is offline...`}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
               />

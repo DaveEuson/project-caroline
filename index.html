@@ -382,6 +382,10 @@
   .memory-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(226,232,240,0.36); }
   .memory-deny { border:1px solid rgba(248,113,113,0.28); border-radius:999px; background:rgba(248,113,113,0.07); color:#fda4af; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
   .memory-deny:hover { background:rgba(248,113,113,0.15); color:#fecdd3; }
+  .memory-hide { border:1px solid rgba(148,163,184,0.22); border-radius:999px; background:rgba(148,163,184,0.05); color:rgba(148,163,184,0.55); padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
+  .memory-hide:hover { background:rgba(148,163,184,0.12); color:rgba(148,163,184,0.85); }
+  .memory-shard.is-hidden { border-color:rgba(var(--t-rgb1),0.06); background:rgba(0,0,0,0.10); }
+  .memory-shard.is-hidden .memory-text { filter:blur(4px); user-select:none; pointer-events:none; opacity:0.5; }
   .memory-empty { color:rgba(226,232,240,0.30); font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.4; padding:6px 2px; }
   #smart-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; max-height:150px; overflow-y:auto; }
   .smart-btn { min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:7px; background:rgba(var(--t-rgb1),0.05); color:var(--t-hex1); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:background .18s, border-color .18s, color .18s, transform .18s; }
@@ -2710,7 +2714,7 @@ function normalizeConfiguredNodeRedUrl(value) {
     if (SAME_ORIGIN_NODE_RED_URL && target.protocol === 'http:' && sameHost && (!target.port || target.port === String(NODE_RED_CONFIG_PORT))) {
       u = SAME_ORIGIN_NODE_RED_URL;
     }
-    if (target.protocol === 'https:' && (sameHost || localTarget) && target.port === String(SECURE_VOICE_PORT)) {
+    if (target.protocol === 'https:' && (sameHost || localTarget || isPrivateIpHost(target.hostname)) && target.port === String(SECURE_VOICE_PORT)) {
       u = SAME_ORIGIN_NODE_RED_URL || ('http://' + (target.hostname || window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
     }
     const browserHost = window.location.hostname || '';
@@ -3444,9 +3448,13 @@ function getNodeRedUrl() {
   if (SAME_ORIGIN_NODE_RED_URL) {
     try {
       const target = new URL(u);
+      const origin = new URL(SAME_ORIGIN_NODE_RED_URL);
       const sameHost = target.hostname === window.location.hostname;
       const localTarget = ['localhost','127.0.0.1','::1'].includes(target.hostname);
-      if (target.protocol === 'http:' && (sameHost || localTarget) && (!target.port || target.port === '1880')) {
+      // Also rewrite when a private IP is saved but the kiosk loaded from localhost on the same port
+      // (e.g. Chromium kiosk opens localhost:8080 but settings stored http://192.168.x.x:8080)
+      const samePortPrivate = isPrivateIpHost(target.hostname) && target.port === origin.port;
+      if (target.protocol === 'http:' && (sameHost || localTarget || samePortPrivate) && (!target.port || target.port === '1880' || target.port === origin.port)) {
         u = SAME_ORIGIN_NODE_RED_URL;
       }
     } catch(e) {}
@@ -8637,9 +8645,11 @@ function renderMemoryWidget() {
     status.innerHTML = '<div class="memory-text">' + labels.join(' · ') + '</div><div class="memory-meta"><span>core memory</span><span></span></div>';
     list.appendChild(status);
   }
+  const hiddenIds = getHiddenShardIds();
   shards.forEach((m) => {
+    const isHidden = hiddenIds.has(m.id);
     const item = document.createElement('div');
-    item.className = 'memory-shard';
+    item.className = 'memory-shard' + (isHidden ? ' is-hidden' : '');
     const text = document.createElement('div');
     text.className = 'memory-text';
     text.textContent = m.text || 'Untitled memory';
@@ -8647,6 +8657,14 @@ function renderMemoryWidget() {
     meta.className = 'memory-meta';
     const age = document.createElement('span');
     age.textContent = memoryAgeLabel(m.ts);
+    const btns = document.createElement('span');
+    btns.style.cssText = 'display:flex;gap:5px;';
+    const hide = document.createElement('button');
+    hide.type = 'button';
+    hide.className = 'memory-hide';
+    hide.textContent = isHidden ? 'Show' : 'Hide';
+    hide.title = isHidden ? 'Reveal this memory' : 'Hide this memory from view';
+    hide.onclick = (ev) => { ev.stopPropagation(); toggleMemoryHidden(m.id); };
     const deny = document.createElement('button');
     deny.type = 'button';
     deny.className = 'memory-deny';
@@ -8656,7 +8674,8 @@ function renderMemoryWidget() {
       ev.stopPropagation();
       markMemoryNotTrue(m.index);
     };
-    meta.append(age, deny);
+    btns.append(hide, deny);
+    meta.append(age, btns);
     item.append(text, meta);
     list.appendChild(item);
   });
@@ -8675,6 +8694,7 @@ function markMemoryNotTrue(idx) {
   const id = note.id || memoryShardId(text);
   stickyNotes.splice(idx, 1);
   localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
+  const hiddenIds = getHiddenShardIds(); hiddenIds.delete(id); localStorage.setItem('caro_hidden_shards', JSON.stringify([...hiddenIds]));
   fetchJsonWithTimeout(httpBase() + '/admin/memory-shards/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -8686,6 +8706,16 @@ function markMemoryNotTrue(idx) {
   renderMemoryWidget();
   addMessage('Memory shard deleted.', 'caroline', 'display');
   playBeep(360);
+}
+
+function getHiddenShardIds() {
+  try { return new Set(JSON.parse(localStorage.getItem('caro_hidden_shards') || '[]')); } catch { return new Set(); }
+}
+function toggleMemoryHidden(id) {
+  const ids = getHiddenShardIds();
+  if (ids.has(id)) { ids.delete(id); } else { ids.add(id); }
+  localStorage.setItem('caro_hidden_shards', JSON.stringify([...ids]));
+  renderMemoryWidget();
 }
 
 // ── WIFI SIGNAL ──────────────────────────────

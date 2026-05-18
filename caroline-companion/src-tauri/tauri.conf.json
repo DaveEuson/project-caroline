@@ -17,11 +17,13 @@
         "height": 620,
         "minWidth": 360,
         "minHeight": 460,
-        "resizable": true
+        "resizable": true,
+        "transparent": true,
+        "shadow": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src ws: wss:; img-src 'self' data: blob:; font-src 'self' data:"
     }
   },
   "bundle": {

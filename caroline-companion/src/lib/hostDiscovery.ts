@@ -24,7 +24,7 @@ function parseHost(url: string) {
 
 function likelyLocalPrefixes(defaultUrl: string) {
   const defaultHost = parseHost(defaultUrl);
-  const prefixes = ["192.168.1", "192.168.1", "192.168.0", "10.0.0"];
+  const prefixes = ["192.168.1", "192.168.12", "192.168.1", "192.168.0", "10.0.0"];
 
   const parts = defaultHost.split(".");
   if (parts.length === 4) {

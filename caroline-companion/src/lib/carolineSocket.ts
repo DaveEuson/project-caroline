@@ -23,7 +23,47 @@ type CarolineSocketOptions = {
   onMessage?: (message: CarolineSocketMessage) => void;
 };
 
-function parseIncomingMessage(data: unknown): CarolineSocketMessage {
+function summarizeTask(task: unknown, index: number) {
+  if (!task || typeof task !== "object") return `Task ${index + 1}`;
+
+  const record = task as Record<string, unknown>;
+  const text =
+    (typeof record.title === "string" ? record.title : null) ??
+    (typeof record.text === "string" ? record.text : null) ??
+    (typeof record.task === "string" ? record.task : null) ??
+    (typeof record.content === "string" ? record.content : null);
+
+  return text?.trim() || `Task ${index + 1}`;
+}
+
+function summarizeTodoUpdate(record: Record<string, unknown>) {
+  const tasks = Array.isArray(record.tasks) ? record.tasks : [];
+  if (!tasks.length) return "📋 Task list updated.";
+
+  const preview = tasks.slice(0, 3).map(summarizeTask).join(", ");
+  const remaining = tasks.length > 3 ? `, and ${tasks.length - 3} more` : "";
+  return `📋 Task list updated: ${preview}${remaining}`;
+}
+
+function summarizeCalendarUpdate(record: Record<string, unknown>) {
+  const event = record.event && typeof record.event === "object"
+    ? record.event as Record<string, unknown>
+    : null;
+
+  if (!event) return "Calendar updated.";
+
+  const title =
+    (typeof event.title === "string" ? event.title : null) ??
+    (typeof event.summary === "string" ? event.summary : null) ??
+    "calendar event";
+  const date = typeof event.date === "string" ? event.date : "";
+  const start = typeof event.start === "string" ? event.start : "";
+  const when = [date, start].filter(Boolean).join(" at ");
+
+  return when ? `Calendar updated: ${title} (${when})` : `Calendar updated: ${title}`;
+}
+
+function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
   if (typeof data !== "string") {
     return { text: String(data ?? ""), raw: data };
   }
@@ -35,6 +75,38 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage {
       const record = parsed as Record<string, unknown>;
 
       const msgType = typeof record.type === "string" ? record.type : undefined;
+
+      if (msgType === "system_stats" || msgType === "client_heartbeat") {
+        return null;
+      }
+
+      if (msgType === "host_hello") {
+        const hostName =
+          (typeof record.aiName === "string" ? record.aiName : null) ??
+          (typeof record.name === "string" ? record.name : null) ??
+          "Caroline";
+
+        return { text: hostName, type: msgType, raw: parsed };
+      }
+
+      if (msgType === "todo_update") {
+        return { text: summarizeTodoUpdate(record), type: msgType, raw: parsed };
+      }
+
+      if (msgType === "calendar_update") {
+        return { text: summarizeCalendarUpdate(record), type: msgType, raw: parsed };
+      }
+
+      if (msgType?.startsWith("spotify_")) {
+        const text =
+          (typeof record.reply === "string" ? record.reply : null) ??
+          (typeof record.message === "string" ? record.message : null) ??
+          (typeof record.content === "string" ? record.content : null) ??
+          (typeof record.text === "string" ? record.text : null) ??
+          msgType.replace(/_/g, " ");
+
+        return { text: `🎵 ${text}`, type: msgType, raw: parsed };
+      }
 
       const text =
         (typeof record.reply === "string" ? record.reply : null) ??
@@ -84,6 +156,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
     socket.onerror = () => setStatus("offline");
     socket.onmessage = (event) => {
       const msg = parseIncomingMessage(event.data);
+      if (!msg) return;
 
       // Node-RED host sends { type: "pairing_rejected", reason: "..." } for a wrong code.
       // Disconnect immediately so the user knows to fix the code in Settings.
