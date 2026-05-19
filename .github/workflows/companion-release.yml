@@ -88,6 +88,6 @@ jobs:
             - Mac (Intel) → `x86_64.dmg`
 
             **First run on Mac:** Right-click the app → Open (bypasses the unsigned app warning).
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
