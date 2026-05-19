@@ -444,13 +444,36 @@ else
   git clone --no-checkout "$CAROLINE_REPO_URL" "$CLONE_DIR"
 fi
 
-if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/remotes/origin/${CAROLINE_CHANNEL}"; then
-  git -C "$CLONE_DIR" checkout -B "$CAROLINE_CHANNEL" "origin/${CAROLINE_CHANNEL}"
-elif git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL}"; then
-  git -C "$CLONE_DIR" checkout --detach "refs/tags/${CAROLINE_CHANNEL}"
-else
+checkout_channel() {
+  if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/remotes/origin/${CAROLINE_CHANNEL}"; then
+    git -C "$CLONE_DIR" checkout -B "$CAROLINE_CHANNEL" "origin/${CAROLINE_CHANNEL}"
+    return $?
+  fi
+  if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL}"; then
+    git -C "$CLONE_DIR" checkout --detach "refs/tags/${CAROLINE_CHANNEL}"
+    return $?
+  fi
+  return 2
+}
+
+CHECKOUT_STATUS=0
+checkout_channel || CHECKOUT_STATUS=$?
+if [ "$CHECKOUT_STATUS" -eq 2 ]; then
   say "${RED}  x Channel not found: ${CAROLINE_CHANNEL}${RESET}"
   exit 1
+fi
+if [ "$CHECKOUT_STATUS" -ne 0 ]; then
+  CLONE_BACKUP_DIR="${CLONE_DIR}.checkout-conflict.$(date +%Y%m%d-%H%M%S)"
+  if [ -e "$CLONE_BACKUP_DIR" ]; then
+    CLONE_BACKUP_DIR="${CLONE_BACKUP_DIR}.$$"
+  fi
+  say "${YELLOW}  ! Repo cache checkout failed; preserving it at ${CLONE_BACKUP_DIR} and recloning.${RESET}"
+  mv "$CLONE_DIR" "$CLONE_BACKUP_DIR"
+  git clone --no-checkout "$CAROLINE_REPO_URL" "$CLONE_DIR"
+  if ! checkout_channel; then
+    say "${RED}  x Unable to check out channel: ${CAROLINE_CHANNEL}${RESET}"
+    exit 1
+  fi
 fi
 
 mkdir -p "$CAROLINE_DIR"
