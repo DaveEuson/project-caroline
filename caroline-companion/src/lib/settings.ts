@@ -36,6 +36,26 @@ export type AppSettings = {
 };
 
 const DEFAULT_SOCKET_URL = "ws://192.168.1.50:8080/ws/caroline";
+const DEFAULT_HOSTS: SavedHost[] = [
+  {
+    id: "caroline-pi",
+    name: "Caroline (Pi)",
+    socketUrl: DEFAULT_SOCKET_URL,
+    pairingCode: "",
+  },
+  {
+    id: "carl-steamdeck",
+    name: "Carl (Steam Deck tunnel)",
+    socketUrl: "ws://127.0.0.1:8088/ws/caroline",
+    pairingCode: "",
+  },
+  {
+    id: "catoline-popos",
+    name: "Catoline (Pop!_OS)",
+    socketUrl: "ws://POP_OS_IP:8080/ws/caroline",
+    pairingCode: "",
+  },
+];
 
 const DEFAULTS: AppSettings = {
   socketUrl: DEFAULT_SOCKET_URL,
@@ -44,16 +64,9 @@ const DEFAULTS: AppSettings = {
   avatarId: "caroline",
   pairingCode: "",
   darkMode: false,
-  activeHostId: "default-host",
+  activeHostId: DEFAULT_HOSTS[0].id,
   agentProfile: null,
-  hosts: [
-    {
-      id: "default-host",
-      name: "Project: Caroline",
-      socketUrl: DEFAULT_SOCKET_URL,
-      pairingCode: "",
-    },
-  ],
+  hosts: DEFAULT_HOSTS,
 };
 
 function migrateSocketUrl(url: string) {
@@ -85,7 +98,8 @@ function normalizeHosts(settings: AppSettings): AppSettings {
   const avatarId = ["caroline", "carl"].includes(String(settings.avatarId || "").trim())
     ? String(settings.avatarId).trim()
     : DEFAULTS.avatarId;
-  const hosts = (Array.isArray(settings.hosts) ? settings.hosts : [])
+  const hostSource = [...DEFAULT_HOSTS, ...(Array.isArray(settings.hosts) ? settings.hosts : [])];
+  const hosts = hostSource
     .map((host, index) => {
       const hostUrl = migrateSocketUrl(host?.socketUrl || (index === 0 ? socketUrl : ""));
       if (!hostUrl) return null;
@@ -107,9 +121,12 @@ function normalizeHosts(settings: AppSettings): AppSettings {
     });
   }
 
-  const uniqueHosts = hosts.filter((host, index, list) => {
-    return list.findIndex((candidate) => candidate.socketUrl === host.socketUrl) === index;
-  });
+  const uniqueHosts = hosts.reduce<SavedHost[]>((list, host) => {
+    const existingIndex = list.findIndex((candidate) => candidate.id === host.id || candidate.socketUrl === host.socketUrl);
+    if (existingIndex >= 0) list[existingIndex] = host;
+    else list.push(host);
+    return list;
+  }, []);
 
   const activeHostId = uniqueHosts.some((host) => host.id === settings.activeHostId)
     ? settings.activeHostId

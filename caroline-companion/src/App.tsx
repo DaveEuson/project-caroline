@@ -26,12 +26,12 @@ const initialMessages: ChatMessage[] = [
   {
     id: 1,
     from: "caroline",
-    text: "Hey! I am ready when your Project: Caroline host is.",
+    text: "Hey! I am ready for Caroline, Carl, or Catoline.",
   },
   {
     id: 2,
     from: "system",
-    text: "Use Settings to change the WebSocket URL or pairing code.",
+    text: "Use Settings to pick a saved host and enter that kiosk's SYNC code.",
   },
 ];
 

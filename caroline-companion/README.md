@@ -2,7 +2,7 @@
 
 Small retro messenger-style desktop companion for Project Caroline.
 
-This app is intentionally simple: one chat window, saved Caroline host profiles, and a small helper that talks to the Node-RED WebSocket flow.
+This app is intentionally simple: one chat window, saved bot profiles for Caroline/Carl/Catoline, and a small helper that talks to the Node-RED WebSocket flow.
 
 ## Scripts
 
@@ -18,13 +18,25 @@ npm run build
 
 ## Backend Hook
 
-The default WebSocket URL is:
+The default Pi profile is:
 
 ```text
 ws://192.168.1.50:8080/ws/caroline
 ```
 
-Change it in the app UI or in `src/lib/carolineSocket.ts`.
+The default Steam Deck profile uses an SSH tunnel because SteamOS Caroline binds to localhost:
+
+```bash
+ssh -L 8088:127.0.0.1:8080 deck@STEAM_DECK_IP
+```
+
+Then Carl connects through:
+
+```text
+ws://127.0.0.1:8088/ws/caroline
+```
+
+Change any profile in the app UI.
 
 Port 8080 is the Caroline kiosk/nginx proxy. Port 1880 is Node-RED direct and is commonly blocked by the host firewall, so the companion should always connect through 8080.
 

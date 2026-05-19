@@ -36,7 +36,7 @@ function likelyLocalPrefixes(defaultUrl: string) {
 
 function candidateUrls(defaultUrl: string) {
   const urls = [defaultUrl];
-  const commonLastOctets = [47, 2, 10, 20, 50, 100, 101, 150, 200, 254];
+  const commonLastOctets = [47, 87, 2, 10, 20, 50, 100, 101, 150, 200, 254];
 
   for (const prefix of likelyLocalPrefixes(defaultUrl)) {
     for (const octet of commonLastOctets) {
