@@ -446,12 +446,16 @@ fi
 
 checkout_channel() {
   if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/remotes/origin/${CAROLINE_CHANNEL}"; then
-    git -C "$CLONE_DIR" checkout -B "$CAROLINE_CHANNEL" "origin/${CAROLINE_CHANNEL}"
-    return $?
+    if git -C "$CLONE_DIR" checkout -B "$CAROLINE_CHANNEL" "origin/${CAROLINE_CHANNEL}"; then
+      return 0
+    fi
+    return 1
   fi
   if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL}"; then
-    git -C "$CLONE_DIR" checkout --detach "refs/tags/${CAROLINE_CHANNEL}"
-    return $?
+    if git -C "$CLONE_DIR" checkout --detach "refs/tags/${CAROLINE_CHANNEL}"; then
+      return 0
+    fi
+    return 1
   fi
   return 2
 }
