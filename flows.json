@@ -5722,7 +5722,12 @@
     "noerr": 0,
     "initialize": "",
     "finalize": "",
-    "libs": [],
+    "libs": [
+      {
+        "var": "fs",
+        "module": "fs"
+      }
+    ],
     "x": 390,
     "y": 860,
     "wires": [
@@ -5797,7 +5802,12 @@
     "noerr": 0,
     "initialize": "",
     "finalize": "",
-    "libs": [],
+    "libs": [
+      {
+        "var": "fs",
+        "module": "fs"
+      }
+    ],
     "x": 430,
     "y": 920,
     "wires": [
