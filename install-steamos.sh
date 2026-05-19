@@ -419,9 +419,27 @@ say ""
 
 say "${MAGENTA}  // PROJECT FILES${RESET}"
 if [ -d "$CLONE_DIR/.git" ]; then
-  say "${DIM}  Existing repo found; syncing ${CAROLINE_CHANNEL}.${RESET}"
-  git -C "$CLONE_DIR" remote set-url origin "$CAROLINE_REPO_URL" >/dev/null 2>&1 || true
-  git -C "$CLONE_DIR" fetch --tags origin
+  if [ -n "$(git -C "$CLONE_DIR" status --porcelain 2>/dev/null || true)" ]; then
+    CLONE_BACKUP_DIR="${CLONE_DIR}.dirty.$(date +%Y%m%d-%H%M%S)"
+    if [ -e "$CLONE_BACKUP_DIR" ]; then
+      CLONE_BACKUP_DIR="${CLONE_BACKUP_DIR}.$$"
+    fi
+    say "${YELLOW}  ! Existing repo cache has local changes; preserving it at ${CLONE_BACKUP_DIR}.${RESET}"
+    mv "$CLONE_DIR" "$CLONE_BACKUP_DIR"
+    git clone --no-checkout "$CAROLINE_REPO_URL" "$CLONE_DIR"
+  else
+    say "${DIM}  Existing repo found; syncing ${CAROLINE_CHANNEL}.${RESET}"
+    git -C "$CLONE_DIR" remote set-url origin "$CAROLINE_REPO_URL" >/dev/null 2>&1 || true
+    git -C "$CLONE_DIR" fetch --tags origin
+  fi
+elif [ -e "$CLONE_DIR" ]; then
+  CLONE_BACKUP_DIR="${CLONE_DIR}.old.$(date +%Y%m%d-%H%M%S)"
+  if [ -e "$CLONE_BACKUP_DIR" ]; then
+    CLONE_BACKUP_DIR="${CLONE_BACKUP_DIR}.$$"
+  fi
+  say "${YELLOW}  ! Existing project cache is not a git repo; preserving it at ${CLONE_BACKUP_DIR}.${RESET}"
+  mv "$CLONE_DIR" "$CLONE_BACKUP_DIR"
+  git clone --no-checkout "$CAROLINE_REPO_URL" "$CLONE_DIR"
 else
   git clone --no-checkout "$CAROLINE_REPO_URL" "$CLONE_DIR"
 fi
