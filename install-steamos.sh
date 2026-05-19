@@ -817,15 +817,28 @@ fi
 echo "\$(date -Is) Update available: \${LOCAL_COMMIT:-unknown} -> \${REMOTE_COMMIT:0:7}" >> "\$LOG"
 curl -fsSL "https://raw.githubusercontent.com/\${REPO_OWNER}/\${REPO_NAME}/\${REPO_CHANNEL}/install-steamos.sh" -o "\$INSTALLER" >> "\$LOG" 2>&1
 chmod 700 "\$INSTALLER"
-CAROLINE_NONINTERACTIVE=true CAROLINE_CHANNEL="\$REPO_CHANNEL" CAROLINE_REPO_URL="\$REPO_URL" bash "\$INSTALLER" >> "\$LOG" 2>&1
+CAROLINE_NONINTERACTIVE=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="\$REPO_CHANNEL" CAROLINE_REPO_URL="\$REPO_URL" bash "\$INSTALLER" >> "\$LOG" 2>&1
 echo "\$(date -Is) Project: Caroline GUI update complete" >> "\$LOG"
+RESTART_CMD="\$(command -v systemctl || true)"
+RESTART_UNIT="caroline-restart-\$(date +%s)"
+if command -v systemd-run >/dev/null 2>&1 && [ -n "\$RESTART_CMD" ]; then
+  if ! systemd-run --user --unit="\$RESTART_UNIT" --collect --on-active=1s "\$RESTART_CMD" --user restart caroline.service >/tmp/caroline-restart.log 2>&1; then
+    nohup bash -lc 'sleep 1; systemctl --user restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
+  fi
+else
+  nohup bash -lc 'sleep 1; systemctl --user restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
+fi
 UPDATE_EOF
 chmod +x "$REAL_HOME/.local/bin/caroline-update"
 say "${GREEN}  ✓ SteamOS update helper ready${RESET}"
 
 systemctl --user daemon-reload
 systemctl --user enable caroline.service
-systemctl --user restart caroline.service
+if [ "${CAROLINE_DEFER_SERVICE_RESTART:-false}" = "true" ]; then
+  say "${DIM}  Caroline service restart deferred to update helper.${RESET}"
+else
+  systemctl --user restart caroline.service
+fi
 
 if command -v sudo >/dev/null 2>&1; then
   if sudo -n true >/dev/null 2>&1; then
@@ -836,7 +849,11 @@ if command -v sudo >/dev/null 2>&1; then
   fi
 fi
 
-say "${GREEN}  ✓ Caroline user service started${RESET}"
+if [ "${CAROLINE_DEFER_SERVICE_RESTART:-false}" = "true" ]; then
+  say "${GREEN}  ✓ Caroline user service files updated${RESET}"
+else
+  say "${GREEN}  ✓ Caroline user service started${RESET}"
+fi
 say ""
 
 say "${MAGENTA}  // VERIFY${RESET}"
