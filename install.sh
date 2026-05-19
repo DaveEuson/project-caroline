@@ -253,8 +253,15 @@ cleanup_install_swap() {
 trap cleanup_install_swap EXIT
 
 reset_install_logs() {
-  rm -f /tmp/caroline-*.log /tmp/caroline-merged-flows.json /tmp/caroline-merged-flows.json.tmp 2>/dev/null || true
-  sudo rm -f /tmp/caroline-*.log /tmp/caroline-merged-flows.json /tmp/caroline-merged-flows.json.tmp 2>/dev/null || true
+  if [ "${CAROLINE_PRESERVE_UPDATE_LOG:-false}" = "true" ]; then
+    find /tmp -maxdepth 1 -type f -name 'caroline-*.log' ! -name 'caroline-update.log' -delete 2>/dev/null || true
+    sudo find /tmp -maxdepth 1 -type f -name 'caroline-*.log' ! -name 'caroline-update.log' -delete 2>/dev/null || true
+  else
+    rm -f /tmp/caroline-*.log 2>/dev/null || true
+    sudo rm -f /tmp/caroline-*.log 2>/dev/null || true
+  fi
+  rm -f /tmp/caroline-merged-flows.json /tmp/caroline-merged-flows.json.tmp 2>/dev/null || true
+  sudo rm -f /tmp/caroline-merged-flows.json /tmp/caroline-merged-flows.json.tmp 2>/dev/null || true
 }
 
 ensure_install_swap() {
@@ -2027,8 +2034,17 @@ if [ -n "$LOCAL_COMMIT" ] && [ -n "$REMOTE_COMMIT" ] && [ "${REMOTE_COMMIT#${LOC
   exit 0
 fi
 echo "$(date -Is) Update available: ${LOCAL_COMMIT:-unknown} -> ${REMOTE_COMMIT:0:7}" >> "$LOG"
-SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true CAROLINE_CHANNEL="$REPO_CHANNEL" bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
+SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true CAROLINE_PRESERVE_UPDATE_LOG=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="$REPO_CHANNEL" bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
 echo "$(date -Is) Project: Caroline GUI update complete" >> "$LOG"
+RESTART_CMD="$(command -v systemctl || true)"
+RESTART_UNIT="caroline-restart-$(date +%s)"
+if command -v systemd-run >/dev/null 2>&1 && [ -n "$RESTART_CMD" ]; then
+  if ! systemd-run --unit="$RESTART_UNIT" --collect --on-active=1s "$RESTART_CMD" restart caroline.service >/tmp/caroline-restart.log 2>&1; then
+    nohup bash -lc 'sleep 1; systemctl restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
+  fi
+else
+  nohup bash -lc 'sleep 1; systemctl restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
+fi
 EOF
 sudo chmod 755 /usr/local/sbin/caroline-update
 sudo chown root:root /usr/local/sbin/caroline-update
@@ -2054,7 +2070,11 @@ rm -f "$CAROLINE_DIR/.config.nodes.json"   2>/dev/null || true
 
 # Use restart rather than start so rerunning the installer actually reloads
 # updated flows/settings on an existing Caroline install.
-sudo systemctl restart caroline
+if [ "${CAROLINE_DEFER_SERVICE_RESTART:-false}" = "true" ]; then
+  echo -e "${DIM}  Caroline service restart deferred to update helper.${RESET}"
+else
+  sudo systemctl restart caroline
+fi
 
 echo -e "${GREEN}  ✓ Caroline service enabled${RESET}"
 
