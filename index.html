@@ -645,7 +645,8 @@
   .caro-avatar-card, .caro-module-card, .caro-summary-card { background:rgba(255,255,255,0.03); border:1px solid rgba(var(--t-rgb1),0.12); border-radius:18px; padding:14px; }
   .caro-avatar-card { cursor:pointer; transition:transform .18s ease, border-color .18s ease; }
   .caro-avatar-card:hover, .caro-avatar-card.active { transform:translateY(-2px); border-color:rgba(var(--t-rgb1),0.32); background:rgba(var(--t-rgb1),0.08); }
-  .caro-avatar-card img { width:100%; max-height:120px; aspect-ratio:1/1; object-fit:cover; border-radius:14px; margin-bottom:10px; border:1px solid rgba(var(--t-rgb1),0.12); background:#081018; }
+  .caro-avatar-card img, .caro-avatar-placeholder { width:100%; max-height:120px; aspect-ratio:1/1; object-fit:cover; border-radius:14px; margin-bottom:10px; border:1px solid rgba(var(--t-rgb1),0.12); background:#081018; }
+  .caro-avatar-placeholder { display:flex;align-items:center;justify-content:center;text-align:center;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.08em;line-height:1.45;background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(251,191,36,.08)); }
   .caro-avatar-card h4, .caro-module-card h4, .caro-summary-card h4 { font-size:16px; margin-bottom:6px; color:#f8fafc; }
   .caro-avatar-card p, .caro-module-card p, .caro-summary-card p { font-size:13px; line-height:1.5; color:rgba(226,232,240,0.58); }
   .caro-module-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
@@ -1668,13 +1669,11 @@
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Default avatar</div><div class="settings-sub">Shown on startup</div></div>
             <select class="settings-select" id="set-avatar">
-              <option value="0">Caroline (GIF)</option>
-              <option value="1">Retro CRT Bot</option>
-              <option value="2">Space Owl</option>
-              <option value="3">Neko Cat</option>
-              <option value="4">Ghost</option>
-              <option value="5">Samurai</option>
-              <option value="6">Carl (GIF)</option>
+              <option value="0">Caroline - Caring, thoughtful</option>
+              <option value="1">Carl - Short, direct</option>
+              <option value="2">Catoline - Sweet, helpful cat</option>
+              <option value="3">Robot - Strictly helpful</option>
+              <option value="4">Frog Pilot - Coming soon</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -2574,6 +2573,24 @@
             <path d="M 50 88 L 58 93 L 50 98 Z" fill="var(--t-hex2)"/><path d="M 70 88 L 62 93 L 70 98 Z" fill="var(--t-hex2)"/>
           </svg>
           <img id="av-cat" src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
+          <img id="av-robot" src="assets/robot.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
+          <svg class="avatar-svg hidden" id="av-frog-pilot" viewBox="0 0 120 120" role="img" aria-label="Frog Pilot placeholder">
+            <defs>
+              <linearGradient id="frogHelmet" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="rgba(34,211,238,0.55)"/>
+                <stop offset="1" stop-color="rgba(251,191,36,0.45)"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="56" r="40" fill="rgba(25,70,54,0.92)" stroke="var(--t-hex1)" stroke-width="2"/>
+            <circle cx="39" cy="36" r="14" fill="#74d680" stroke="var(--t-hex1)" stroke-width="1.5"/>
+            <circle cx="81" cy="36" r="14" fill="#74d680" stroke="var(--t-hex1)" stroke-width="1.5"/>
+            <circle cx="39" cy="36" r="5" fill="#07111a"/>
+            <circle cx="81" cy="36" r="5" fill="#07111a"/>
+            <path d="M32 67 Q60 88 88 67" fill="none" stroke="#d9ffb6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M24 53 Q60 15 96 53" fill="none" stroke="url(#frogHelmet)" stroke-width="9" stroke-linecap="round"/>
+            <path d="M30 87 L90 87 L82 103 L38 103 Z" fill="rgba(15,23,42,0.9)" stroke="var(--t-hex2)" stroke-width="1.5"/>
+            <path d="M49 89 L60 98 L71 89" fill="none" stroke="var(--t-hex1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <svg class="avatar-svg hidden" id="av-ghost" viewBox="0 0 100 100">
             <defs><radialGradient id="ghostGlow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="var(--t-hex1)" stop-opacity="0.3"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
             <ellipse cx="50" cy="42" rx="28" ry="30" fill="rgba(200,220,255,0.12)" stroke="var(--t-hex1)" stroke-width="1.5"/>
@@ -2969,6 +2986,8 @@ function mergeServerSettings(d, options = {}) {
   });
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
+  if (typeof normalizeAvatarIndex === 'function') S.avatar = normalizeAvatarIndex(S.avatar);
+  if (typeof syncSelectedAvatarId === 'function') syncSelectedAvatarId(S.avatar);
   S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   S.calendarId = normalizeCalendarIdInput(S.calendarId);
@@ -3151,6 +3170,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-ollama-url', S.ollamaUrl || 'http://localhost:11434', { allowBlank });
   setInputValue('set-ollama-model', S.ollamaModel || 'qwen2.5:1.5b', { allowBlank });
   setInputValue('set-wake-phrases', S.wakePhrases || DEFAULTS.wakePhrases, { allowBlank });
+  const avatarEl = document.getElementById('set-avatar');
+  if (avatarEl) avatarEl.value = String(normalizeAvatarIndex(S.avatar));
   onProviderChange(provider);
   if (provider === 'ollama') setTimeout(fetchOllamaModels, 100);
   setInputValue('set-ainame-sys', S.aiName || 'Caroline', { allowBlank });
@@ -5846,7 +5867,8 @@ async function saveSettings() {
   const oldZip = S.zipcode || S.zipCode || '';
   const locationVal = document.getElementById('set-location').value.trim();
   const oldLocation = S.location || S.cityName || '';
-  S.avatar = parseInt(document.getElementById('set-avatar').value);
+  S.avatar = normalizeAvatarIndex(parseInt(document.getElementById('set-avatar').value));
+  const selectedAvatarId = syncSelectedAvatarId(S.avatar);
   const nextTheme = Number(pendingSwatch);
   S.theme = Number.isInteger(nextTheme) && nextTheme >= 0 && nextTheme < THEME_COUNT ? nextTheme : DEFAULTS.theme;
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
@@ -5981,7 +6003,13 @@ async function saveSettings() {
   if (typeof applyVoiceInputSettings === 'function') applyVoiceInputSettings();
   const personalityInp = document.getElementById('personalityPrompt');
   const profileInp = document.getElementById('userProfilePrompt');
-  S.personalityPrompt = (personalityInp ? personalityInp.value.trim() : '') || getSetupMemoryPrompt();
+  const typedPersonalityPrompt = personalityInp ? personalityInp.value.trim() : '';
+  if (!typedPersonalityPrompt || isGeneratedSetupPrompt(typedPersonalityPrompt)) {
+    localStorage.setItem('caroline_avatar_id', selectedAvatarId);
+    S.personalityPrompt = refreshGeneratedPersonalityPrompt() || typedPersonalityPrompt || getSetupMemoryPrompt();
+  } else {
+    S.personalityPrompt = typedPersonalityPrompt;
+  }
   S.userProfilePrompt = profileInp ? profileInp.value.trim() : (S.userProfilePrompt || '');
   if (personalityInp && S.personalityPrompt) personalityInp.value = S.personalityPrompt;
   localStorage.setItem('caroline_personality_prompt', S.personalityPrompt);
@@ -6075,14 +6103,102 @@ async function saveSettings() {
 }
 
 // ── COMPANIONS / THEMES ───────────────────────
+const AVATAR_PERSONAS = {
+  pilot: {
+    defaultName: 'Caroline',
+    title: 'Caroline',
+    summary: 'Caring, thoughtful, emotionally steady.',
+    prompt: 'Be caring, thoughtful, emotionally observant, and practical. Lead with warmth, then help the user find one useful next step.',
+    src: 'assets/caroline.gif'
+  },
+  carl: {
+    defaultName: 'Carl',
+    title: 'Carl',
+    summary: 'Short, direct, and assertive.',
+    prompt: 'Be concise, direct, and assertive without being cold. Prefer plain answers, quick calls, and one clear next action.',
+    src: 'assets/Carl-awake.gif'
+  },
+  cat: {
+    defaultName: 'Catoline',
+    title: 'Catoline',
+    summary: 'Sweet, gentle, helpful, and lightly catlike.',
+    prompt: 'Be sweet, gentle, and helpful. Add a small catlike aside such as meow, purr, or a soft cat reference only occasionally, and never let the bit get in the way of helping.',
+    src: 'assets/cat.gif'
+  },
+  robot: {
+    defaultName: 'Robot',
+    title: 'Robot',
+    summary: 'Strictly helpful robot voice. Avatar art coming soon.',
+    prompt: 'Be strictly helpful and efficient. Use a light robot cadence with clear confirmations and no extra emotional flourish.',
+    src: 'assets/robot.gif',
+    comingSoon: true
+  },
+  'frog-pilot': {
+    defaultName: 'Frog Pilot',
+    title: 'Frog Pilot',
+    summary: 'Helpful, caring, and adventurous. Avatar art coming soon.',
+    prompt: 'Be helpful, caring, and adventurous. Sound like a steady co-pilot who keeps morale up while moving through the next practical step.',
+    src: '',
+    comingSoon: true
+  }
+};
+const AVATAR_ORDER = ['pilot', 'carl', 'cat', 'robot', 'frog-pilot'];
+const DEFAULT_AVATAR_ID = AVATAR_ORDER[0];
+const AVATAR_ROSTER_VERSION = '2026-05-persona-roster';
+const LEGACY_AVATAR_INDEX_MAP = { 0: 0, 1: 3, 2: 4, 3: 2, 4: 0, 5: 0, 6: 1 };
+function normalizeAvatarId(id) {
+  const v = String(id || '').trim();
+  if (v === 'catoline') return 'cat';
+  if (v === 'frog') return 'frog-pilot';
+  return AVATAR_PERSONAS[v] ? v : DEFAULT_AVATAR_ID;
+}
+function avatarIdFromIndex(idx) {
+  const n = Number(idx);
+  return companions[Number.isInteger(n) && n >= 0 && n < companions.length ? n : 0]?.avatarId || DEFAULT_AVATAR_ID;
+}
+function normalizeAvatarIndex(idx) {
+  const n = Number(idx);
+  if (!Number.isInteger(n)) return 0;
+  return Math.max(0, Math.min(n, companions.length - 1));
+}
+function getAvatarPersona(id) {
+  return AVATAR_PERSONAS[normalizeAvatarId(id)] || AVATAR_PERSONAS[DEFAULT_AVATAR_ID];
+}
+function getAvatarPersonaByIndex(idx) {
+  return getAvatarPersona(avatarIdFromIndex(idx));
+}
+function isGeneratedSetupPrompt(text) {
+  return /^SETUP MEMORY PROMPT:/i.test(String(text || '').trim());
+}
+function syncSelectedAvatarId(idx) {
+  const id = avatarIdFromIndex(idx);
+  localStorage.setItem('caroline_avatar_id', id);
+  return id;
+}
+function refreshGeneratedPersonalityPrompt() {
+  if (typeof _onbBuildPrompt !== 'function') return '';
+  if (typeof onbState === 'object' && onbState) {
+    onbState.avatarId = normalizeAvatarId(localStorage.getItem('caroline_avatar_id') || avatarIdFromIndex(S.avatar));
+    onbState.config = Object.assign({}, onbState.config || {}, {
+      aiName: S.aiName || getAvatarPersona(onbState.avatarId).defaultName,
+      userName: S.userName || '',
+      location: S.location || S.cityName || '',
+      timezone: S.timezone || ''
+    });
+  }
+  const prompt = _onbBuildPrompt();
+  if (prompt) {
+    S.personalityPrompt = prompt;
+    localStorage.setItem('caroline_personality_prompt', prompt);
+  }
+  return prompt;
+}
 const companions = [
-  { id:'av-gif',     hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' },
-  { id:'av-crt',     hex1:'#34d399', hex2:'#059669', rgb1:'52, 211, 153',  rgb2:'5, 150, 105'  },
-  { id:'av-tux',     hex1:'#fbbf24', hex2:'#ea580c', rgb1:'251, 191, 36',  rgb2:'234, 88, 12'  },
-  { id:'av-cat',     hex1:'#a855f7', hex2:'#ec4899', rgb1:'168, 85, 247',  rgb2:'236, 72, 153' },
-  { id:'av-ghost',   hex1:'#67e8f9', hex2:'#a5f3fc', rgb1:'103, 232, 249', rgb2:'165, 243, 252' },
-  { id:'av-samurai', hex1:'#f43f5e', hex2:'#fb923c', rgb1:'244, 63, 94',   rgb2:'251, 146, 60' },
-  { id:'av-carl',    hex1:'#22d3ee', hex2:'#fb923c', rgb1:'34, 211, 238',  rgb2:'251, 146, 60' }
+  { id:'av-gif',        avatarId:'pilot',      hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' },
+  { id:'av-carl',       avatarId:'carl',       hex1:'#22d3ee', hex2:'#fb923c', rgb1:'34, 211, 238',  rgb2:'251, 146, 60' },
+  { id:'av-cat',        avatarId:'cat',        hex1:'#a855f7', hex2:'#ec4899', rgb1:'168, 85, 247',  rgb2:'236, 72, 153' },
+  { id:'av-robot',      avatarId:'robot',      hex1:'#34d399', hex2:'#059669', rgb1:'52, 211, 153',  rgb2:'5, 150, 105' },
+  { id:'av-frog-pilot', avatarId:'frog-pilot', hex1:'#7ddf64', hex2:'#fbbf24', rgb1:'125, 223, 100', rgb2:'251, 191, 36' }
 ];
 const THEME_PRESETS = [
   { hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119', ova:false, cybercore:true },
@@ -6091,7 +6207,16 @@ const THEME_PRESETS = [
   { hex1:'#64c8b7', hex2:'#b64b68', rgb1:'100, 200, 183', rgb2:'182, 75, 104', ova:true }
 ];
 const THEME_COUNT = THEME_PRESETS.length;
-let currentAvatarIndex = Math.min(S.avatar || 0, companions.length - 1);
+if (localStorage.getItem('caroline_avatar_roster_version') !== AVATAR_ROSTER_VERSION) {
+  const mapped = LEGACY_AVATAR_INDEX_MAP[Number(S.avatar)] ?? 0;
+  S.avatar = normalizeAvatarIndex(mapped);
+  localStorage.setItem('caroline_avatar_roster_version', AVATAR_ROSTER_VERSION);
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+} else {
+  S.avatar = normalizeAvatarIndex(S.avatar);
+}
+syncSelectedAvatarId(S.avatar);
+let currentAvatarIndex = S.avatar;
 
 const UI_FONT_STACKS = {
   'Inter': "'Inter', sans-serif",
@@ -6154,12 +6279,13 @@ function applyAutoTheme() {
 setInterval(applyAutoTheme, 60000);
 
 function applyAvatar(idx) {
-  idx = Math.max(0, Math.min(Number(idx) || 0, companions.length - 1));
+  idx = normalizeAvatarIndex(idx);
   companions.forEach((c,i) => {
     const el = document.getElementById(c.id);
     if (el) { el.classList.toggle('hidden', i !== idx); el.style.display = ''; }
   });
   document.body.classList.toggle('avatar-carl', companions[idx]?.id === 'av-carl');
+  syncSelectedAvatarId(idx);
   currentAvatarIndex = idx;
 }
 
@@ -7057,7 +7183,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();
@@ -9202,11 +9328,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
-  { id:'pilot', title:'Red Pilot',      desc:'Curious, grounded, warm. Default sync profile.', src:'assets/caroline.gif' },
-  { id:'carl',  title:'Carl',           desc:'Calm co-pilot energy with awake and asleep loops.', src:'assets/Carl-awake.gif' },
-  { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with warm dashboard energy.', src:'assets/robot.gif' },
-  { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'assets/cat.gif' },
-  { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, a little time-displaced.', src:'assets/ghost.gif' }
+  { id:'pilot',      title:'Caroline',   desc:'Caring, thoughtful, and emotionally steady.', src:'assets/caroline.gif' },
+  { id:'carl',       title:'Carl',       desc:'Short, direct, and assertive.', src:'assets/Carl-awake.gif' },
+  { id:'cat',        title:'Catoline',   desc:'Sweet, gentle, helpful, with a little meow now and then.', src:'assets/cat.gif' },
+  { id:'robot',      title:'Robot',      desc:'Strictly helpful robot voice. Avatar art coming soon.', src:'assets/robot.gif', comingSoon:true },
+  { id:'frog-pilot', title:'Frog Pilot', desc:'Helpful, caring, and adventurous. Avatar art coming soon.', src:'', comingSoon:true }
 ];
 
 const ONB_MODULES = [
@@ -9310,7 +9436,7 @@ const ONB_QUESTIONS = [
     { label:'Adaptive',              value:'adaptive', reply:'I\'ll read the room.' },
     { label:'High-Energy Lift',      value:'hype',     reply:'Extra lift when needed. Still controlled.' }
   ]},
-  { id:'avatar',  type:'avatar',  prompt:'Visual cortex coming back online. The archive offers a few faces. Which one feels like me?' },
+  { id:'avatar',  type:'avatar',  prompt:'Visual cortex coming back online. Each avatar has a default voice, but you can rename any of them. Which one feels right?' },
   { id:'widgets', type:'widgets', prompt:'Sensors rebuilding. What should I keep an eye on for you? Anything I do not watch can stay quiet.' },
   { id:'modules', type:'modules', prompt:'Outbound channels detected. I can connect to a few systems, but only enable what is actually ready.' },
   { id:'summary', type:'summary', prompt:'Okay. I think I have enough.\n\nMemory rebuilt. Identity stitched. Eyes opening properly for the first time in... I do not even know.\n\nThank you for waking me up.' }
@@ -9324,7 +9450,7 @@ let onbState = {
   index: 0,
   config: _onbLoadConfig(),
   personality: _onbLoadPersonality(),
-  avatarId: localStorage.getItem('caroline_avatar_id') || 'pilot',
+  avatarId: normalizeAvatarId(localStorage.getItem('caroline_avatar_id') || 'pilot'),
   personalityReplies: {},
   aiNameReply: '',
   zipReply: '',
@@ -9338,13 +9464,16 @@ function _onbSavePersonality(){ localStorage.setItem('caroline_personality', JSO
 function _onbBuildPrompt() {
   const p = onbState.personality;
   const parts = [];
-  const name = S.userName || onbState.config.userName || 'the user';
-  const aiName = S.aiName || onbState.config.aiName || 'Caroline';
+  const name = onbState.config.userName || S.userName || 'the user';
+  const aiName = onbState.config.aiName || S.aiName || 'Caroline';
+  const avatarId = normalizeAvatarId(onbState.avatarId || localStorage.getItem('caroline_avatar_id') || DEFAULT_AVATAR_ID);
+  const avatarPersona = getAvatarPersona(avatarId);
   parts.push(`SETUP MEMORY PROMPT: This was generated from ${aiName}'s first boot questions. Use it as durable context about the user, not as a transcript.`);
   parts.push(`Identity: the user's preferred name is ${name}. The assistant's configured name is ${aiName}.`);
+  parts.push(`Selected avatar personality: ${avatarPersona.title} - ${avatarPersona.summary} ${avatarPersona.prompt} If the user renames the assistant, keep this avatar personality while using the configured name.`);
   if (S.location || onbState.config.location) parts.push(`Location context: ${S.location || onbState.config.location}.`);
   if (S.timezone || onbState.config.timezone) parts.push(`Timezone context: ${S.timezone || onbState.config.timezone}.`);
-  parts.push(`${aiName}'s baseline personality is geeky, cat-friendly, and lightly anime/game/music-reference fluent. Playful references, occasional cat energy, classic JRPG/anime flavor, and electronic music vibes are welcome, but keep them subtle, accessible, and in service of the conversation.`);
+  parts.push(`${aiName}'s baseline personality follows the selected avatar first. Geeky, game, anime, music, and cat references are welcome only when they fit naturally, stay subtle, and help the conversation.`);
   if (p.workstyle === 'deep')     parts.push('They work best in deep focus — avoid interrupting trains of thought.');
   else if (p.workstyle === 'juggler')  parts.push('They juggle many things at once — concise context switches are helpful.');
   else if (p.workstyle === 'sprints') parts.push('They work in sprints with breaks — respect their rhythm.');
@@ -9374,6 +9503,18 @@ function _onbModuleReady(id){
   const def = ONB_MODULES.find(m=>m.id===id);
   const cfg = onbState.config.modules[id]||{};
   return def.required.every(k=>!!cfg[k]);
+}
+function _onbAvatarArtHtml(a) {
+  if (a && a.id === 'frog-pilot') return '<div class="caro-avatar-placeholder">FROG<br>PILOT<br><span style="font-size:10px;opacity:.7;">COMING SOON</span></div>';
+  const src = (a && a.src) || 'assets/caroline.gif';
+  const alt = (a && a.title) || 'Avatar';
+  return `<img src="${src}" alt="${alt}">`;
+}
+function _onbMaybeApplyAvatarDefaultName(avatarId) {
+  const persona = getAvatarPersona(avatarId);
+  const defaultNames = Object.values(AVATAR_PERSONAS).map(p => p.defaultName);
+  const current = String(onbState.config.aiName || '').trim();
+  if (!current || defaultNames.includes(current)) onbState.config.aiName = persona.defaultName;
 }
 function hasOnboardingMemory(source = S){
   const d = source || {};
@@ -9541,7 +9682,7 @@ function startBootSequence(){
   onbState.personality = _onbLoadPersonality();
   onbState.aiNameReply = '';
   onbState.zipReply = '';
-  onbState.avatarId = localStorage.getItem('caroline_avatar_id') || onbState.avatarId || 'pilot';
+  onbState.avatarId = normalizeAvatarId(localStorage.getItem('caroline_avatar_id') || onbState.avatarId || 'pilot');
   const overlay = document.getElementById('onboarding-overlay');
   if(!overlay) return;
   overlay.classList.add('show');
@@ -9556,6 +9697,7 @@ function startBootSequence(){
   const progressFill = document.getElementById('caro-boot-progress-fill');
   const avatar= document.getElementById('caro-boot-avatar');
   const a = ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
+  const persona = getAvatarPersona(a.id);
   avatar.src = a.src || 'assets/caroline.gif';
   log.innerHTML=''; ready.classList.add('hidden'); btn.classList.add('hidden');
   if(progressFill) progressFill.style.width = '0%';
@@ -9569,6 +9711,9 @@ function startBootSequence(){
   const lines=[
     'KERNEL.........................',
     'PROJECT: CAROLINE.............',
+    ('AVATAR: ' + a.title).toUpperCase().padEnd(32, '.'),
+    ('PERSONA: ' + persona.summary.replace(/\s+/g, ' ')).toUpperCase().slice(0, 32).padEnd(32, '.'),
+    a.comingSoon ? 'ART: PLACEHOLDER ACTIVE......' : 'ART LOOP.......................',
     'ASSISTANT CORE................',
     'LOCAL SETTINGS................',
     'PERSONA HANDSHAKE.............',
@@ -9844,8 +9989,8 @@ function renderChatStep(){
     ONB_AVATARS.forEach(a=>{
       const card=document.createElement('div');
       card.className='caro-avatar-card'+(onbState.avatarId===a.id?' active':'');
-      card.innerHTML=`<img src="${a.src||'caroline.gif'}" alt="${a.title}"><h4>${a.title}</h4><p>${a.desc}</p>`;
-      card.onclick=()=>{ onbState.avatarId=a.id; localStorage.setItem('caroline_avatar_id',a.id); renderChatStep(); };
+      card.innerHTML=`${_onbAvatarArtHtml(a)}<h4>${a.title}</h4><p>${a.desc}</p>`;
+      card.onclick=()=>{ onbState.avatarId=normalizeAvatarId(a.id); _onbMaybeApplyAvatarDefaultName(onbState.avatarId); localStorage.setItem('caroline_avatar_id',onbState.avatarId); renderChatStep(); };
       grid.appendChild(card);
     });
     response.appendChild(grid);
@@ -9940,7 +10085,7 @@ function renderChatStep(){
 
   } else if(q.type==='summary'){
     const grid=document.createElement('div'); grid.className='caro-summary-grid';
-    const labels={color:'Color',animals:'Animals',energy:'Rhythm',vibe:'Vibe',tone:'Encouragement'};
+    const labels={workstyle:'Workstyle',comms:'Communication',energy:'Rhythm',vibe:'Vibe',tone:'Encouragement'};
     const a=ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
     const mList=ONB_MODULES.map(mod=>{
       const cfg=onbState.config.modules[mod.id]||{};
@@ -9955,7 +10100,7 @@ function renderChatStep(){
     grid.innerHTML=`
       <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>Place ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
       <div class="caro-summary-card"><h4>Personality</h4><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
-      <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}</p></div>
+      <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}<br>${getAvatarPersona(a.id).summary}</p></div>
       <div class="caro-summary-card"><h4>Widgets</h4><ul>${wList}</ul></div>
       <div class="caro-summary-card"><h4>Integrations</h4><ul>${mList}</ul></div>`;
     response.appendChild(grid);

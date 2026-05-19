@@ -5751,7 +5751,7 @@
     "id": "caro-admin-update-exec",
     "type": "exec",
     "z": "1497b6d50e1369f5",
-    "command": "bash -lc 'nohup sudo -n /usr/local/sbin/caroline-update >/tmp/caroline-update-trigger.log 2>&1 &'",
+    "command": "bash -lc 'if [ -x \"$HOME/.local/bin/caroline-update\" ]; then nohup \"$HOME/.local/bin/caroline-update\" >/tmp/caroline-update-trigger.log 2>&1 & else nohup sudo -n /usr/local/sbin/caroline-update >/tmp/caroline-update-trigger.log 2>&1 & fi'",
     "addpay": false,
     "append": "",
     "useSpawn": "false",

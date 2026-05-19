@@ -24,10 +24,11 @@ On the Project: Caroline kiosk, copy the `SYNC:` code from the top bar.
 
 In the companion app:
 
-1. Set the WebSocket URL to `ws://YOUR-CAROLINE-IP:8080/ws/caroline`.
-2. Enter your companion display name.
-3. Paste the kiosk `SYNC:` code.
-4. Click **Connect**.
+1. Pick the saved bot profile, such as **Caroline**, **Carl**, or **Catoline**.
+2. Set that profile's WebSocket URL to `ws://YOUR-CAROLINE-IP:8080/ws/caroline`.
+3. Enter your companion display name.
+4. Paste that kiosk's `SYNC:` code.
+5. Click **Connect**.
 
 Each saved host keeps its own WebSocket URL and pairing code, so one companion app can switch between multiple Project: Caroline hosts.
 
@@ -38,6 +39,18 @@ Install the `.deb` package from the release page. If your desktop blocks the fir
 ## Steam Deck Notes
 
 Use Desktop Mode and launch the `.AppImage` release asset. SteamOS does not include Debian package tools by default, so the `.deb` package is for Ubuntu/Pop!_OS rather than the Deck.
+
+SteamOS Caroline binds to localhost by default. To use the **Carl / Steam Deck** saved profile from another computer, start an SSH tunnel first:
+
+```bash
+ssh -L 8088:127.0.0.1:8080 deck@STEAM_DECK_IP
+```
+
+Then use this companion URL for Carl:
+
+```text
+ws://127.0.0.1:8088/ws/caroline
+```
 
 ## Smoke Test
 

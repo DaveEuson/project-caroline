@@ -338,7 +338,13 @@ say "${DIM}    SteamOS local model support is experimental; Ollama can be instal
 say ""
 INSTALL_OLLAMA="n"
 OLLAMA_USER_SERVICE_ENABLED="false"
-if ask_yes_no "Configure Caroline to try local Ollama mode on this Deck?" "n"; then
+EXISTING_AI_PROVIDER="$(existing_setting aiProvider)"
+EXISTING_OLLAMA_MODEL="$(existing_setting ollamaModel)"
+if ! can_prompt && [ -n "$EXISTING_AI_PROVIDER" ]; then
+  AI_PROVIDER="$EXISTING_AI_PROVIDER"
+  OLLAMA_MODEL="${EXISTING_OLLAMA_MODEL:-$RECOMMENDED_OLLAMA_MODEL}"
+  say "${DIM}  Existing AI provider preserved: ${AI_PROVIDER}${RESET}"
+elif ask_yes_no "Configure Caroline to try local Ollama mode on this Deck?" "n"; then
   AI_PROVIDER="ollama"
   OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
   if ask_yes_no "Install/start portable Ollama now and pull ${OLLAMA_MODEL}?" "y"; then
@@ -432,6 +438,27 @@ fi
 mkdir -p "$CAROLINE_DIR"
 rm -rf "$CAROLINE_DIR/.git"
 tar --exclude='./.git' -C "$CLONE_DIR" -cf - . | tar -C "$CAROLINE_DIR" -xf -
+
+BUILD_COMMIT="$(git -C "$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+BUILD_BRANCH="$(git -C "$CLONE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "$CAROLINE_CHANNEL")"
+BUILD_INSTALLED_AT="$(date -Is)"
+BUILD_HOSTNAME="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo steamdeck)"
+export BUILD_COMMIT BUILD_BRANCH BUILD_INSTALLED_AT BUILD_HOSTNAME CAROLINE_VERSION CAROLINE_REPO_URL CAROLINE_CHANNEL
+node <<'NODE_BUILD'
+const fs = require('fs');
+const path = process.env.CAROLINE_DIR;
+const build = {
+  version: process.env.CAROLINE_VERSION || '',
+  commit: process.env.BUILD_COMMIT || 'unknown',
+  branch: process.env.BUILD_BRANCH || process.env.CAROLINE_CHANNEL || 'unknown',
+  channel: process.env.CAROLINE_CHANNEL || '',
+  repo: process.env.CAROLINE_REPO_URL || '',
+  installedAt: process.env.BUILD_INSTALLED_AT || new Date().toISOString(),
+  hostname: process.env.BUILD_HOSTNAME || '',
+  platform: 'steamos'
+};
+fs.writeFileSync(`${path}/caroline_build.json`, JSON.stringify(build, null, 2) + '\n');
+NODE_BUILD
 
 CAROLINE_DIR_SED="$(printf '%s' "$CAROLINE_DIR" | sed 's/[&#]/\\&/g')"
 for json in "$CAROLINE_DIR/flows.json" "$CAROLINE_DIR/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-wonder-loop.json"; do
@@ -678,6 +705,78 @@ DESKTOP_EOF
 cp -f "$REAL_HOME/.local/share/applications/caroline-steamos.desktop" "$REAL_HOME/Desktop/Project: Caroline.desktop" 2>/dev/null || true
 cp -f "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" "$REAL_HOME/Desktop/Project: Caroline Kiosk.desktop" 2>/dev/null || true
 chmod +x "$REAL_HOME/Desktop/Project: Caroline.desktop" "$REAL_HOME/Desktop/Project: Caroline Kiosk.desktop" 2>/dev/null || true
+
+cat > "$REAL_HOME/.local/bin/caroline-update" <<UPDATE_EOF
+#!/usr/bin/env bash
+set -Eeuo pipefail
+LOG="/tmp/caroline-update.log"
+LOCK="/tmp/caroline-update.lock"
+INSTALLER="/tmp/caroline-install-steamos.sh"
+REPO_OWNER="Project-Caroline"
+REPO_NAME="project-caroline"
+REPO_URL="\${CAROLINE_REPO_URL:-https://github.com/\${REPO_OWNER}/\${REPO_NAME}.git}"
+CAROLINE_DIR="${CAROLINE_DIR}"
+CLONE_DIR="${CLONE_DIR}"
+export PATH="${NODE_CURRENT}/bin:\$HOME/.local/bin:\$PATH"
+trap 'code=\$?; echo "\$(date -Is) Project: Caroline GUI update failed (exit \$code)" >> "\$LOG"; exit \$code' ERR
+
+exec 9>"\$LOCK"
+if ! flock -n 9; then
+  echo "\$(date -Is) update already running" >> "\$LOG"
+  exit 0
+fi
+
+REPO_CHANNEL="\${CAROLINE_UPDATE_CHANNEL:-}"
+if [ -z "\$REPO_CHANNEL" ] && [ -s "\$CAROLINE_DIR/caroline_channel" ]; then
+  REPO_CHANNEL="\$(head -n 1 "\$CAROLINE_DIR/caroline_channel" | tr -d '[:space:]' || true)"
+fi
+if [ -z "\$REPO_CHANNEL" ] && [ -f "\$CAROLINE_DIR/caroline_build.json" ] && command -v node >/dev/null 2>&1; then
+  REPO_CHANNEL="\$(node -e 'const fs=require("fs"); const p=process.argv[1]; try{const b=JSON.parse(fs.readFileSync(p,"utf8")); process.stdout.write(b.channel||b.branch||"");}catch(e){}' "\$CAROLINE_DIR/caroline_build.json")"
+fi
+REPO_CHANNEL="\${REPO_CHANNEL:-nightly}"
+case "\$REPO_CHANNEL" in
+  ''|*[!A-Za-z0-9._/-]*)
+    echo "\$(date -Is) invalid Caroline update channel: \$REPO_CHANNEL" | tee -a "\$LOG"
+    exit 1
+    ;;
+esac
+
+{
+  echo "============================================================"
+  echo "\$(date -Is) Project: Caroline GUI update requested"
+  echo "Target user: \$(id -un)"
+  echo "Target home: \$HOME"
+  echo "Channel: \$REPO_CHANNEL"
+} > "\$LOG"
+
+LOCAL_COMMIT=""
+if [ -f "\$CAROLINE_DIR/caroline_build.json" ] && command -v node >/dev/null 2>&1; then
+  LOCAL_COMMIT="\$(node -e 'const fs=require("fs"); const p=process.argv[1]; try{const b=JSON.parse(fs.readFileSync(p,"utf8")); process.stdout.write(b.commit||"");}catch(e){}' "\$CAROLINE_DIR/caroline_build.json")"
+fi
+if [ -z "\$LOCAL_COMMIT" ] && [ -d "\$CLONE_DIR/.git" ]; then
+  LOCAL_COMMIT="\$(git -C "\$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || true)"
+fi
+REMOTE_COMMIT="\$(git ls-remote "\$REPO_URL" "refs/heads/\${REPO_CHANNEL}" 2>/dev/null | awk '{print \$1}' | head -1 || true)"
+if [ -z "\$REMOTE_COMMIT" ]; then
+  REMOTE_COMMIT="\$(git ls-remote "\$REPO_URL" "refs/tags/\${REPO_CHANNEL}" 2>/dev/null | awk '{print \$1}' | head -1 || true)"
+fi
+if [ -z "\$REMOTE_COMMIT" ]; then
+  echo "\$(date -Is) Project: Caroline GUI update check unavailable (could not reach GitHub)" >> "\$LOG"
+  exit 0
+fi
+if [ -n "\$LOCAL_COMMIT" ] && [ "\${REMOTE_COMMIT#\${LOCAL_COMMIT}}" != "\$REMOTE_COMMIT" ]; then
+  echo "\$(date -Is) Project: Caroline GUI update already current (\${LOCAL_COMMIT})" >> "\$LOG"
+  exit 0
+fi
+
+echo "\$(date -Is) Update available: \${LOCAL_COMMIT:-unknown} -> \${REMOTE_COMMIT:0:7}" >> "\$LOG"
+curl -fsSL "https://raw.githubusercontent.com/\${REPO_OWNER}/\${REPO_NAME}/\${REPO_CHANNEL}/install-steamos.sh" -o "\$INSTALLER" >> "\$LOG" 2>&1
+chmod 700 "\$INSTALLER"
+CAROLINE_NONINTERACTIVE=true CAROLINE_CHANNEL="\$REPO_CHANNEL" CAROLINE_REPO_URL="\$REPO_URL" bash "\$INSTALLER" >> "\$LOG" 2>&1
+echo "\$(date -Is) Project: Caroline GUI update complete" >> "\$LOG"
+UPDATE_EOF
+chmod +x "$REAL_HOME/.local/bin/caroline-update"
+say "${GREEN}  ✓ SteamOS update helper ready${RESET}"
 
 systemctl --user daemon-reload
 systemctl --user enable caroline.service
