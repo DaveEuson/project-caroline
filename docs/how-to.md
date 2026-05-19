@@ -10,6 +10,7 @@ Start here if you are new to Raspberry Pi, Ubuntu, SSH, or home-server setup.
 | A spare PC, mini PC, VM, or server | [How to install Caroline on Ubuntu Server](how-to-ubuntu-server.md) |
 | A normal Ubuntu desktop computer | [How to install Caroline on Ubuntu Desktop](how-to-ubuntu-desktop.md) |
 | A Steam Deck in Desktop Mode | [Experimental Steam Deck / SteamOS install](how-to-steamos.md) |
+| A Windows, Ubuntu/Pop!_OS, or Steam Deck desktop client | [How to install the Companion app](companion-client.md) |
 
 ## Before You Install
 

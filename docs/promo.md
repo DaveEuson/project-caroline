@@ -22,7 +22,7 @@ Built for Raspberry Pi and Ubuntu, Caroline runs as a fullscreen cyberpunk dashb
 
 ## v0.3.0-beta.3 Release Blurb
 
-Project: Caroline v0.3.0-beta.3 is the public beta companion build: a Raspberry Pi / Ubuntu AI kiosk with chat, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, dashboard widgets, and the Windows companion client path. It tightens companion pairing, settings persistence, privacy behavior, memory commands, kiosk update controls, and Node-RED flow organization while keeping Caroline as the default avatar.
+Project: Caroline v0.3.0-beta.3 is the public beta companion build: a Raspberry Pi / Ubuntu AI kiosk with chat, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, dashboard widgets, and the desktop companion client path. It tightens companion pairing, settings persistence, privacy behavior, memory commands, kiosk update controls, and Node-RED flow organization while keeping Caroline as the default avatar.
 
 ## One-Liners
 

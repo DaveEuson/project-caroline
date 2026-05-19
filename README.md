@@ -40,6 +40,12 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
 
+The optional desktop companion app is released separately:
+
+[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.8)
+
+Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, and `.deb` or `.AppImage` on Steam Deck Desktop Mode.
+
 For microphone input from another browser, use Chrome or Chromium with the secure voice URL printed by the installer:
 
 ```text
@@ -78,6 +84,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - [How to install on Ubuntu Server](docs/how-to-ubuntu-server.md)
 - [How to install on Ubuntu Desktop](docs/how-to-ubuntu-desktop.md)
 - [Experimental Steam Deck / SteamOS install](docs/how-to-steamos.md)
+- [How to install the Companion app](docs/companion-client.md)
 - [How to set up SSH and a stable IP](docs/network-prep.md)
 - [How to set up Google Calendar OAuth](docs/google-oauth.md)
 - [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
