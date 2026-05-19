@@ -18,7 +18,7 @@ type ChatMessage = {
   text: string;
 };
 
-const COMPANION_VERSION = "0.1.5";
+const COMPANION_VERSION = "0.1.6";
 const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caroline/releases";
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 
@@ -462,7 +462,7 @@ export default function App() {
 
   async function handleCheckClientUpdates() {
     setIsCheckingUpdate(true);
-    setUpdateMessage("");
+    setUpdateMessage("Checking companion updates...");
 
     try {
       const response = await fetch(COMPANION_TAGS_URL, { cache: "no-store" });
@@ -516,6 +516,20 @@ export default function App() {
 
   const isOnline = status === "online";
   const buddyAvatar = buddyAvatarSrc(settings.avatarId, isOnline);
+  const darkModeButtonLabel = settings.darkMode ? "Switch to light mode" : "Switch to dark mode";
+
+  function showProfilePanel() {
+    setSettingsOpen(false);
+    setProfileOpen(true);
+  }
+
+  function toggleSettingsPanel() {
+    setSettingsOpen((open) => {
+      const nextOpen = !open;
+      if (nextOpen) setProfileOpen(false);
+      return nextOpen;
+    });
+  }
 
   return (
     <main className="desktop">
@@ -533,15 +547,15 @@ export default function App() {
               type="button"
               className="settings-btn"
               onClick={() => setSettings({ ...settings, darkMode: !settings.darkMode })}
-              aria-label="Toggle dark mode"
-              title={settings.darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={darkModeButtonLabel}
+              title={darkModeButtonLabel}
             >
               {settings.darkMode ? "☀" : "☾"}
             </button>
             <button
               type="button"
               className={`settings-btn${settingsOpen ? " active" : ""}`}
-              onClick={() => setSettingsOpen((o) => !o)}
+              onClick={toggleSettingsPanel}
               aria-label={settingsOpen ? "Close settings" : "Open settings"}
               title="Settings"
             >
@@ -733,7 +747,7 @@ export default function App() {
             <button
               type="button"
               className="buddy-profile-btn"
-              onClick={() => setProfileOpen((open) => !open)}
+              onClick={showProfilePanel}
             >
               Buddy Info
             </button>
@@ -807,16 +821,21 @@ export default function App() {
             </div>
 
             <div className="action-strip" aria-label="Chat actions">
-              <button type="button" onClick={() => setProfileOpen((open) => !open)}>
+              <button type="button" onClick={showProfilePanel} className={profileOpen && !settingsOpen ? "active" : ""}>
                 Profile
               </button>
-              <button type="button" onClick={() => setSettingsOpen((open) => !open)}>
+              <button type="button" onClick={toggleSettingsPanel} className={settingsOpen ? "active" : ""}>
                 Settings
               </button>
               <button type="button" onClick={handleCheckClientUpdates} disabled={isCheckingUpdate}>
-                Updates
+                {isCheckingUpdate ? "Checking..." : "Updates"}
               </button>
             </div>
+            {updateMessage && !settingsOpen && (
+              <p className="update-status" role="status">
+                {updateMessage}
+              </p>
+            )}
 
             <form className="compose" onSubmit={handleSubmit}>
               <input
