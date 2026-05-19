@@ -35,7 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/n
 Exact frozen beta tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.2/install.sh | bash -s -- --channel v0.3.0-beta.2
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | bash -s -- --channel v0.3.0-beta.3
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
@@ -126,9 +126,9 @@ Settings, API keys, tasks, and memory are preserved.
 
 - **Release:** the `release` branch is the recommended public beta channel.
 - **Nightly/dev:** the `nightly` branch gets the newest tested work first.
-- **Frozen tags:** tags such as `v0.3.0-beta.2` are exact snapshots.
+- **Frozen tags:** tags such as `v0.3.0-beta.3` are exact snapshots.
 
-For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.2 notes](docs/releases/v0.3.0-beta.2.md).
+For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.3 notes](docs/releases/v0.3.0-beta.3.md).
 
 ## Uninstall
 
@@ -146,11 +146,11 @@ Caroline stores settings, API tokens, OAuth data, task state, and chat memory on
 
 The simulated dashboard is available here:
 
-[Launch the Project Caroline offline demo](https://project-caroline.github.io/project-caroline/)
+[Launch the Project: Caroline offline demo](https://project-caroline.github.io/project-caroline/)
 
 This is a static, no-account walkthrough from [demo/index.html](demo/index.html). It uses bundled assets and canned responses, so it is safe to share, but the real installed kiosk is the primary experience.
 
-![Project Caroline offline demo preview](Screenshots/demo-offline.png)
+![Project: Caroline offline demo preview](Screenshots/demo-offline.png)
 
 ## Calling Artists And Animators
 
@@ -160,7 +160,7 @@ Interested in helping shape Caroline's visual identity? Start a conversation in 
 
 ## Beta Kits
 
-DIY install is the main path for now. I am also considering a small run of ready-to-go Project Caroline Raspberry Pi kits for people who want a turnkey setup. If that would be useful to you, reach out so I can gauge demand.
+DIY install is the main path for now. I am also considering a small run of ready-to-go Project: Caroline Raspberry Pi kits for people who want a turnkey setup. If that would be useful to you, reach out so I can gauge demand.
 
 ## Roadmap
 

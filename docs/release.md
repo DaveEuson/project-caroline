@@ -1,6 +1,6 @@
-# Project Caroline Release Process
+# Project: Caroline Release Process
 
-Use this when promoting Caroline from the moving `nightly` branch to a public beta/stable release.
+Use this when promoting Project: Caroline from the moving `nightly` branch to a public beta/stable release.
 
 ## Channels
 
@@ -8,7 +8,7 @@ Use this when promoting Caroline from the moving `nightly` branch to a public be
 |---|---|---|
 | Nightly/dev | `nightly` branch | Latest tested fixes and experiments |
 | Release | `release` branch | Recommended public install |
-| Frozen tag | GitHub release tag, for example `v0.3.0-beta.2` | Exact archived build |
+| Frozen tag | GitHub release tag, for example `v0.3.0-beta.3` | Exact archived build |
 
 The regular install command follows `release`:
 
@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/r
 A tagged release can be installed by replacing `release` with the tag and passing the channel:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.2/install.sh | bash -s -- --channel v0.3.0-beta.2
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | bash -s -- --channel v0.3.0-beta.3
 ```
 
 ## Release Checklist
@@ -41,8 +41,8 @@ git push origin release
 8. Create and push an annotated tag from `release`:
 
 ```bash
-git tag -a v0.3.0-beta.2 -m "Project Caroline v0.3.0 beta 2"
-git push origin release v0.3.0-beta.2
+git tag -a v0.3.0-beta.3 -m "Project: Caroline v0.3.0 beta 3"
+git push origin release v0.3.0-beta.3
 ```
 
 9. Create a GitHub Release from the tag with short notes and known limitations.

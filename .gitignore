@@ -4,6 +4,7 @@ caroline_context.json
 caroline_history.json
 caroline-calendar.json
 carlinemoodtracker-*.json
+.claude/
 *.env
 .env.*
 *_key.json
@@ -29,6 +30,7 @@ desktop.ini
 # ── EDITOR ────────────────────────────────────────────────────
 .vscode/
 .idea/
+.codex-worktrees/
 *.swp
 *.swo
 
@@ -39,3 +41,4 @@ flows.pi-backup-*.json
 *.backup-*
 *.cybercore-backup-*
 Screenshot_*.png.jpg
+qa-artifacts/

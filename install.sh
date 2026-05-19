@@ -145,7 +145,7 @@ bool_json() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="0.3.0-beta.2"
+CAROLINE_VERSION="0.3.0-beta.3"
 CAROLINE_REPO_URL="https://github.com/Project-Caroline/project-caroline.git"
 CAROLINE_RAW_BASE="https://raw.githubusercontent.com/Project-Caroline/project-caroline"
 NODE_RED_PORT=1880
@@ -399,14 +399,14 @@ has_desktop_environment() {
 
 write_desktop_shortcuts() {
   local _desktop_dir="$1"
-  local _windowed_file="$_desktop_dir/Project Caroline.desktop"
-  local _kiosk_file="$_desktop_dir/Project Caroline Kiosk.desktop"
+  local _windowed_file="$_desktop_dir/Project: Caroline.desktop"
+  local _kiosk_file="$_desktop_dir/Project: Caroline Kiosk.desktop"
 
   mkdir -p "$_desktop_dir"
   cat > "$_windowed_file" << EOF
 [Desktop Entry]
 Type=Application
-Name=Project Caroline
+Name=Project: Caroline
 Comment=Launch Project: Caroline in a browser window
 Exec=${WINDOWED_LAUNCHER}
 Icon=web-browser
@@ -418,7 +418,7 @@ EOF
   cat > "$_kiosk_file" << EOF
 [Desktop Entry]
 Type=Application
-Name=Project Caroline Kiosk
+Name=Project: Caroline Kiosk
 Comment=Launch Project: Caroline fullscreen kiosk
 Exec=${KIOSK_LAUNCHER}
 Icon=web-browser
@@ -1334,7 +1334,7 @@ phase "REACTIVATION 4/6 — APPLICATION FILES"
 mkdir -p "$CAROLINE_DIR"
 
 echo -e "${YELLOW}  ► Cloning Caroline from GitHub...${RESET}"
-echo -e "${DIM}    Fetching Project Caroline ${CAROLINE_CHANNEL}.${RESET}"
+echo -e "${DIM}    Fetching Project: Caroline ${CAROLINE_CHANNEL}.${RESET}"
 
 CLONE_DIR="$REAL_HOME/project-caroline"
 
@@ -1366,8 +1366,8 @@ elif git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL
     exit 1
   }
 else
-  echo -e "${RED}  ✗ Project Caroline channel not found: ${CAROLINE_CHANNEL}${RESET}"
-  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.2.${RESET}"
+  echo -e "${RED}  ✗ Project: Caroline channel not found: ${CAROLINE_CHANNEL}${RESET}"
+  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.3.${RESET}"
   echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
   exit 1
 fi
@@ -2104,8 +2104,8 @@ elif has_desktop_environment; then
     write_desktop_shortcuts "$DESKTOP_DIR"
     echo -e "${GREEN}  ✓ Desktop shortcuts created${RESET}"
     echo -e "${DIM}    Browser:  ${BROWSER_BIN}${RESET}"
-    echo -e "${DIM}    Windowed: ${DESKTOP_DIR}/Project Caroline.desktop${RESET}"
-    echo -e "${DIM}    Kiosk:    ${DESKTOP_DIR}/Project Caroline Kiosk.desktop${RESET}"
+    echo -e "${DIM}    Windowed: ${DESKTOP_DIR}/Project: Caroline.desktop${RESET}"
+    echo -e "${DIM}    Kiosk:    ${DESKTOP_DIR}/Project: Caroline Kiosk.desktop${RESET}"
   else
     echo -e "${YELLOW}  ⚠ Desktop shortcuts skipped because no supported browser was installed.${RESET}"
   fi

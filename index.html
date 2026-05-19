@@ -1,6 +1,6 @@
 <!--
   Project: Caroline — Personal AI Kiosk
-  Version: 0.3.0-beta.2
+  Version: 0.3.0-beta.3
   Copyright (c) 2026 Dave Euson. All rights reserved.
   Source-available public beta. See LICENSE and NOTICE.md for terms.
 
@@ -43,6 +43,8 @@
   .net-pill.offline { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.08); }
   .net-pill.checking { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.08); }
   #ip-pill { color:#67e8f9; border-color:rgba(34,211,238,0.35); background:rgba(34,211,238,0.08); }
+  #companion-code-pill { cursor:pointer; color:#facc15; border-color:rgba(250,204,21,0.38); background:rgba(250,204,21,0.08); }
+  #companion-code-pill:hover { background:rgba(250,204,21,0.16); color:#fde68a; }
   #resource-pill.warn { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.08); }
   #resource-pill.danger { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.08); }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
@@ -86,13 +88,13 @@
   /* SETTINGS MODAL */
   #settings-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 800; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
   #settings-overlay.show { display: flex; }
-  #settings-modal { background: #0c0814; border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; width: 500px; max-height: 82vh; overflow: hidden; display: flex; flex-direction: column; }
-  #settings-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 14px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.1); flex-shrink: 0; }
+  #settings-modal { background: #0c0814; border: 1px solid rgba(var(--t-rgb1), 0.3); border-radius: 20px; width: min(900px, calc(100vw - 48px)); max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; }
+  #settings-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 12px; border-bottom: 1px solid rgba(var(--t-rgb1), 0.1); flex-shrink: 0; }
   #settings-header h2 { font-size: 11px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.25em; }
   #settings-close { background: none; border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 3px 12px; font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; cursor: pointer; }
-  #settings-body { overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 22px; }
+  #settings-body { overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 18px; }
   .settings-section h3 { font-size: 11px; color: rgba(226,232,240,0.3); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; }
-  .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .settings-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
   .settings-label { font-size: 15px; color: #e2e8f0; }
   .settings-sub { font-size: 12px; color: rgba(226,232,240,0.4); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
   .settings-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; outline: none; width: 140px; }
@@ -104,18 +106,27 @@
   .theme-swatch.active { border-color: #f8fafc; transform: scale(1.15); }
   .settings-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
   .settings-save-btn { background: linear-gradient(135deg, var(--t-hex1), rgba(var(--t-rgb1),0.5)); border: none; border-radius: 12px; padding: 10px 28px; color: #05050a; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .settings-boot-btn:disabled, .settings-save-btn:disabled, .settings-select:disabled { opacity:0.55; cursor:wait; }
   .settings-feedback { font-size: 12px; color: var(--t-hex1); font-family: 'JetBrains Mono', monospace; opacity: 0; transition: opacity 0.3s; }
   .settings-feedback.show { opacity: 1; }
   .settings-feedback.error { color: #fb7185; }
   #discord-fields { overflow:hidden; max-height:0; opacity:0; transition:max-height 0.35s ease, opacity 0.25s ease; }
   #discord-fields.open { max-height:240px; opacity:1; }
   .clear-history-btn { background: none; border: 1px solid rgba(244,63,94,0.3); border-radius: 10px; padding: 6px 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; }
-  #settings-tabs { display: flex; gap: 4px; padding: 10px 18px; border-bottom: 1px solid rgba(var(--t-rgb1),0.1); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
+  #settings-tabs { display: flex; gap: 4px; padding: 8px 18px; border-bottom: 1px solid rgba(var(--t-rgb1),0.1); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
   #settings-tabs::-webkit-scrollbar { display: none; }
   .stab { background: none; border: 1px solid rgba(var(--t-rgb1),0.2); border-radius: 20px; padding: 5px 13px; font-size: 10px; color: rgba(226,232,240,0.45); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
   .stab.active { background: rgba(var(--t-rgb1),0.12); border-color: rgba(var(--t-rgb1),0.5); color: var(--t-hex1); }
-  .stab-panel { display: flex; flex-direction: column; gap: 22px; }
+  .stab-panel { display: flex; flex-direction: column; gap: 18px; }
   .stab-panel[hidden] { display: none !important; }
+  .update-action-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; min-width:230px; }
+  @media (min-width: 780px) {
+    .stab-panel { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); align-items:start; column-gap:18px; row-gap:16px; }
+    .settings-section { min-width:0; }
+    #stab-about .settings-section:first-child,
+    #stab-connect .settings-section:first-child,
+    #stab-system .settings-section:last-child { grid-column:1 / -1; }
+  }
   #widget-meme img { width:100%; border-radius:8px; cursor:pointer; display:block; object-fit:cover; max-height:180px; transition:opacity 0.3s; }
   #meme-title { font-size:10px; color:rgba(226,232,240,0.45); font-family:'JetBrains Mono',monospace; margin-top:5px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   #meme-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9000; align-items:center; justify-content:center; cursor:pointer; }
@@ -429,13 +440,15 @@
   body.idle-mode #avatar-carousel .nav-btn { display:none; }
   body.idle-mode #avatar-outer { transform: scale(1.2); }
   body.idle-mode #avatar-outer::before { display:none; }
-  #avatar-wrap #av-sleeping { opacity: 0; pointer-events: none; }
+  #avatar-wrap #av-sleeping,
+  #avatar-wrap #av-carl-sleeping { opacity: 0; pointer-events: none; }
   #avatar-wrap #av-happy { opacity: 0; pointer-events: none; }
   body.mood-elated #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
   body.mood-elated #avatar-wrap #av-happy { opacity: 1; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
-  body.idle-mode.idle-night #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
-  body.idle-mode.idle-day #avatar-wrap #av-gif { opacity: 1 !important; pointer-events: none; }
+  body.idle-mode.idle-night:not(.avatar-carl) #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-night.avatar-carl #avatar-wrap #av-carl-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-day #avatar-wrap .avatar-svg:not(.hidden):not(#av-happy):not(#av-sleeping):not(#av-carl-sleeping) { opacity: 1 !important; pointer-events: none; }
   body.idle-mode #avatar-wrap #av-happy { opacity: 0; pointer-events: none; }
   body.idle-mode .nav-btn { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
   body.idle-mode #bottom-bar { opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
@@ -511,7 +524,7 @@
   @media (max-width: 1100px) {
     #left { width: 200px; padding: 8px; }
     #news-panel { width: 240px; }
-    #settings-modal { width: 95vw; max-width: 480px; }
+    #settings-modal { width: 95vw; max-width: 860px; }
     #msg-input { font-size: 16px; }
     #subtitle-text { font-size: 17px; }
     .quick-btn { padding: 8px 12px; font-size: 13px; }
@@ -525,7 +538,7 @@
     .topbar-name { font-size: 15px; }
     #holiday-text { max-width: 100px; }
     #date-text { font-size: 11px; }
-    #settings-modal { width: 98vw; max-height: 85vh; }
+    #settings-modal { width: 98vw; max-height: 86vh; }
     #subtitle-text { font-size: 15px; }
     .quick-btn { padding: 8px 10px; font-size: 12px; }
     #msg-input { font-size: 15px; padding: 12px 16px; }
@@ -702,7 +715,7 @@
   #osk-close:hover { color:rgba(226,232,240,0.8); border-color:rgba(var(--t-rgb1),0.4); }
 
   /* ── OFFLINE BANNER ─────────────────────────── */
-  #offline-banner { position:absolute; top:66px; left:0; right:0; z-index:999; background:rgba(244,63,94,0.10); border-bottom:1px solid rgba(244,63,94,0.22); padding:5px 14px; font-size:11px; color:#fb7185; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transform:translateY(calc(-100% - 66px)); transition:transform 0.3s ease; pointer-events:auto; }
+  #offline-banner { position:absolute; top:66px; left:0; right:0; z-index:790; background:rgba(244,63,94,0.10); border-bottom:1px solid rgba(244,63,94,0.22); padding:5px 14px; font-size:11px; color:#fb7185; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transform:translateY(calc(-100% - 66px)); transition:transform 0.3s ease; pointer-events:auto; }
   #offline-banner.show { transform:translateY(0); }
   #offline-reconnect-btn { margin-left:auto; background:rgba(244,63,94,0.12); border:1px solid rgba(244,63,94,0.35); border-radius:8px; padding:3px 9px; color:#fecdd3; font-family:'JetBrains Mono',monospace; font-size:10px; cursor:pointer; }
   .nodered-status { font-size:14px; width:18px; text-align:center; color:rgba(226,232,240,0.35); font-family:'JetBrains Mono',monospace; }
@@ -1661,6 +1674,7 @@
               <option value="3">Neko Cat</option>
               <option value="4">Ghost</option>
               <option value="5">Samurai</option>
+              <option value="6">Carl (GIF)</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -2297,13 +2311,13 @@
             <button class="settings-boot-btn" type="button" onclick="copyIssueReportLink()">Copy Issue Link</button>
           </div>
           <div class="settings-row" style="margin-top:14px;">
-            <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status">Pulls the latest GitHub build; Refresh Build only rereads version info</div></div>
-            <div style="display:flex;gap:8px;align-items:center;">
+            <div><div class="settings-label">Update Caroline</div><div class="settings-sub" id="update-command-status" role="status" aria-live="polite">Pulls the latest GitHub build; Refresh Build only rereads version info</div></div>
+            <div class="update-action-row">
               <select id="update-channel-select" class="settings-select" style="font-size:10px;padding:5px 8px;">
                 <option value="release">Release</option>
                 <option value="nightly">Nightly</option>
               </select>
-              <button class="settings-boot-btn" type="button" onclick="startCarolineUpdate(this)">⟳ Update</button>
+              <button class="settings-boot-btn" id="settings-update-btn" type="button" onclick="startCarolineUpdate(this)" aria-describedby="update-command-status">⟳ Update</button>
             </div>
           </div>
           <div id="issue-report-status" style="margin-top:8px;font-size:10px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;word-break:break-all;"></div>
@@ -2390,21 +2404,22 @@
 <div id="topbar">
   <div class="dot"></div>
   <span class="topbar-name" id="topbar-name">Caroline</span>
-  <span class="topbar-version">v0.3.0-beta.2</span>
+  <span class="topbar-version">v0.3.0-beta.3</span>
   <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
   <span class="net-pill" id="model-pill" title="Active AI model">-- --</span>
   <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
   <span class="net-pill" id="resource-pill" title="Host CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="net-pill" id="privacy-pill" title="Privacy mode is on — history and memory are hidden and not saved" style="display:none;background:rgba(251,113,133,0.12);border-color:rgba(251,113,133,0.4);color:#fb7185;">🔒 PRIVATE</span>
+  <button class="net-pill" id="companion-code-pill" type="button" onclick="copyCompanionPairingCode()" title="Click to copy the Project: Caroline Companion sync code">SYNC: ------</button>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI">AI KEY NEEDED</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
   <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
     <span id="wifi-strength" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:rgba(var(--t-rgb1),0.5);">--</span>
   </div>
-  <button id="hist-btn" onclick="toggleHistory()" title="Chat history" aria-label="Open chat history"><i class="ti ti-message-circle"></i></button>
-  <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog"><i class="ti ti-settings"></i> Settings</button>
+  <button id="hist-btn" onclick="toggleHistory()" title="Chat history" aria-label="Open chat history" aria-expanded="false" aria-controls="history-panel"><i class="ti ti-message-circle"></i></button>
+  <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-overlay"><i class="ti ti-settings"></i> Settings</button>
   <span id="restart-btn"><i class="ti ti-refresh"></i> REBOOT</span>
 </div>
 
@@ -2578,9 +2593,11 @@
             <path d="M42 60 Q50 65 58 60" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <line x1="15" y1="48" x2="85" y2="48" stroke="var(--t-hex1)" stroke-width="0.5" opacity="0.3"/>
           </svg>
+          <img id="av-carl" src="assets/Carl-awake.gif" class="avatar-svg hidden" alt="Carl" onerror="this.style.display='none'"/>
           <img id="av-custom" src="" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
           <img id="av-happy" src="assets/caroline-happy.gif" class="avatar-svg" alt="Caroline Happy" onerror="this.style.display='none'"/>
           <img id="av-sleeping" src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-carl-sleeping" src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -2619,7 +2636,7 @@
             <button class="media-nav-btn" onclick="changeMediaChannel(1)" title="Next"><i class="ti ti-chevron-right"></i></button>
           </div>
           <div class="media-frame-wrap">
-            <iframe id="media-iframe" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <iframe id="media-iframe" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
             <video id="media-video" autoplay muted playsinline controls></video>
             <div id="media-fallback-card">
               <div id="media-fallback-icon"><i class="ti ti-device-tv" aria-hidden="true"></i></div>
@@ -2717,7 +2734,7 @@
 // ── SPOTIFY OAUTH (PKCE) ──────────────────────
 
 // ── VERSION ───────────────────────────────────
-const VERSION = '0.3.0-beta.2';
+const VERSION = '0.3.0-beta.3';
 const BUILD_FALLBACK = 'local-dev';
 let buildInfo = { version: VERSION, commit: BUILD_FALLBACK, branch: '', installedAt: '', source: 'local file' };
 let latestBuildInfo = { checkedAt: 0, commit: '', shortCommit: '', available: false, error: '' };
@@ -2754,7 +2771,7 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -2770,8 +2787,8 @@ function normalizeConfiguredNodeRedUrl(value) {
     if (SAME_ORIGIN_NODE_RED_URL && target.protocol === 'http:' && sameHost && (!target.port || target.port === String(NODE_RED_CONFIG_PORT))) {
       u = SAME_ORIGIN_NODE_RED_URL;
     }
-    if (target.protocol === 'https:' && (sameHost || localTarget) && target.port === String(SECURE_VOICE_PORT)) {
-      u = SAME_ORIGIN_NODE_RED_URL || ('http://' + (target.hostname || window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
+    if (target.protocol === 'https:' && target.port === String(SECURE_VOICE_PORT) && (sameHost || localTarget || isPrivateIpHost(target.hostname))) {
+      u = SAME_ORIGIN_NODE_RED_URL || ('http://' + (target.hostname || window.location.hostname || 'localhost') + ':8080');
     }
     const browserHost = window.location.hostname || '';
     const browserHostIsRemote = browserHost && !['localhost','127.0.0.1','::1','[::1]'].includes(browserHost);
@@ -2784,6 +2801,25 @@ function normalizeConfiguredNodeRedUrl(value) {
     u = DEFAULT_NODE_RED_CONFIG_URL;
   }
   return (u || DEFAULT_NODE_RED_CONFIG_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_CONFIG_URL;
+}
+
+function publicNodeRedUrlFrom(url) {
+  let u = String(url || DEFAULT_NODE_RED_CONFIG_URL || '').trim();
+  if (!u) return DEFAULT_NODE_RED_CONFIG_URL;
+  if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+  try {
+    const target = new URL(u);
+    const savedPiHost = normalizeHostCandidate(S && S.piIp);
+    const fallbackHost = savedPiHost || normalizeHostCandidate(window.location.hostname);
+    if (target.protocol === 'https:' && target.port === String(SECURE_VOICE_PORT)) {
+      const host = !isLocalHostName(target.hostname) ? target.hostname : fallbackHost;
+      if (host) return 'http://' + host + ':8080';
+    }
+    if (isLocalHostName(target.hostname) && savedPiHost && !isLocalHostName(savedPiHost)) {
+      return 'http://' + savedPiHost + ':8080';
+    }
+  } catch(e) {}
+  return u.replace(/\/+$/, '');
 }
 
 function parseFeatureBool(value, fallback) {
@@ -3201,6 +3237,8 @@ async function syncSettingsFromServer() {
     fetchWeather();
     fetchTides();
     updateFeedbackQuickButton();
+    if (typeof updateCompanionCodePill === 'function') updateCompanionCodePill();
+    if (typeof syncCompanionPairingCode === 'function') syncCompanionPairingCode();
     if (typeof applyVoiceInputSettings === 'function') applyVoiceInputSettings();
     return true;
   } catch(e) {
@@ -3261,6 +3299,22 @@ function installCommandForChannel(channel = currentReleaseChannel()) {
   return 'curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/' + safeChannel + '/install.sh | bash' + suffix;
 }
 
+function syncUpdateChannelSelect(channel = currentReleaseChannel()) {
+  const select = document.getElementById('update-channel-select');
+  if (!select) return;
+  const safeChannel = /^[A-Za-z0-9._/-]+$/.test(channel) ? channel : 'release';
+  const value = safeChannel;
+  if (![...select.options].some(option => option.value === value)) {
+    select.appendChild(new Option(safeChannel, value));
+  }
+  select.value = value;
+}
+
+function selectedUpdateChannel() {
+  const selected = String(document.getElementById('update-channel-select')?.value || '').trim();
+  return /^[A-Za-z0-9._/-]+$/.test(selected) ? selected : currentReleaseChannel();
+}
+
 function normalizeCommit(value) {
   return String(value || '').trim().toLowerCase().replace(/[^0-9a-f]/g, '');
 }
@@ -3271,9 +3325,9 @@ function commitMatches(localCommit, remoteCommit) {
   return !!(local && remote && (remote === local || remote.startsWith(local) || local.startsWith(remote)));
 }
 
-async function fetchLatestBuildInfo() {
-  const channel = encodeURIComponent(currentReleaseChannel());
-  const resp = await fetch('https://api.github.com/repos/Project-Caroline/project-caroline/commits/' + channel, {
+async function fetchLatestBuildInfo(channel = currentReleaseChannel()) {
+  const encodedChannel = encodeURIComponent(channel);
+  const resp = await fetch('https://api.github.com/repos/Project-Caroline/project-caroline/commits/' + encodedChannel, {
     cache: 'no-store',
     headers: { 'Accept': 'application/vnd.github+json' }
   });
@@ -3284,6 +3338,7 @@ async function fetchLatestBuildInfo() {
   return {
     commit,
     shortCommit: commit.slice(0, 7),
+    channel,
     date: data.commit?.committer?.date || data.commit?.author?.date || '',
     message: String(data.commit?.message || '').split('\n')[0].trim()
   };
@@ -3291,8 +3346,9 @@ async function fetchLatestBuildInfo() {
 
 async function checkUpdateAvailability(options = {}) {
   const localCommit = buildInfo.commit || buildInfo.gitCommit || '';
+  const channel = options.channel || currentReleaseChannel();
   try {
-    const latest = await fetchLatestBuildInfo();
+    const latest = await fetchLatestBuildInfo(channel);
     if (!normalizeCommit(localCommit) || localCommit === BUILD_FALLBACK) {
       throw new Error('local build hash is not available yet');
     }
@@ -3332,6 +3388,7 @@ function updateAboutPanel() {
   set('about-installed', buildInfo.installedAt ? new Date(buildInfo.installedAt).toLocaleString() : 'not installed by script');
   set('about-source', buildInfo.repo || buildInfo.source || window.location.href);
   set('about-runtime', (S.nodeRedUrl || DEFAULT_NODE_RED_URL) + ' · ' + (navigator.userAgent || '').replace(/\s+/g, ' ').slice(0, 120));
+  syncUpdateChannelSelect();
   set('about-user', S.userName || 'not set');
   set('about-ai', S.aiName || 'Caroline');
   set('about-home', [S.cityName || S.location || '', S.timezone || ''].filter(Boolean).join(' · ') || 'not set');
@@ -3342,7 +3399,7 @@ function updateAboutPanel() {
 
 async function copyBuildInfo() {
   const text = [
-    'Project Caroline',
+    'Project: Caroline',
     'Version: v' + VERSION,
     'Build: ' + shortBuildLabel(),
     'Installed: ' + (buildInfo.installedAt || 'not installed by script'),
@@ -3531,7 +3588,7 @@ function getNodeRedUrl() {
     } catch(e) {}
   }
   u = (u || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
-  if (S) S.nodeRedUrl = configured;
+  if (S) S.nodeRedUrl = publicNodeRedUrlFrom(u);
   const field = document.getElementById('set-nodered-url');
   if (field && !field.value.trim()) field.value = configured;
   return u;
@@ -4157,9 +4214,39 @@ async function testNodeRedUrl() {
   }
 }
 
+function closeTransientPanels(except = '') {
+  if (except !== 'settings') {
+    document.getElementById('settings-overlay')?.classList.remove('show');
+    document.getElementById('settings-topbar-btn')?.setAttribute('aria-expanded', 'false');
+  }
+  if (except !== 'history') {
+    document.getElementById('history-panel')?.classList.remove('open');
+    const histBtn = document.getElementById('hist-btn');
+    if (histBtn) {
+      histBtn.classList.remove('open');
+      histBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+  if (except !== 'todo') {
+    const todo = document.getElementById('todo-panel');
+    if (todo && todo.classList.contains('open')) {
+      todo.classList.remove('open');
+      setTimeout(() => {
+        if (!todo.classList.contains('open')) todo.style.display = 'none';
+      }, 420);
+    }
+  }
+  if (except !== 'news') document.getElementById('news-modal')?.classList.remove('show');
+  if (except !== 'howto') document.getElementById('howto-overlay')?.classList.remove('show');
+}
+
 function toggleSettings() {
   const ov = document.getElementById('settings-overlay');
-  const isOpen = ov.classList.toggle('show');
+  const willOpen = !ov.classList.contains('show');
+  if (willOpen) closeTransientPanels('settings');
+  const isOpen = ov.classList.toggle('show', willOpen);
+  const topbarBtn = document.getElementById('settings-topbar-btn');
+  if (topbarBtn) topbarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   if (isOpen) {
     document.getElementById('set-avatar').value = S.avatar;
     const fontSel = document.getElementById('set-font');
@@ -5908,7 +5995,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -5994,7 +6081,8 @@ const companions = [
   { id:'av-tux',     hex1:'#fbbf24', hex2:'#ea580c', rgb1:'251, 191, 36',  rgb2:'234, 88, 12'  },
   { id:'av-cat',     hex1:'#a855f7', hex2:'#ec4899', rgb1:'168, 85, 247',  rgb2:'236, 72, 153' },
   { id:'av-ghost',   hex1:'#67e8f9', hex2:'#a5f3fc', rgb1:'103, 232, 249', rgb2:'165, 243, 252' },
-  { id:'av-samurai', hex1:'#f43f5e', hex2:'#fb923c', rgb1:'244, 63, 94',   rgb2:'251, 146, 60' }
+  { id:'av-samurai', hex1:'#f43f5e', hex2:'#fb923c', rgb1:'244, 63, 94',   rgb2:'251, 146, 60' },
+  { id:'av-carl',    hex1:'#22d3ee', hex2:'#fb923c', rgb1:'34, 211, 238',  rgb2:'251, 146, 60' }
 ];
 const THEME_PRESETS = [
   { hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119', ova:false, cybercore:true },
@@ -6066,17 +6154,19 @@ function applyAutoTheme() {
 setInterval(applyAutoTheme, 60000);
 
 function applyAvatar(idx) {
+  idx = Math.max(0, Math.min(Number(idx) || 0, companions.length - 1));
   companions.forEach((c,i) => {
     const el = document.getElementById(c.id);
     if (el) { el.classList.toggle('hidden', i !== idx); el.style.display = ''; }
   });
+  document.body.classList.toggle('avatar-carl', companions[idx]?.id === 'av-carl');
   currentAvatarIndex = idx;
 }
 
 function changeAvatar(dir) {
-  document.getElementById(companions[currentAvatarIndex].id).classList.add('hidden');
   currentAvatarIndex = (currentAvatarIndex + dir + companions.length) % companions.length;
-  document.getElementById(companions[currentAvatarIndex].id).classList.remove('hidden');
+  S.avatar = currentAvatarIndex;
+  applyAvatar(currentAvatarIndex);
   applyTheme(S.theme);
   resetIdle();
 }
@@ -6255,6 +6345,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const ov = document.getElementById('settings-overlay');
     if (ov && ov.classList.contains('show')) { toggleSettings(); return; }
+    const hp = document.getElementById('history-panel');
+    if (hp && hp.classList.contains('open')) { toggleHistory(); return; }
+    const nm = document.getElementById('news-modal');
+    if (nm && nm.classList.contains('show')) { closeNewsModal(); return; }
     const tp = document.getElementById('todo-panel');
     if (tp && tp.classList.contains('open')) { toggleTodo(); return; }
     const sb = document.getElementById('subtitle-box');
@@ -6408,7 +6502,13 @@ let chatLog = loadCleanChatLog();
 function toggleHistory(){
   const p=document.getElementById('history-panel'), b=document.getElementById('hist-btn');
   if(!p) return;
-  const open=p.classList.toggle('open'); if (b) b.classList.toggle('open',open);
+  const open=!p.classList.contains('open');
+  if (open) closeTransientPanels('history');
+  p.classList.toggle('open', open);
+  if (b) {
+    b.classList.toggle('open',open);
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
   if(open){ renderHistory(); setTimeout(()=>{ const h=document.getElementById('history-messages'); if(h) h.scrollTop=99999; },50); }
   resetIdle();
 }
@@ -6508,7 +6608,7 @@ function showUninstallCommand(btn) {
 }
 
 function showUpdateCommand(btn) {
-  const cmd = installCommandForChannel();
+  const cmd = installCommandForChannel(selectedUpdateChannel());
   const status = document.getElementById('update-command-status');
   const message = 'Manual fallback: run this in the device terminal if the GUI cannot verify or start the update. Settings and saved credentials are preserved: ' + cmd;
   if (status) {
@@ -6533,42 +6633,42 @@ function setUpdateStatus(text, color = 'rgba(34,211,238,0.95)') {
   status.style.color = color;
 }
 
+function setUpdateBusy(btn, busy, label) {
+  const button = btn || document.getElementById('settings-update-btn');
+  const channelSelect = document.getElementById('update-channel-select');
+  if (button) {
+    button.disabled = !!busy;
+    button.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (label) button.textContent = label;
+  }
+  if (channelSelect) channelSelect.disabled = !!busy;
+}
+
 async function startCarolineUpdate(btn) {
   const originalText = btn ? btn.textContent : '⟳ Update';
-  const channel = (document.getElementById('update-channel-select')?.value || 'release').toLowerCase();
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Checking...';
-  }
+  setUpdateBusy(btn, true, 'Checking...');
   setUpdateStatus('Checking GitHub for a newer Caroline build...');
   await refreshBuildInfo({ quiet: true, skipUpdateCheck: true });
-  const latest = await checkUpdateAvailability({ quiet: false });
+  syncUpdateChannelSelect();
+  const channel = selectedUpdateChannel();
+  const latest = await checkUpdateAvailability({ quiet: false, channel });
   if (latest.error) {
     setUpdateStatus('Could not verify whether an update exists. Command copied as a manual fallback.', '#fbbf24');
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
+    setUpdateBusy(btn, false, originalText);
     showUpdateCommand(null);
     return;
   }
   if (!latest.available) {
     setUpdateStatus('Caroline is already up to date. No update needed.', 'rgba(52,211,153,0.9)');
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
+    setUpdateBusy(btn, false, originalText);
     return;
   }
   if (!confirm('Update Project: Caroline to ' + latest.shortCommit + ' now? The interface may disconnect for a minute while services restart.')) {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
+    setUpdateBusy(btn, false, originalText);
     setUpdateStatus('Update available: ' + latest.shortCommit + '. Not started yet.', '#fbbf24');
     return;
   }
-  if (btn) btn.textContent = 'Starting...';
+  setUpdateBusy(btn, true, 'Starting...');
   setUpdateStatus('Starting update on the Caroline host...');
   try {
     const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/update', {
@@ -6582,14 +6682,11 @@ async function startCarolineUpdate(btn) {
     if (!resp.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + resp.status));
     setUpdateStatus('Update started. Caroline may disconnect while Node-RED restarts; give her about a minute.');
     clog('info', 'Update started from GUI');
-    if (btn) btn.textContent = 'Updating...';
+    setUpdateBusy(btn, true, 'Updating...');
     pollCarolineUpdateStatus(btn, originalText);
   } catch(e) {
     setUpdateStatus('Automatic update is not ready on this install. Command copied as fallback.', '#fbbf24');
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
+    setUpdateBusy(btn, false, originalText);
     showUpdateCommand(null);
   }
 }
@@ -6618,10 +6715,7 @@ function pollCarolineUpdateStatus(btn, originalText) {
       if (lastLine && (isComplete || isAlreadyCurrent || isFailed)) {
         clearInterval(carolineUpdatePollTimer);
         carolineUpdatePollTimer = null;
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = originalText || '⟳ Update';
-        }
+        setUpdateBusy(btn, false, originalText || '⟳ Update');
         if (isComplete) setTimeout(() => { refreshBuildInfo(); }, 1500);
       }
     } catch(e) {
@@ -6630,10 +6724,7 @@ function pollCarolineUpdateStatus(btn, originalText) {
     if (tries > 40) {
       clearInterval(carolineUpdatePollTimer);
       carolineUpdatePollTimer = null;
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = originalText || '⟳ Update';
-      }
+      setUpdateBusy(btn, false, originalText || '⟳ Update');
       setUpdateStatus('Update may still be finishing. Refresh Caroline and check About > Build.');
     }
   }, 3000);
@@ -6782,7 +6873,7 @@ function scrollChatToBottom() {
   const history = document.getElementById('history-messages');
   if (history) history.scrollTop = history.scrollHeight;
 }
-function addMessage(text, role, source){
+function addMessage(text, role, source, meta = {}){
   text = cleanDisplayText(text);
   if (!text) return;
   const box=document.getElementById('subtitle-box'), sender=document.getElementById('subtitle-sender'), content=document.getElementById('subtitle-text'), typing=document.getElementById('typing'), subtitleLike=document.getElementById('subtitle-like');
@@ -6791,8 +6882,16 @@ function addMessage(text, role, source){
   typing.classList.remove('show'); box.classList.remove('hidden'); resetIdle();
   const userLabel = (S.userName || 'You').toUpperCase();
   const aiLabel = (S.aiName || 'Caroline').toUpperCase();
+  const companionLabel = String(meta.clientName || meta.companionName || 'Companion').trim().toUpperCase();
+  const remoteUserLabel = String(meta.userName || S.userName || 'You').trim().toUpperCase();
   const label = role === 'user'
-    ? (source === 'discord' ? userLabel + ' (DISCORD)' : source === 'telegram' ? userLabel + ' (TELEGRAM)' : userLabel)
+    ? (source === 'discord'
+      ? remoteUserLabel + ' (DISCORD)'
+      : source === 'telegram'
+      ? remoteUserLabel + ' (TELEGRAM)'
+      : source === 'caroline-companion'
+      ? companionLabel
+      : userLabel)
     : (source === 'discord' ? aiLabel + ' (DISCORD)' : source === 'telegram' ? aiLabel + ' (TELEGRAM)' : source === 'proactive' ? aiLabel + ' // AMBIENT' : aiLabel);
   box.classList.toggle('proactive', source==='proactive');
   sender.textContent=label; content.textContent=text;
@@ -6880,6 +6979,57 @@ setTimeout(() => updateTopbarNetwork(), 1500);
 setInterval(() => pollSystemResources(), 30000);
 setTimeout(() => pollSystemResources(), 3000);
 
+// ── COMPANION PAIRING ─────────────────────────
+const COMPANION_PAIRING_KEY = 'caroline_companion_pairing_code';
+function normalizeCompanionPairingCode(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+}
+function generateCompanionPairingCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  if (window.crypto && crypto.getRandomValues) {
+    const values = new Uint32Array(6);
+    crypto.getRandomValues(values);
+    for (const value of values) code += alphabet[value % alphabet.length];
+  } else {
+    for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+}
+function getCompanionPairingCode() {
+  let code = normalizeCompanionPairingCode(S.companionPairingCode || localStorage.getItem(COMPANION_PAIRING_KEY));
+  if (code.length !== 6) code = generateCompanionPairingCode();
+  S.companionPairingCode = code;
+  localStorage.setItem(COMPANION_PAIRING_KEY, code);
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  return code;
+}
+function updateCompanionCodePill() {
+  const code = getCompanionPairingCode();
+  const pillEl = document.getElementById('companion-code-pill');
+  if (!pillEl) return;
+  pillEl.textContent = 'SYNC: ' + code;
+  pillEl.title = 'Click to copy Project: Caroline Companion sync code ' + code;
+}
+function syncCompanionPairingCode() {
+  const code = getCompanionPairingCode();
+  updateCompanionCodePill();
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'settings_update', companionPairingCode: code }));
+  }
+}
+async function copyCompanionPairingCode() {
+  const code = getCompanionPairingCode();
+  updateCompanionCodePill();
+  try {
+    await navigator.clipboard.writeText(code);
+    showSettingsFeedback('Companion code copied');
+  } catch(e) {
+    window.prompt('Copy this Project: Caroline Companion pairing code', code);
+  }
+  syncCompanionPairingCode();
+}
+
 // ── WEBSOCKET ─────────────────────────────────
 let ws;
 let wsReconnectTimer = null;
@@ -6910,9 +7060,11 @@ function connectWS(){
       const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
+      _payload.companionPairingCode = getCompanionPairingCode();
       normalizeSettingsBooleans(_payload, { fillDefaults: false });
       ws.send(JSON.stringify(_payload));
     })();
+    syncCompanionPairingCode();
     syncSettingsFromServer().then(() => refreshPiNetworkIdentity()).then(() => loadMemoryShards()).then(() => {
       if (shouldRunOnboarding() && !onboardingStarted) startBootSequence();
     });
@@ -6922,8 +7074,24 @@ function connectWS(){
   try {
     const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
 
-    if (d.type === 'reply' || d.reply) {
+    if (d.type === 'conversation_event') {
+      const eventText = d.content || d.message || d.text || '';
+      const eventSource = d.source || 'display';
+      if (!eventText) return;
+      if (d.role === 'user') {
+        if (eventSource === 'display' && d.origin === 'http-chat') return;
+        addMessage(eventText, 'user', eventSource, d);
+        _trackRecv(eventText);
+      } else if (d.role === 'assistant') {
+        addMessage(eventText, 'caroline', eventSource, d);
+        speak(eventText);
+        _trackRecv(eventText);
+      }
+    }
+    else if (d.type === 'reply' || d.reply) {
       let t = d.content || d.reply;
+      const replySource = d.source || 'display';
+      if (replySource === 'display' && d.origin === 'http-chat') return;
       // Parse and strip mood-change tags before displaying
       const moodMatch = t.match(/\[SET_USER_MOOD:(\d+)\]/i);
       if (moodMatch) {
@@ -6943,7 +7111,7 @@ function connectWS(){
       }
       nudgeAiMoodForInteraction(1);
       playBeep(600);
-      addMessage(t, 'caroline', d.source || 'display');
+      addMessage(t, 'caroline', replySource, d);
       speak(t);
       setTimeout(maybeAskToRemember, 800);
       _trackRecv(t);
@@ -6955,10 +7123,10 @@ function connectWS(){
       renderMoods();
     }
     else if (d.type === 'user_telegram') {
-      addMessage(d.content, 'user', 'telegram');
+      addMessage(d.content, 'user', 'telegram', d);
     }
     else if (d.type === 'user_discord') {
-      addMessage(d.content, 'user', 'discord');
+      addMessage(d.content, 'user', 'discord', d);
     }
     else if (d.type === 'assistant_typing') {
       showTyping(d.source || 'display');
@@ -7028,6 +7196,7 @@ function retryNodeRedConnection() {
 document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
 updateAvatarFrameLabel();
 updateAiConfigIndicator();
+updateCompanionCodePill();
 
 // ── SEND ──────────────────────────────────────
 const input=document.getElementById('msg-input');
@@ -7712,6 +7881,7 @@ function closeNewsModal() {
 function openNewsModal(item) {
   const modal = document.getElementById('news-modal');
   if (!modal || !item) return;
+  closeTransientPanels('news');
   const source = document.getElementById('news-modal-source');
   const title = document.getElementById('news-modal-title');
   const desc = document.getElementById('news-modal-desc');
@@ -8424,8 +8594,23 @@ function showAddTask() {
 
 function toggleTodo() {
   const panel = document.getElementById('todo-panel');
+  if (!panel) return;
+  const open = !panel.classList.contains('open');
+  if (open) closeTransientPanels('todo');
   panel.style.display = 'flex';
-  setTimeout(() => { const open = panel.classList.toggle('open'); if (open) { renderTodos(); updateTodoDate(); } resetIdle(); }, 10);
+  panel.style.transform = '';
+  setTimeout(() => {
+    panel.classList.toggle('open', open);
+    if (open) {
+      renderTodos();
+      updateTodoDate();
+    } else {
+      setTimeout(() => {
+        if (!panel.classList.contains('open')) panel.style.display = 'none';
+      }, 420);
+    }
+    resetIdle();
+  }, 10);
 }
 function updateTodoDate() { const el = document.getElementById('todo-date'); if (el) el.textContent = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'}); }
 
@@ -8747,6 +8932,10 @@ function upsertLocalMemoryShard(fact, opts = {}) {
   return shard;
 }
 async function saveToMemory(fact) {
+  if (S.privacyMode) {
+    renderMemoryWidget();
+    return;
+  }
   const shard = upsertLocalMemoryShard(fact, { source: 'manual' });
   if (!shard) return;
   try {
@@ -8765,11 +8954,16 @@ async function saveToMemory(fact) {
   }
 }
 function rememberActionShard(action) {
+  if (S.privacyMode) return;
   const fact = action && (action.fact || action.content || action.text);
   if (!fact) return;
   upsertLocalMemoryShard(fact, { id: action.id, source: 'action' });
 }
 async function loadMemoryShards() {
+  if (S.privacyMode) {
+    renderMemoryWidget();
+    return;
+  }
   try {
     const resp = await fetchJsonWithTimeout(httpBase() + '/admin/memory-shards', { timeoutMs: 5000 }, 'Load memory shards');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -8920,7 +9114,7 @@ setInterval(updateWifi, 30000);
 
 (function() {
   const ts = Date.now();
-  ['av-gif','av-cat'].forEach(id => {
+  ['av-gif','av-cat','av-carl','av-carl-sleeping'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el.src) el.src = el.src.split('?')[0] + '?v=' + ts;
   });
@@ -9009,6 +9203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
   { id:'pilot', title:'Red Pilot',      desc:'Curious, grounded, warm. Default sync profile.', src:'assets/caroline.gif' },
+  { id:'carl',  title:'Carl',           desc:'Calm co-pilot energy with awake and asleep loops.', src:'assets/Carl-awake.gif' },
   { id:'robot', title:'Neon Bot',       desc:'Playful machine friend with warm dashboard energy.', src:'assets/robot.gif' },
   { id:'cat',   title:'Cat',            desc:'Softer, weirder — still very Caroline.', src:'assets/cat.gif' },
   { id:'ghost', title:'Ghost Terminal', desc:'Mysterious, glowy, a little time-displaced.', src:'assets/ghost.gif' }

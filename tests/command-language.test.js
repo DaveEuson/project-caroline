@@ -155,8 +155,8 @@ for (const [surface, nodeId] of buildNodes) {
 
   test(`${surface}: remember variants`, () => {
     const cases = [
-      ['Remember that Sarah is my wife', { type: 'remember', fact: 'Sarah is my wife' }],
-      ['Keep in mind that Dave drinks dark roast coffee', { type: 'remember', fact: 'Dave drinks dark roast coffee' }],
+      ['Remember that Riley likes dark roast coffee', { type: 'remember', fact: 'Riley likes dark roast coffee' }],
+      ['Keep in mind that the workshop prefers morning check-ins', { type: 'remember', fact: 'the workshop prefers morning check-ins' }],
     ];
     for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} remember: ${text}`);
   });
@@ -239,10 +239,10 @@ for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http pars
       title: 'Codex qwen model smoke test',
     }, `${surface} JSON calendar delete`);
 
-    const rememberReply = 'Got it. [ACTION]{"type":"remember","fact":"Sarah is my wife"}[/ACTION]';
-    expectAction(parseAction(nodeId, 'Remember that Sarah is my wife', rememberReply), {
+    const rememberReply = 'Got it. [ACTION]{"type":"remember","fact":"Riley likes dark roast coffee"}[/ACTION]';
+    expectAction(parseAction(nodeId, 'Remember that Riley likes dark roast coffee', rememberReply), {
       type: 'remember',
-      fact: 'Sarah is my wife',
+      fact: 'Riley likes dark roast coffee',
     }, `${surface} JSON remember`);
   });
 }
@@ -264,10 +264,10 @@ test('final action router sanitizes and routes all action types', () => {
   const deleteEvent = handleAction({ type: 'calendar_delete', title: 'Codex qwen model smoke test from my calendar tomorrow' });
   assert.strictEqual(deleteEvent[4].calDeleteAction.title, 'Codex qwen model smoke test');
 
-  handleAction({ type: 'remember', fact: 'Sarah is my wife' });
+  handleAction({ type: 'remember', fact: 'Riley likes dark roast coffee' });
   const savedContext = JSON.parse(runNode.lastWrites['/home/davee/caroline/caroline_context.json']);
-  assert.strictEqual(savedContext.memoryShards[0].text, 'Sarah is my wife');
-  assert.strictEqual(savedContext.dave.notes[0], 'Sarah is my wife');
+  assert.strictEqual(savedContext.memoryShards[0].text, 'Riley likes dark roast coffee');
+  assert.strictEqual(savedContext.dave.notes[0], 'Riley likes dark roast coffee');
 });
 
 let passed = 0;

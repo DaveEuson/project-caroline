@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # This intentionally avoids pacman/system package installs and does not disable
 # SteamOS read-only mode. Everything lives under the deck user's home directory.
 
-CAROLINE_VERSION="0.3.0-beta.2"
+CAROLINE_VERSION="0.3.0-beta.3"
 CAROLINE_REPO_URL="${CAROLINE_REPO_URL:-https://github.com/Project-Caroline/project-caroline.git}"
 CAROLINE_CHANNEL="${CAROLINE_CHANNEL:-nightly}"
 CAROLINE_PORT="${CAROLINE_PORT:-8080}"
@@ -658,8 +658,8 @@ chmod +x "$REAL_HOME/.local/bin/caroline-steamos-kiosk"
 cat > "$REAL_HOME/.local/share/applications/caroline-steamos.desktop" <<DESKTOP_EOF
 [Desktop Entry]
 Type=Application
-Name=Project Caroline
-Comment=Open Project Caroline
+Name=Project: Caroline
+Comment=Open Project: Caroline
 Exec=${REAL_HOME}/.local/bin/caroline-steamos-open
 Terminal=false
 Categories=Utility;
@@ -668,16 +668,16 @@ DESKTOP_EOF
 cat > "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" <<DESKTOP_EOF
 [Desktop Entry]
 Type=Application
-Name=Project Caroline Kiosk
-Comment=Open Project Caroline fullscreen
+Name=Project: Caroline Kiosk
+Comment=Open Project: Caroline fullscreen
 Exec=${REAL_HOME}/.local/bin/caroline-steamos-kiosk
 Terminal=false
 Categories=Utility;
 DESKTOP_EOF
 
-cp -f "$REAL_HOME/.local/share/applications/caroline-steamos.desktop" "$REAL_HOME/Desktop/Project Caroline.desktop" 2>/dev/null || true
-cp -f "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" "$REAL_HOME/Desktop/Project Caroline Kiosk.desktop" 2>/dev/null || true
-chmod +x "$REAL_HOME/Desktop/Project Caroline.desktop" "$REAL_HOME/Desktop/Project Caroline Kiosk.desktop" 2>/dev/null || true
+cp -f "$REAL_HOME/.local/share/applications/caroline-steamos.desktop" "$REAL_HOME/Desktop/Project: Caroline.desktop" 2>/dev/null || true
+cp -f "$REAL_HOME/.local/share/applications/caroline-steamos-kiosk.desktop" "$REAL_HOME/Desktop/Project: Caroline Kiosk.desktop" 2>/dev/null || true
+chmod +x "$REAL_HOME/Desktop/Project: Caroline.desktop" "$REAL_HOME/Desktop/Project: Caroline Kiosk.desktop" 2>/dev/null || true
 
 systemctl --user daemon-reload
 systemctl --user enable caroline.service

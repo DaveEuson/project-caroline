@@ -115,7 +115,7 @@ After uninstall, these should be gone:
 systemctl status caroline
 ls -ld ~/caroline ~/project-caroline
 ls ~/.config/autostart/caroline-kiosk.desktop
-ls ~/Desktop/"Project Caroline.desktop" ~/Desktop/"Project Caroline Kiosk.desktop"
+ls ~/Desktop/"Project: Caroline.desktop" ~/Desktop/"Project: Caroline Kiosk.desktop"
 ```
 
 Expected results:

@@ -5,7 +5,7 @@ Caroline uses a Google **Desktop app OAuth client** for personal Calendar access
 ## Create the OAuth Client
 
 1. Open [Google Cloud Console](https://console.cloud.google.com/).
-2. Select an existing project, or create a new project named something like `Project Caroline`.
+2. Select an existing project, or create a new project named something like `Project: Caroline`.
 3. Enable these APIs in **APIs & Services > Library**:
    - Google Calendar API
 4. Open **Google Auth Platform**.
