@@ -13,6 +13,12 @@ carlinemoodtracker-*.json
 # ── LARGE MEDIA (use Git LFS or host externally) ──────────────
 *.mp4
 *.webm
+*.msi
+*.exe
+*.deb
+*.rpm
+*.AppImage
+*.dmg
 # GIFs in assets/ are committed as placeholders — real ones replace them
 *.gif
 !assets/*.gif

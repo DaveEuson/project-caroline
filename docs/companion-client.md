@@ -14,7 +14,7 @@ Choose the package for your platform:
 |---|---|
 | Windows | `.msi` |
 | Ubuntu / Pop!_OS | `.deb` |
-| Steam Deck Desktop Mode | `.deb` first, `.AppImage` if you prefer portable |
+| Steam Deck Desktop Mode | `.AppImage` |
 | macOS Apple Silicon | `aarch64.dmg` |
 | macOS Intel | `x86_64.dmg` |
 
@@ -37,7 +37,7 @@ Install the `.deb` package from the release page. If your desktop blocks the fir
 
 ## Steam Deck Notes
 
-Use Desktop Mode. Install the `.deb` package if it works on your SteamOS image; otherwise use the `.AppImage` release asset.
+Use Desktop Mode and launch the `.AppImage` release asset. SteamOS does not include Debian package tools by default, so the `.deb` package is for Ubuntu/Pop!_OS rather than the Deck.
 
 ## Smoke Test
 

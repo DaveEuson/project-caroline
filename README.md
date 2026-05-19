@@ -44,7 +44,7 @@ The optional desktop companion app is released separately:
 
 [Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.8)
 
-Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, and `.deb` or `.AppImage` on Steam Deck Desktop Mode.
+Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, and `.AppImage` on Steam Deck Desktop Mode.
 
 For microphone input from another browser, use Chrome or Chromium with the secure voice URL printed by the installer:
 
