@@ -368,6 +368,22 @@ button, input, select { font: inherit; }
 .full-width-btn:active { background: var(--btn-bg-active); }
 .full-width-btn:disabled { cursor: wait; opacity: 0.65; }
 
+.danger-btn {
+  background: #f4d6d6;
+  border-color: #9c4444;
+  color: #6f1010;
+}
+
+.danger-btn:active {
+  background: #e9baba;
+}
+
+html[data-theme="dark"] .danger-btn {
+  background: #3a1f24;
+  border-color: #a85b63;
+  color: #ffd6dc;
+}
+
 .discovered-hosts {
   display: flex;
   flex-direction: column;
@@ -455,12 +471,29 @@ html[data-theme="dark"] .buddy-heading {
 
 .buddy {
   align-items: center;
+  background: transparent;
   border: 1px solid transparent;
   border-radius: 2px;
+  color: inherit;
   display: flex;
   gap: 7px;
   min-width: 0;
   padding: 5px;
+  position: relative;
+  text-align: left;
+  width: 100%;
+}
+
+.buddy-button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.buddy-button:hover,
+.buddy-button:focus-visible {
+  background: var(--bg-buddy-active);
+  border-color: var(--border-buddy-active);
+  outline: none;
 }
 
 .buddy-profile-btn {
@@ -479,6 +512,14 @@ html[data-theme="dark"] .buddy-heading {
   border-color: var(--border-buddy-active);
 }
 
+.buddy.unread strong {
+  color: #004f9f;
+}
+
+html[data-theme="dark"] .buddy.unread strong {
+  color: #a9cdf8;
+}
+
 .buddy-avatar {
   width: 32px;
   height: 32px;
@@ -487,7 +528,8 @@ html[data-theme="dark"] .buddy-heading {
   flex-shrink: 0;
 }
 
-.buddy > div {
+.buddy > div,
+.buddy-copy {
   flex: 1;
   min-width: 0;
 }
@@ -508,6 +550,34 @@ html[data-theme="dark"] .buddy-heading {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.buddy em {
+  color: var(--color-text-muted);
+  display: block;
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.2;
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buddy-unread {
+  align-items: center;
+  background: #ffdd42;
+  border: 1px solid #7f6500;
+  border-radius: 50%;
+  color: #111;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 900;
+  height: 18px;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 4px;
 }
 
 /* ── Chat panel ─────────────────────────────────────────────── */

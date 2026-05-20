@@ -95,7 +95,7 @@ function normalizeHosts(settings: AppSettings): AppSettings {
   const socketUrl = migrateSocketUrl(settings.socketUrl);
   const userName = String(settings.userName || deriveUserNameFromCompanionName(settings.companionName) || "").trim();
   const companionName = String(settings.companionName || (userName ? `${userName}'s Companion` : "My Companion")).trim();
-  const avatarId = ["caroline", "carl"].includes(String(settings.avatarId || "").trim())
+  const avatarId = ["caroline", "carl", "catoline", "robot"].includes(String(settings.avatarId || "").trim())
     ? String(settings.avatarId).trim()
     : DEFAULTS.avatarId;
   const hostSource = [...DEFAULT_HOSTS, ...(Array.isArray(settings.hosts) ? settings.hosts : [])];

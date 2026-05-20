@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   createCarolineSocket,
+  type CarolineSocketMessage,
   type CarolineSocketStatus,
 } from "./lib/carolineSocket";
 import { buildWeeklyAgentProfile } from "./lib/agentProfile";
@@ -9,6 +10,9 @@ import { loadSettings, saveSettings, type AgentProfile, type AppSettings, type S
 import carolineAvatar from "../src-tauri/icons/64x64.png";
 import carlAwakeAvatar from "../../assets/Carl-awake.gif";
 import carlAsleepAvatar from "../../assets/Carl-asleep.gif";
+import catAvatar from "../../assets/cat.gif";
+import robotAwakeAvatar from "../../assets/Robot-Awake.gif";
+import robotSleepingAvatar from "../../assets/Robot-Sleeping.gif";
 
 type ChatMessage = {
   id: number;
@@ -18,22 +22,135 @@ type ChatMessage = {
   text: string;
 };
 
+type BuddyState = {
+  status: CarolineSocketStatus;
+  aiName: string;
+  hostName: string;
+  userName: string;
+  unreadCount: number;
+  lastMessage: string;
+  lastMessageAt: number;
+};
+
+type HostSocketEntry = {
+  signature: string;
+  socket: ReturnType<typeof createCarolineSocket>;
+};
+
 const COMPANION_VERSION = "0.1.8";
 const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caroline/releases";
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
+const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
+const MAX_MESSAGES_PER_HOST = 500;
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: 1,
-    from: "caroline",
-    text: "Hey! I am ready for Caroline, Carl, or Catoline.",
-  },
-  {
-    id: 2,
-    from: "system",
-    text: "Use Settings to pick a saved host and enter that kiosk's SYNC code.",
-  },
-];
+let localMessageId = Date.now();
+
+function nextMessageId() {
+  localMessageId += 1;
+  return localMessageId;
+}
+
+function inferBuddyAiName(host?: SavedHost) {
+  const hint = `${host?.id || ""} ${host?.name || ""}`.toLowerCase();
+  if (hint.includes("carl")) return "Carl";
+  if (hint.includes("cat")) return "Catoline";
+  if (hint.includes("robot")) return "Robot";
+  if (hint.includes("frog")) return "Frog Pilot";
+  return "Caroline";
+}
+
+function initialMessagesForHost(host?: SavedHost): ChatMessage[] {
+  const buddyName = inferBuddyAiName(host);
+  const hostLabel = host?.name || "Project: Caroline";
+  return [
+    {
+      id: nextMessageId(),
+      from: "caroline",
+      sender: buddyName,
+      text: `Hey! This chat is ready for ${hostLabel}.`,
+    },
+    {
+      id: nextMessageId(),
+      from: "system",
+      text: "Enter that kiosk's SYNC code in Settings if this buddy asks to pair.",
+    },
+  ];
+}
+
+function resetMessagesForHosts(hosts: SavedHost[]) {
+  return Object.fromEntries(hosts.map((host) => [host.id, initialMessagesForHost(host)]));
+}
+
+function normalizeChatMessage(value: unknown): ChatMessage | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const from = record.from;
+  const text = typeof record.text === "string" ? record.text : "";
+  if (from !== "you" && from !== "caroline" && from !== "system" && from !== "user") return null;
+  if (!text.trim()) return null;
+
+  return {
+    id: typeof record.id === "number" && Number.isFinite(record.id) ? record.id : nextMessageId(),
+    from,
+    sender: typeof record.sender === "string" ? record.sender : undefined,
+    source: typeof record.source === "string" ? record.source : undefined,
+    text,
+  };
+}
+
+function trimChatHistory(messages: ChatMessage[]) {
+  return messages.slice(-MAX_MESSAGES_PER_HOST);
+}
+
+function loadChatHistory(): Record<string, ChatMessage[]> {
+  try {
+    const stored = localStorage.getItem(CHAT_HISTORY_KEY);
+    if (!stored) return {};
+    const parsed = JSON.parse(stored) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+
+    return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, ChatMessage[]>>((history, [hostId, value]) => {
+      if (!Array.isArray(value)) return history;
+      const messages = value.map(normalizeChatMessage).filter((message): message is ChatMessage => Boolean(message));
+      if (messages.length) history[hostId] = trimChatHistory(messages);
+      return history;
+    }, {});
+  } catch {
+    return {};
+  }
+}
+
+function saveChatHistory(history: Record<string, ChatMessage[]>) {
+  try {
+    const trimmed = Object.entries(history).reduce<Record<string, ChatMessage[]>>((next, [hostId, messages]) => {
+      if (messages.length) next[hostId] = trimChatHistory(messages);
+      return next;
+    }, {});
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(trimmed));
+  } catch {
+    // Best effort only. Chat should keep working even if browser storage is full or unavailable.
+  }
+}
+
+function deleteChatHistory() {
+  try {
+    localStorage.removeItem(CHAT_HISTORY_KEY);
+  } catch {
+    // Best effort only.
+  }
+}
+
+function initialBuddyState(host?: SavedHost): BuddyState {
+  return {
+    status: "offline",
+    aiName: inferBuddyAiName(host),
+    hostName: host?.name || "Project: Caroline",
+    userName: "",
+    unreadCount: 0,
+    lastMessage: "",
+    lastMessageAt: 0,
+  };
+}
 
 function getOrCreateClientId() {
   const storageKey = "caroline-companion-client-id";
@@ -48,7 +165,7 @@ function statusLabel(status: CarolineSocketStatus, aiName: string) {
   if (status === "online") return `${aiName} is online`;
   if (status === "connecting") return "Connecting...";
   if (status === "rejected") return "Pairing code rejected";
-  return "Project: Caroline is offline";
+  return `${aiName} is offline`;
 }
 
 function hostNameFromUrl(url: string) {
@@ -96,7 +213,40 @@ function companionDisplayName(settings: AppSettings, fallbackUserName: string) {
 }
 
 function buddyAvatarSrc(avatarId: string, isOnline: boolean) {
-  return avatarId === "carl" ? (isOnline ? carlAwakeAvatar : carlAsleepAvatar) : carolineAvatar;
+  const normalized = avatarId.toLowerCase();
+  if (normalized.includes("carl")) return isOnline ? carlAwakeAvatar : carlAsleepAvatar;
+  if (normalized.includes("cat")) return catAvatar;
+  if (normalized.includes("robot")) return isOnline ? robotAwakeAvatar : robotSleepingAvatar;
+  return carolineAvatar;
+}
+
+function avatarIdForHost(host: SavedHost, state?: BuddyState) {
+  const hint = `${host.id} ${host.name} ${state?.aiName || ""}`.toLowerCase();
+  if (hint.includes("carl")) return "carl";
+  if (hint.includes("cat")) return "catoline";
+  if (hint.includes("robot")) return "robot";
+  return "caroline";
+}
+
+function buddyStatusText(status: CarolineSocketStatus) {
+  if (status === "online") return "available";
+  if (status === "connecting") return "signing on...";
+  if (status === "rejected") return "pairing rejected";
+  return "offline";
+}
+
+function isUsableSocketUrl(url: string) {
+  const trimmed = url.trim();
+  return /^wss?:\/\//i.test(trimmed) && !/POP_OS_IP/i.test(trimmed);
+}
+
+function hostSocketSignature(url: string) {
+  return url.trim();
+}
+
+function previewText(value: string) {
+  const text = value.replace(/\s+/g, " ").trim();
+  return text.length > 42 ? `${text.slice(0, 39)}...` : text;
 }
 
 function chatUserName(settings: AppSettings, fallbackUserName: string) {
@@ -128,28 +278,32 @@ export default function App() {
   );
   const [profileOpen, setProfileOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [activeSocketUrl, setActiveSocketUrl] = useState(() => loadSettings().socketUrl);
   const [status, setStatus] = useState<CarolineSocketStatus>("offline");
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [hostMessages, setHostMessages] = useState<Record<string, ChatMessage[]>>(() => {
+    const savedHistory = loadChatHistory();
+    return Object.fromEntries(
+      settings.hosts.map((host) => [host.id, savedHistory[host.id]?.length ? savedHistory[host.id] : initialMessagesForHost(host)])
+    );
+  });
+  const [buddyStates, setBuddyStates] = useState<Record<string, BuddyState>>(() =>
+    Object.fromEntries(settings.hosts.map((host) => [host.id, initialBuddyState(host)]))
+  );
   const [draft, setDraft] = useState("");
   const [discoveredHosts, setDiscoveredHosts] = useState<DiscoveredHost[]>([]);
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
+  const [connectionNonce, setConnectionNonce] = useState(0);
+  const [connectionUrls, setConnectionUrls] = useState<Record<string, string>>(() =>
+    Object.fromEntries(settings.hosts.map((host) => [host.id, host.socketUrl]))
+  );
 
   const [clientId] = useState(getOrCreateClientId);
 
-  // Mutable ref so socket always reads latest name/code without being recreated
-  const clientRef = useRef({
-    clientId,
-    displayName: companionDisplayName(settings, hostUserName),
-    userName: chatUserName(settings, hostUserName),
-    pairingCode: settings.pairingCode,
-  });
-
-  const socketRef = useRef<ReturnType<typeof createCarolineSocket> | null>(null);
+  const settingsRef = useRef(settings);
+  const activeHostIdRef = useRef(settings.activeHostId);
+  const hostSocketsRef = useRef<Map<string, HostSocketEntry>>(new Map());
   const transcriptRef = useRef<HTMLDivElement | null>(null);
-  const aiNameRef = useRef(aiName);
   const hostUserNameRef = useRef("");
 
   // Apply dark mode to <html> element whenever the setting changes
@@ -157,23 +311,18 @@ export default function App() {
     document.documentElement.dataset.theme = settings.darkMode ? "dark" : "light";
   }, [settings.darkMode]);
 
-  // Keep clientRef current with latest settings (no socket reconnect needed)
   useEffect(() => {
-    clientRef.current = {
-      clientId,
-      displayName: companionDisplayName(settings, hostUserName),
-      userName: chatUserName(settings, hostUserName),
-      pairingCode: settings.pairingCode,
-    };
-  }, [clientId, hostUserName, settings.companionName, settings.pairingCode, settings.userName]);
-
-  useEffect(() => {
-    aiNameRef.current = aiName;
-  }, [aiName]);
+    settingsRef.current = settings;
+    activeHostIdRef.current = settings.activeHostId;
+  }, [settings]);
 
   useEffect(() => {
     hostUserNameRef.current = hostUserName;
   }, [hostUserName]);
+
+  useEffect(() => {
+    saveChatHistory(hostMessages);
+  }, [hostMessages]);
 
   useEffect(() => {
     const nextProfile = buildWeeklyAgentProfile({
@@ -214,135 +363,293 @@ export default function App() {
     });
   }
 
-  // Only recreates (and reconnects) when the active URL changes
-  const socket = useMemo(
-    () =>
-      createCarolineSocket({
-        url: activeSocketUrl,
-        getClient: () => clientRef.current,
-        onStatusChange: setStatus,
-        onMessage: (msg) => {
-          if (msg.type === "host_hello") {
-            const raw = msg.raw && typeof msg.raw === "object" ? msg.raw as Record<string, unknown> : {};
-            const nextName =
-              (typeof raw.aiName === "string" ? raw.aiName : null) ??
-              (typeof raw.name === "string" ? raw.name : null) ??
-              msg.text;
-            const nextHostName =
-              (typeof raw.hostName === "string" ? raw.hostName : null) ??
-              (typeof raw.host === "string" ? raw.host : null);
-            const nextUserName =
-              (typeof raw.userName === "string" ? raw.userName : null) ??
-              msg.userName;
-            const profileText =
-              (typeof raw.agentProfile === "string" ? raw.agentProfile : null) ??
-              (typeof raw.profile === "string" ? raw.profile : null) ??
-              msg.agentProfile ??
-              "";
-            const personalityHint =
-              (typeof raw.personalityHint === "string" ? raw.personalityHint : null) ??
-              (typeof raw.personalitySummary === "string" ? raw.personalitySummary : null) ??
-              msg.personalityHint ??
-              "";
+  const appendHostMessage = useCallback(
+    (
+      hostId: string,
+      message: Omit<ChatMessage, "id"> & { id?: number },
+      options: { unread?: boolean; updatePreview?: boolean } = {}
+    ) => {
+      const nextMessage = { ...message, id: message.id ?? nextMessageId() };
+      setHostMessages((previous) => {
+        const host = settingsRef.current.hosts.find((candidate) => candidate.id === hostId);
+        const current = previous[hostId] || initialMessagesForHost(host);
+        return { ...previous, [hostId]: trimChatHistory([...current, nextMessage]) };
+      });
 
-            const resolvedAiName = nextName.trim() || "Caroline";
-            if (resolvedAiName) setAiName(resolvedAiName);
-            if (nextUserName?.trim()) {
-              const userName = nextUserName.trim();
-              setHostUserName(userName);
-            }
+      if (options.updatePreview === false) return;
 
-            setSettingsRaw((previous) => {
-              const userName = nextUserName?.trim() || previous.userName || hostUserNameRef.current;
-              const hostName = nextHostName?.trim();
-              const hosts = hostName
-                ? previous.hosts.map((host) =>
-                    host.id === previous.activeHostId && host.name !== hostName
-                      ? { ...host, name: hostName }
-                      : host
-                  )
-                : previous.hosts;
-              const companionName = shouldAutoNameCompanion(previous.companionName)
-                ? companionDisplayName({ ...previous, userName }, userName)
-                : previous.companionName;
-              const profile = buildWeeklyAgentProfile({
-                aiName: resolvedAiName,
-                userName,
-                hostProfile: profileText,
-                personalityHint,
-                previous: previous.agentProfile,
-              });
-              setAgentProfile(profile);
-              const next = {
-                ...previous,
-                userName: previous.userName || userName,
-                companionName,
-                hosts,
-                agentProfile: profile,
-              };
-              saveSettings(next);
-              return next;
-            });
-            return;
-          }
+      const shouldUnread = options.unread ?? activeHostIdRef.current !== hostId;
+      const sender = nextMessage.sender || (nextMessage.from === "you" ? "You" : nextMessage.from === "system" ? "System" : "Buddy");
+      const preview = `${sender}: ${nextMessage.text}`;
+      setBuddyStates((previous) => {
+        const host = settingsRef.current.hosts.find((candidate) => candidate.id === hostId);
+        const current = previous[hostId] || initialBuddyState(host);
+        return {
+          ...previous,
+          [hostId]: {
+            ...current,
+            unreadCount: shouldUnread ? current.unreadCount + 1 : current.unreadCount,
+            lastMessage: preview,
+            lastMessageAt: Date.now(),
+          },
+        };
+      });
+    },
+    []
+  );
 
-          if (msg.type === "pairing_rejected") {
-            setMessages((m) => [
-              ...m,
-              {
-                id: Date.now(),
-                from: "system",
-                text: "Pairing code was rejected. Check the code on the kiosk screen and try again in Settings.",
-              },
-            ]);
-            return;
-          }
+  const handleHostStatus = useCallback((hostId: string, nextStatus: CarolineSocketStatus) => {
+    setBuddyStates((previous) => {
+      const host = settingsRef.current.hosts.find((candidate) => candidate.id === hostId);
+      const current = previous[hostId] || initialBuddyState(host);
+      return { ...previous, [hostId]: { ...current, status: nextStatus } };
+    });
+    if (activeHostIdRef.current === hostId) setStatus(nextStatus);
+  }, []);
 
-          if (msg.role === "user" || msg.type === "user_discord" || msg.type === "user_telegram") {
-            if (msg.clientId && msg.clientId === clientId) return;
+  const handleHostMessage = useCallback(
+    (hostId: string, msg: CarolineSocketMessage) => {
+      if (msg.type === "host_hello") {
+        const raw = msg.raw && typeof msg.raw === "object" ? msg.raw as Record<string, unknown> : {};
+        const nextName =
+          (typeof raw.aiName === "string" ? raw.aiName : null) ??
+          (typeof raw.name === "string" ? raw.name : null) ??
+          msg.text;
+        const nextHostName =
+          (typeof raw.hostName === "string" ? raw.hostName : null) ??
+          (typeof raw.host === "string" ? raw.host : null);
+        const nextUserName =
+          (typeof raw.userName === "string" ? raw.userName : null) ??
+          msg.userName;
+        const profileText =
+          (typeof raw.agentProfile === "string" ? raw.agentProfile : null) ??
+          (typeof raw.profile === "string" ? raw.profile : null) ??
+          msg.agentProfile ??
+          "";
+        const personalityHint =
+          (typeof raw.personalityHint === "string" ? raw.personalityHint : null) ??
+          (typeof raw.personalitySummary === "string" ? raw.personalitySummary : null) ??
+          msg.personalityHint ??
+          "";
+        const host = settingsRef.current.hosts.find((candidate) => candidate.id === hostId);
+        const resolvedAiName = nextName.trim() || inferBuddyAiName(host);
+        const userName = nextUserName?.trim() || hostUserNameRef.current;
+        const isActive = activeHostIdRef.current === hostId;
 
-            const sender =
-              msg.source === "caroline-companion"
-                ? msg.clientName || "Companion"
-                : msg.source === "discord"
-                ? `${msg.userName || hostUserNameRef.current || "User"} via Discord`
-                : msg.source === "telegram"
-                ? `${msg.userName || hostUserNameRef.current || "User"} via Telegram`
-                : msg.userName || hostUserNameRef.current || "You";
-
-            setMessages((m) => [
-              ...m,
-              {
-                id: Date.now(),
-                from: "user",
-                sender,
-                source: msg.source,
-                text: msg.text,
-              },
-            ]);
-            return;
-          }
-
-          setMessages((m) => [
-            ...m,
-            {
-              id: Date.now(),
-              from: msg.role === "system" ? "system" : "caroline",
-              sender: msg.role === "system" ? "System" : msg.aiName || aiNameRef.current,
-              source: msg.source,
-              text: msg.text,
+        setBuddyStates((previous) => {
+          const current = previous[hostId] || initialBuddyState(host);
+          return {
+            ...previous,
+            [hostId]: {
+              ...current,
+              status: "online",
+              aiName: resolvedAiName,
+              hostName: nextHostName?.trim() || current.hostName,
+              userName: userName || current.userName,
             },
-          ]);
-        },
-      }),
-    [activeSocketUrl]
+          };
+        });
+
+        if (isActive) {
+          setAiName(resolvedAiName);
+          setStatus("online");
+          if (userName) setHostUserName(userName);
+        }
+
+        setSettingsRaw((previous) => {
+          const settingsHost = previous.hosts.find((candidate) => candidate.id === hostId);
+          const hostName = nextHostName?.trim();
+          const hosts = hostName
+            ? previous.hosts.map((candidate) =>
+                candidate.id === hostId && candidate.name !== hostName
+                  ? { ...candidate, name: hostName }
+                  : candidate
+              )
+            : previous.hosts;
+          const profileUserName = userName || previous.userName || hostUserNameRef.current;
+          const profile = buildWeeklyAgentProfile({
+            aiName: resolvedAiName,
+            userName: profileUserName,
+            hostProfile: profileText,
+            personalityHint,
+            previous: previous.agentProfile,
+          });
+          if (isActive) setAgentProfile(profile);
+          const next = {
+            ...previous,
+            userName: isActive ? previous.userName || profileUserName : previous.userName,
+            companionName:
+              isActive && shouldAutoNameCompanion(previous.companionName)
+                ? companionDisplayName({ ...previous, userName: profileUserName }, profileUserName)
+                : previous.companionName,
+            hosts,
+            agentProfile: isActive ? profile : previous.agentProfile,
+            socketUrl: settingsHost?.id === previous.activeHostId ? settingsHost.socketUrl : previous.socketUrl,
+          };
+          saveSettings(next);
+          return next;
+        });
+        return;
+      }
+
+      if (msg.type === "pairing_rejected") {
+        appendHostMessage(hostId, {
+          from: "system",
+          text: "Pairing code was rejected. Check the code on the kiosk screen and try again in Settings.",
+        });
+        return;
+      }
+
+      if (msg.role === "user" || msg.type === "user_discord" || msg.type === "user_telegram") {
+        if (msg.clientId && msg.clientId === clientId) return;
+
+        const sender =
+          msg.source === "caroline-companion"
+            ? msg.clientName || "Companion"
+            : msg.source === "discord"
+            ? `${msg.userName || hostUserNameRef.current || "User"} via Discord`
+            : msg.source === "telegram"
+            ? `${msg.userName || hostUserNameRef.current || "User"} via Telegram`
+            : msg.userName || hostUserNameRef.current || "You";
+
+        appendHostMessage(hostId, {
+          from: "user",
+          sender,
+          source: msg.source,
+          text: msg.text,
+        });
+        return;
+      }
+
+      appendHostMessage(hostId, {
+        from: msg.role === "system" ? "system" : "caroline",
+        sender: msg.role === "system" ? "System" : msg.aiName || inferBuddyAiName(settingsRef.current.hosts.find((host) => host.id === hostId)),
+        source: msg.source,
+        text: msg.text,
+      });
+    },
+    [appendHostMessage, clientId]
   );
 
   useEffect(() => {
-    socketRef.current = socket;
-    socket.connect();
-    return () => socket.disconnect();
-  }, [socket]);
+    const hostIds = new Set(settings.hosts.map((host) => host.id));
+
+    setHostMessages((previous) => {
+      let changed = false;
+      const next = { ...previous };
+      settings.hosts.forEach((host) => {
+        if (!next[host.id]) {
+          next[host.id] = initialMessagesForHost(host);
+          changed = true;
+        }
+      });
+      Object.keys(next).forEach((hostId) => {
+        if (!hostIds.has(hostId)) {
+          delete next[hostId];
+          changed = true;
+        }
+      });
+      return changed ? next : previous;
+    });
+
+    setBuddyStates((previous) => {
+      let changed = false;
+      const next = { ...previous };
+      settings.hosts.forEach((host) => {
+        if (!next[host.id]) {
+          next[host.id] = initialBuddyState(host);
+          changed = true;
+        }
+      });
+      Object.keys(next).forEach((hostId) => {
+        if (!hostIds.has(hostId)) {
+          delete next[hostId];
+          changed = true;
+        }
+      });
+      return changed ? next : previous;
+    });
+
+    setConnectionUrls((previous) => {
+      let changed = false;
+      const next = { ...previous };
+      settings.hosts.forEach((host) => {
+        if (!next[host.id]) {
+          next[host.id] = host.socketUrl;
+          changed = true;
+        }
+      });
+      Object.keys(next).forEach((hostId) => {
+        if (!hostIds.has(hostId)) {
+          delete next[hostId];
+          changed = true;
+        }
+      });
+      return changed ? next : previous;
+    });
+  }, [settings.hosts]);
+
+  useEffect(() => {
+    settings.hosts.forEach((host) => {
+      const connectionUrl = connectionUrls[host.id] || host.socketUrl;
+      const signature = hostSocketSignature(connectionUrl);
+      const existing = hostSocketsRef.current.get(host.id);
+      if (existing && existing.signature !== signature) {
+        existing.socket.disconnect();
+        hostSocketsRef.current.delete(host.id);
+      }
+    });
+
+    Array.from(hostSocketsRef.current.entries()).forEach(([hostId, entry]) => {
+      if (!settings.hosts.some((host) => host.id === hostId)) {
+        entry.socket.disconnect();
+        hostSocketsRef.current.delete(hostId);
+      }
+    });
+
+    settings.hosts.forEach((host) => {
+      const connectionUrl = connectionUrls[host.id] || host.socketUrl;
+      if (!isUsableSocketUrl(connectionUrl)) {
+        handleHostStatus(host.id, "offline");
+        return;
+      }
+
+      const signature = hostSocketSignature(connectionUrl);
+      if (hostSocketsRef.current.get(host.id)?.signature === signature) return;
+
+      const socket = createCarolineSocket({
+        url: connectionUrl.trim(),
+        getClient: () => {
+          const latest = settingsRef.current;
+          const latestHost = latest.hosts.find((candidate) => candidate.id === host.id);
+          return {
+            clientId,
+            displayName: companionDisplayName(latest, hostUserNameRef.current),
+            userName: chatUserName(latest, hostUserNameRef.current),
+            pairingCode: latestHost?.pairingCode || latest.pairingCode,
+          };
+        },
+        onStatusChange: (nextStatus) => handleHostStatus(host.id, nextStatus),
+        onMessage: (msg) => handleHostMessage(host.id, msg),
+      });
+      hostSocketsRef.current.set(host.id, { signature, socket });
+      socket.connect();
+    });
+  }, [clientId, connectionNonce, connectionUrls, handleHostMessage, handleHostStatus, settings.hosts]);
+
+  useEffect(() => () => {
+    hostSocketsRef.current.forEach((entry) => entry.socket.disconnect());
+    hostSocketsRef.current.clear();
+  }, []);
+
+  const selectedHost = activeHost();
+  const selectedBuddyState = selectedHost
+    ? buddyStates[selectedHost.id] || initialBuddyState(selectedHost)
+    : initialBuddyState();
+  const activeStatus = selectedBuddyState.status || status;
+  const activeAiName = selectedBuddyState.aiName || aiName;
+  const activeHostUserName = selectedBuddyState.userName || hostUserName;
+  const messages = selectedHost ? hostMessages[selectedHost.id] || [] : [];
 
   // Auto-scroll transcript on new messages
   useEffect(() => {
@@ -354,40 +661,44 @@ export default function App() {
 
   function handleConnect() {
     const url = settings.socketUrl.trim();
+    const current = activeHost();
+    if (!current) return;
     if (url && !/^wss?:\/\//i.test(url)) {
-      setMessages((m) => [
-        ...m,
-        { id: Date.now(), from: "system", text: "WebSocket URL must start with ws:// or wss://" },
-      ]);
+      appendHostMessage(
+        current.id,
+        { from: "system", text: "WebSocket URL must start with ws:// or wss://" },
+        { unread: false }
+      );
       return;
     }
     updateActiveHost({ socketUrl: url, pairingCode: settings.pairingCode });
-    if (url && url !== activeSocketUrl) {
-      setActiveSocketUrl(url);
-    } else {
-      socketRef.current?.connect();
+    const entry = hostSocketsRef.current.get(current.id);
+    if (entry) {
+      entry.socket.disconnect();
+      hostSocketsRef.current.delete(current.id);
     }
+    if (isUsableSocketUrl(url)) handleHostStatus(current.id, "connecting");
+    setConnectionUrls((previous) => ({ ...previous, [current.id]: url }));
+    setConnectionNonce((value) => value + 1);
   }
 
   function handleSelectHost(hostId: string) {
     const host = settings.hosts.find((h) => h.id === hostId);
     if (!host) return;
+    const state = buddyStates[host.id] || initialBuddyState(host);
     setSettings({
       ...settings,
       activeHostId: host.id,
       socketUrl: host.socketUrl,
       pairingCode: host.pairingCode,
     });
-    setActiveSocketUrl(host.socketUrl);
-    setAiName("Caroline");
-    setMessages((m) => [
-      ...m,
-      {
-        id: Date.now(),
-        from: "system",
-        text: `Switched to ${host.name}.`,
-      },
-    ]);
+    setAiName(state.aiName || inferBuddyAiName(host));
+    setHostUserName(state.userName || hostUserName);
+    setStatus(state.status);
+    setBuddyStates((previous) => ({
+      ...previous,
+      [host.id]: { ...(previous[host.id] || initialBuddyState(host)), unreadCount: 0 },
+    }));
   }
 
   function handleAddHost() {
@@ -402,6 +713,11 @@ export default function App() {
       activeHostId: host.id,
       hosts: [...settings.hosts, host],
     });
+    setHostMessages((previous) => ({ ...previous, [host.id]: initialMessagesForHost(host) }));
+    setBuddyStates((previous) => ({ ...previous, [host.id]: initialBuddyState(host) }));
+    setConnectionUrls((previous) => ({ ...previous, [host.id]: host.socketUrl }));
+    setAiName(inferBuddyAiName(host));
+    setStatus("offline");
   }
 
   function handleRemoveHost() {
@@ -415,7 +731,9 @@ export default function App() {
       pairingCode: nextHost.pairingCode,
       hosts: remaining,
     });
-    setActiveSocketUrl(nextHost.socketUrl);
+    hostSocketsRef.current.get(settings.activeHostId)?.socket.disconnect();
+    hostSocketsRef.current.delete(settings.activeHostId);
+    setStatus((buddyStates[nextHost.id] || initialBuddyState(nextHost)).status);
   }
 
   async function handleDiscoverHosts() {
@@ -424,16 +742,19 @@ export default function App() {
     try {
       const hosts = await discoverCarolineHosts(settings.socketUrl);
       setDiscoveredHosts(hosts);
-      setMessages((m) => [
-        ...m,
-        {
-          id: Date.now(),
-          from: "system",
-          text: hosts.length
-            ? `Found ${hosts.length} possible Project: Caroline host${hosts.length === 1 ? "" : "s"} on the network.`
-            : "No Project: Caroline hosts found. Type the URL manually in Settings.",
-        },
-      ]);
+      const current = activeHost();
+      if (current) {
+        appendHostMessage(
+          current.id,
+          {
+            from: "system",
+            text: hosts.length
+              ? `Found ${hosts.length} possible Project: Caroline host${hosts.length === 1 ? "" : "s"} on the network.`
+              : "No Project: Caroline hosts found. Type the URL manually in Settings.",
+          },
+          { unread: false }
+        );
+      }
     } finally {
       setIsDiscovering(false);
     }
@@ -455,8 +776,13 @@ export default function App() {
       pairingCode: nextHost.pairingCode,
       hosts,
     });
-    setActiveSocketUrl(host.url);
-    setAiName("Caroline");
+    if (!existing) {
+      setHostMessages((previous) => ({ ...previous, [nextHost.id]: initialMessagesForHost(nextHost) }));
+      setBuddyStates((previous) => ({ ...previous, [nextHost.id]: initialBuddyState(nextHost) }));
+    }
+    setConnectionUrls((previous) => ({ ...previous, [nextHost.id]: nextHost.socketUrl }));
+    setAiName(inferBuddyAiName(nextHost));
+    setStatus((buddyStates[nextHost.id] || initialBuddyState(nextHost)).status);
     setDiscoveredHosts([]);
   }
 
@@ -495,27 +821,53 @@ export default function App() {
     event.preventDefault();
     const text = draft.trim();
     if (!text) return;
+    const current = activeHost();
+    if (!current) return;
 
-    setMessages((m) => [
-      ...m,
-      { id: Date.now(), from: "you", sender: chatUserName(settings, hostUserName), text },
-    ]);
+    appendHostMessage(
+      current.id,
+      { from: "you", sender: chatUserName(settings, activeHostUserName), text },
+      { unread: false }
+    );
     setDraft("");
 
-    if (!socketRef.current?.send(text)) {
-      setMessages((m) => [
-        ...m,
+    if (!hostSocketsRef.current.get(current.id)?.socket.send(text)) {
+      appendHostMessage(
+        current.id,
         {
-          id: Date.now() + 1,
           from: "system",
           text: "Project: Caroline is offline. Open Settings (⚙), enter the WebSocket URL, and click Connect.",
         },
-      ]);
+        { unread: false }
+      );
     }
   }
 
-  const isOnline = status === "online";
-  const buddyAvatar = buddyAvatarSrc(settings.avatarId, isOnline);
+  function handleDeleteAllChats() {
+    const confirmed = window.confirm("Delete all companion chat history saved on this computer?");
+    if (!confirmed) return;
+
+    deleteChatHistory();
+    setHostMessages(resetMessagesForHosts(settings.hosts));
+    setBuddyStates((previous) =>
+      Object.fromEntries(
+        settings.hosts.map((host) => {
+          const current = previous[host.id] || initialBuddyState(host);
+          return [
+            host.id,
+            {
+              ...current,
+              unreadCount: 0,
+              lastMessage: "",
+              lastMessageAt: 0,
+            },
+          ];
+        })
+      )
+    );
+  }
+
+  const isOnline = activeStatus === "online";
   const darkModeButtonLabel = settings.darkMode ? "Switch to light mode" : "Switch to dark mode";
 
   function showProfilePanel() {
@@ -566,8 +918,8 @@ export default function App() {
 
         {/* ── Status row ────────────────────────────────────── */}
         <div className="status-row">
-          <span className={`status-light ${status}`} />
-          <span>{statusLabel(status, aiName)}</span>
+          <span className={`status-light ${activeStatus}`} />
+          <span>{statusLabel(activeStatus, activeAiName)}</span>
         </div>
 
         {/* ── Settings panel (shown when settingsOpen) ──────── */}
@@ -626,7 +978,7 @@ export default function App() {
               <label htmlFor="user-name">Your Name</label>
               <input
                 id="user-name"
-                value={settings.userName || hostUserName}
+                value={settings.userName || activeHostUserName}
                 onChange={(e) => setSettings({ ...settings, userName: e.target.value })}
                 placeholder="Dave"
               />
@@ -638,7 +990,7 @@ export default function App() {
                 id="companion-name"
                 value={settings.companionName}
                 onChange={(e) => setSettings({ ...settings, companionName: e.target.value })}
-                placeholder={`${chatUserName(settings, hostUserName)}'s Companion`}
+                placeholder={`${chatUserName(settings, activeHostUserName)}'s Companion`}
               />
             </div>
 
@@ -651,6 +1003,8 @@ export default function App() {
               >
                 <option value="caroline">Caroline</option>
                 <option value="carl">Carl</option>
+                <option value="catoline">Catoline</option>
+                <option value="robot">Robot</option>
               </select>
             </div>
 
@@ -664,6 +1018,18 @@ export default function App() {
                 {isCheckingUpdate ? "Checking for Client Updates..." : "Check Client Updates"}
               </button>
               {updateMessage && <p className="settings-note">{updateMessage}</p>}
+            </div>
+
+            <div className="settings-group">
+              <label>Privacy</label>
+              <button
+                type="button"
+                className="full-width-btn danger-btn"
+                onClick={handleDeleteAllChats}
+              >
+                Delete All Chats
+              </button>
+              <p className="settings-note">Clears saved companion transcripts and unread counts on this computer.</p>
             </div>
 
             {/* Pairing code — host kiosk displays a code; client enters it here */}
@@ -731,19 +1097,39 @@ export default function App() {
         <section className="chat-shell">
           <aside className="buddy-list" aria-label="Buddy list">
             <div className="buddy-heading">Buddies</div>
-            <div className={`buddy${isOnline ? " active" : ""}`}>
-              <img
-                src={buddyAvatar}
-                alt={aiName}
-                className="buddy-avatar"
-                width={32}
-                height={32}
-              />
-              <div>
-                <strong>{aiName}</strong>
-                <small>{isOnline ? "available" : "offline"}</small>
-              </div>
-            </div>
+            {settings.hosts.map((host) => {
+              const state = buddyStates[host.id] || initialBuddyState(host);
+              const selected = host.id === settings.activeHostId;
+              const avatarId = avatarIdForHost(host, state);
+              const avatar = buddyAvatarSrc(avatarId, state.status === "online");
+              return (
+                <button
+                  type="button"
+                  className={`buddy buddy-button ${selected ? "active" : ""} ${state.status} ${state.unreadCount ? "unread" : ""}`}
+                  key={host.id}
+                  onClick={() => handleSelectHost(host.id)}
+                  title={host.socketUrl}
+                >
+                  <img
+                    src={avatar}
+                    alt={state.aiName || host.name}
+                    className="buddy-avatar"
+                    width={32}
+                    height={32}
+                  />
+                  <div className="buddy-copy">
+                    <strong>{state.aiName || inferBuddyAiName(host)}</strong>
+                    <small>{buddyStatusText(state.status)}</small>
+                    {state.lastMessage && <em>{previewText(state.lastMessage)}</em>}
+                  </div>
+                  {state.unreadCount > 0 && (
+                    <span className="buddy-unread" aria-label={`${state.unreadCount} unread message${state.unreadCount === 1 ? "" : "s"}`}>
+                      {state.unreadCount > 9 ? "9+" : state.unreadCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
             <button
               type="button"
               className="buddy-profile-btn"
@@ -757,12 +1143,12 @@ export default function App() {
             {profileOpen && (
               <section
                 className={`profile-window profile-theme-${agentProfile.theme || "midnight"}`}
-                aria-label={`${aiName} buddy info`}
+                aria-label={`${activeAiName} buddy info`}
               >
                 <header className="profile-title">
                   <span className="profile-running-icon" />
                   <strong>Buddy Info:</strong>
-                  <input value={agentProfile.screenName || aiName} readOnly aria-label="Generated screen name" />
+                  <input value={agentProfile.screenName || activeAiName} readOnly aria-label="Generated screen name" />
                   <button type="button" disabled>
                     OK
                   </button>
@@ -784,7 +1170,7 @@ export default function App() {
                 <div className="profile-label">Away message / Personal Profile:</div>
                 <div className="profile-scroll">
                   <div className="profile-canvas">
-                    <div className="profile-kicker">{agentProfile.screenName || aiName}</div>
+                    <div className="profile-kicker">{agentProfile.screenName || activeAiName}</div>
                     {agentProfile.profileLines.map((line, index) => (
                       <p className={`profile-line line-${index + 1}`} key={`${agentProfile.weekKey}-${index}`}>
                         {line}
@@ -808,11 +1194,11 @@ export default function App() {
                   <span>
                     {msg.sender ||
                       (msg.from === "you"
-                        ? chatUserName(settings, hostUserName)
+                        ? chatUserName(settings, activeHostUserName)
                         : msg.from === "caroline"
-                        ? aiName
+                        ? activeAiName
                         : msg.from === "user"
-                        ? hostUserName || "You"
+                        ? activeHostUserName || "You"
                         : "System")}
                   </span>
                   <p>{msg.text}</p>
@@ -839,8 +1225,8 @@ export default function App() {
 
             <form className="compose" onSubmit={handleSubmit}>
               <input
-                aria-label={`Message ${aiName}`}
-                placeholder={isOnline ? "Type a message..." : `${aiName} is offline...`}
+                aria-label={`Message ${activeAiName}`}
+                placeholder={isOnline ? "Type a message..." : `${activeAiName} is offline...`}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
               />
