@@ -441,14 +441,16 @@
   body.idle-mode #avatar-outer { transform: scale(1.2); }
   body.idle-mode #avatar-outer::before { display:none; }
   #avatar-wrap #av-sleeping,
-  #avatar-wrap #av-carl-sleeping { opacity: 0; pointer-events: none; }
+  #avatar-wrap #av-carl-sleeping,
+  #avatar-wrap #av-robot-sleeping { opacity: 0; pointer-events: none; }
   #avatar-wrap #av-happy { opacity: 0; pointer-events: none; }
   body.mood-elated #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
   body.mood-elated #avatar-wrap #av-happy { opacity: 1; pointer-events: none; }
   body.idle-mode #avatar-wrap .avatar-svg { opacity: 0; pointer-events: none; }
-  body.idle-mode.idle-night:not(.avatar-carl) #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-night:not(.avatar-carl):not(.avatar-robot) #avatar-wrap #av-sleeping { opacity: 1; pointer-events: none; }
   body.idle-mode.idle-night.avatar-carl #avatar-wrap #av-carl-sleeping { opacity: 1; pointer-events: none; }
-  body.idle-mode.idle-day #avatar-wrap .avatar-svg:not(.hidden):not(#av-happy):not(#av-sleeping):not(#av-carl-sleeping) { opacity: 1 !important; pointer-events: none; }
+  body.idle-mode.idle-night.avatar-robot #avatar-wrap #av-robot-sleeping { opacity: 1; pointer-events: none; }
+  body.idle-mode.idle-day #avatar-wrap .avatar-svg:not(.hidden):not(#av-happy):not(#av-sleeping):not(#av-carl-sleeping):not(#av-robot-sleeping) { opacity: 1 !important; pointer-events: none; }
   body.idle-mode #avatar-wrap #av-happy { opacity: 0; pointer-events: none; }
   body.idle-mode .nav-btn { opacity: 0; pointer-events: none; transition: opacity 1s ease; }
   body.idle-mode #bottom-bar { opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
@@ -2573,7 +2575,7 @@
             <path d="M 50 88 L 58 93 L 50 98 Z" fill="var(--t-hex2)"/><path d="M 70 88 L 62 93 L 70 98 Z" fill="var(--t-hex2)"/>
           </svg>
           <img id="av-cat" src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
-          <img id="av-robot" src="assets/robot.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
+          <img id="av-robot" src="assets/Robot-Awake.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-frog-pilot" viewBox="0 0 120 120" role="img" aria-label="Frog Pilot placeholder">
             <defs>
               <linearGradient id="frogHelmet" x1="0" x2="1" y1="0" y2="1">
@@ -2615,6 +2617,7 @@
           <img id="av-happy" src="assets/caroline-happy.gif" class="avatar-svg" alt="Caroline Happy" onerror="this.style.display='none'"/>
           <img id="av-sleeping" src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
           <img id="av-carl-sleeping" src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-robot-sleeping" src="assets/Robot-Sleeping.gif" class="avatar-svg" alt="Robot Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -6128,10 +6131,9 @@ const AVATAR_PERSONAS = {
   robot: {
     defaultName: 'Robot',
     title: 'Robot',
-    summary: 'Strictly helpful robot voice. Avatar art coming soon.',
+    summary: 'Strictly helpful robot voice.',
     prompt: 'Be strictly helpful and efficient. Use a light robot cadence with clear confirmations and no extra emotional flourish.',
-    src: 'assets/robot.gif',
-    comingSoon: true
+    src: 'assets/Robot-Awake.gif'
   },
   'frog-pilot': {
     defaultName: 'Frog Pilot',
@@ -6285,6 +6287,7 @@ function applyAvatar(idx) {
     if (el) { el.classList.toggle('hidden', i !== idx); el.style.display = ''; }
   });
   document.body.classList.toggle('avatar-carl', companions[idx]?.id === 'av-carl');
+  document.body.classList.toggle('avatar-robot', companions[idx]?.id === 'av-robot');
   syncSelectedAvatarId(idx);
   currentAvatarIndex = idx;
 }
@@ -9240,7 +9243,7 @@ setInterval(updateWifi, 30000);
 
 (function() {
   const ts = Date.now();
-  ['av-gif','av-cat','av-carl','av-carl-sleeping'].forEach(id => {
+  ['av-gif','av-cat','av-carl','av-carl-sleeping','av-robot','av-robot-sleeping'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el.src) el.src = el.src.split('?')[0] + '?v=' + ts;
   });
@@ -9331,7 +9334,7 @@ const ONB_AVATARS = [
   { id:'pilot',      title:'Caroline',   desc:'Caring, thoughtful, and emotionally steady.', src:'assets/caroline.gif' },
   { id:'carl',       title:'Carl',       desc:'Short, direct, and assertive.', src:'assets/Carl-awake.gif' },
   { id:'cat',        title:'Catoline',   desc:'Sweet, gentle, helpful, with a little meow now and then.', src:'assets/cat.gif' },
-  { id:'robot',      title:'Robot',      desc:'Strictly helpful robot voice. Avatar art coming soon.', src:'assets/robot.gif', comingSoon:true },
+  { id:'robot',      title:'Robot',      desc:'Strictly helpful robot voice.', src:'assets/Robot-Awake.gif' },
   { id:'frog-pilot', title:'Frog Pilot', desc:'Helpful, caring, and adventurous. Avatar art coming soon.', src:'', comingSoon:true }
 ];
 

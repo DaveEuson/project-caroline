@@ -1,12 +1,26 @@
 # Project: Caroline
 
-Project: Caroline is a local AI kiosk for your desk, wall screen, Raspberry Pi, Ubuntu box, or experimental Steam Deck setup.
+Project: Caroline is a local AI host and kiosk for your desk, wall screen, Raspberry Pi, Ubuntu box, or experimental Steam Deck setup.
 
-It gives you a persistent assistant console with chat memory, calendar actions, local tasks, smart-home controls, music, weather, news, video, system status, and ambient widgets. It is built for your local network first: use OpenRouter for the smoothest AI experience, or run a private local model through Ollama.
+It gives you a persistent assistant console with chat memory, calendar actions, local tasks, smart-home controls, music, weather, news, video, system status, and ambient widgets. It is built for your local network first: install Caroline on one host, then open it from the kiosk screen, any browser on your network, or the optional desktop companion app.
 
 Caroline is not just a chatbot page. It is a small personal command center meant to stay open all day.
 
 ![Project: Caroline dashboard](Screenshots/Screenshot_1.jpg)
+
+![Project: Caroline Companion buddy list](Screenshots/companion-buddies.png)
+
+## Host, Kiosk, Browser, Companion
+
+Caroline has one **host** and as many **clients** as you want on your local network.
+
+- The host is the device running Caroline: a Raspberry Pi, Ubuntu server/desktop, or experimental Steam Deck install.
+- The kiosk is the host's own fullscreen browser view, ideal for a wall screen or desk display.
+- Any browser on your network can open `http://YOUR-CAROLINE-IP:8080/` for the same dashboard and chat.
+- Chrome or Chromium can use the secure voice URL `https://YOUR-CAROLINE-IP:8444/` for microphone and wake-word access.
+- The Companion app is a retro messenger-style desktop client that can pair with multiple Caroline hosts, switch between buddies, keep local chat history, and clear saved chats for privacy.
+
+That means Caroline can be a visible room kiosk, a headless home server, and a desktop chat buddy at the same time.
 
 ## What Caroline Can Do
 
@@ -17,6 +31,8 @@ Caroline is not just a chatbot page. It is a small personal command center meant
 - Spotify playback controls
 - Weather, news, video, tides, radio, Pomodoro, memory, and system widgets
 - Fullscreen kiosk mode or server/client mode from another browser
+- Desktop Companion app for Caroline, Carl, Catoline, Robot, and future host personalities
+- Multiple paired hosts with per-buddy transcripts, unread message badges, and local chat-history deletion
 
 ## Quick Install
 
@@ -44,7 +60,13 @@ The optional desktop companion app is released separately:
 
 [Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.8)
 
-Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, and `.AppImage` on Steam Deck Desktop Mode.
+Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, `.dmg` on macOS, and `.AppImage` on Steam Deck Desktop Mode. The companion pairs with the `SYNC:` code shown on each Caroline host and talks to:
+
+```text
+ws://YOUR-CAROLINE-IP:8080/ws/caroline
+```
+
+If you run more than one Caroline host, the buddy list can switch between them like a classic instant messenger.
 
 For microphone input from another browser, use Chrome or Chromium with the secure voice URL printed by the installer:
 
