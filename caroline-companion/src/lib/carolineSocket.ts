@@ -291,7 +291,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         clientName: client.displayName,
         userName: client.userName,
         pairingCode: client.pairingCode || undefined,
-        appVersion: "0.1.8",
+        appVersion: "0.1.9",
       })
     );
   }

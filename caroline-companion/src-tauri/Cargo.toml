@@ -1,6 +1,6 @@
 [package]
 name = "caroline-companion"
-version = "0.1.8"
+version = "0.1.9"
 description = "Classic chat companion client for Project: Caroline"
 authors = ["Project Caroline"]
 license = "MIT"
