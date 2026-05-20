@@ -10,6 +10,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Added default companion bot profiles for Caroline on Pi, Carl on Steam Deck, and Catoline on Pop!_OS.
 - Added live multi-host buddy switching in the companion app, with per-buddy transcripts, status, and unread message badges.
 - Added local companion chat history with a privacy control to delete all saved chats.
+- Added Hide/Show controls for memory shards so sensitive shard text can be concealed without deleting it.
 - Added a SteamOS user-space update helper so Steam Deck builds can update without relying on `/usr/local/sbin`.
 - Added architecture and backup/restore docs.
 - Added a practical release checklist with device QA, smoke tests, and rollback notes.
@@ -23,6 +24,8 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Updated companion docs to explain the Steam Deck SSH tunnel profile.
 - Updated Steam Deck companion guidance to prefer the `.AppImage` build.
 - Preserved existing AI provider/model settings during noninteractive SteamOS updates.
+- Made dashboard feature toggles persist immediately when changed, including Spotify and Calendar widget selections.
+- Persisted selected Google read/write calendars through the settings API.
 
 ## Fixed
 

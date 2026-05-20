@@ -393,6 +393,10 @@
   .memory-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(226,232,240,0.36); }
   .memory-deny { border:1px solid rgba(248,113,113,0.28); border-radius:999px; background:rgba(248,113,113,0.07); color:#fda4af; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
   .memory-deny:hover { background:rgba(248,113,113,0.15); color:#fecdd3; }
+  .memory-hide { border:1px solid rgba(148,163,184,0.22); border-radius:999px; background:rgba(148,163,184,0.05); color:rgba(148,163,184,0.55); padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
+  .memory-hide:hover { background:rgba(148,163,184,0.12); color:rgba(148,163,184,0.85); }
+  .memory-shard.is-hidden { border-color:rgba(var(--t-rgb1),0.06); background:rgba(0,0,0,0.10); }
+  .memory-shard.is-hidden .memory-text { filter:blur(4px); user-select:none; pointer-events:none; opacity:0.5; }
   .memory-empty { color:rgba(226,232,240,0.30); font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.4; padding:6px 2px; }
   #smart-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; max-height:150px; overflow-y:auto; }
   .smart-btn { min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:7px; background:rgba(var(--t-rgb1),0.05); color:var(--t-hex1); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:background .18s, border-color .18s, color .18s, transform .18s; }
@@ -2791,7 +2795,7 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -2903,6 +2907,19 @@ function syncFeatureCheckboxes() {
   return featureState;
 }
 
+function collectFeatureCheckboxesFromForm() {
+  if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  const before = JSON.stringify(S.features);
+  FEATURE_KEYS.forEach(k => {
+    const el = document.getElementById('feat-' + k);
+    if (el) S.features[k] = !!el.checked;
+  });
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  if (JSON.stringify(S.features) !== before) S.featuresUpdatedAt = Date.now();
+  return S.features;
+}
+
 S.features = normalizeFeatureState(S.features, { repairAllOff: false });
 if (S.zipCode && !S.zipcode) S.zipcode = S.zipCode;
 normalizeSettingsBooleans(S);
@@ -2961,6 +2978,14 @@ function clearBrowserInstallState(reason) {
 function mergeServerSettings(d, options = {}) {
   if (!d || !Object.keys(d).length) return false;
   const skip = options.skip || new Set();
+  let storedSettings = {};
+  try { storedSettings = JSON.parse(localStorage.getItem('caro_settings') || '{}') || {}; } catch(e) {}
+  const localFeaturesUpdatedAt = Number(storedSettings.featuresUpdatedAt || S.featuresUpdatedAt || 0);
+  const serverFeaturesUpdatedAt = Number(d.featuresUpdatedAt || 0);
+  const shouldKeepLocalFeatures = !!d.features
+    && localFeaturesUpdatedAt > serverFeaturesUpdatedAt
+    && storedSettings.features
+    && typeof storedSettings.features === 'object';
   const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
@@ -2978,6 +3003,7 @@ function mergeServerSettings(d, options = {}) {
   normalizeSettingsBooleans(d);
   Object.keys(d).forEach(k => {
     if (skip.has(k)) return;
+    if (k === 'features' && shouldKeepLocalFeatures) return;
     const v = d[k];
     if (k.endsWith('Configured')) {
       S[k] = !!v;
@@ -2997,7 +3023,16 @@ function mergeServerSettings(d, options = {}) {
   if (!Array.isArray(S.calendarIds) || !S.calendarIds.length) { S.calendarIds = S.calendarId ? [S.calendarId] : []; }
   if (!S.defaultWriteCalendarId && S.calendarId) S.defaultWriteCalendarId = S.calendarId;
   if (S.installId) localStorage.setItem('caro_install_id', S.installId);
+  if (shouldKeepLocalFeatures) {
+    S.features = normalizeFeatureState(storedSettings.features, { repairAllOff: false });
+    S.featuresUpdatedAt = localFeaturesUpdatedAt;
+  }
   localStorage.setItem('caro_settings', JSON.stringify(S));
+  if (shouldKeepLocalFeatures && typeof postSettingsToNodeRed === 'function') {
+    setTimeout(() => {
+      postSettingsToNodeRed({ features: S.features, featuresUpdatedAt: S.featuresUpdatedAt }, 5000).catch(e => console.warn('[Caroline] local feature state repair failed:', e));
+    }, 500);
+  }
   const restoreKeys = Object.keys(restoredSecrets).filter(k => restoredSecrets[k] && !d[k] && !d[k + 'Configured']);
   if (restoreKeys.length && typeof postSettingsToNodeRed === 'function') {
     const payload = {};
@@ -4140,11 +4175,12 @@ function attachWidgetCloseButtons() {
 
 function persistFeatureState(reason = 'feature change') {
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  S.featuresUpdatedAt = Date.now();
   localStorage.setItem('caro_settings', JSON.stringify(S));
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', features: S.features }));
+    ws.send(JSON.stringify({ type: 'settings_update', features: S.features, featuresUpdatedAt: S.featuresUpdatedAt }));
   }
-  postSettingsToNodeRed({ features: S.features }, 5000).catch(e => console.warn('[Caroline] ' + reason + ' settings sync failed:', e));
+  postSettingsToNodeRed({ features: S.features, featuresUpdatedAt: S.featuresUpdatedAt }, 5000).catch(e => console.warn('[Caroline] ' + reason + ' settings sync failed:', e));
 }
 
 function disableWidgetFeature(feature, label) {
@@ -4195,10 +4231,13 @@ function toggleNewsTicker(showTicker) {
 function previewFeature(key, val) {
   // Live preview while settings are open
   if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
-  S.features[key] = val;
+  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  S.features[key] = !!val;
   if (key === 'news' && val) localStorage.setItem('caro_news_ticker_hidden', 'false');
   applyFeatures();
+  syncFeatureCheckboxes();
   updateFeatWarnings();
+  persistFeatureState('feature toggle');
   if (key === 'memes' && val && !currentMeme) { fetchMeme(); scheduleMemeRotation(); }
 }
 
@@ -5877,6 +5916,7 @@ async function saveSettings() {
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
   S.autoTheme = document.getElementById('set-auto-theme').checked;
+  collectFeatureCheckboxesFromForm();
   S.aiModel = document.getElementById('set-model').value;
   const newName = document.getElementById('set-ainame').value.trim() || 'Caroline';
   S.aiName = newName;
@@ -6026,7 +6066,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -6059,12 +6099,7 @@ async function saveSettings() {
   }
 
   // Save feature toggles
-  if (!S.features) S.features = Object.assign({}, FEATURE_DEFAULTS);
-  FEATURE_KEYS.forEach(k => {
-    const el = document.getElementById('feat-'+k);
-    if (el) S.features[k] = el.checked;
-  });
-  S.features = normalizeFeatureState(S.features, { repairAllOff: false });
+  collectFeatureCheckboxesFromForm();
   syncFeatureCheckboxes();
   updateFeatWarnings();
 
@@ -7186,7 +7221,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();
@@ -9161,9 +9196,11 @@ function renderMemoryWidget() {
     status.innerHTML = '<div class="memory-text">' + labels.join(' · ') + '</div><div class="memory-meta"><span>core memory</span><span></span></div>';
     list.appendChild(status);
   }
+  const hiddenIds = getHiddenShardIds();
   shards.forEach((m) => {
+    const isHidden = hiddenIds.has(m.id);
     const item = document.createElement('div');
-    item.className = 'memory-shard';
+    item.className = 'memory-shard' + (isHidden ? ' is-hidden' : '');
     const text = document.createElement('div');
     text.className = 'memory-text';
     text.textContent = m.text || 'Untitled memory';
@@ -9171,6 +9208,17 @@ function renderMemoryWidget() {
     meta.className = 'memory-meta';
     const age = document.createElement('span');
     age.textContent = memoryAgeLabel(m.ts);
+    const btns = document.createElement('span');
+    btns.style.cssText = 'display:flex;gap:5px;';
+    const hide = document.createElement('button');
+    hide.type = 'button';
+    hide.className = 'memory-hide';
+    hide.textContent = isHidden ? 'Show' : 'Hide';
+    hide.title = isHidden ? 'Reveal this memory shard' : 'Hide this memory shard from view';
+    hide.onclick = (ev) => {
+      ev.stopPropagation();
+      toggleMemoryHidden(m.id);
+    };
     const deny = document.createElement('button');
     deny.type = 'button';
     deny.className = 'memory-deny';
@@ -9180,7 +9228,8 @@ function renderMemoryWidget() {
       ev.stopPropagation();
       markMemoryNotTrue(m.index);
     };
-    meta.append(age, deny);
+    btns.append(hide, deny);
+    meta.append(age, btns);
     item.append(text, meta);
     list.appendChild(item);
   });
@@ -9199,6 +9248,9 @@ function markMemoryNotTrue(idx) {
   const id = note.id || memoryShardId(text);
   stickyNotes.splice(idx, 1);
   localStorage.setItem('caro_notes', JSON.stringify(stickyNotes));
+  const hiddenIds = getHiddenShardIds();
+  hiddenIds.delete(id);
+  localStorage.setItem('caro_hidden_shards', JSON.stringify([...hiddenIds]));
   fetchJsonWithTimeout(httpBase() + '/admin/memory-shards/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -9210,6 +9262,24 @@ function markMemoryNotTrue(idx) {
   renderMemoryWidget();
   addMessage('Memory shard deleted.', 'caroline', 'display');
   playBeep(360);
+}
+
+function getHiddenShardIds() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('caro_hidden_shards') || '[]');
+    return new Set(Array.isArray(raw) ? raw : []);
+  } catch(e) {
+    return new Set();
+  }
+}
+
+function toggleMemoryHidden(id) {
+  if (!id) return;
+  const ids = getHiddenShardIds();
+  if (ids.has(id)) ids.delete(id);
+  else ids.add(id);
+  localStorage.setItem('caro_hidden_shards', JSON.stringify([...ids]));
+  renderMemoryWidget();
 }
 
 // ── WIFI SIGNAL ──────────────────────────────
