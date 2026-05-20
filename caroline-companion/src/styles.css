@@ -654,7 +654,7 @@ html[data-theme="dark"] .buddy.unread strong {
   border-bottom: 1px solid #85856b;
   display: grid;
   gap: 2px 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   padding: 5px 6px;
 }
 

@@ -1,5 +1,5 @@
 // Port 8080 = nginx proxy (externally accessible). Port 1880 = Node-RED direct (firewall-blocked).
-export const DEFAULT_CAROLINE_SOCKET_URL = "ws://192.168.1.50:8080/ws/caroline";
+export const DEFAULT_CAROLINE_SOCKET_URL = "ws://caroline.local:8080/ws/caroline";
 
 export type CarolineSocketStatus = "connecting" | "online" | "offline" | "rejected";
 
@@ -13,6 +13,7 @@ export type CarolineSocketMessage = {
   clientName?: string;
   userName?: string;
   aiName?: string;
+  deviceType?: string;
   origin?: string;
   agentProfile?: string;
   personalityHint?: string;
@@ -108,6 +109,7 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
           role: "system",
           aiName: stringField(record, "aiName") || hostName,
           userName: stringField(record, "userName"),
+          deviceType: stringField(record, "deviceType") || stringField(record, "hostDeviceType"),
           agentProfile: stringField(record, "agentProfile"),
           personalityHint: stringField(record, "personalityHint"),
         };

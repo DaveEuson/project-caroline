@@ -6,7 +6,15 @@ import {
 } from "./lib/carolineSocket";
 import { buildWeeklyAgentProfile } from "./lib/agentProfile";
 import { discoverCarolineHosts, type DiscoveredHost } from "./lib/hostDiscovery";
-import { loadSettings, saveSettings, type AgentProfile, type AppSettings, type SavedHost } from "./lib/settings";
+import {
+  loadSettings,
+  normalizeDeviceType,
+  saveSettings,
+  type AgentProfile,
+  type AppSettings,
+  type HostDeviceType,
+  type SavedHost,
+} from "./lib/settings";
 import carolineAvatar from "../src-tauri/icons/64x64.png";
 import carlAwakeAvatar from "../../assets/Carl-awake.gif";
 import carlAsleepAvatar from "../../assets/Carl-asleep.gif";
@@ -26,6 +34,7 @@ type BuddyState = {
   status: CarolineSocketStatus;
   aiName: string;
   hostName: string;
+  deviceType: HostDeviceType;
   userName: string;
   unreadCount: number;
   lastMessage: string;
@@ -42,6 +51,7 @@ const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caro
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
 const MAX_MESSAGES_PER_HOST = 500;
+const HOST_DEVICE_TYPES: HostDeviceType[] = ["", "Pi", "Steam", "Ubuntu", "Mac", "Windows"];
 
 let localMessageId = Date.now();
 
@@ -69,6 +79,14 @@ function inferAvatarId(value: string) {
   if (normalized.includes("cat")) return "catoline";
   if (normalized.includes("robot")) return "robot";
   return "caroline";
+}
+
+function inferDeviceTypeForHost(host?: SavedHost, state?: BuddyState): HostDeviceType {
+  return normalizeDeviceType(state?.deviceType || host?.deviceType) || normalizeDeviceType(`${host?.id || ""} ${host?.name || ""} ${host?.socketUrl || ""}`);
+}
+
+function deviceTypeLabel(deviceType?: HostDeviceType) {
+  return deviceType ? deviceType : "Device";
 }
 
 function isAutoHostName(value: string) {
@@ -175,6 +193,7 @@ function initialBuddyState(host?: SavedHost): BuddyState {
     status: "offline",
     aiName: inferBuddyAiName(host),
     hostName: host?.name || "Project: Caroline",
+    deviceType: inferDeviceTypeForHost(host),
     userName: "",
     unreadCount: 0,
     lastMessage: "",
@@ -444,6 +463,11 @@ export default function App() {
         const nextHostName =
           (typeof raw.hostName === "string" ? raw.hostName : null) ??
           (typeof raw.host === "string" ? raw.host : null);
+        const nextDeviceType = normalizeDeviceType(
+          (typeof raw.deviceType === "string" ? raw.deviceType : null) ??
+          (typeof raw.hostDeviceType === "string" ? raw.hostDeviceType : null) ??
+          msg.deviceType
+        );
         const nextUserName =
           (typeof raw.userName === "string" ? raw.userName : null) ??
           msg.userName;
@@ -472,6 +496,7 @@ export default function App() {
               status: "online",
               aiName: resolvedAiName,
               hostName: nextHostName?.trim() || resolvedAiName || current.hostName,
+              deviceType: nextDeviceType || current.deviceType,
               userName: userName || current.userName,
             },
           };
@@ -496,6 +521,7 @@ export default function App() {
               name: nextLabel,
               aiName: resolvedAiName,
               avatarId: resolvedAvatarId,
+              deviceType: nextDeviceType || candidate.deviceType,
             };
           });
           const profileUserName = userName || previous.userName || hostUserNameRef.current;
@@ -682,6 +708,7 @@ export default function App() {
     : initialBuddyState();
   const activeStatus = selectedBuddyState.status || status;
   const activeAiName = selectedBuddyState.aiName || aiName;
+  const activeDeviceType = inferDeviceTypeForHost(selectedHost, selectedBuddyState);
   const activeHostUserName = selectedBuddyState.userName || hostUserName;
   const messages = selectedHost ? hostMessages[selectedHost.id] || [] : [];
   const buddyHosts = settings.hosts.filter((host) =>
@@ -700,6 +727,14 @@ export default function App() {
     const url = settings.socketUrl.trim();
     const current = activeHost();
     if (!current) return;
+    if (!url) {
+      appendHostMessage(
+        current.id,
+        { from: "system", text: "Enter this host's WebSocket URL first. The path is usually /ws/caroline." },
+        { unread: false }
+      );
+      return;
+    }
     if (url && !/^wss?:\/\//i.test(url)) {
       appendHostMessage(
         current.id,
@@ -754,6 +789,7 @@ export default function App() {
       id: newHostId(),
       name: "New Buddy",
       socketUrl: settings.socketUrl,
+      deviceType: "",
       pairingCode: "",
     };
     setSettings({
@@ -815,6 +851,7 @@ export default function App() {
       id: newHostId(),
       name: `Project: Caroline @ ${host.label}`,
       socketUrl: host.url,
+      deviceType: "",
       pairingCode: "",
     };
     const hosts = existing ? settings.hosts : [...settings.hosts, nextHost];
@@ -986,6 +1023,7 @@ export default function App() {
                   {settings.hosts.map((host) => (
                     <option value={host.id} key={host.id}>
                       {buddyDisplayName(host, buddyStates[host.id])}
+                      {inferDeviceTypeForHost(host, buddyStates[host.id]) ? ` (${inferDeviceTypeForHost(host, buddyStates[host.id])})` : ""}
                     </option>
                   ))}
                 </select>
@@ -1005,6 +1043,30 @@ export default function App() {
                 value={activeHost()?.name || ""}
                 onChange={(e) => updateActiveHost({ name: e.target.value })}
               />
+            </div>
+
+            <div className="settings-group">
+              <label htmlFor="host-ai-name">Buddy Name</label>
+              <input
+                id="host-ai-name"
+                value={activeHost()?.aiName || inferBuddyAiName(activeHost())}
+                onChange={(e) => updateActiveHost({ aiName: e.target.value, avatarId: inferAvatarId(e.target.value) })}
+              />
+            </div>
+
+            <div className="settings-group">
+              <label htmlFor="host-device-type">Host Device</label>
+              <select
+                id="host-device-type"
+                value={activeHost()?.deviceType || ""}
+                onChange={(e) => updateActiveHost({ deviceType: normalizeDeviceType(e.target.value) })}
+              >
+                {HOST_DEVICE_TYPES.map((deviceType) => (
+                  <option value={deviceType} key={deviceType || "unknown"}>
+                    {deviceType || "Unknown"}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="settings-group">
@@ -1034,7 +1096,7 @@ export default function App() {
             </div>
 
             <div className="settings-group">
-              <label htmlFor="companion-name">Companion Name</label>
+              <label htmlFor="companion-name">Client Name</label>
               <input
                 id="companion-name"
                 value={settings.companionName}
@@ -1149,6 +1211,7 @@ export default function App() {
             {buddyHosts.map((host) => {
               const state = buddyStates[host.id] || initialBuddyState(host);
               const displayName = buddyDisplayName(host, state);
+              const deviceType = inferDeviceTypeForHost(host, state);
               const selected = host.id === settings.activeHostId;
               const avatarId = avatarIdForHost(host, state);
               const avatar = buddyAvatarSrc(avatarId, state.status === "online");
@@ -1169,7 +1232,7 @@ export default function App() {
                   />
                   <div className="buddy-copy">
                     <strong>{displayName}</strong>
-                    <small>{buddyStatusText(state.status)}</small>
+                    <small>{buddyStatusText(state.status)}{deviceType ? ` · ${deviceType}` : ""}</small>
                     {state.lastMessage && <em>{previewText(state.lastMessage)}</em>}
                   </div>
                   {state.unreadCount > 0 && (
@@ -1207,6 +1270,9 @@ export default function App() {
                   </button>
                 </header>
                 <div className="profile-stats">
+                  <p>
+                    <strong>Device:</strong> {deviceTypeLabel(activeDeviceType)}
+                  </p>
                   <p>
                     <strong>Warning Level:</strong> {agentProfile.warningLevel || 0}%
                   </p>

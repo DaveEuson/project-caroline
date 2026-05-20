@@ -1,10 +1,13 @@
 const SETTINGS_KEY = "caroline-companion-settings";
 
+export type HostDeviceType = "" | "Pi" | "Steam" | "Ubuntu" | "Mac" | "Windows";
+
 export type SavedHost = {
   id: string;
   name: string;
   aiName?: string;
   avatarId?: string;
+  deviceType?: HostDeviceType;
   socketUrl: string;
   pairingCode: string;
 };
@@ -37,12 +40,33 @@ export type AppSettings = {
   agentProfile: AgentProfile | null;
 };
 
-const DEFAULT_SOCKET_URL = "ws://192.168.1.50:8080/ws/caroline";
+const DEFAULT_SOCKET_URL = "";
 const DEFAULT_HOSTS: SavedHost[] = [
   {
     id: "caroline-host",
-    name: "Project: Caroline",
+    name: "Caroline",
+    aiName: "Caroline",
+    avatarId: "caroline",
+    deviceType: "Pi",
     socketUrl: DEFAULT_SOCKET_URL,
+    pairingCode: "",
+  },
+  {
+    id: "carl-steam",
+    name: "Carl",
+    aiName: "Carl",
+    avatarId: "carl",
+    deviceType: "Steam",
+    socketUrl: "ws://127.0.0.1:8088/ws/caroline",
+    pairingCode: "",
+  },
+  {
+    id: "catoline-ubuntu",
+    name: "Catoline",
+    aiName: "Catoline",
+    avatarId: "catoline",
+    deviceType: "Ubuntu",
+    socketUrl: "",
     pairingCode: "",
   },
 ];
@@ -66,6 +90,17 @@ function migrateSocketUrl(url: string) {
 function normalizeAvatarId(value: unknown, fallback = "caroline") {
   const id = String(value || "").trim();
   return ["caroline", "carl", "catoline", "robot"].includes(id) ? id : fallback;
+}
+
+export function normalizeDeviceType(value: unknown): HostDeviceType {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "";
+  if (raw === "pi" || raw.includes("raspberry")) return "Pi";
+  if (raw === "steam" || raw.includes("steam") || raw.includes("deck")) return "Steam";
+  if (raw === "windows" || raw.includes("windows") || raw.includes("wsl")) return "Windows";
+  if (raw === "mac" || raw.includes("mac") || raw.includes("darwin")) return "Mac";
+  if (raw === "ubuntu" || raw.includes("ubuntu") || raw.includes("pop") || raw.includes("debian") || raw.includes("linux")) return "Ubuntu";
+  return "";
 }
 
 function safeHostId(value: string, fallback: string) {
@@ -92,6 +127,11 @@ function isLegacyPlaceholderHost(host: Partial<SavedHost>) {
   return name === "carl (steam deck tunnel)" || name === "catoline (pop!_os)";
 }
 
+function defaultDeviceTypeForHost(host: Partial<SavedHost>) {
+  const hint = `${host?.id || ""} ${host?.name || ""} ${host?.aiName || ""} ${host?.socketUrl || ""}`;
+  return normalizeDeviceType(hint);
+}
+
 function deriveUserNameFromCompanionName(value: string) {
   const match = String(value || "").trim().match(/^(.+?)'s Companion$/i);
   return match ? match[1].trim() : "";
@@ -103,14 +143,14 @@ function normalizeHosts(settings: AppSettings): AppSettings {
   const companionName = String(settings.companionName || (userName ? `${userName}'s Companion` : "My Companion")).trim();
   const avatarId = normalizeAvatarId(settings.avatarId, DEFAULTS.avatarId);
   const savedHosts = Array.isArray(settings.hosts) ? settings.hosts : [];
-  const hostSource = savedHosts.length ? savedHosts : DEFAULT_HOSTS;
+  const hostSource = savedHosts.length ? [...DEFAULT_HOSTS, ...savedHosts] : DEFAULT_HOSTS;
   const hosts = hostSource
     .filter((host) => !isLegacyPlaceholderHost(host))
     .map<SavedHost | null>((host, index) => {
       const hostUrl = migrateSocketUrl(host?.socketUrl || (index === 0 ? socketUrl : ""));
-      if (!hostUrl) return null;
       const hostAiName = String(host?.aiName || "").trim();
       const hostAvatarId = normalizeAvatarId(host?.avatarId, "");
+      const hostDeviceType = normalizeDeviceType(host?.deviceType) || defaultDeviceTypeForHost(host);
       const normalized: SavedHost = {
         id: safeHostId(host?.id || `host-${index + 1}`, `host-${index + 1}`),
         name: String(host?.name || hostAiName || hostNameFromUrl(hostUrl)).trim() || hostNameFromUrl(hostUrl),
@@ -119,11 +159,12 @@ function normalizeHosts(settings: AppSettings): AppSettings {
       };
       if (hostAiName) normalized.aiName = hostAiName;
       if (hostAvatarId) normalized.avatarId = hostAvatarId;
+      if (hostDeviceType) normalized.deviceType = hostDeviceType;
       return normalized;
     })
     .filter((host): host is SavedHost => host !== null);
 
-  if (!hosts.some((host) => host.socketUrl === socketUrl)) {
+  if (socketUrl && !hosts.some((host) => host.socketUrl === socketUrl)) {
     hosts.unshift({
       id: "default-host",
       name: hostNameFromUrl(socketUrl),
@@ -133,7 +174,7 @@ function normalizeHosts(settings: AppSettings): AppSettings {
   }
 
   const uniqueHosts = hosts.reduce<SavedHost[]>((list, host) => {
-    const existingIndex = list.findIndex((candidate) => candidate.id === host.id || candidate.socketUrl === host.socketUrl);
+    const existingIndex = list.findIndex((candidate) => candidate.id === host.id || (candidate.socketUrl && host.socketUrl && candidate.socketUrl === host.socketUrl));
     if (existingIndex >= 0) list[existingIndex] = host;
     else list.push(host);
     return list;
@@ -141,7 +182,7 @@ function normalizeHosts(settings: AppSettings): AppSettings {
 
   const activeHostId = uniqueHosts.some((host) => host.id === settings.activeHostId)
     ? settings.activeHostId
-    : uniqueHosts.find((host) => host.socketUrl === socketUrl)?.id || uniqueHosts[0]?.id || "default-host";
+    : (socketUrl ? uniqueHosts.find((host) => host.socketUrl === socketUrl)?.id : "") || uniqueHosts[0]?.id || "default-host";
 
   const activeHost = uniqueHosts.find((host) => host.id === activeHostId) || uniqueHosts[0];
 

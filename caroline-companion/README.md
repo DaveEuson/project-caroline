@@ -2,7 +2,7 @@
 
 Small retro messenger-style desktop companion for Project Caroline.
 
-This app is intentionally simple: one chat window, saved bot profiles for Caroline/Carl/Catoline, and a small helper that talks to the Node-RED WebSocket flow.
+This app is intentionally simple: one chat window, saved buddy profiles for Caroline/Carl/Catoline, per-host device labels, and a small helper that talks to the Node-RED WebSocket flow.
 
 ## Scripts
 
@@ -18,11 +18,7 @@ npm run build
 
 ## Backend Hook
 
-The default Pi profile is:
-
-```text
-ws://192.168.1.50:8080/ws/caroline
-```
+The default Pi profile starts blank. Set it to your host, for example `ws://YOUR-CAROLINE-IP:8080/ws/caroline`.
 
 The default Steam Deck profile uses an SSH tunnel because SteamOS Caroline binds to localhost:
 
@@ -42,6 +38,8 @@ Port 8080 is the Caroline kiosk/nginx proxy. Port 1880 is Node-RED direct and is
 
 In Node-RED, expose a WebSocket endpoint at `/ws/caroline` through the kiosk proxy, parse messages with a `message` field, send them through Caroline's existing chat handler, and send the reply back over the socket.
 
+`/ws/caroline` is the fixed service route, not the assistant identity. The host sends its configured AI name and device type during pairing, so a Steam Deck can be Carl on Steam while still using the same websocket path.
+
 ## Host Visibility
 
 When the companion connects, it sends:
@@ -52,6 +50,7 @@ When the companion connects, it sends:
   "source": "caroline-companion",
   "clientId": "saved-device-id",
   "clientName": "Dave's Companion",
+  "pairingCode": "ABC123",
   "appVersion": "0.1.0"
 }
 ```
@@ -63,7 +62,8 @@ Every 30 seconds it sends:
   "type": "client_heartbeat",
   "source": "caroline-companion",
   "clientId": "saved-device-id",
-  "clientName": "Dave's Companion"
+  "clientName": "Dave's Companion",
+  "pairingCode": "ABC123"
 }
 ```
 
@@ -71,7 +71,7 @@ In Node-RED, store those messages in flow/global context. That is the simple sta
 
 ## Host Discovery
 
-The **Find Hosts** button probes likely local WebSocket URLs, including the default `192.168.1.x` network and common home LAN ranges.
+The **Find Hosts** button probes likely local WebSocket URLs, including common home LAN ranges.
 
 Discovered hosts can be saved as separate profiles. Each saved host keeps its own WebSocket URL and pairing code so the desktop companion can switch between multiple Caroline hosts without retyping setup details.
 
