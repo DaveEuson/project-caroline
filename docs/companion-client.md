@@ -49,7 +49,7 @@ Install the `.deb` package from the release page. If your desktop blocks the fir
 
 Use Desktop Mode and launch the `.AppImage` release asset. SteamOS does not include Debian package tools by default, so the `.deb` package is for Ubuntu/Pop!_OS rather than the Deck.
 
-SteamOS Caroline binds to localhost by default. To use the **Carl / Steam Deck** saved profile from another computer, start an SSH tunnel first:
+SteamOS Caroline is reachable on your private LAN at `ws://STEAM_DECK_IP:8080/ws/caroline`. If you prefer not to expose Carl directly on the LAN, start an SSH tunnel first:
 
 ```bash
 ssh -L 8088:127.0.0.1:8080 deck@STEAM_DECK_IP

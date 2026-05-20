@@ -11,8 +11,8 @@ This path is experimental and installs everything under the `deck` user's home d
 - Installs Node-RED locally under `~/caroline/node-red-runtime`
 - Runs Caroline as a user systemd service
 - Optionally installs portable Ollama under `~/.local/ollama` and runs it as a user systemd service
-- Serves the UI locally at `http://localhost:8080/`
-- Keeps the service bound to localhost and writes private settings/token files with owner-only permissions
+- Serves the UI locally at `http://localhost:8080/` and on your private LAN at `http://STEAM_DECK_IP:8080/`
+- Keeps browser API access limited to localhost/private-network origins and writes private settings/token files with owner-only permissions
 - Asks the same first-run identity/privacy/AI questions as the main installer, adapted for SteamOS
 
 It does **not** install system packages with `pacman`, change SteamOS read-only mode, or configure nginx.
@@ -45,6 +45,12 @@ Or open Firefox and go to:
 http://localhost:8080/
 ```
 
+From another computer on the same private network, use:
+
+```text
+http://STEAM_DECK_IP:8080/
+```
+
 ## Useful Commands
 
 ```bash
@@ -71,7 +77,7 @@ http://localhost:8080/red
 
 ## View From Another Computer
 
-The experimental SteamOS install binds to localhost for safety. To view it from another computer, create an SSH tunnel:
+The experimental SteamOS install listens on your private LAN. If you prefer not to expose Carl directly on the LAN, use an SSH tunnel instead:
 
 ```bash
 ssh -L 8088:127.0.0.1:8080 deck@STEAM_DECK_IP
@@ -83,7 +89,7 @@ Then open this on your computer:
 http://localhost:8088/
 ```
 
-The browser origin guard allows local Caroline pages and blocks non-local browser origins from calling the Deck's local Node-RED endpoints.
+The browser origin guard allows local/private Caroline pages and blocks non-private browser origins from calling the Deck's local Node-RED endpoints.
 
 ## Current Limits
 

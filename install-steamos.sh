@@ -631,7 +631,7 @@ const path = require('path');
 const fs = require('fs');
 const carolineDir = process.env.CAROLINE_DIR || __dirname;
 const credentialSecretPath = path.join(carolineDir, ".credential_secret");
-const allowedBrowserOrigin = /^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/i;
+const allowedBrowserOrigin = /^https?:\\/\\/(localhost|127\\.0\\.0\\.1|10(?:\\.\\d{1,3}){3}|192\\.168(?:\\.\\d{1,3}){2}|172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})(:\\d+)?$/i;
 
 function localhostOriginGuard(req, res, next) {
   const origin = req.headers && req.headers.origin;
@@ -645,14 +645,14 @@ function localhostOriginGuard(req, res, next) {
 
 module.exports = {
   uiPort: process.env.PORT || ${CAROLINE_PORT},
-  uiHost: "127.0.0.1",
+  uiHost: "0.0.0.0",
   httpAdminRoot: "/red",
   httpNodeRoot: "/",
   httpStatic: carolineDir,
   flowFile: "flows.json",
   httpRequestTimeout: 120000,
   httpNodeCors: {
-    origin: ["http://localhost:${CAROLINE_PORT}", "http://127.0.0.1:${CAROLINE_PORT}"],
+    origin: true,
     methods: "GET,PUT,POST,DELETE,OPTIONS"
   },
   credentialSecret: fs.readFileSync(credentialSecretPath, "utf8").trim(),
