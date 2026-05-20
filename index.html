@@ -47,6 +47,9 @@
   #companion-code-pill:hover { background:rgba(250,204,21,0.16); color:#fde68a; }
   #resource-pill.warn { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.08); }
   #resource-pill.danger { color:#fb7185; border-color:rgba(251,113,133,0.35); background:rgba(251,113,133,0.08); }
+  #wifi-indicator { display:inline-flex; align-items:center; justify-content:center; gap:5px; flex:0 0 auto; min-width:50px; height:26px; padding:0 7px; border:1px solid rgba(var(--t-rgb1),0.22); border-radius:20px; background:rgba(var(--t-rgb1),0.07); white-space:nowrap; line-height:1; }
+  #wifi-icon { flex:0 0 auto; }
+  #wifi-strength { display:inline-block; min-width:22px; white-space:nowrap; text-align:left; line-height:1; }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
   #restart-btn { margin-left: 8px; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
   #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
@@ -542,6 +545,8 @@
     #avatar-outer { width: 180px; height: 180px; }
     #topbar { padding: 0 8px; gap: 6px; }
     .topbar-name { font-size: 15px; }
+    #model-pill, #resource-pill { display:none; }
+    #wifi-indicator { min-width:48px; height:25px; padding:0 6px; }
     #holiday-text { max-width: 100px; }
     #date-text { font-size: 11px; }
     #settings-modal { width: 98vw; max-height: 86vh; }
@@ -2419,7 +2424,7 @@
   <button class="net-pill" id="companion-code-pill" type="button" onclick="copyCompanionPairingCode()" title="Click to copy the Project: Caroline Companion sync code">SYNC: ------</button>
   <span class="ai-config-pill" id="ai-config-pill" title="Add an OpenRouter API key in Settings -> AI">AI KEY NEEDED</span>
   <span class="topbar-clock" id="clock">--:-- --</span>
-  <div id="wifi-indicator" style="display:flex;align-items:center;gap:4px;margin-left:4px;" title="WiFi Signal">
+  <div id="wifi-indicator" title="WiFi Signal">
     <i class="ti ti-wifi" id="wifi-icon" style="font-size:14px;color:rgba(var(--t-rgb1),0.6);"></i>
     <span id="wifi-strength" style="font-size:12px;font-family:'JetBrains Mono',monospace;color:rgba(var(--t-rgb1),0.5);">--</span>
   </div>
