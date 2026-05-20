@@ -16,11 +16,11 @@ Choose the package for your platform:
 
 | Platform | File |
 |---|---|
-| Windows | `.msi` |
-| Ubuntu / Pop!_OS | `.deb` |
-| Steam Deck Desktop Mode | `.AppImage` |
-| macOS Apple Silicon | `aarch64.dmg` |
-| macOS Intel | `x86_64.dmg` |
+| Windows | `Windows_Project.Caroline.Companion_0.1.9_x64_en-US.msi` |
+| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.9_amd64.deb` |
+| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.9_amd64.AppImage` |
+| macOS Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.9_aarch64.dmg` |
+| macOS Intel | `MacIntel_Project.Caroline.Companion_0.1.9_x64.dmg` |
 
 ## Connect
 

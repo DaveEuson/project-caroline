@@ -19,6 +19,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Reduced the avatar roster to the named Project: Caroline characters instead of generic avatar choices.
 - Expanded the README and companion guide to explain Caroline as a host/kiosk that can be reached from LAN browsers or the desktop companion app.
 - Bumped the companion app version and download links to `0.1.9`.
+- Updated companion release artifact names so installers clearly identify Windows, Linux, Steam Deck, Mac Intel, and Mac Apple Silicon downloads.
 - Updated companion docs to explain the Steam Deck SSH tunnel profile.
 - Updated Steam Deck companion guidance to prefer the `.AppImage` build.
 - Preserved existing AI provider/model settings during noninteractive SteamOS updates.

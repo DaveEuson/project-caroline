@@ -60,7 +60,17 @@ The optional desktop companion app is released separately:
 
 [Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.9)
 
-Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, `.dmg` on macOS, and `.AppImage` on Steam Deck Desktop Mode. The companion pairs with the `SYNC:` code shown on each Caroline host and talks to:
+Use the platform-named installer for your computer:
+
+| Platform | Release asset |
+|---|---|
+| Windows | `Windows_Project.Caroline.Companion_0.1.9_x64_en-US.msi` |
+| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.9_amd64.deb` |
+| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.9_amd64.AppImage` |
+| Mac Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.9_aarch64.dmg` |
+| Mac Intel | `MacIntel_Project.Caroline.Companion_0.1.9_x64.dmg` |
+
+The companion pairs with the `SYNC:` code shown on each Caroline host and talks to:
 
 ```text
 ws://YOUR-CAROLINE-IP:8080/ws/caroline
