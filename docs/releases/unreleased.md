@@ -11,6 +11,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Added live multi-host buddy switching in the companion app, with per-buddy transcripts, status, and unread message badges.
 - Added local companion chat history with a privacy control to delete all saved chats.
 - Added companion buddy cleanup so unpaired placeholder hosts no longer appear in the buddy list.
+- Added per-host device type labels for companion buddies, covering Pi, Steam, Ubuntu, Mac, and Windows hosts.
 - Added Hide/Show controls for memory shards so sensitive shard text can be concealed without deleting it.
 - Added a SteamOS user-space update helper so Steam Deck builds can update without relying on `/usr/local/sbin`.
 - Added architecture and backup/restore docs.
@@ -28,9 +29,11 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Made dashboard feature toggles persist immediately when changed, including Spotify and Calendar widget selections.
 - Persisted selected Google read/write calendars through the settings API.
 - Opened the companion app to the chat view by default and widened the default desktop window.
+- Clarified that `/ws/caroline` is the fixed WebSocket route, while the host's configured AI name is synced separately.
 
 ## Fixed
 
+- Fixed AI name saving so the hidden duplicate settings field can no longer overwrite Carl back to Caroline.
 - Fixed `/health` build reporting so installed commit and channel data come from `caroline_build.json`.
 - Fixed SteamOS updates when the cached repo has local changes by preserving the dirty cache and recloning.
 - Fixed SteamOS update status so it can read the helper log and report completion.

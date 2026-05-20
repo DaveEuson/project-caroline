@@ -1674,12 +1674,12 @@
         <div class="settings-section">
           <h3>Appearance</h3>
           <div class="settings-row">
-            <div><div class="settings-label">AI Name</div><div class="settings-sub">Default: Caroline</div></div>
-            <input class="settings-input" id="set-ainame" type="text" maxlength="20" placeholder="Caroline"/>
+            <div><div class="settings-label">AI Name</div><div class="settings-sub" id="set-ainame-hint">Suggested: Caroline</div></div>
+            <input class="settings-input" id="set-ainame" type="text" maxlength="20" placeholder="Caroline" oninput="syncAiNameInputs('set-ainame')"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Default avatar</div><div class="settings-sub">Shown on startup</div></div>
-            <select class="settings-select" id="set-avatar">
+            <select class="settings-select" id="set-avatar" onchange="onSettingsAvatarChange()">
               <option value="0">Caroline - Caring, thoughtful</option>
               <option value="1">Carl - Short, direct</option>
               <option value="2">Catoline - Sweet, helpful cat</option>
@@ -2170,8 +2170,8 @@
             <input class="settings-input" id="set-username" type="text" placeholder="Your name" style="width:180px"/>
           </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">AI Name</div><div class="settings-sub">Default: Caroline</div></div>
-            <input class="settings-input" id="set-ainame-sys" type="text" maxlength="20" placeholder="Caroline" style="width:180px"/>
+            <div><div class="settings-label">AI Name</div><div class="settings-sub" id="set-ainame-sys-hint">Suggested: Caroline</div></div>
+            <input class="settings-input" id="set-ainame-sys" type="text" maxlength="20" placeholder="Caroline" style="width:180px" oninput="syncAiNameInputs('set-ainame-sys')"/>
           </div>
         </div>
         <div class="settings-section">
@@ -2800,7 +2800,7 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
@@ -3215,6 +3215,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-wake-phrases', S.wakePhrases || DEFAULTS.wakePhrases, { allowBlank });
   const avatarEl = document.getElementById('set-avatar');
   if (avatarEl) avatarEl.value = String(normalizeAvatarIndex(S.avatar));
+  updateAiNameHints();
   onProviderChange(provider);
   if (provider === 'ollama') setTimeout(fetchOllamaModels, 100);
   setInputValue('set-ainame-sys', S.aiName || 'Caroline', { allowBlank });
@@ -5874,7 +5875,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
   const preserveBlankKeys = new Set([
     'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret',
     'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
-    'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'zipcode', 'zipCode', 'calendarId', 'defaultWriteCalendarId',
+    'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'hostDeviceType', 'zipcode', 'zipCode', 'calendarId', 'defaultWriteCalendarId',
     'hueIp', 'tidesStation', 'spotifyClientId',
     'googleClientId', 'googleRedirectUri', 'sheetId', 'wakePhrases'
   ]);
@@ -5923,7 +5924,7 @@ async function saveSettings() {
   S.autoTheme = document.getElementById('set-auto-theme').checked;
   collectFeatureCheckboxesFromForm();
   S.aiModel = document.getElementById('set-model').value;
-  const newName = document.getElementById('set-ainame').value.trim() || 'Caroline';
+  const newName = resolveSettingsAiName(S.aiName);
   S.aiName = newName;
   document.getElementById('topbar-name').textContent = newName;
   updateAvatarFrameLabel();
@@ -6034,8 +6035,7 @@ async function saveSettings() {
   S.googleRedirectUri = normalizeGoogleRedirectUri(S.googleRedirectUri);
   const unInp = document.getElementById('set-username');
   if (unInp && unInp.value.trim()) S.userName = unInp.value.trim();
-  const ainSysInp = document.getElementById('set-ainame-sys');
-  if (ainSysInp && ainSysInp.value.trim()) { S.aiName = ainSysInp.value.trim(); document.getElementById('topbar-name').textContent = S.aiName; updateAvatarFrameLabel(); }
+  setAiNameInputsValue(S.aiName);
   const wakeEnabledInp = document.getElementById('set-wake-word-enabled');
   const wakePhrasesInp = document.getElementById('set-wake-phrases');
   if (wakeEnabledInp) S.wakeWordEnabled = wakeEnabledInp.checked;
@@ -6071,7 +6071,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -6209,6 +6209,65 @@ function getAvatarPersona(id) {
 function getAvatarPersonaByIndex(idx) {
   return getAvatarPersona(avatarIdFromIndex(idx));
 }
+function avatarDefaultNameFromIndex(idx) {
+  return getAvatarPersonaByIndex(idx).defaultName || 'Caroline';
+}
+function isBuiltInAvatarName(value) {
+  const name = String(value || '').trim().toLowerCase();
+  if (!name) return true;
+  return Object.values(AVATAR_PERSONAS).some(p => String(p.defaultName || '').toLowerCase() === name);
+}
+function setAiNameInputsValue(value) {
+  const name = String(value || '').trim();
+  ['set-ainame', 'set-ainame-sys'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = name;
+  });
+}
+function updateAiNameHints() {
+  const avatarEl = document.getElementById('set-avatar');
+  const suggested = avatarDefaultNameFromIndex(avatarEl ? avatarEl.value : S.avatar);
+  ['set-ainame-hint', 'set-ainame-sys-hint'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = 'Suggested: ' + suggested;
+  });
+  ['set-ainame', 'set-ainame-sys'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.placeholder = suggested;
+  });
+}
+function syncAiNameInputs(sourceId) {
+  const source = document.getElementById(sourceId);
+  const targetId = sourceId === 'set-ainame' ? 'set-ainame-sys' : 'set-ainame';
+  const target = document.getElementById(targetId);
+  if (source && target) target.value = source.value;
+  updateAiNameHints();
+}
+function onSettingsAvatarChange() {
+  const avatarEl = document.getElementById('set-avatar');
+  const suggested = avatarDefaultNameFromIndex(avatarEl ? avatarEl.value : S.avatar);
+  const primary = document.getElementById('set-ainame');
+  const system = document.getElementById('set-ainame-sys');
+  const current = (primary && primary.value.trim()) || (system && system.value.trim()) || S.aiName || '';
+  if (isBuiltInAvatarName(current)) setAiNameInputsValue(suggested);
+  updateAiNameHints();
+}
+function resolveSettingsAiName(previousName) {
+  const primary = document.getElementById('set-ainame');
+  const system = document.getElementById('set-ainame-sys');
+  const primaryName = primary ? primary.value.trim() : '';
+  const systemName = system ? system.value.trim() : '';
+  const previous = String(previousName || S.aiName || '').trim();
+  const suggested = avatarDefaultNameFromIndex(document.getElementById('set-avatar')?.value ?? S.avatar);
+  let resolved = primaryName || systemName || suggested || 'Caroline';
+  if (primaryName && systemName && primaryName !== systemName) {
+    if (primaryName !== previous && systemName === previous) resolved = primaryName;
+    else if (systemName !== previous && primaryName === previous) resolved = systemName;
+    else resolved = primaryName;
+  }
+  setAiNameInputsValue(resolved);
+  return resolved || 'Caroline';
+}
 function isGeneratedSetupPrompt(text) {
   return /^SETUP MEMORY PROMPT:/i.test(String(text || '').trim());
 }
@@ -6258,6 +6317,7 @@ if (localStorage.getItem('caroline_avatar_roster_version') !== AVATAR_ROSTER_VER
   S.avatar = normalizeAvatarIndex(S.avatar);
 }
 syncSelectedAvatarId(S.avatar);
+updateAiNameHints();
 let currentAvatarIndex = S.avatar;
 
 const UI_FONT_STACKS = {
@@ -7226,7 +7286,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();

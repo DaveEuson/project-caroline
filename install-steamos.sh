@@ -500,7 +500,9 @@ const build = {
   repo: process.env.CAROLINE_REPO_URL || '',
   installedAt: process.env.BUILD_INSTALLED_AT || new Date().toISOString(),
   hostname: process.env.BUILD_HOSTNAME || '',
-  platform: 'steamos'
+  platform: 'steamos',
+  deviceType: 'Steam',
+  hardwareProfile: 'Steam Deck / SteamOS'
 };
 fs.writeFileSync(`${path}/caroline_build.json`, JSON.stringify(build, null, 2) + '\n');
 NODE_BUILD
@@ -571,6 +573,7 @@ const defaults = {
   temperatureUnit: existing.temperatureUnit || 'fahrenheit',
   piIp: '127.0.0.1',
   nodeRedUrl: `http://localhost:${process.env.CAROLINE_PORT || 8080}`,
+  hostDeviceType: 'Steam',
   uiFont: existing.uiFont || 'Inter',
   uiScale: existing.uiScale || 'large',
   uiDensity: existing.uiDensity || 'comfortable',

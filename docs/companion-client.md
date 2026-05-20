@@ -28,13 +28,16 @@ On the Project: Caroline kiosk, copy the `SYNC:` code from the top bar.
 
 In the companion app:
 
-1. Pick the saved bot profile, such as **Caroline**, **Carl**, **Catoline**, or **Robot**.
+1. Pick the saved buddy profile, such as **Caroline on Pi**, **Carl on Steam**, or **Catoline on Ubuntu**.
 2. Set that profile's WebSocket URL to `ws://YOUR-CAROLINE-IP:8080/ws/caroline`.
-3. Enter your companion display name.
-4. Paste that kiosk's `SYNC:` code.
-5. Click **Connect**.
+3. Confirm the host device type: **Pi**, **Steam**, **Ubuntu**, **Mac**, or **Windows**.
+4. Enter your companion client display name.
+5. Paste that kiosk's `SYNC:` code.
+6. Click **Connect**.
 
 Each saved host keeps its own WebSocket URL and pairing code, so one companion app can switch between multiple Project: Caroline hosts. The buddy list also tracks per-host transcripts, unread messages, and connection status.
+
+The `/ws/caroline` part of the WebSocket URL is always the service route. The assistant's actual name comes from the host settings and the pairing handshake, so a Steam Deck host can still be **Carl** while using `/ws/caroline`.
 
 Chat history is saved locally on the computer running the companion app. Use **Settings > Delete All Chats** to wipe saved companion transcripts and unread counts from that computer.
 

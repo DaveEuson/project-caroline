@@ -76,6 +76,8 @@ The companion pairs with the `SYNC:` code shown on each Caroline host and talks 
 ws://YOUR-CAROLINE-IP:8080/ws/caroline
 ```
 
+That `/ws/caroline` path is the fixed service route. The host's configured buddy name and device type are synced separately, so a Steam Deck can show up as Carl on Steam while using the same route.
+
 If you run more than one Caroline host, the buddy list can switch between them like a classic instant messenger.
 
 For microphone input from another browser, use Chrome or Chromium with the secure voice URL printed by the installer:

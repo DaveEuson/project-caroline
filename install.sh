@@ -619,6 +619,20 @@ caroline_hardware_profile() {
   fi
 }
 
+caroline_device_type() {
+  if is_wsl; then
+    printf 'Windows'
+  elif is_steam_deck; then
+    printf 'Steam'
+  elif is_raspberry_pi; then
+    printf 'Pi'
+  elif [ -r /etc/os-release ] && grep -qiE '^ID=(ubuntu|pop|debian)' /etc/os-release; then
+    printf 'Ubuntu'
+  else
+    printf 'Ubuntu'
+  fi
+}
+
 recommended_ollama_model() {
   local _ram_mb="${1:-$(total_ram_mb)}"
   local _arch
@@ -1412,7 +1426,9 @@ jq -n \
   --arg repo "$BUILD_REPO" \
   --arg installedAt "$BUILD_INSTALLED_AT" \
   --arg hostname "$(hostname)" \
-  '{ version: $version, commit: $commit, branch: $branch, channel: $channel, repo: $repo, installedAt: $installedAt, hostname: $hostname }' \
+  --arg deviceType "$(caroline_device_type)" \
+  --arg hardwareProfile "$(caroline_hardware_profile)" \
+  '{ version: $version, commit: $commit, branch: $branch, channel: $channel, repo: $repo, installedAt: $installedAt, hostname: $hostname, deviceType: $deviceType, hardwareProfile: $hardwareProfile }' \
   > "$CAROLINE_DIR/caroline_build.json"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_build.json"
 printf '%s\n' "$CAROLINE_CHANNEL" > "$CAROLINE_DIR/caroline_channel"
@@ -1755,6 +1771,7 @@ BROWSER_HOST_IP="$PI_IP"
 if is_wsl; then
   BROWSER_HOST_IP="localhost"
 fi
+HOST_DEVICE_TYPE="$(caroline_device_type)"
 INSTALL_ID="$(date +%s)-$(hostname)-$RANDOM"
 INSTALL_EVENT_TYPE="install"
 if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
@@ -1773,6 +1790,7 @@ jq -n \
   --arg ollamaUrl    "$OLLAMA_URL_DEFAULT" \
   --arg piIp         "$PI_IP" \
   --arg nrUrl        "http://${BROWSER_HOST_IP}:${KIOSK_PORT}" \
+  --arg hostDeviceType "$HOST_DEVICE_TYPE" \
   --arg installId    "$INSTALL_ID" \
   --argjson localAuth "$(bool_json "$LOCAL_AUTH_ENABLED")" \
   --argjson telemetryInstallCount "$(bool_json "$TELEMETRY_INSTALL_COUNT")" \
@@ -1799,6 +1817,7 @@ jq -n \
     zipCode:         $zip,
     piIp:            $piIp,
     nodeRedUrl:      $nrUrl,
+    hostDeviceType:  $hostDeviceType,
     uiFont:          "Inter",
     uiScale:         "large",
     uiDensity:       "comfortable",
