@@ -10,7 +10,7 @@ Use it when you want Caroline as a desktop chat buddy while the main kiosk keeps
 
 Latest companion release:
 
-https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.8
+https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.9
 
 Choose the package for your platform:
 

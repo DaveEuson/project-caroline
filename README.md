@@ -58,7 +58,7 @@ Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and t
 
 The optional desktop companion app is released separately:
 
-[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.8)
+[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.9)
 
 Use the `.msi` on Windows, `.deb` on Ubuntu/Pop!_OS, `.dmg` on macOS, and `.AppImage` on Steam Deck Desktop Mode. The companion pairs with the `SYNC:` code shown on each Caroline host and talks to:
 
