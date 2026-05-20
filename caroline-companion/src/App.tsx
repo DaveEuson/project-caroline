@@ -51,12 +51,42 @@ function nextMessageId() {
 }
 
 function inferBuddyAiName(host?: SavedHost) {
+  const savedName = host?.aiName?.trim();
+  if (savedName) return savedName;
+  const customName = host?.name?.trim();
+  if (customName && !isAutoHostName(customName)) return customName;
   const hint = `${host?.id || ""} ${host?.name || ""}`.toLowerCase();
   if (hint.includes("carl")) return "Carl";
   if (hint.includes("cat")) return "Catoline";
   if (hint.includes("robot")) return "Robot";
   if (hint.includes("frog")) return "Frog Pilot";
   return "Caroline";
+}
+
+function inferAvatarId(value: string) {
+  const normalized = value.toLowerCase();
+  if (normalized.includes("carl")) return "carl";
+  if (normalized.includes("cat")) return "catoline";
+  if (normalized.includes("robot")) return "robot";
+  return "caroline";
+}
+
+function isAutoHostName(value: string) {
+  const name = value.trim().toLowerCase();
+  return (
+    !name ||
+    name === "project: caroline" ||
+    name.startsWith("project: caroline @") ||
+    name.startsWith("project: caroline (") ||
+    name === "caroline (pi)" ||
+    name === "carl (steam deck tunnel)" ||
+    name === "catoline (pop!_os)" ||
+    name === "new buddy"
+  );
+}
+
+function buddyDisplayName(host: SavedHost, state?: BuddyState) {
+  return state?.aiName || host.aiName || inferBuddyAiName(host);
 }
 
 function initialMessagesForHost(host?: SavedHost): ChatMessage[] {
@@ -168,15 +198,6 @@ function statusLabel(status: CarolineSocketStatus, aiName: string) {
   return `${aiName} is offline`;
 }
 
-function hostNameFromUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-    return parsed.hostname ? `Project: Caroline @ ${parsed.hostname}` : "Project: Caroline";
-  } catch {
-    return "Project: Caroline";
-  }
-}
-
 function newHostId() {
   return `host-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
 }
@@ -221,7 +242,8 @@ function buddyAvatarSrc(avatarId: string, isOnline: boolean) {
 }
 
 function avatarIdForHost(host: SavedHost, state?: BuddyState) {
-  const hint = `${host.id} ${host.name} ${state?.aiName || ""}`.toLowerCase();
+  if (host.avatarId) return host.avatarId;
+  const hint = `${host.id} ${host.name} ${host.aiName || ""} ${state?.aiName || ""}`.toLowerCase();
   if (hint.includes("carl")) return "carl";
   if (hint.includes("cat")) return "catoline";
   if (hint.includes("robot")) return "robot";
@@ -238,6 +260,10 @@ function buddyStatusText(status: CarolineSocketStatus) {
 function isUsableSocketUrl(url: string) {
   const trimmed = url.trim();
   return /^wss?:\/\//i.test(trimmed) && !/POP_OS_IP/i.test(trimmed);
+}
+
+function hasPairingCode(host?: SavedHost) {
+  return Boolean(host?.pairingCode.trim());
 }
 
 function hostSocketSignature(url: string) {
@@ -276,7 +302,7 @@ export default function App() {
       previous: settings.agentProfile,
     })
   );
-  const [profileOpen, setProfileOpen] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [status, setStatus] = useState<CarolineSocketStatus>("offline");
   const [hostMessages, setHostMessages] = useState<Record<string, ChatMessage[]>>(() => {
@@ -435,6 +461,7 @@ export default function App() {
         const resolvedAiName = nextName.trim() || inferBuddyAiName(host);
         const userName = nextUserName?.trim() || hostUserNameRef.current;
         const isActive = activeHostIdRef.current === hostId;
+        const resolvedAvatarId = inferAvatarId(resolvedAiName);
 
         setBuddyStates((previous) => {
           const current = previous[hostId] || initialBuddyState(host);
@@ -444,7 +471,7 @@ export default function App() {
               ...current,
               status: "online",
               aiName: resolvedAiName,
-              hostName: nextHostName?.trim() || current.hostName,
+              hostName: nextHostName?.trim() || resolvedAiName || current.hostName,
               userName: userName || current.userName,
             },
           };
@@ -459,13 +486,18 @@ export default function App() {
         setSettingsRaw((previous) => {
           const settingsHost = previous.hosts.find((candidate) => candidate.id === hostId);
           const hostName = nextHostName?.trim();
-          const hosts = hostName
-            ? previous.hosts.map((candidate) =>
-                candidate.id === hostId && candidate.name !== hostName
-                  ? { ...candidate, name: hostName }
-                  : candidate
-              )
-            : previous.hosts;
+          const hosts = previous.hosts.map((candidate) => {
+            if (candidate.id !== hostId) return candidate;
+            const nextLabel = isAutoHostName(candidate.name)
+              ? resolvedAiName || hostName || candidate.name
+              : candidate.name;
+            return {
+              ...candidate,
+              name: nextLabel,
+              aiName: resolvedAiName,
+              avatarId: resolvedAvatarId,
+            };
+          });
           const profileUserName = userName || previous.userName || hostUserNameRef.current;
           const profile = buildWeeklyAgentProfile({
             aiName: resolvedAiName,
@@ -609,7 +641,9 @@ export default function App() {
 
     settings.hosts.forEach((host) => {
       const connectionUrl = connectionUrls[host.id] || host.socketUrl;
-      if (!isUsableSocketUrl(connectionUrl)) {
+      if (!hasPairingCode(host) || !isUsableSocketUrl(connectionUrl)) {
+        hostSocketsRef.current.get(host.id)?.socket.disconnect();
+        hostSocketsRef.current.delete(host.id);
         handleHostStatus(host.id, "offline");
         return;
       }
@@ -650,6 +684,9 @@ export default function App() {
   const activeAiName = selectedBuddyState.aiName || aiName;
   const activeHostUserName = selectedBuddyState.userName || hostUserName;
   const messages = selectedHost ? hostMessages[selectedHost.id] || [] : [];
+  const buddyHosts = settings.hosts.filter((host) =>
+    hasPairingCode(host) || host.id === settings.activeHostId || settings.hosts.length === 1
+  );
 
   // Auto-scroll transcript on new messages
   useEffect(() => {
@@ -671,7 +708,18 @@ export default function App() {
       );
       return;
     }
-    updateActiveHost({ socketUrl: url, pairingCode: settings.pairingCode });
+    const pairingCode = settings.pairingCode.trim();
+    if (!pairingCode) {
+      updateActiveHost({ socketUrl: url, pairingCode: "" });
+      handleHostStatus(current.id, "offline");
+      appendHostMessage(
+        current.id,
+        { from: "system", text: "Enter this host's SYNC pairing code before connecting." },
+        { unread: false }
+      );
+      return;
+    }
+    updateActiveHost({ socketUrl: url, pairingCode });
     const entry = hostSocketsRef.current.get(current.id);
     if (entry) {
       entry.socket.disconnect();
@@ -704,13 +752,14 @@ export default function App() {
   function handleAddHost() {
     const host: SavedHost = {
       id: newHostId(),
-      name: hostNameFromUrl(settings.socketUrl),
+      name: "New Buddy",
       socketUrl: settings.socketUrl,
-      pairingCode: settings.pairingCode,
+      pairingCode: "",
     };
     setSettings({
       ...settings,
       activeHostId: host.id,
+      pairingCode: "",
       hosts: [...settings.hosts, host],
     });
     setHostMessages((previous) => ({ ...previous, [host.id]: initialMessagesForHost(host) }));
@@ -766,7 +815,7 @@ export default function App() {
       id: newHostId(),
       name: `Project: Caroline @ ${host.label}`,
       socketUrl: host.url,
-      pairingCode: settings.pairingCode,
+      pairingCode: "",
     };
     const hosts = existing ? settings.hosts : [...settings.hosts, nextHost];
     setSettings({
@@ -936,7 +985,7 @@ export default function App() {
                 >
                   {settings.hosts.map((host) => (
                     <option value={host.id} key={host.id}>
-                      {host.name}
+                      {buddyDisplayName(host, buddyStates[host.id])}
                     </option>
                   ))}
                 </select>
@@ -1097,8 +1146,9 @@ export default function App() {
         <section className="chat-shell">
           <aside className="buddy-list" aria-label="Buddy list">
             <div className="buddy-heading">Buddies</div>
-            {settings.hosts.map((host) => {
+            {buddyHosts.map((host) => {
               const state = buddyStates[host.id] || initialBuddyState(host);
+              const displayName = buddyDisplayName(host, state);
               const selected = host.id === settings.activeHostId;
               const avatarId = avatarIdForHost(host, state);
               const avatar = buddyAvatarSrc(avatarId, state.status === "online");
@@ -1112,13 +1162,13 @@ export default function App() {
                 >
                   <img
                     src={avatar}
-                    alt={state.aiName || host.name}
+                    alt={displayName}
                     className="buddy-avatar"
                     width={32}
                     height={32}
                   />
                   <div className="buddy-copy">
-                    <strong>{state.aiName || inferBuddyAiName(host)}</strong>
+                    <strong>{displayName}</strong>
                     <small>{buddyStatusText(state.status)}</small>
                     {state.lastMessage && <em>{previewText(state.lastMessage)}</em>}
                   </div>

@@ -3,6 +3,8 @@ const SETTINGS_KEY = "caroline-companion-settings";
 export type SavedHost = {
   id: string;
   name: string;
+  aiName?: string;
+  avatarId?: string;
   socketUrl: string;
   pairingCode: string;
 };
@@ -38,21 +40,9 @@ export type AppSettings = {
 const DEFAULT_SOCKET_URL = "ws://192.168.1.50:8080/ws/caroline";
 const DEFAULT_HOSTS: SavedHost[] = [
   {
-    id: "caroline-pi",
-    name: "Caroline (Pi)",
+    id: "caroline-host",
+    name: "Project: Caroline",
     socketUrl: DEFAULT_SOCKET_URL,
-    pairingCode: "",
-  },
-  {
-    id: "carl-steamdeck",
-    name: "Carl (Steam Deck tunnel)",
-    socketUrl: "ws://127.0.0.1:8088/ws/caroline",
-    pairingCode: "",
-  },
-  {
-    id: "catoline-popos",
-    name: "Catoline (Pop!_OS)",
-    socketUrl: "ws://POP_OS_IP:8080/ws/caroline",
     pairingCode: "",
   },
 ];
@@ -73,6 +63,11 @@ function migrateSocketUrl(url: string) {
   return String(url || DEFAULTS.socketUrl).replace(":1880/ws/caroline", ":8080/ws/caroline");
 }
 
+function normalizeAvatarId(value: unknown, fallback = "caroline") {
+  const id = String(value || "").trim();
+  return ["caroline", "carl", "catoline", "robot"].includes(id) ? id : fallback;
+}
+
 function safeHostId(value: string, fallback: string) {
   return String(value || fallback).replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || fallback;
 }
@@ -86,6 +81,17 @@ function hostNameFromUrl(url: string) {
   }
 }
 
+function isLegacyPlaceholderHost(host: Partial<SavedHost>) {
+  const id = String(host?.id || "").trim();
+  const name = String(host?.name || "").toLowerCase();
+  const url = String(host?.socketUrl || "");
+  const pairingCode = String(host?.pairingCode || "").trim();
+  if (pairingCode) return false;
+  if (id === "carl-steamdeck" || id === "catoline-popos") return true;
+  if (url.includes("POP_OS_IP")) return true;
+  return name === "carl (steam deck tunnel)" || name === "catoline (pop!_os)";
+}
+
 function deriveUserNameFromCompanionName(value: string) {
   const match = String(value || "").trim().match(/^(.+?)'s Companion$/i);
   return match ? match[1].trim() : "";
@@ -95,22 +101,27 @@ function normalizeHosts(settings: AppSettings): AppSettings {
   const socketUrl = migrateSocketUrl(settings.socketUrl);
   const userName = String(settings.userName || deriveUserNameFromCompanionName(settings.companionName) || "").trim();
   const companionName = String(settings.companionName || (userName ? `${userName}'s Companion` : "My Companion")).trim();
-  const avatarId = ["caroline", "carl", "catoline", "robot"].includes(String(settings.avatarId || "").trim())
-    ? String(settings.avatarId).trim()
-    : DEFAULTS.avatarId;
-  const hostSource = [...DEFAULT_HOSTS, ...(Array.isArray(settings.hosts) ? settings.hosts : [])];
+  const avatarId = normalizeAvatarId(settings.avatarId, DEFAULTS.avatarId);
+  const savedHosts = Array.isArray(settings.hosts) ? settings.hosts : [];
+  const hostSource = savedHosts.length ? savedHosts : DEFAULT_HOSTS;
   const hosts = hostSource
-    .map((host, index) => {
+    .filter((host) => !isLegacyPlaceholderHost(host))
+    .map<SavedHost | null>((host, index) => {
       const hostUrl = migrateSocketUrl(host?.socketUrl || (index === 0 ? socketUrl : ""));
       if (!hostUrl) return null;
-      return {
+      const hostAiName = String(host?.aiName || "").trim();
+      const hostAvatarId = normalizeAvatarId(host?.avatarId, "");
+      const normalized: SavedHost = {
         id: safeHostId(host?.id || `host-${index + 1}`, `host-${index + 1}`),
-        name: String(host?.name || hostNameFromUrl(hostUrl)).trim() || hostNameFromUrl(hostUrl),
+        name: String(host?.name || hostAiName || hostNameFromUrl(hostUrl)).trim() || hostNameFromUrl(hostUrl),
         socketUrl: hostUrl,
         pairingCode: String(host?.pairingCode || ""),
       };
+      if (hostAiName) normalized.aiName = hostAiName;
+      if (hostAvatarId) normalized.avatarId = hostAvatarId;
+      return normalized;
     })
-    .filter((host): host is SavedHost => Boolean(host));
+    .filter((host): host is SavedHost => host !== null);
 
   if (!hosts.some((host) => host.socketUrl === socketUrl)) {
     hosts.unshift({

@@ -439,7 +439,7 @@ html[data-theme="dark"] .danger-btn {
 .chat-shell {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(112px, 148px) minmax(0, 1fr);
+  grid-template-columns: minmax(168px, 196px) minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
 }
@@ -931,7 +931,7 @@ html[data-theme="dark"] .buddy.unread strong {
   }
 
   .chat-shell {
-    grid-template-columns: minmax(88px, 118px) minmax(0, 1fr);
+    grid-template-columns: minmax(118px, 148px) minmax(0, 1fr);
   }
 
   .buddy-list {
