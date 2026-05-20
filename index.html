@@ -5025,7 +5025,7 @@ function resetPersonality() {
 
 function getSetupMemoryPrompt() {
   const stored = String(S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '').trim();
-  if (stored) return stored;
+  if (stored && !generatedSetupPromptNeedsRefresh(stored)) return stored;
   if (typeof _onbBuildPrompt !== 'function') return '';
   const p = typeof _onbLoadPersonality === 'function' ? _onbLoadPersonality() : {};
   if (typeof onbState === 'object' && onbState) onbState.personality = p;
@@ -5036,6 +5036,18 @@ function getSetupMemoryPrompt() {
     localStorage.setItem('caro_settings', JSON.stringify(S));
   }
   return rebuilt;
+}
+
+function generatedSetupPromptNeedsRefresh(text) {
+  if (!isGeneratedSetupPrompt(text)) return false;
+  const prompt = String(text || '');
+  const expectedName = String(S.aiName || '').trim();
+  if (expectedName && !prompt.includes("assistant's configured name is " + expectedName)) return true;
+  try {
+    const expectedAvatar = getAvatarPersonaByIndex(S.avatar).title;
+    if (expectedAvatar && !prompt.includes('Selected avatar personality: ' + expectedAvatar)) return true;
+  } catch(e) {}
+  return false;
 }
 
 const PROFILE_REQUEST_PROMPT = "I am setting up a source-available digital sidekick kiosk called Project: Caroline. Since you already know my workflow, personality, communication style, and support needs, write an imported memory prompt I can paste into Caroline. Focus on how I think, what helps me follow through, how direct or gentle the assistant should be, what drains or motivates me, recurring patterns worth remembering, and how to support me without being generic. Keep it practical, strictly platonic, and formatting-free. Do not include secrets, private contact details, or anything I would not want stored on my own kiosk.";
