@@ -88,6 +88,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - [How to set up SSH and a stable IP](docs/network-prep.md)
 - [How to set up Google Calendar OAuth](docs/google-oauth.md)
 - [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
+- [Release notes](docs/releases/README.md)
 
 ## AI Options
 
