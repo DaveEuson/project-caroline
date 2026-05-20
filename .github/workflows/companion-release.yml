@@ -19,18 +19,22 @@ jobs:
           # Windows installer (.msi)
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            assetNamePattern: 'Windows_Project.Caroline.Companion_[version]_[arch]_en-US[setup][ext]'
 
           # Linux — Ubuntu/Pop!_OS/Steam Deck desktop packages
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            assetNamePattern: 'Linux_Project.Caroline.Companion_[version]_[arch][ext]'
 
           # macOS — Intel + Rosetta 2 (runs on all Macs)
           - os: macos-latest
             target: x86_64-apple-darwin
+            assetNamePattern: 'MacIntel_Project.Caroline.Companion_[version]_[arch][ext]'
 
           # macOS — Apple Silicon native (M1/M2/M3)
           - os: macos-latest
             target: aarch64-apple-darwin
+            assetNamePattern: 'MacAppleSilicon_Project.Caroline.Companion_[version]_[arch][ext]'
 
     runs-on: ${{ matrix.os }}
 
@@ -82,12 +86,14 @@ jobs:
             A retro AIM-style chat window for your Caroline AI.
 
             **Download the right file for your platform:**
-            - Windows → `.msi` file
-            - Ubuntu / Pop!_OS / Steam Deck Desktop Mode → `.deb` first, `.AppImage` if you prefer portable
-            - Mac (M1/M2/M3) → `aarch64.dmg`
-            - Mac (Intel) → `x86_64.dmg`
+            - Windows → `Windows_Project.Caroline.Companion_*_x64_en-US.msi`
+            - Ubuntu / Pop!_OS → `Linux_Project.Caroline.Companion_*_amd64.deb`
+            - Steam Deck Desktop Mode → `Linux_Project.Caroline.Companion_*_amd64.AppImage`
+            - Mac (M1/M2/M3) → `MacAppleSilicon_Project.Caroline.Companion_*_aarch64.dmg`
+            - Mac (Intel) → `MacIntel_Project.Caroline.Companion_*_x64.dmg`
 
             **First run on Mac:** Right-click the app → Open (bypasses the unsigned app warning).
           releaseDraft: false
           prerelease: false
+          releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
           args: --target ${{ matrix.target }}
