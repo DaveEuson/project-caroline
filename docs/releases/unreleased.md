@@ -9,6 +9,8 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Added coming-soon placeholders for Robot and Frog Pilot avatars.
 - Added default companion bot profiles for Caroline on Pi, Carl on Steam Deck, and Catoline on Pop!_OS.
 - Added a SteamOS user-space update helper so Steam Deck builds can update without relying on `/usr/local/sbin`.
+- Added architecture and backup/restore docs.
+- Added a practical release checklist with device QA, smoke tests, and rollback notes.
 
 ## Changed
 

@@ -80,3 +80,10 @@ View recent logs:
 ```bash
 journalctl -u caroline -n 120 --no-pager
 ```
+
+## Operations Guides
+
+- [Architecture overview](architecture.md)
+- [Backup and restore](backup-restore.md)
+- [Release process](release.md)
+- [Release notes](releases/README.md)

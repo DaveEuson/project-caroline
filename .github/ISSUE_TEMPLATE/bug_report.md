@@ -44,6 +44,8 @@ sudo journalctl -u caroline --since today --no-pager
 sudo journalctl -u nginx --since today --no-pager
 ```
 
+For safer diagnostic guidance, see `docs/backup-restore.md`.
+
 ## Safety note
 
 Do not paste API keys, OAuth tokens, Discord tokens, private calendar details, passwords, or full credential files.
