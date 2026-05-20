@@ -95,5 +95,5 @@ jobs:
             **First run on Mac:** Right-click the app → Open (bypasses the unsigned app warning).
           releaseDraft: false
           prerelease: false
-          releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
+          assetNamePattern: ${{ matrix.assetNamePattern }}
           args: --target ${{ matrix.target }}
