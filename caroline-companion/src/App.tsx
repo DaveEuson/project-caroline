@@ -46,7 +46,7 @@ type HostSocketEntry = {
   socket: ReturnType<typeof createCarolineSocket>;
 };
 
-const COMPANION_VERSION = "0.1.9";
+const COMPANION_VERSION = "0.1.10";
 const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caroline/releases";
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
