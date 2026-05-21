@@ -10,17 +10,17 @@ Use it when you want Caroline as a desktop chat buddy while the main kiosk keeps
 
 Latest companion release:
 
-https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.9
+https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.10
 
 Choose the package for your platform:
 
 | Platform | File |
 |---|---|
-| Windows | `Windows_Project.Caroline.Companion_0.1.9_x64_en-US.msi` |
-| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.9_amd64.deb` |
-| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.9_amd64.AppImage` |
-| macOS Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.9_aarch64.dmg` |
-| macOS Intel | `MacIntel_Project.Caroline.Companion_0.1.9_x64.dmg` |
+| Windows | `Windows_Project.Caroline.Companion_0.1.10_x64_en-US.msi` |
+| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.10_amd64.deb` |
+| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.10_amd64.AppImage` |
+| macOS Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.10_aarch64.dmg` |
+| macOS Intel | `MacIntel_Project.Caroline.Companion_0.1.10_x64.dmg` |
 
 ## Connect
 
