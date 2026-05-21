@@ -34,28 +34,6 @@ type CarolineSocketOptions = {
   onMessage?: (message: CarolineSocketMessage) => void;
 };
 
-function summarizeTask(task: unknown, index: number) {
-  if (!task || typeof task !== "object") return `Task ${index + 1}`;
-
-  const record = task as Record<string, unknown>;
-  const text =
-    (typeof record.title === "string" ? record.title : null) ??
-    (typeof record.text === "string" ? record.text : null) ??
-    (typeof record.task === "string" ? record.task : null) ??
-    (typeof record.content === "string" ? record.content : null);
-
-  return text?.trim() || `Task ${index + 1}`;
-}
-
-function summarizeTodoUpdate(record: Record<string, unknown>) {
-  const tasks = Array.isArray(record.tasks) ? record.tasks : [];
-  if (!tasks.length) return "📋 Task list updated.";
-
-  const preview = tasks.slice(0, 3).map(summarizeTask).join(", ");
-  const remaining = tasks.length > 3 ? `, and ${tasks.length - 3} more` : "";
-  return `📋 Task list updated: ${preview}${remaining}`;
-}
-
 function summarizeCalendarUpdate(record: Record<string, unknown>) {
   const event = record.event && typeof record.event === "object"
     ? record.event as Record<string, unknown>
@@ -167,9 +145,7 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
         };
       }
 
-      if (msgType === "todo_update") {
-        return { text: summarizeTodoUpdate(record), type: msgType, raw: parsed };
-      }
+      if (msgType === "todo_update") return null;
 
       if (msgType === "calendar_update") {
         return { text: summarizeCalendarUpdate(record), type: msgType, raw: parsed };
@@ -293,7 +269,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         clientName: client.displayName,
         userName: client.userName,
         pairingCode: client.pairingCode || undefined,
-        appVersion: "0.1.10",
+        appVersion: "0.1.11",
       })
     );
   }

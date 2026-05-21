@@ -46,7 +46,7 @@ type HostSocketEntry = {
   socket: ReturnType<typeof createCarolineSocket>;
 };
 
-const COMPANION_VERSION = "0.1.10";
+const COMPANION_VERSION = "0.1.11";
 const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caroline/releases";
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
@@ -150,6 +150,14 @@ function trimChatHistory(messages: ChatMessage[]) {
   return messages.slice(-MAX_MESSAGES_PER_HOST);
 }
 
+function isTaskUpdateNoise(message: ChatMessage) {
+  return message.from === "caroline" && /^\s*(?:\uD83D\uDCCB\s*)?Task list updated\b/.test(message.text);
+}
+
+function cleanChatHistory(messages: ChatMessage[]) {
+  return trimChatHistory(messages.filter((message) => !isTaskUpdateNoise(message)));
+}
+
 function loadChatHistory(): Record<string, ChatMessage[]> {
   try {
     const stored = localStorage.getItem(CHAT_HISTORY_KEY);
@@ -160,7 +168,8 @@ function loadChatHistory(): Record<string, ChatMessage[]> {
     return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, ChatMessage[]>>((history, [hostId, value]) => {
       if (!Array.isArray(value)) return history;
       const messages = value.map(normalizeChatMessage).filter((message): message is ChatMessage => Boolean(message));
-      if (messages.length) history[hostId] = trimChatHistory(messages);
+      const cleanedMessages = cleanChatHistory(messages);
+      if (cleanedMessages.length) history[hostId] = cleanedMessages;
       return history;
     }, {});
   } catch {
@@ -171,7 +180,8 @@ function loadChatHistory(): Record<string, ChatMessage[]> {
 function saveChatHistory(history: Record<string, ChatMessage[]>) {
   try {
     const trimmed = Object.entries(history).reduce<Record<string, ChatMessage[]>>((next, [hostId, messages]) => {
-      if (messages.length) next[hostId] = trimChatHistory(messages);
+      const cleanedMessages = cleanChatHistory(messages);
+      if (cleanedMessages.length) next[hostId] = cleanedMessages;
       return next;
     }, {});
     localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(trimmed));
@@ -415,6 +425,8 @@ export default function App() {
       options: { unread?: boolean; updatePreview?: boolean } = {}
     ) => {
       const nextMessage = { ...message, id: message.id ?? nextMessageId() };
+      if (isTaskUpdateNoise(nextMessage)) return;
+
       setHostMessages((previous) => {
         const host = settingsRef.current.hosts.find((candidate) => candidate.id === hostId);
         const current = previous[hostId] || initialMessagesForHost(host);
