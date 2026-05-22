@@ -24,7 +24,7 @@ function parseHost(url: string) {
 
 function likelyLocalPrefixes(defaultUrl: string) {
   const defaultHost = parseHost(defaultUrl);
-  const prefixes = ["192.168.1", "192.168.12", "192.168.1", "192.168.0", "10.0.0"];
+  const prefixes = ["192.168.1", "192.168.0", "10.0.0", "10.0.1", "172.16.0"];
 
   const parts = defaultHost.split(".");
   if (parts.length === 4) {
@@ -36,7 +36,7 @@ function likelyLocalPrefixes(defaultUrl: string) {
 
 function candidateUrls(defaultUrl: string) {
   const urls = [defaultUrl];
-  const commonLastOctets = [47, 87, 2, 10, 20, 50, 100, 101, 150, 200, 254];
+  const commonLastOctets = [2, 10, 20, 50, 100, 101, 150, 200, 254];
 
   for (const prefix of likelyLocalPrefixes(defaultUrl)) {
     for (const octet of commonLastOctets) {
