@@ -38,4 +38,5 @@ flows-backup.json
 flows.pi-backup-*.json
 *.backup-*
 *.cybercore-backup-*
+Screenshots/PXL_*
 Screenshot_*.png.jpg
