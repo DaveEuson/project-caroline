@@ -48,3 +48,4 @@ flows.pi-backup-*.json
 *.cybercore-backup-*
 Screenshot_*.png.jpg
 qa-artifacts/
+.deploy/

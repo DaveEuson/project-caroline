@@ -14,6 +14,8 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Added per-host device type labels for companion buddies, covering Pi, Steam, Ubuntu, Mac, and Windows hosts.
 - Added Hide/Show controls for memory shards so sensitive shard text can be concealed without deleting it.
 - Added a SteamOS user-space update helper so Steam Deck builds can update without relying on `/usr/local/sbin`.
+- Added a Raspberry Pi deploy helper with backups, hash verification, and restart fallback for system services that need sudo.
+- Added a multi-device smoke-test runner for Pi, SteamOS, and Ubuntu/Pop!_OS hosts covering health, chat visibility, calendar reads, widget gating, service state, and Discord configuration.
 - Added architecture and backup/restore docs.
 - Added a practical release checklist with device QA, smoke tests, and rollback notes.
 
@@ -39,6 +41,10 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Fixed SteamOS updates when the cached repo has local changes by preserving the dirty cache and recloning.
 - Fixed SteamOS update status so it can read the helper log and report completion.
 - Fixed Linux/Pi update status so updater logs survive the installer cleanup and service restart.
+- Fixed external `/chat` calls so smoke-test and companion-style messages are no longer hidden by the kiosk as duplicate display-originated messages.
+- Fixed disabled-widget guardrails so inactive calendar/task/Hue/weather/tide/music-style features return deterministic setup guidance instead of being described as active.
+- Fixed selected Google calendar IDs that do not contain `@` or `#` so additional selected calendars can be fetched and displayed.
+- Fixed startup calendar refresh and automatic cleanup of completed tasks older than 24 hours.
 
 ## Removed
 

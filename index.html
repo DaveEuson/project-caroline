@@ -5532,7 +5532,7 @@ function selectGoogleCalendarFromList() {}
 
 function looksLikeGoogleCalendarId(value) {
   const v = String(value || '').trim();
-  return !v || v === 'primary' || v.includes('@') || v.includes('#');
+  return !v || v.length > 0;
 }
 function normalizeCalendarIdInput(value) {
   const v = String(value || '').trim();
@@ -5544,7 +5544,7 @@ function validateCalendarIdInput() {
   const v = (input?.value || '').trim();
   if (!statusEl || !v) return true;
   if (!looksLikeGoogleCalendarId(v)) {
-    statusEl.textContent = 'Use primary or Load Calendars; names like "' + v + '" are not Google calendar IDs';
+    statusEl.textContent = 'Use primary or Load Calendars to choose a Google calendar ID';
     statusEl.style.color = '#fbbf24';
     return false;
   }
@@ -7510,6 +7510,7 @@ async function sendAiHttpMessage(text, context) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text,
+        source: 'display',
         aiProvider: provider,
         aiModel: S.aiModel || 'anthropic/claude-haiku-4.5',
         openrouterKey: S.openrouterKey || '',
@@ -8940,6 +8941,15 @@ function addTodoItem() {
   todos.push({ text, done: false, autoDone: false, tag: normalizeTodoTag(newTodoTag, text), createdAt: Date.now(), doneAt: null });
   input.value = ''; saveTodos(); renderTodos(); playBeep(700);
   sendTaskAddToServer(text);
+}
+function cleanupOldTodos() {
+  const now = Date.now();
+  const before = todos.length;
+  todos = todos.filter(t => !(t.done && t.doneAt && (now - t.doneAt > 24 * 60 * 60 * 1000)));
+  if (todos.length !== before) {
+    saveTodos();
+    renderTodos();
+  }
 }
 function clearDoneTodos() { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); playBeep(400); }
 function autoCompleteTodo(text) {
@@ -10399,9 +10409,11 @@ function maybeReturningGreeting(){
 updateSettingsStatus();
 // Sync from server first so fresh-install detection clears caro_onboarded before we check it
 syncSettingsFromServer().then(() => refreshPiNetworkIdentity()).then(() => {
+  cleanupOldTodos();
   testNodeRedUrl();
   loadMemoryShards();
   fetchWeather();
+  refreshCalendarWidget();
   if(shouldRunOnboarding() && !onboardingStarted){ startBootSequence(); } else { maybeReturningGreeting(); }
 });
 
