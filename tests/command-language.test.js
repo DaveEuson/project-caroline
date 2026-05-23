@@ -94,6 +94,15 @@ function parseAction(nodeId, userMessage, rawReply) {
   return msg && msg.action;
 }
 
+function parseReply(nodeId, userMessage, rawReply, extraMsg = {}) {
+  const payload = nodeId === NODES.wsParse
+    ? { choices: [{ message: { content: rawReply } }] }
+    : { response: rawReply };
+  const out = runNode(nodeId, Object.assign({ userMessage, payload }, extraMsg));
+  const msg = Array.isArray(out) ? out.find((item) => item && item.payload && item.payload.reply) : out;
+  return String(msg && msg.payload && msg.payload.reply || '');
+}
+
 function handleAction(action) {
   return runNode(NODES.handleAction, { action });
 }
@@ -215,6 +224,16 @@ for (const [surface, nodeId] of buildNodes) {
 }
 
 for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http parse', NODES.httpParse]]) {
+  test(`${surface}: casual greetings survive inactive widget scrub`, () => {
+    const reply = parseReply(nodeId, 'Happy Friday buddy', 'Happy Friday! We can check your task list and pick one small win.', {
+      inactiveWidgetGuards: [
+        { id: 'tasks', pattern: '\\b(tasks?|to[- ]?dos?|todo|task list)\\b', reply: 'The task/calendar widget is off right now, so I will leave the list alone until it is enabled.' },
+      ],
+    });
+    assert(reply.includes('Happy Friday'), `${surface}: should keep a warm greeting`);
+    assert(!/smallest visible step|what do you want to focus on|task\/calendar widget/i.test(reply), `${surface}: should not show productivity or setup fallback`);
+  });
+
   test(`${surface}: inferred action after model misses action block`, () => {
     expectAction(parseAction(nodeId, 'Can you add Eat dinner to my caliender at 9pm?', 'Sure, working on it.'), {
       type: 'calendar',

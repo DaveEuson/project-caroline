@@ -49,6 +49,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Fixed startup calendar refresh and automatic cleanup of completed tasks older than 24 hours.
 - Fixed command-language tests so calendar and Hue parser checks simulate linked integrations while disconnected guardrails still return setup guidance.
 - Documented the `companion-v0.1.11` fix for repeated raw **Task list updated.** messages in companion transcripts.
+- Fixed casual greetings from local models so disabled-widget guardrails no longer turn a simple hello into productivity advice.
 
 ## Removed
 
