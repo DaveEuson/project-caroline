@@ -74,7 +74,7 @@ Current smoke-validated hosts:
 
 - Raspberry Pi OS Desktop kiosk: use the stable Pi IP and confirm `/system-resources` stays reasonable after the kiosk settles.
 - Steam Deck / SteamOS: use the stable LAN IP for smoke runs; `steamdeck` mDNS can be slower or flaky from Windows.
-- Ubuntu Desktop VM: validated for server/client mode with 50GB disk and CPU-only Ollama, but rerun smoke after confirming the VM is reachable on the LAN.
+- Ubuntu Desktop VM: validated for server/client mode with 50GB disk and CPU-only Ollama; rerun smoke after confirming the VM is reachable on the LAN.
 
 Useful health checks:
 
