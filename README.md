@@ -177,7 +177,7 @@ Settings, API keys, tasks, and memory are preserved.
 
 - **Release:** the `release` branch is the recommended public beta channel.
 - **Nightly/dev:** the `nightly` branch gets the newest tested work first.
-- **Frozen tags:** tags such as `v0.3.0-beta.3` are exact snapshots.
+- **Frozen tags:** tags such as `v0.3.0-beta.4` are exact snapshots.
 
 For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.4 notes](docs/releases/v0.3.0-beta.4.md).
 

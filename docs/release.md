@@ -8,7 +8,7 @@ Use this when promoting Project: Caroline from the moving `nightly` branch to a 
 |---|---|---|
 | Nightly/dev | `nightly` branch | Latest tested fixes and experiments |
 | Release | `release` branch | Recommended public install |
-| Frozen tag | GitHub release tag, for example `v0.3.0-beta.3` | Exact archived build |
+| Frozen tag | GitHub release tag, for example `v0.3.0-beta.4` | Exact archived build |
 
 The regular install command follows `release`:
 
@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/r
 A tagged release can be installed by replacing `release` with the tag and passing the channel:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.3
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.4/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.4
 ```
 
 ## Release Checklist
@@ -119,8 +119,8 @@ git push origin release
 4. Create and push an annotated tag from `release`:
 
 ```bash
-git tag -a v0.3.0-beta.3 -m "Project: Caroline v0.3.0 beta 3"
-git push origin release v0.3.0-beta.3
+git tag -a v0.3.0-beta.4 -m "Project: Caroline v0.3.0 beta 4"
+git push origin release v0.3.0-beta.4
 ```
 
 5. Create a GitHub Release from the tag with short notes and known limitations.
@@ -131,7 +131,7 @@ git push origin release v0.3.0-beta.3
 If a release goes bad, reinstall the last known-good tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.3
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.4/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.4
 ```
 
 For SteamOS, use the SteamOS installer from a known-good commit or tag:
