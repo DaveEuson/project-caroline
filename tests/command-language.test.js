@@ -17,6 +17,8 @@ const NODES = {
   httpParse: '4a770c4d047aa23d',
   handleAction: '0cbd504f3c3054fd',
 };
+const HISTORY_PATH = '/home/davee/caroline/caroline_history.json';
+const CONTEXT_PATH = '/home/davee/caroline/caroline_context.json';
 
 const tests = [];
 
@@ -40,10 +42,10 @@ function createStore(initial = {}) {
   }, initial);
 }
 
-function runNode(id, msg, initialStore = {}) {
+function runNode(id, msg, initialStore = {}, initialFiles = {}) {
   const node = findNode(id);
   const store = createStore(initialStore);
-  const writes = {};
+  const writes = Object.assign({}, initialFiles);
   const sandbox = {
     msg,
     fs: {
@@ -121,6 +123,33 @@ function assertNoAction(nodeId, text, expectedReplyPart) {
   if (expectedReplyPart) {
     assert(String(msg.payload && msg.payload.reply || '').includes(expectedReplyPart), `${nodeId} ${text}: reply should include ${expectedReplyPart}`);
   }
+}
+
+function memoryFiles(facts) {
+  return {
+    [HISTORY_PATH]: '[]',
+    [CONTEXT_PATH]: JSON.stringify({
+      memoryShards: facts.map((text, i) => ({ id: `test-${i}`, text, source: 'test' })),
+      dave: { notes: [] },
+      user: { notes: [] },
+    }),
+  };
+}
+
+function buildReply(nodeId, text, files) {
+  const out = runNode(nodeId, { payload: { content: text, message: text, aiProvider: 'openrouter' } }, {}, files);
+  const msg = Array.isArray(out) ? out.find((item) => item && item.payload && item.payload.reply) : out;
+  return String(msg && msg.payload && msg.payload.reply || '');
+}
+
+function buildModelPayload(nodeId, text, files, initialStore = {}) {
+  const out = runNode(nodeId, { payload: { content: text, message: text, aiProvider: 'openrouter' } }, Object.assign({
+    aiProvider: 'openrouter',
+    openrouterKey: 'test-key',
+  }, initialStore), files);
+  const msg = Array.isArray(out) ? out.find((item) => item && typeof item.payload === 'string') : out;
+  assert(msg && msg.payload, `${nodeId}: expected model request payload`);
+  return JSON.parse(msg.payload);
 }
 
 const buildNodes = [
@@ -220,6 +249,18 @@ for (const [surface, nodeId] of buildNodes) {
     assert(msg && msg.payload, `${surface}: expected Ollama request payload`);
     const payload = JSON.parse(msg.payload);
     assert.strictEqual(payload.think, false, `${surface}: Ollama request should disable thinking mode`);
+  });
+
+  test(`${surface}: relationship recall uses durable memory shards`, () => {
+    const reply = buildReply(nodeId, "What's my wife's name?", memoryFiles(['Beckie is my wife']));
+    assert(reply.includes('Beckie'), `${surface}: expected reply to include saved wife name`);
+    assert(!/do(?:n't| not) have|not.*memory|tell me/i.test(reply), `${surface}: should not claim the memory is missing`);
+  });
+
+  test(`${surface}: durable memory shards are included in cloud prompt context`, () => {
+    const payload = buildModelPayload(nodeId, 'Tell me something low key about today.', memoryFiles(['Beckie is my wife']));
+    const system = payload.messages.find((entry) => entry.role === 'system').content;
+    assert(system.includes('Beckie is my wife'), `${surface}: expected saved memory in system context`);
   });
 }
 
