@@ -10,19 +10,19 @@ Use it when you want Caroline as a desktop chat buddy while the main kiosk keeps
 
 Latest companion release:
 
-https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.11
+https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.12
 
 Choose the package for your platform:
 
 | Platform | File |
 |---|---|
-| Windows | `Windows_Project.Caroline.Companion_0.1.11_x64_en-US.msi` |
-| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.11_amd64.deb` |
-| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.11_amd64.AppImage` |
-| macOS Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.11_aarch64.dmg` |
-| macOS Intel | `MacIntel_Project.Caroline.Companion_0.1.11_x64.dmg` |
+| Windows | `Windows_Project.Caroline.Companion_0.1.12_x64_en-US.msi` |
+| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.12_amd64.deb` |
+| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.12_amd64.AppImage` |
+| macOS Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.12_aarch64.dmg` |
+| macOS Intel | `MacIntel_Project.Caroline.Companion_0.1.12_x64.dmg` |
 
-If the chat fills with repeated **Task list updated.** messages, update to `companion-v0.1.11` or newer. Older companion builds displayed raw task-sync WebSocket updates as normal chat messages.
+If the chat fills with repeated **Task list updated.** or **Calendar updated.** messages, update to `companion-v0.1.12` or newer. Older companion builds displayed raw task/calendar sync WebSocket updates as normal chat messages.
 
 ## Connect
 
