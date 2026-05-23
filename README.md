@@ -39,36 +39,37 @@ That means Caroline can be a visible room kiosk, a headless home server, and a d
 Recommended public beta build:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+sudo apt-get update && sudo apt-get install -y bash curl ca-certificates
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 Nightly/dev build:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install.sh | bash -s -- --nightly
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install.sh | tr -d '\r' | bash -s -- --nightly
 ```
 
 Exact frozen beta tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | bash -s -- --channel v0.3.0-beta.3
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.3
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
 
 The optional desktop companion app is released separately:
 
-[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.10)
+[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.11)
 
 Use the platform-named installer for your computer:
 
 | Platform | Release asset |
 |---|---|
-| Windows | `Windows_Project.Caroline.Companion_0.1.10_x64_en-US.msi` |
-| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.10_amd64.deb` |
-| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.10_amd64.AppImage` |
-| Mac Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.10_aarch64.dmg` |
-| Mac Intel | `MacIntel_Project.Caroline.Companion_0.1.10_x64.dmg` |
+| Windows | `Windows_Project.Caroline.Companion_0.1.11_x64_en-US.msi` |
+| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.11_amd64.deb` |
+| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.11_amd64.AppImage` |
+| Mac Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.11_aarch64.dmg` |
+| Mac Intel | `MacIntel_Project.Caroline.Companion_0.1.11_x64.dmg` |
 
 The companion pairs with the `SYNC:` code shown on each Caroline host and talks to:
 
@@ -97,7 +98,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 |---|---|---|
 | Raspberry Pi OS Desktop 64-bit | Primary beta | Dedicated kiosk screen |
 | Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
-| Ubuntu Desktop 64-bit | Works, less tested | Desktop testing or local browser use |
+| Ubuntu Desktop 64-bit | Validated | Server/client mode from another browser; local kiosk mode is less tested |
 | Steam Deck / SteamOS | Experimental nightly | Repurposed handheld desk terminal |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
@@ -107,6 +108,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - Steam Deck / SteamOS support is experimental and currently tracks nightly.
 - OpenRouter is the best AI experience for speed and answer quality.
 - Ollama is private and local, but small hardware can be slower and less polished.
+- Ubuntu Desktop server/client mode is validated on a 50GB VM with CPU-only Ollama using `qwen2.5:1.5b`.
 - Caroline is designed for trusted local networks. Do not expose it directly to the public internet.
 
 ## Beginner Guides
@@ -137,11 +139,13 @@ The installer detects your hardware, RAM, and platform, then preselects the loca
 - Recommended Steam Deck local quality: **qwen3:1.7b**
 - Fast Steam Deck local fallback: **qwen3:0.6b**
 - Safe/legacy fallback: **gemma3:1b**
+- Ubuntu Desktop VM validation: **50GB disk**, CPU-only Ollama, **qwen2.5:1.5b**
 
 ## Requirements
 
 - 64-bit Raspberry Pi OS or Ubuntu; SteamOS is experimental on nightly
 - 4GB RAM minimum; 6-8GB is better for local AI
+- 50GB disk recommended for Ubuntu VM local Ollama testing; 12GB images are too small for the recommended model after OS and runtime packages
 - Internet during install
 - A stable local IP address is strongly recommended
 - Do not expose Caroline directly to the public internet
@@ -162,7 +166,8 @@ Add these later in **Settings**:
 Use **Settings > About > Update**, or rerun:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+sudo apt-get update && sudo apt-get install -y bash curl ca-certificates
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 Settings, API keys, tasks, and memory are preserved.
@@ -178,7 +183,7 @@ For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/r
 ## Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | tr -d '\r' | sudo bash -s --
 ```
 
 ## Safety

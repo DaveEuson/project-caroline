@@ -70,7 +70,7 @@ Use this guide:
 Open Terminal on the Pi, or SSH into it, then run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 Recommended answers:
@@ -158,5 +158,5 @@ journalctl -u caroline -n 120 --no-pager
 Update Caroline:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```

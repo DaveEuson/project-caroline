@@ -13,13 +13,13 @@ Use this when promoting Project: Caroline from the moving `nightly` branch to a 
 The regular install command follows `release`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 A tagged release can be installed by replacing `release` with the tag and passing the channel:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | bash -s -- --channel v0.3.0-beta.3
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.3
 ```
 
 ## Release Checklist
@@ -66,7 +66,7 @@ Remove generated `node_modules` or `dist` folders from the worktree before commi
 |---|---|
 | Raspberry Pi OS Desktop | Fresh install, kiosk launch, update from previous build, `/health`, Settings save |
 | Ubuntu Server | Fresh server/client install, browser access from another device, update, `/health` |
-| Ubuntu Desktop or Pop!_OS | Install or update if touched, browser access, companion profile if relevant |
+| Ubuntu Desktop or Pop!_OS | Install or update if touched, browser access, companion profile if relevant; Ubuntu Desktop VM server/client mode is validated with 50GB disk, CPU-only Ollama, and `qwen2.5:1.5b` |
 | Steam Deck / SteamOS | Nightly install or update, local `http://localhost:8080/`, update status, companion SSH tunnel |
 | Companion app | Build installer artifacts, connect to Caroline/Pi and Carl/Deck profiles |
 
@@ -125,13 +125,13 @@ git push origin release v0.3.0-beta.3
 If a release goes bad, reinstall the last known-good tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | bash -s -- --channel v0.3.0-beta.3
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.3
 ```
 
 For SteamOS, use the SteamOS installer from a known-good commit or tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install-steamos.sh | CAROLINE_CHANNEL=nightly bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install-steamos.sh | tr -d '\r' | CAROLINE_CHANNEL=nightly bash -s --
 ```
 
 If user state may be at risk, create a backup first. See [Backup and restore](backup-restore.md).

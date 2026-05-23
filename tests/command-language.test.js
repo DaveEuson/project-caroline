@@ -79,8 +79,8 @@ function directCommand(nodeId, text, payload = {}) {
   return Array.isArray(out) ? out.find((item) => item && (item.action || item.payload)) : out;
 }
 
-function directAction(nodeId, text) {
-  const out = runNode(nodeId, { payload: { content: text, aiProvider: 'ollama' } });
+function directAction(nodeId, text, initialStore = {}) {
+  const out = runNode(nodeId, { payload: { content: text, aiProvider: 'ollama' } }, initialStore);
   const msg = Array.isArray(out) ? out.find((item) => item && item.action) : out;
   return msg && msg.action;
 }
@@ -129,7 +129,7 @@ for (const [surface, nodeId] of buildNodes) {
       ['Schedule Project Caroline release event Friday at 6pm for 30 minutes', { type: 'calendar', title: 'Project Caroline release event', time: '18:00', duration_minutes: 30 }],
       ['Book demo walkthrough Friday at 3pm', { type: 'calendar', title: 'demo walkthrough', time: '15:00', duration_minutes: 60 }],
     ];
-    for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} calendar: ${text}`);
+    for (const [text, expected] of cases) expectAction(directAction(nodeId, text, { googleConnected: true }), expected, `${surface} calendar: ${text}`);
   });
 
   test(`${surface}: calendar delete variants`, () => {
@@ -139,7 +139,7 @@ for (const [surface, nodeId] of buildNodes) {
       ['delete the calendar event "Dentist appointment"', { type: 'calendar_delete', title: 'Dentist appointment' }],
       ['remove clean install notes off my schedule', { type: 'calendar_delete', title: 'clean install notes' }],
     ];
-    for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} delete: ${text}`);
+    for (const [text, expected] of cases) expectAction(directAction(nodeId, text, { googleConnected: true }), expected, `${surface} delete: ${text}`);
   });
 
   test(`${surface}: task variants`, () => {
@@ -171,7 +171,13 @@ for (const [surface, nodeId] of buildNodes) {
       ['focus lighting please', { type: 'hue', mode: 'focus' }],
       ['night lights', { type: 'hue', mode: 'night' }],
     ];
-    for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} Hue: ${text}`);
+    for (const [text, expected] of cases) {
+      expectAction(directAction(nodeId, text, {
+        features: { hue: true },
+        hueIp: '192.168.1.2',
+        hueKey: 'test-hue-key',
+      }), expected, `${surface} Hue: ${text}`);
+    }
   });
 
   test(`${surface}: feedback does not become calendar read`, () => {
@@ -188,7 +194,7 @@ for (const [surface, nodeId] of buildNodes) {
 
   test(`${surface}: safe non-action replies`, () => {
     assertNoAction(nodeId, 'I have feedback', 'what Dave should change');
-    assertNoAction(nodeId, 'what is on my calendar today', 'calendar today');
+    assertNoAction(nodeId, 'what is on my calendar today', 'Calendar is not linked');
     assertNoAction(nodeId, 'why are your responses so slow', 'local Ollama');
     assertNoAction(nodeId, 'hello', "I'm here");
   });

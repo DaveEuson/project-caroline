@@ -1,14 +1,15 @@
 # How to Install Caroline on Ubuntu Desktop
 
-Ubuntu Desktop works, but it is less tested than Raspberry Pi OS and Ubuntu Server. For beta, use Ubuntu Desktop when you want to test Caroline on a normal Linux desktop or VM.
+Ubuntu Desktop is validated for server/client mode, where Caroline runs on the Ubuntu machine and you open it from another browser on your network. Local fullscreen kiosk mode works for testing, but is still less tested than Raspberry Pi OS.
 
-For the most reliable Ubuntu setup, use [Ubuntu Server](how-to-ubuntu-server.md) and open Caroline from another browser.
+For the most minimal Ubuntu setup, use [Ubuntu Server](how-to-ubuntu-server.md) and open Caroline from another browser.
 
 ## What You Need
 
 - A PC, mini PC, VM, or laptop
 - Ubuntu Desktop 64-bit
 - 4GB RAM minimum; 6-8GB is better
+- 50GB disk recommended if you want local Ollama; 12GB VM images are too tight for the recommended model after OS and runtime packages
 - Internet during install
 
 ## 1. Install Ubuntu Desktop
@@ -70,7 +71,8 @@ Guide:
 Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+sudo apt-get update && sudo apt-get install -y bash curl ca-certificates
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 Recommended answers:
@@ -79,7 +81,7 @@ Recommended answers:
 - Kiosk mode: **No** for testing
 - Kiosk mode: **Yes** only if this is a dedicated display machine
 
-For local Ollama, use `qwen2.5:1.5b` for recommended quality, `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice.
+For local Ollama, `qwen2.5:1.5b` is validated on a 50GB Ubuntu Desktop VM with CPU-only Ollama. Use `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice.
 
 If kiosk or XRDP behaves strangely on Ubuntu Desktop, use server/client mode instead:
 

@@ -74,7 +74,8 @@ Use this guide:
 Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+sudo apt-get update && sudo apt-get install -y bash curl ca-certificates
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 Recommended answers:

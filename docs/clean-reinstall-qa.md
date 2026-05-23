@@ -11,7 +11,8 @@ This guide has two reset levels:
 
 - Confirm you have SSH, Raspberry Pi Connect, or VM console access before enabling kiosk mode.
 - For Ubuntu VM QA, use Ubuntu Server 64-bit when possible, choose **No** for kiosk mode, and open Caroline from another machine at `http://<vm-ip>:8080/`. If you enable local browser login, log in as `caroline`; the installer prints the password file path.
-- Use Ubuntu Desktop VM only if you specifically want to test experimental local fullscreen kiosk behavior.
+- Ubuntu Desktop VM is validated for server/client mode from another browser. Use local fullscreen kiosk behavior only when you specifically want to test that desktop path.
+- For Ubuntu Desktop VM local AI QA, allocate about 50GB of disk before installing Ollama. CPU-only Ollama with `qwen2.5:1.5b` is validated; 12GB images are too small after OS and runtime packages.
 - Ubuntu-based distributions such as Pop!_OS, Linux Mint, Zorin OS, and elementary OS are expected to work best in server/client mode, but treat them as unverified until install, reboot, update, and integration checks pass.
 - For Ubuntu Server, VM, or server/client installs, give the Caroline host a stable local IP. A router DHCP reservation is recommended because it keeps setup simple; a manual static IP also works if you know your network settings.
 - Save any local credentials or notes you still need from `~/caroline`.
@@ -34,15 +35,15 @@ Ports used by Caroline:
 Run this on the Pi or Linux VM:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash -s -- --yes
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | tr -d '\r' | sudo bash -s -- --yes
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 sudo reboot
 ```
 
 To force Caroline's optional local browser login off during reinstall:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | CAROLINE_LOCAL_AUTH=false bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | CAROLINE_LOCAL_AUTH=false bash -s --
 ```
 
 After reboot, open:
@@ -73,6 +74,7 @@ Expected to work from the external client browser:
 
 - First-run setup and Settings save/reload.
 - Chat through OpenRouter or Ollama running on the Caroline host.
+- Local Ollama with `qwen2.5:1.5b` on a 50GB Ubuntu Desktop VM in server/client mode.
 - Ollama on another LAN machine if **Settings -> AI -> Ollama URL** points to it.
 - Weather, timezone, news, video, radio, Pomodoro, local tasks, calendar, Spotify, Hue, Discord, update, reboot, and CPU/RAM monitor.
 - Google and Spotify setup, as long as the browser can reach the VM on ports `8080` and `8443`.
@@ -90,7 +92,7 @@ Expected limitations in server/client mode:
 Use this when you want the safety prompt:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | tr -d '\r' | sudo bash -s --
 ```
 
 Type exactly:
@@ -104,7 +106,7 @@ UNINSTALL CAROLINE
 Use this if you want to preserve `~/caroline` while removing services and launchers:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | sudo bash -s -- --keep-data
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/uninstall.sh | tr -d '\r' | sudo bash -s -- --keep-data
 ```
 
 ## Verify Uninstall
@@ -166,7 +168,7 @@ If these commands print no paths, the package purge is clean enough for installe
 Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 During install, record:
@@ -254,7 +256,7 @@ After reboot:
 Rerun the installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 ```
 
 Check:
@@ -299,11 +301,11 @@ rm -rf "/tmp/caroline-kiosk-$(id -u).lock"
 rm -f ~/.mozilla/firefox/caroline-kiosk/parent.lock ~/.mozilla/firefox/caroline-kiosk/lock ~/.mozilla/firefox/caroline-kiosk/.parentlock
 rm -rf ~/.config/caroline/chromium-kiosk ~/.config/caroline/chromium-window
 rm -f ~/.local/bin/caroline-window ~/.local/bin/caroline-kiosk
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install.sh | tr -d '\r' | bash -s --
 sudo reboot
 ```
 
-For Ubuntu QA, the recommended path is to keep kiosk mode off and open Caroline from an external browser at `http://<vm-ip>:8080/`. Only rerun the installer to enable kiosk autostart if you intentionally want to test Ubuntu Desktop fullscreen behavior.
+For Ubuntu QA, the validated server/client path is to keep kiosk mode off and open Caroline from an external browser at `http://<vm-ip>:8080/`. Ubuntu Desktop VM local AI is validated with a 50GB disk and CPU-only Ollama using `qwen2.5:1.5b`. Only rerun the installer to enable kiosk autostart if you intentionally want to test Ubuntu Desktop fullscreen behavior.
 
 ## Release Gate
 

@@ -24,7 +24,7 @@ When you choose local AI, the installer can download Ollama's Linux archive into
 In Steam Deck Desktop Mode, open Konsole and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install-steamos.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install-steamos.sh | tr -d '\r' | bash -s --
 ```
 
 Then open Caroline on the Deck:

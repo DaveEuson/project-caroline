@@ -23,7 +23,9 @@ Draft notes for the next public beta. Move these into a versioned release note f
 
 - Reduced the avatar roster to the named Project: Caroline characters instead of generic avatar choices.
 - Expanded the README and companion guide to explain Caroline as a host/kiosk that can be reached from LAN browsers or the desktop companion app.
-- Bumped the companion app version and download links to `0.1.10`.
+- Bumped the companion app version and download links to `0.1.11`.
+- Documented Ubuntu Desktop VM server/client validation with 50GB disk, CPU-only Ollama, and `qwen2.5:1.5b`.
+- Hardened public install and uninstall snippets against pasted CRLF line endings.
 - Updated companion release artifact names so installers clearly identify Windows, Linux, Steam Deck, Mac Intel, and Mac Apple Silicon downloads.
 - Updated companion docs to explain the Steam Deck SSH tunnel profile.
 - Updated Steam Deck companion guidance to prefer the `.AppImage` build.
@@ -45,6 +47,8 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Fixed disabled-widget guardrails so inactive calendar/task/Hue/weather/tide/music-style features return deterministic setup guidance instead of being described as active.
 - Fixed selected Google calendar IDs that do not contain `@` or `#` so additional selected calendars can be fetched and displayed.
 - Fixed startup calendar refresh and automatic cleanup of completed tasks older than 24 hours.
+- Fixed command-language tests so calendar and Hue parser checks simulate linked integrations while disconnected guardrails still return setup guidance.
+- Documented the `companion-v0.1.11` fix for repeated raw **Task list updated.** messages in companion transcripts.
 
 ## Removed
 
