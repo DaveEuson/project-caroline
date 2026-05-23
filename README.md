@@ -52,7 +52,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/n
 Exact frozen beta tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.3/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.3
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.4/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.4
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
@@ -96,16 +96,17 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 
 | Platform | Status | Best For |
 |---|---|---|
-| Raspberry Pi OS Desktop 64-bit | Primary beta | Dedicated kiosk screen |
+| Raspberry Pi OS Desktop 64-bit | Validated primary beta | Dedicated kiosk screen |
 | Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
 | Ubuntu Desktop 64-bit | Validated | Server/client mode from another browser; local kiosk mode is less tested |
-| Steam Deck / SteamOS | Experimental nightly | Repurposed handheld desk terminal |
+| Steam Deck / SteamOS | Smoke-validated nightly | Repurposed handheld desk terminal |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
 ## Current Beta Reality
 
 - Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
-- Steam Deck / SteamOS support is experimental and currently tracks nightly.
+- Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter as the preferred AI path, and lazy-loaded visual media.
+- Steam Deck / SteamOS support tracks nightly and is smoke-validated in server/client mode by stable IP; mDNS hostnames can be slower from Windows networks.
 - OpenRouter is the best AI experience for speed and answer quality.
 - Ollama is private and local, but small hardware can be slower and less polished.
 - Ubuntu Desktop server/client mode is validated on a 50GB VM with CPU-only Ollama using `qwen2.5:1.5b`.
@@ -178,7 +179,7 @@ Settings, API keys, tasks, and memory are preserved.
 - **Nightly/dev:** the `nightly` branch gets the newest tested work first.
 - **Frozen tags:** tags such as `v0.3.0-beta.3` are exact snapshots.
 
-For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.3 notes](docs/releases/v0.3.0-beta.3.md).
+For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.4 notes](docs/releases/v0.3.0-beta.4.md).
 
 ## Uninstall
 

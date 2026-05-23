@@ -64,11 +64,17 @@ Remove generated `node_modules` or `dist` folders from the worktree before commi
 
 | Target | Required Check |
 |---|---|
-| Raspberry Pi OS Desktop | Fresh install, kiosk launch, update from previous build, `/health`, Settings save |
-| Ubuntu Server | Fresh server/client install, browser access from another device, update, `/health` |
-| Ubuntu Desktop or Pop!_OS | Install or update if touched, browser access, companion profile if relevant; Ubuntu Desktop VM server/client mode is validated with 50GB disk, CPU-only Ollama, and `qwen2.5:1.5b` |
-| Steam Deck / SteamOS | Nightly install or update, local `http://localhost:8080/`, update status, companion SSH tunnel |
+| Raspberry Pi OS Desktop | Fresh install, kiosk launch, update from previous build, `/health`, Settings save, Settings > System Check |
+| Ubuntu Server | Fresh server/client install, browser access from another device, update, `/health`, Settings > System Check |
+| Ubuntu Desktop or Pop!_OS | Install or update if touched, browser access, Settings > System Check, companion profile if relevant; Ubuntu Desktop VM server/client mode is validated with 50GB disk, CPU-only Ollama, and `qwen2.5:1.5b` |
+| Steam Deck / SteamOS | Nightly install or update, local `http://localhost:8080/`, update status, Settings > System Check, companion SSH tunnel |
 | Companion app | Build installer artifacts, connect to Caroline/Pi and Carl/Deck profiles |
+
+Current smoke-validated hosts:
+
+- Raspberry Pi OS Desktop kiosk: use the stable Pi IP and confirm `/system-resources` stays reasonable after the kiosk settles.
+- Steam Deck / SteamOS: use the stable LAN IP for smoke runs; `steamdeck` mDNS can be slower or flaky from Windows.
+- Ubuntu Desktop VM: validated for server/client mode with 50GB disk and CPU-only Ollama, but rerun smoke after confirming the VM is reachable on the LAN.
 
 Useful health checks:
 

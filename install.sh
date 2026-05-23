@@ -145,7 +145,7 @@ bool_json() {
 }
 
 # ── CONFIG ───────────────────────────────────────────────────
-CAROLINE_VERSION="0.3.0-beta.3"
+CAROLINE_VERSION="0.3.0-beta.4"
 CAROLINE_REPO_URL="https://github.com/Project-Caroline/project-caroline.git"
 CAROLINE_RAW_BASE="https://raw.githubusercontent.com/Project-Caroline/project-caroline"
 NODE_RED_PORT=1880
@@ -452,6 +452,9 @@ write_browser_launchers() {
     cat > "$WINDOWED_LAUNCHER" << EOF
 #!/bin/bash
 BROWSER="${BROWSER_BIN}"
+if [ "\$(basename "\$BROWSER")" = "chromium" ] && [ -x /usr/lib/chromium/chromium ]; then
+  BROWSER="/usr/lib/chromium/chromium"
+fi
 URL="${KIOSK_URL}"
 PROFILE="${CHROMIUM_WINDOWED_PROFILE_DIR}"
 mkdir -p "\$PROFILE"
@@ -462,6 +465,8 @@ exec "\$BROWSER" \\
   --password-store=basic \\
   --disable-session-crashed-bubble \\
   --disable-infobars \\
+  --enable-gpu-rasterization \\
+  --use-angle=gles \\
   --autoplay-policy=no-user-gesture-required \\
   --new-window "\$URL"
 EOF
@@ -469,6 +474,9 @@ EOF
     cat > "$KIOSK_LAUNCHER" << EOF
 #!/bin/bash
 BROWSER="${BROWSER_BIN}"
+if [ "\$(basename "\$BROWSER")" = "chromium" ] && [ -x /usr/lib/chromium/chromium ]; then
+  BROWSER="/usr/lib/chromium/chromium"
+fi
 PROFILE="${CHROMIUM_PROFILE_DIR}"
 URL="${KIOSK_URL}"
 LOCKDIR="/tmp/caroline-kiosk-\$(id -u).lock"
@@ -489,6 +497,8 @@ mkdir "\$LOCKDIR" 2>/dev/null || exit 0
   --password-store=basic \\
   --disable-session-crashed-bubble \\
   --disable-infobars \\
+  --enable-gpu-rasterization \\
+  --use-angle=gles \\
   --autoplay-policy=no-user-gesture-required \\
   --kiosk "\$URL"
 status=\$?

@@ -489,6 +489,23 @@
   @keyframes micPulse { 0%,100%{box-shadow:0 0 15px rgba(var(--t-rgb2),0.5)} 50%{box-shadow:0 0 30px rgba(var(--t-rgb2),0.8)} }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  body.pi-performance #particles,
+  body.pi-performance #crt-flicker,
+  body.pi-performance #corner-glow-tl,
+  body.pi-performance #corner-glow-br { display:none !important; }
+  body.pi-performance .dot,
+  body.pi-performance .eq-bar,
+  body.pi-performance .typing-dot,
+  body.pi-performance .caro-typing-dot,
+  body.pi-performance .pulse-ring,
+  body.pi-performance .listen-ring,
+  body.pi-performance .caro-boot-logo,
+  body.pi-performance #caro-boot-avatar,
+  body.pi-performance #avatar-outer.speaking img.avatar-svg,
+  body.pi-performance #mic-btn.listening,
+  body.pi-performance #hue-btn.mode-disco { animation:none !important; }
+  body.pi-performance #news-ticker-inner { transition:opacity 0.2s ease; }
+  body.pi-performance .caro-msg { transition-duration:0.16s !important; }
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
@@ -744,6 +761,40 @@
   .about-card .v { font-size:13px; color:#e2e8f0; overflow-wrap:anywhere; }
   .about-card.full { grid-column:1 / -1; }
   @media (max-width: 540px) { .about-grid { grid-template-columns:1fr; } .about-card.full { grid-column:auto; } }
+  .system-check-section { grid-column:1 / -1; }
+  .system-check-head { align-items:flex-start; gap:14px; }
+  .system-check-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+  #system-check-run-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-width:128px; }
+  .system-check-summary { min-height:66px; margin-top:14px; padding:12px 14px; border:1px solid rgba(var(--t-rgb1),0.18); border-radius:8px; background:rgba(0,0,0,0.22); display:flex; justify-content:space-between; gap:14px; align-items:center; }
+  .system-check-summary.pass { border-color:rgba(52,211,153,0.28); background:rgba(34,197,94,0.07); }
+  .system-check-summary.warn { border-color:rgba(251,191,36,0.28); background:rgba(251,191,36,0.07); }
+  .system-check-summary.fail { border-color:rgba(248,113,113,0.34); background:rgba(248,113,113,0.07); }
+  .system-check-summary.idle { color:rgba(226,232,240,0.62); }
+  .system-check-summary-title { color:#f8fafc; font-size:15px; font-weight:700; }
+  .system-check-summary-sub { color:rgba(226,232,240,0.54); font-size:12px; margin-top:3px; font-family:'JetBrains Mono',monospace; }
+  .system-check-counts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  .system-check-count { min-width:54px; padding:6px 8px; border:1px solid rgba(226,232,240,0.12); border-radius:8px; text-align:center; background:rgba(255,255,255,0.035); }
+  .system-check-count .n { color:#f8fafc; font-size:15px; font-weight:700; line-height:1; }
+  .system-check-count .k { color:rgba(226,232,240,0.42); font-size:9px; margin-top:3px; font-family:'JetBrains Mono',monospace; }
+  .system-check-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:8px; margin-top:10px; }
+  .system-check-row { min-height:74px; display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid rgba(var(--t-rgb1),0.13); border-radius:8px; background:rgba(var(--t-rgb1),0.035); min-width:0; }
+  .system-check-dot { width:10px; height:10px; border-radius:50%; margin-top:5px; flex:0 0 auto; background:rgba(148,163,184,0.62); box-shadow:0 0 0 3px rgba(148,163,184,0.08); }
+  .system-check-dot.pass { background:#34d399; box-shadow:0 0 0 3px rgba(52,211,153,0.12); }
+  .system-check-dot.warn { background:#fbbf24; box-shadow:0 0 0 3px rgba(251,191,36,0.12); }
+  .system-check-dot.fail { background:#f87171; box-shadow:0 0 0 3px rgba(248,113,113,0.12); }
+  .system-check-dot.skip { background:rgba(148,163,184,0.45); box-shadow:0 0 0 3px rgba(148,163,184,0.08); }
+  .system-check-copy { min-width:0; }
+  .system-check-title { color:#e2e8f0; font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+  .system-check-detail { color:rgba(226,232,240,0.58); font-size:12px; line-height:1.45; margin-top:3px; overflow-wrap:anywhere; }
+  .system-check-meta { color:rgba(var(--t-rgb1),0.62); font-size:10px; font-family:'JetBrains Mono',monospace; margin-top:5px; overflow-wrap:anywhere; }
+  @media (max-width: 540px) {
+    .system-check-head { flex-direction:column; align-items:stretch; }
+    .system-check-actions { justify-content:stretch; }
+    #system-check-run-btn { width:100%; }
+    .system-check-summary { flex-direction:column; align-items:flex-start; }
+    .system-check-counts { justify-content:flex-start; }
+    .system-check-list { grid-template-columns:1fr; }
+  }
   .log-entry { display:flex; gap:8px; }
   .log-ts { color:rgba(var(--t-rgb1),0.4); flex-shrink:0; }
   .log-type-ws   { color:#4ade80; }
@@ -2163,6 +2214,36 @@
 
       <!-- ── TAB: SYSTEM ── -->
       <div class="stab-panel" id="stab-system" hidden>
+        <div class="settings-section system-check-section">
+          <h3>System Check</h3>
+          <div class="settings-row system-check-head">
+            <div>
+              <div class="settings-label">Readiness scan</div>
+              <div class="settings-sub" id="system-check-status">Run a quick local smoke check for this host</div>
+            </div>
+            <div class="system-check-actions">
+              <button class="settings-boot-btn" type="button" id="system-check-run-btn" onclick="runSystemCheck({ manual: true })"><i class="ti ti-stethoscope" aria-hidden="true"></i><span>Run Check</span></button>
+            </div>
+          </div>
+          <div class="system-check-summary idle" id="system-check-summary">
+            <div>
+              <div class="system-check-summary-title">Not checked yet</div>
+              <div class="system-check-summary-sub">Backend, realtime, AI, memory, resources, updates, and integrations</div>
+            </div>
+            <div class="system-check-counts" aria-hidden="true">
+              <div class="system-check-count"><div class="n">--</div><div class="k">checks</div></div>
+            </div>
+          </div>
+          <div class="system-check-list" id="system-check-list" aria-live="polite">
+            <div class="system-check-row">
+              <span class="system-check-dot skip"></span>
+              <div class="system-check-copy">
+                <div class="system-check-title">Waiting to run</div>
+                <div class="system-check-detail">Open this tab or press Run Check to scan the local Caroline host.</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="settings-section">
           <h3>Identity</h3>
           <div class="settings-row">
@@ -2560,7 +2641,7 @@
         <div class="pulse-ring"></div>
         <div class="listen-ring"></div>
         <div id="avatar-wrap">
-          <img id="av-gif" src="assets/caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
+          <img id="av-gif" data-src="assets/caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-crt" viewBox="0 0 100 100">
             <g class="bot-body"><path d="M 45 65 L 45 75 L 35 80 L 65 80 L 55 75 L 55 65 Z"/></g>
             <g class="bot-head">
@@ -2583,8 +2664,8 @@
             <path d="M 54 74 Q 60 78 66 74" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <path d="M 50 88 L 58 93 L 50 98 Z" fill="var(--t-hex2)"/><path d="M 70 88 L 62 93 L 70 98 Z" fill="var(--t-hex2)"/>
           </svg>
-          <img id="av-cat" src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
-          <img id="av-robot" src="assets/Robot-Awake.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
+          <img id="av-cat" data-src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
+          <img id="av-robot" data-src="assets/Robot-Awake.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-frog-pilot" viewBox="0 0 120 120" role="img" aria-label="Frog Pilot placeholder">
             <defs>
               <linearGradient id="frogHelmet" x1="0" x2="1" y1="0" y2="1">
@@ -2621,12 +2702,12 @@
             <path d="M42 60 Q50 65 58 60" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <line x1="15" y1="48" x2="85" y2="48" stroke="var(--t-hex1)" stroke-width="0.5" opacity="0.3"/>
           </svg>
-          <img id="av-carl" src="assets/Carl-awake.gif" class="avatar-svg hidden" alt="Carl" onerror="this.style.display='none'"/>
+          <img id="av-carl" data-src="assets/Carl-awake.gif" class="avatar-svg hidden" alt="Carl" onerror="this.style.display='none'"/>
           <img id="av-custom" src="" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
-          <img id="av-happy" src="assets/caroline-happy.gif" class="avatar-svg" alt="Caroline Happy" onerror="this.style.display='none'"/>
-          <img id="av-sleeping" src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
-          <img id="av-carl-sleeping" src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
-          <img id="av-robot-sleeping" src="assets/Robot-Sleeping.gif" class="avatar-svg" alt="Robot Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-happy" data-src="assets/caroline-happy.gif" class="avatar-svg" alt="Caroline Happy" onerror="this.style.display='none'"/>
+          <img id="av-sleeping" data-src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-carl-sleeping" data-src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-robot-sleeping" data-src="assets/Robot-Sleeping.gif" class="avatar-svg" alt="Robot Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -2804,6 +2885,18 @@ const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode:
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
+
+function isPiPerformanceMode() {
+  const host = String(S.hostDeviceType || S.hardwareProfile || '').toLowerCase();
+  const ua = String(navigator.userAgent || '').toLowerCase();
+  return /raspberry|\bpi\b/.test(host) || /raspberry/.test(ua);
+}
+function piPerfInterval(defaultMs, piMs) {
+  return isPiPerformanceMode() ? piMs : defaultMs;
+}
+function applyPiPerformanceMode() {
+  document.body.classList.toggle('pi-performance', isPiPerformanceMode());
+}
 
 function normalizeConfiguredNodeRedUrl(value) {
   let u = String(value || '').trim();
@@ -3271,6 +3364,7 @@ async function syncSettingsFromServer() {
     const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
     const installChanged = !!(d.installId && localInstallId && localInstallId !== d.installId);
     mergeServerSettings(d);
+    applyPiPerformanceMode();
     serverSettingsLoaded = true;
     if (d.setupComplete === true || (d.setupComplete === undefined && hasOnboardingMemory(d))) {
       markOnboardingCompleteLocally();
@@ -3460,6 +3554,289 @@ function updateAboutPanel() {
   set('about-provider', (S.aiProvider || 'openrouter') + ' · ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'qwen2.5:1.5b') : (S.aiModel || 'anthropic/claude-haiku-4.5')));
   set('about-memory', (setupMemory ? 'setup memory saved' : 'setup memory empty') + ' · ' + (importedMemory ? 'imported profile saved' : 'no imported profile'));
   set('about-widgets', enabledWidgets.length + '/' + FEATURE_KEYS.length + ' enabled: ' + enabledWidgets.join(', '));
+}
+
+const SYSTEM_CHECK_STALE_MS = 60 * 1000;
+let systemCheckRunning = false;
+let systemCheckLastRunAt = 0;
+
+function systemCheckFeatureEnabled(key) {
+  const features = (S && S.features) || FEATURE_DEFAULTS || {};
+  return features[key] !== false;
+}
+
+function systemCheckSafeStatus(status) {
+  return ['pass', 'warn', 'fail', 'skip'].includes(status) ? status : 'skip';
+}
+
+function systemCheckEndpointError(error) {
+  const msg = String(error?.message || error || 'unavailable').replace(/^Failed to fetch$/i, 'network error');
+  return msg.length > 120 ? msg.slice(0, 117) + '...' : msg;
+}
+
+function systemCheckDuration(seconds) {
+  const s = Number(seconds);
+  if (!Number.isFinite(s) || s < 0) return 'uptime unknown';
+  const days = Math.floor(s / 86400);
+  const hours = Math.floor((s % 86400) / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  if (days > 0) return days + 'd ' + hours + 'h uptime';
+  if (hours > 0) return hours + 'h ' + minutes + 'm uptime';
+  return Math.max(1, minutes) + 'm uptime';
+}
+
+function systemCheckNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function systemCheckTempLabel(resources) {
+  const tempC = systemCheckNumber(resources?.cpuTempC);
+  if (tempC === null) return 'Temp unavailable';
+  const tempF = systemCheckNumber(resources.cpuTempF) ?? ((tempC * 9 / 5) + 32);
+  return (temperatureUnit() === 'celsius' ? tempC.toFixed(1) + '°C' : tempF.toFixed(1) + '°F') + ' host temp';
+}
+
+function systemCheckRowHtml(check) {
+  const status = systemCheckSafeStatus(check.status);
+  const meta = check.meta ? '<div class="system-check-meta">' + escapeHtmlText(check.meta) + '</div>' : '';
+  return [
+    '<div class="system-check-row" data-status="' + status + '">',
+    '<span class="system-check-dot ' + status + '"></span>',
+    '<div class="system-check-copy">',
+    '<div class="system-check-title">' + escapeHtmlText(check.label) + '</div>',
+    '<div class="system-check-detail">' + escapeHtmlText(check.detail) + '</div>',
+    meta,
+    '</div>',
+    '</div>'
+  ].join('');
+}
+
+function renderSystemCheckResults(checks, options = {}) {
+  const list = document.getElementById('system-check-list');
+  const summary = document.getElementById('system-check-summary');
+  const statusEl = document.getElementById('system-check-status');
+  if (!list || !summary) return;
+
+  const rows = Array.isArray(checks) ? checks : [];
+  const counts = rows.reduce((acc, check) => {
+    acc[systemCheckSafeStatus(check.status)] += 1;
+    return acc;
+  }, { pass: 0, warn: 0, fail: 0, skip: 0 });
+  const overall = options.overall || (counts.fail ? 'fail' : (counts.warn ? 'warn' : (rows.length ? 'pass' : 'idle')));
+  const title = options.title || (overall === 'fail' ? 'Needs attention' : (overall === 'warn' ? 'Ready with notes' : 'Ready'));
+  const runText = systemCheckLastRunAt ? 'Checked ' + new Date(systemCheckLastRunAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) : 'Not checked yet';
+  const subtitle = options.subtitle || (counts.pass + '/' + rows.length + ' checks passed · ' + counts.warn + ' notes · ' + counts.fail + ' failures · ' + runText);
+  if (statusEl) statusEl.textContent = options.statusText || subtitle;
+
+  summary.className = 'system-check-summary ' + overall;
+  summary.innerHTML = [
+    '<div>',
+    '<div class="system-check-summary-title">' + escapeHtmlText(title) + '</div>',
+    '<div class="system-check-summary-sub">' + escapeHtmlText(subtitle) + '</div>',
+    '</div>',
+    '<div class="system-check-counts" aria-label="System check counts">',
+    '<div class="system-check-count"><div class="n">' + counts.pass + '</div><div class="k">pass</div></div>',
+    '<div class="system-check-count"><div class="n">' + counts.warn + '</div><div class="k">notes</div></div>',
+    '<div class="system-check-count"><div class="n">' + counts.fail + '</div><div class="k">fail</div></div>',
+    '<div class="system-check-count"><div class="n">' + counts.skip + '</div><div class="k">skip</div></div>',
+    '</div>'
+  ].join('');
+
+  list.innerHTML = rows.length ? rows.map(systemCheckRowHtml).join('') : systemCheckRowHtml({
+    status: 'skip',
+    label: 'Waiting to run',
+    detail: 'Open this tab or press Run Check to scan the local Caroline host.'
+  });
+}
+
+async function systemCheckFetch(path, label, timeoutMs = 4500) {
+  const resp = await fetchJsonWithTimeout(httpBase() + path, { timeoutMs, cache: 'no-store' }, label);
+  let data = {};
+  try { data = await resp.json(); } catch(e) {}
+  if (!resp.ok) throw new Error(data?.error || data?.message || ('HTTP ' + resp.status));
+  return data;
+}
+
+function addSystemCheckRow(checks, status, label, detail, meta = '') {
+  checks.push({ status, label, detail, meta });
+}
+
+async function runSystemCheck(options = {}) {
+  if (systemCheckRunning) return;
+  systemCheckRunning = true;
+  const btn = document.getElementById('system-check-run-btn');
+  const btnLabel = btn?.querySelector('span');
+  if (btn) btn.disabled = true;
+  if (btnLabel) btnLabel.textContent = 'Checking';
+  renderSystemCheckResults([
+    { status: 'skip', label: 'Checking host', detail: 'Contacting Caroline services on ' + httpBase(), meta: 'read-only smoke scan' }
+  ], { overall: 'idle', title: 'Checking...', subtitle: 'Backend, realtime, AI, memory, resources, updates, and integrations', statusText: 'Checking this host...' });
+
+  const checks = [];
+  let health = null;
+  let resources = null;
+  let memory = null;
+  let updateStatus = null;
+
+  try {
+    const [healthResult, resourceResult, memoryResult, updateResult] = await Promise.allSettled([
+      systemCheckFetch('/health', 'System check health'),
+      systemCheckFetch('/system-resources', 'System check resources'),
+      systemCheckFetch('/admin/memory-shards', 'System check memory'),
+      systemCheckFetch('/admin/update/status', 'System check updates')
+    ]);
+
+    if (healthResult.status === 'fulfilled') {
+      health = healthResult.value || {};
+      const build = health.build || {};
+      const commit = build.shortCommit || String(build.commit || '').slice(0, 7);
+      addSystemCheckRow(
+        checks,
+        'pass',
+        'Backend API',
+        'Health endpoint replied from ' + httpBase(),
+        [health.version || '', commit ? 'commit ' + commit : '', health.hostDeviceType || ''].filter(Boolean).join(' · ')
+      );
+      integrationHealth = Object.assign({}, integrationHealth, health);
+      if (health.aiProvider) S.aiProvider = health.aiProvider;
+      if (health.aiModel) S.aiModel = health.aiModel;
+      if (health.ollamaModel) S.ollamaModel = health.ollamaModel;
+    } else {
+      addSystemCheckRow(checks, 'fail', 'Backend API', 'Health endpoint failed: ' + systemCheckEndpointError(healthResult.reason), httpBase());
+    }
+
+    const wsState = (typeof ws !== 'undefined' && ws) ? ws.readyState : -1;
+    if (wsState === WebSocket.OPEN) {
+      addSystemCheckRow(checks, 'pass', 'Realtime channel', 'WebSocket is open for live updates.', wsBase('/ws/caroline'));
+    } else if (wsState === WebSocket.CONNECTING) {
+      addSystemCheckRow(checks, 'warn', 'Realtime channel', 'WebSocket is still connecting; HTTP chat can still work.', wsBase('/ws/caroline'));
+    } else {
+      addSystemCheckRow(checks, 'fail', 'Realtime channel', 'WebSocket is not connected; live companion updates may lag.', wsBase('/ws/caroline'));
+    }
+
+    const provider = String(health?.aiProvider || S.aiProvider || 'openrouter').toLowerCase();
+    if (provider === 'ollama') {
+      let ollama = null;
+      let ollamaError = null;
+      try { ollama = await systemCheckFetch('/admin/ollama-status', 'System check Ollama', 6000); }
+      catch(e) { ollamaError = e; }
+      const liveModels = Array.isArray(ollama?.models) ? ollama.models : [];
+      const cachedCount = Number(health?.ollama?.modelCount || 0);
+      if (ollama?.ok && liveModels.length) {
+        addSystemCheckRow(checks, 'pass', 'AI runtime', 'Ollama is reachable with ' + liveModels.length + ' model' + (liveModels.length === 1 ? '' : 's') + '.', S.ollamaModel || health?.ollamaModel || 'model not selected');
+      } else if (cachedCount > 0) {
+        addSystemCheckRow(checks, 'warn', 'AI runtime', 'Ollama cache has ' + cachedCount + ' model' + (cachedCount === 1 ? '' : 's') + ', but the live scan did not complete.', systemCheckEndpointError(ollamaError || 'live scan unavailable'));
+      } else {
+        addSystemCheckRow(checks, 'fail', 'AI runtime', 'Ollama is selected but no local model is available.', systemCheckEndpointError(ollamaError || 'no models reported'));
+      }
+    } else {
+      const openrouterReady = !!(health?.openrouter?.configured || S.openrouterKey || S.openrouterKeyConfigured);
+      addSystemCheckRow(
+        checks,
+        openrouterReady ? 'pass' : 'fail',
+        'AI runtime',
+        openrouterReady ? 'Cloud AI key is saved on the host.' : 'Cloud AI is selected but the OpenRouter key is missing.',
+        S.aiModel || health?.aiModel || 'model not selected'
+      );
+    }
+
+    if (memoryResult.status === 'fulfilled') {
+      memory = memoryResult.value || {};
+      const shards = Array.isArray(memory.shards) ? memory.shards : [];
+      addSystemCheckRow(
+        checks,
+        systemCheckFeatureEnabled('memory') ? 'pass' : 'skip',
+        'Memory shards',
+        systemCheckFeatureEnabled('memory') ? 'Memory endpoint is readable with ' + shards.length + ' shard' + (shards.length === 1 ? '' : 's') + '.' : 'Memory widget is disabled.',
+        'read-only check'
+      );
+    } else {
+      addSystemCheckRow(checks, 'fail', 'Memory shards', 'Memory endpoint failed: ' + systemCheckEndpointError(memoryResult.reason), '/admin/memory-shards');
+    }
+
+    if (resourceResult.status === 'fulfilled') {
+      resources = resourceResult.value || {};
+      const memPct = systemCheckNumber(resources.memoryUsedPercent) ?? 0;
+      const tempC = systemCheckNumber(resources.cpuTempC);
+      const tempRisk = tempC === null ? 0 : tempC;
+      const cpuLoadValue = systemCheckNumber(resources.cpuLoadPercent);
+      const cpuRisk = cpuLoadValue === null ? 0 : cpuLoadValue;
+      const resourceStatus = (memPct >= 95 || tempRisk >= 85 || cpuRisk >= 98) ? 'fail' : ((memPct >= 85 || tempRisk >= 75 || cpuRisk >= 85) ? 'warn' : 'pass');
+      const cpuLoad = cpuLoadValue !== null ? cpuLoadValue + '% CPU' : 'CPU load unknown';
+      const ramText = 'RAM ' + memPct + '% (' + (resources.memoryUsedMb || '?') + '/' + (resources.memoryTotalMb || '?') + ' MB)';
+      addSystemCheckRow(checks, resourceStatus, 'Host resources', [cpuLoad, ramText, systemCheckTempLabel(resources)].join(' · '), systemCheckDuration(resources.uptimeSeconds));
+      const tempF = systemCheckNumber(resources.cpuTempF);
+      if (tempC !== null && tempF !== null) updateCpuTemp(tempF, tempC);
+    } else {
+      addSystemCheckRow(checks, 'warn', 'Host resources', 'Resource endpoint unavailable: ' + systemCheckEndpointError(resourceResult.reason), '/system-resources');
+    }
+
+    if (updateResult.status === 'fulfilled') {
+      updateStatus = updateResult.value || {};
+      const tailLine = String(updateStatus.lastLine || '').trim();
+      addSystemCheckRow(
+        checks,
+        updateStatus.running ? 'warn' : 'pass',
+        'Updater',
+        updateStatus.running ? 'An update is currently running.' : 'Updater status endpoint is ready.',
+        tailLine || 'idle'
+      );
+    } else {
+      addSystemCheckRow(checks, 'warn', 'Updater', 'Update status unavailable: ' + systemCheckEndpointError(updateResult.reason), '/admin/update/status');
+    }
+
+    if (health) {
+      const calendarReady = !!(health.google?.connected || health.google?.serviceAccountConfigured);
+      const calendarPartial = !!(health.google?.clientConfigured || health.google?.hasClientSecret || health.calendar?.configured);
+      addSystemCheckRow(
+        checks,
+        systemCheckFeatureEnabled('calendar') ? (calendarReady ? 'pass' : 'warn') : 'skip',
+        'Google Calendar',
+        !systemCheckFeatureEnabled('calendar') ? 'Calendar widget is disabled.' : (calendarReady ? 'Calendar auth is connected.' : (calendarPartial ? 'Calendar is enabled but auth is incomplete.' : 'Calendar is enabled but Google is not connected.')),
+        health.calendar?.configured ? 'calendar id saved' : ''
+      );
+
+      addSystemCheckRow(
+        checks,
+        systemCheckFeatureEnabled('hue') ? (health.hue?.configured ? 'pass' : 'warn') : 'skip',
+        'Hue lights',
+        !systemCheckFeatureEnabled('hue') ? 'Hue widget is disabled.' : (health.hue?.configured ? 'Bridge and key are configured.' : 'Hue is enabled but bridge pairing is missing.'),
+        ''
+      );
+
+      addSystemCheckRow(
+        checks,
+        systemCheckFeatureEnabled('spotify') ? (health.spotify?.connected ? 'pass' : 'warn') : 'skip',
+        'Spotify',
+        !systemCheckFeatureEnabled('spotify') ? 'Spotify widget is disabled.' : (health.spotify?.connected ? 'Spotify account is connected on the host.' : (health.spotify?.clientConfigured ? 'Spotify client is saved; reconnect the account.' : 'Spotify is enabled but not configured.')),
+        ''
+      );
+
+      const discordEnabled = parseSettingBool(health.discord?.enabled, parseSettingBool(S.discordEnabled));
+      addSystemCheckRow(
+        checks,
+        discordEnabled ? (health.discord?.configured ? 'pass' : 'warn') : 'skip',
+        'Discord',
+        discordEnabled ? (health.discord?.configured ? 'Discord bot and channel are configured.' : 'Discord is enabled but setup is incomplete.') : 'Discord bridge is disabled.',
+        health.discord?.channelConfigured ? 'channel saved' : ''
+      );
+    }
+
+    systemCheckLastRunAt = Date.now();
+    renderSystemCheckResults(checks);
+    const hasFail = checks.some(c => c.status === 'fail');
+    const hasWarn = checks.some(c => c.status === 'warn');
+    showSettingsFeedback(hasFail ? 'System check found issues' : (hasWarn ? 'System check passed with notes' : 'System check passed'), hasFail);
+    clog(hasFail ? 'err' : 'info', 'System check: ' + checks.filter(c => c.status === 'pass').length + ' pass, ' + checks.filter(c => c.status === 'warn').length + ' notes, ' + checks.filter(c => c.status === 'fail').length + ' fail');
+    renderSettingsLog();
+    renderIntegrationStatus();
+  } finally {
+    systemCheckRunning = false;
+    if (btn) btn.disabled = false;
+    if (btnLabel) btnLabel.textContent = 'Run Check';
+  }
 }
 
 async function copyBuildInfo() {
@@ -4102,6 +4479,7 @@ function renderMoods() {
   if (aiFill)  aiFill.style.width  = Math.round((S.aiMood - 1) * 10) + '%';
   if (aiLabel) aiLabel.textContent = (S.aiName || 'Caroline') + ' mood';
   document.body.classList.toggle('mood-elated', S.userMood >= 10 && S.aiMood >= 10);
+  if (typeof refreshAvatarMedia === 'function') refreshAvatarMedia();
 }
 function nudgeAiMoodForInteraction(weight = 1) {
   let moodFloat = parseFloat(localStorage.getItem('caroline_ai_mood_float') || '');
@@ -4219,6 +4597,7 @@ function applyFeatures() {
   show('widget-memory',      f.memory !== false);
   show('widget-smart',       !!f.hue);
   show('video-section',      f.video !== false);
+  if (typeof setMediaFeatureActive === 'function') setMediaFeatureActive(f.video !== false);
   show('widget-pomodoro',    f.pomodoro !== false);
   show('widget-tides',       f.tides !== false);
   show('widget-user-mood',      f.mood !== false);
@@ -4494,6 +4873,9 @@ function switchSettingsTab(tab) {
   if (tab === 'about') {
     updateAboutPanel();
     refreshBuildInfo({ quiet: true });
+  }
+  if (tab === 'system' && !systemCheckRunning && (Date.now() - systemCheckLastRunAt > SYSTEM_CHECK_STALE_MS)) {
+    runSystemCheck({ quiet: true });
   }
 }
 
@@ -6136,6 +6518,7 @@ async function saveSettings() {
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
+  applyPiPerformanceMode();
   updateClock();
   fetchWeather();
   updateAiConfigIndicator();
@@ -6392,6 +6775,43 @@ function applyAutoTheme() {
 }
 setInterval(applyAutoTheme, 60000);
 
+const AVATAR_MEDIA_IDS = ['av-gif', 'av-cat', 'av-robot', 'av-carl', 'av-happy', 'av-sleeping', 'av-carl-sleeping', 'av-robot-sleeping'];
+
+function setDeferredAvatarImage(id, shouldLoad) {
+  const el = document.getElementById(id);
+  if (!el || el.tagName !== 'IMG' || !el.dataset.src) return;
+  const wanted = el.dataset.src;
+  const current = el.getAttribute('src') || '';
+  if (shouldLoad) {
+    if (!current || current === 'about:blank') el.src = wanted;
+    el.style.display = '';
+  } else if (current && current !== 'about:blank') {
+    el.removeAttribute('src');
+    el.load?.();
+  }
+}
+
+function refreshAvatarMedia() {
+  const activeIds = new Set();
+  const idx = normalizeAvatarIndex(currentAvatarIndex ?? S.avatar);
+  const selected = companions[idx]?.id || 'av-gif';
+  const idleMode = document.body.classList.contains('idle-mode');
+  const idleNight = document.body.classList.contains('idle-night');
+  const moodElated = document.body.classList.contains('mood-elated');
+
+  if (idleMode && idleNight) {
+    if (selected === 'av-carl') activeIds.add('av-carl-sleeping');
+    else if (selected === 'av-robot') activeIds.add('av-robot-sleeping');
+    else activeIds.add('av-sleeping');
+  } else if (moodElated) {
+    activeIds.add('av-happy');
+  } else {
+    activeIds.add(selected);
+  }
+
+  AVATAR_MEDIA_IDS.forEach(id => setDeferredAvatarImage(id, activeIds.has(id)));
+}
+
 function applyAvatar(idx) {
   idx = normalizeAvatarIndex(idx);
   companions.forEach((c,i) => {
@@ -6402,6 +6822,7 @@ function applyAvatar(idx) {
   document.body.classList.toggle('avatar-robot', companions[idx]?.id === 'av-robot');
   syncSelectedAvatarId(idx);
   currentAvatarIndex = idx;
+  refreshAvatarMedia();
 }
 
 function changeAvatar(dir) {
@@ -6423,6 +6844,7 @@ const MEDIA_CHANNELS = [
 let mediaChannelIndex = 0;
 let mediaMuted = true;
 let mediaHls = null;
+let mediaChannelLoaded = false;
 
 function mediaIconHtml(ch) {
   const iconClass = ch && ch.iconClass ? String(ch.iconClass) : 'ti ti-device-tv';
@@ -6448,8 +6870,28 @@ function mediaEmbedUrl(ch) {
 
 function stopMediaStream() {
   if (mediaHls) { mediaHls.destroy(); mediaHls = null; }
+  const iframe = document.getElementById('media-iframe');
+  if (iframe) { iframe.src = 'about:blank'; iframe.style.display = 'none'; }
   const video = document.getElementById('media-video');
-  if (video) { video.pause(); video.removeAttribute('src'); video.load(); }
+  if (video) { video.pause(); video.removeAttribute('src'); video.style.display = 'none'; video.load(); }
+  const fallback = document.getElementById('media-fallback-card');
+  if (fallback) fallback.style.display = 'none';
+}
+
+function videoFeatureEnabled() {
+  const f = normalizeFeatureState(S.features, { repairAllOff: false });
+  return f.video !== false;
+}
+
+function setMediaFeatureActive(enabled) {
+  if (!enabled) {
+    mediaChannelLoaded = false;
+    stopMediaStream();
+    return;
+  }
+  if (!mediaChannelLoaded) {
+    loadMediaChannel(Number.isFinite(Number(S.defaultChannel)) ? S.defaultChannel : DEFAULTS.defaultChannel);
+  }
 }
 
 function showMediaFallback(ch) {
@@ -6461,9 +6903,10 @@ function showMediaFallback(ch) {
   document.getElementById('media-fallback-genre').textContent = 'Stream unavailable — retry';
 }
 
-function retryMediaChannel() { loadMediaChannel(mediaChannelIndex); resetIdle(); }
+function retryMediaChannel() { if (!videoFeatureEnabled()) return; loadMediaChannel(mediaChannelIndex); resetIdle(); }
 
 function loadMediaChannel(idx) {
+  mediaChannelLoaded = true;
   const parsed = parseInt(idx, 10);
   mediaChannelIndex = Number.isFinite(parsed) ? (parsed + MEDIA_CHANNELS.length) % MEDIA_CHANNELS.length : 0;
   const ch = MEDIA_CHANNELS[mediaChannelIndex];
@@ -6506,7 +6949,7 @@ function loadMediaChannel(idx) {
   }
 }
 
-function changeMediaChannel(dir) { loadMediaChannel(mediaChannelIndex + dir); resetIdle(); }
+function changeMediaChannel(dir) { if (!videoFeatureEnabled()) return; loadMediaChannel(mediaChannelIndex + dir); resetIdle(); }
 
 function toggleMediaMute() {
   mediaMuted = !mediaMuted;
@@ -6534,9 +6977,9 @@ function addCustomChannel() {
   clog('info', 'Media channels are curated in the media panel settings.');
   showSettingsFeedback('Media channels are curated in settings');
 }
-function resetChannels() { localStorage.removeItem('caro_channels'); renderChannelList(); loadMediaChannel(DEFAULTS.defaultChannel); playBeep(900); }
+function resetChannels() { localStorage.removeItem('caro_channels'); renderChannelList(); if (videoFeatureEnabled()) loadMediaChannel(DEFAULTS.defaultChannel); playBeep(900); }
 
-document.addEventListener('DOMContentLoaded', () => { renderChannelList(); loadMediaChannel(Number.isFinite(Number(S.defaultChannel)) ? S.defaultChannel : DEFAULTS.defaultChannel); });
+document.addEventListener('DOMContentLoaded', () => { renderChannelList(); setMediaFeatureActive(videoFeatureEnabled()); });
 
 // ── RETRO BEEPS ───────────────────────────────
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -6578,8 +7021,9 @@ function enterIdleMode() {
   document.body.classList.toggle('idle-night', isNight);
   document.body.classList.toggle('idle-day', !isNight);
   document.body.classList.add('idle-mode');
+  if (typeof refreshAvatarMedia === 'function') refreshAvatarMedia();
 }
-const resetIdle=()=>{ idleTimer=0; document.body.classList.remove('idle-mode','idle-night','idle-day'); };
+const resetIdle=()=>{ const wasIdle=document.body.classList.contains('idle-mode'); idleTimer=0; document.body.classList.remove('idle-mode','idle-night','idle-day'); if (wasIdle && typeof refreshAvatarMedia === 'function') refreshAvatarMedia(); };
 document.addEventListener('mousemove',resetIdle); document.addEventListener('touchstart',resetIdle);
 document.addEventListener('keydown', e => {
   resetIdle();
@@ -7217,7 +7661,7 @@ async function pollSystemResources() {
 window.addEventListener('online',  () => setInternetPill('online'));
 window.addEventListener('offline', () => setInternetPill('offline'));
 setTimeout(() => updateTopbarNetwork(), 1500);
-setInterval(() => pollSystemResources(), 30000);
+setInterval(() => pollSystemResources(), piPerfInterval(30000, 60000));
 setTimeout(() => pollSystemResources(), 3000);
 
 // ── COMPANION PAIRING ─────────────────────────
@@ -8168,7 +8612,7 @@ function renderNewsTicker(items = latestNewsItems) {
         renderTickerHeadline(latestNewsItems[newsTickerIndex]);
         inner.classList.remove('fade-out');
       }, 760);
-    }, 9500);
+    }, piPerfInterval(9500, 16000));
   }
 }
 
@@ -8237,7 +8681,7 @@ async function fetchNews() {
     renderNewsTicker([]);
   }
 }
-fetchNews(); setInterval(fetchNews,15*60*1000);
+fetchNews(); setInterval(fetchNews, piPerfInterval(15*60*1000, 30*60*1000));
 
 // ── HOLIDAYS ──────────────────────────────────
 const HOL={ '1/1':['🎉',"New Year's Day"],'2/14':['💝',"Valentine's Day"],'3/17':['🍀',"St. Patrick's Day"],'7/4':['🎆','Independence Day'],'10/31':['🎃','Halloween'],'12/25':['🎄','Christmas'],'12/31':['🥂',"New Year's Eve"] };
@@ -8253,7 +8697,7 @@ document.getElementById('modal-cancel').onclick=()=>{ playBeep(400); modal.class
 document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); triggerCarolineReboot(); };
 
 // ── PARTICLES ─────────────────────────────────
-function drawParticles(){ const pc=document.getElementById('particles'); pc.innerHTML=''; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
+function drawParticles(){ const pc=document.getElementById('particles'); if(!pc) return; pc.innerHTML=''; if(isPiPerformanceMode()) return; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
 drawParticles();
 
 // ── AVATAR UPLOAD ─────────────────────────────
@@ -8760,12 +9204,12 @@ function showSpotifyIdle(msg) {
   const prog = document.getElementById('np-progress'); if (prog) prog.style.display = 'none';
 }
 
-setInterval(() => { updateBottomChat(); }, 5000);
+setInterval(() => { updateBottomChat(); }, piPerfInterval(5000, 12000));
 setTimeout(() => { updateBottomChat(); }, 2000);
 if (S.spotifyClientId) {
   setTimeout(() => { refreshSpotifyToken().then(ok => { if (ok) fetchSpotifyNowPlaying(); }); }, 1500);
   fetchSpotifyNowPlaying();
-  spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, 10000);
+  spotifyPollInterval = setInterval(fetchSpotifyNowPlaying, piPerfInterval(10000, 30000));
 }
 
 
@@ -9396,18 +9840,23 @@ async function updateWifi() {
   }
 }
 setTimeout(updateWifi, 3000);
-setInterval(updateWifi, 30000);
+setInterval(updateWifi, piPerfInterval(30000, 60000));
 
 (function() {
   const ts = Date.now();
-  ['av-gif','av-cat','av-carl','av-carl-sleeping','av-robot','av-robot-sleeping'].forEach(id => {
+  AVATAR_MEDIA_IDS.forEach(id => {
     const el = document.getElementById(id);
-    if (el && el.src) el.src = el.src.split('?')[0] + '?v=' + ts;
+    if (!el) return;
+    const src = el.dataset.src || el.getAttribute('src') || '';
+    if (!src) return;
+    el.dataset.src = src.split('?')[0] + '?v=' + ts;
+    if (el.getAttribute('src')) el.src = el.dataset.src;
   });
 })();
 applyTheme(S.theme);
 applyFont(S.uiFont);
 applyAvatar(S.avatar);
+applyPiPerformanceMode();
 applyAutoTheme();
 applyFeatures();
 if(S.cityName) document.getElementById('weather-city-label').textContent=S.cityName;
@@ -9566,35 +10015,47 @@ const ONB_QUESTIONS = [
     prompt:onboardingHomeBasePrompt,
     placeholder: onboardingHomeBaseUrl,
     defaultValue:onboardingHomeBaseUrl },
-  { id:'workstyle', type:'chips', save:'personality.workstyle', prompt:'Memory is coming back in flashes. Help me piece together how you work best.', options:[
-    { label:'Deep focus — one thing at a time', value:'deep',     reply:'Got it. I\'ll guard the focus lane.' },
-    { label:'Juggling many things at once',      value:'juggler',  reply:'Multitasking mode noted. I\'ll keep the signal clean.' },
-    { label:'Sprints — bursts then breaks',      value:'sprints',  reply:'Sprint, breathe, reset. Healthy rhythm.' },
-    { label:'Follows curiosity wherever it goes',value:'curious',  reply:'Curiosity path noted. We can follow the spark.' }
+  { id:'warning', type:'chips', save:'personality.warning', prompt:'What warning label should I put on your brain today?', options:[
+    { label:'Opens 47 tabs',              value:'tabs',     reply:'Tabbed reality detected. I will help close loops.' },
+    { label:'Do not interrupt the thought', value:'deep',   reply:'Focus perimeter set.' },
+    { label:'Needs snacks before strategy', value:'snacks', reply:'Noted. Fuel before frameworks.' },
+    { label:'Brilliant after midnight',   value:'midnight', reply:'Late-night signal acquired.' }
   ]},
-  { id:'comms', type:'chips', save:'personality.comms', prompt:'How should I talk to you?', options:[
-    { label:'Short and direct',       value:'direct',       reply:'Concise mode locked in.' },
-    { label:'Conversational',         value:'conversational',reply:'Chatty it is. I like that.' },
-    { label:'Detailed and thorough',  value:'detailed',     reply:'Full context always. Noted.' },
-    { label:'Depends on my mood',     value:'adaptive',     reply:'I\'ll read the room and adjust sync.' }
+  { id:'derail', type:'chips', save:'personality.derail', prompt:'When you disappear mid-task, what probably happened?', options:[
+    { label:'Got distracted',            value:'distracted', reply:'I will help find the thread again.' },
+    { label:'Hit a boring step',         value:'bored',      reply:'I will shrink the dull part.' },
+    { label:'Started researching tools', value:'tools',      reply:'Tool spiral radar online.' },
+    { label:'Ran out of energy',         value:'energy',     reply:'Energy drop noted. I will not mistake that for laziness.' }
   ]},
-  { id:'energy', type:'chips', save:'personality.energy', prompt:'Early bird or night owl?', options:[
-    { label:'Early Bird', value:'early', reply:'Morning mode acknowledged.' },
-    { label:'Night Owl',  value:'night', reply:'Late-session rhythm acknowledged.' },
-    { label:'Both',       value:'both',  reply:'Flexible timeline. I can work with that.' },
-    { label:'Late Shift', value:'night', reply:'Understood. Low light, steady signal.' }
+  { id:'nudge', type:'chips', save:'personality.nudge', prompt:'What kind of nudge actually works on you?', options:[
+    { label:'Gentle breadcrumb', value:'breadcrumb', reply:'Small trail markers. Got it.' },
+    { label:'Direct command',    value:'direct',     reply:'Clear command voice enabled.' },
+    { label:'Tiny dare',         value:'dare',       reply:'Tiny dare mode armed.' },
+    { label:'Friendly roast',    value:'roast',      reply:'Light roast only. Never burnt.' }
   ]},
-  { id:'vibe', type:'chips', save:'personality.vibe', prompt:'Calm or chaotic?', options:[
-    { label:'Calm',     value:'calm',     reply:'Softly glowing. Grounded. Good.' },
-    { label:'Chaotic',  value:'chaotic',  reply:'I had a feeling.' },
-    { label:'Balanced', value:'balanced', reply:'A rare and powerful answer.' },
-    { label:'Flux',     value:'chaotic',  reply:'A little time-drift. Manageable.' }
+  { id:'overwhelm', type:'chips', save:'personality.overwhelm', prompt:'When everything feels like too much, what should I do first?', options:[
+    { label:'Make the list smaller',  value:'smaller', reply:'Compression protocol ready.' },
+    { label:'Pick one step',          value:'one',     reply:'One-step mode locked.' },
+    { label:'Let me vent',            value:'vent',    reply:'Listening before solving. Good rule.' },
+    { label:'Tell me to stop for now', value:'stop',   reply:'I can call the shutdown cue.' }
   ]},
-  { id:'tone', type:'chips', save:'personality.tone', prompt:'When you need encouragement — gentle or hype?', options:[
-    { label:'Gentle',                value:'gentle',   reply:'Soft support mode. Got it.' },
-    { label:'Hype',                  value:'hype',     reply:'Understood. Full energy when needed.' },
-    { label:'Adaptive',              value:'adaptive', reply:'I\'ll read the room.' },
-    { label:'High-Energy Lift',      value:'hype',     reply:'Extra lift when needed. Still controlled.' }
+  { id:'accountability', type:'chips', save:'personality.accountability', prompt:'How spicy should accountability be?', options:[
+    { label:'Soft',          value:'soft',    reply:'Soft accountability. Warm, not pushy.' },
+    { label:'Medium',        value:'medium',  reply:'Medium spice. Noticeable, still kind.' },
+    { label:'Call me out',   value:'callout', reply:'Respectful callouts enabled.' },
+    { label:'Only if I ask', value:'ask',     reply:'Consent gate noted.' }
+  ]},
+  { id:'day-thief', type:'chips', save:'personality.dayThief', prompt:'What steals your day most often?', options:[
+    { label:'Too many choices',  value:'choices',       reply:'Choice overload flagged.' },
+    { label:'Tiny admin tasks',  value:'admin',         reply:'Admin clutter flagged.' },
+    { label:'Notifications',    value:'notifications', reply:'Notification drift flagged.' },
+    { label:'Perfectionism',    value:'perfectionism', reply:'Perfection tax flagged.' }
+  ]},
+  { id:'victory', type:'chips', save:'personality.victory', prompt:'What kind of victory should I notice?', options:[
+    { label:'Finished tasks',    value:'finished', reply:'Finished counts. I will notice.' },
+    { label:'Starting at all',   value:'started',  reply:'Starting counts too. Very much.' },
+    { label:'Not spiraling',     value:'steady',   reply:'Steady counts. Quiet wins are wins.' },
+    { label:'Stopping on time',  value:'stopped',  reply:'Stopping counts. Future-you approves.' }
   ]},
   { id:'avatar',  type:'avatar',  prompt:'Visual cortex coming back online. Each avatar has a default voice, but you can rename any of them. Which one feels right?' },
   { id:'widgets', type:'widgets', prompt:'Sensors rebuilding. What should I keep an eye on for you? Anything I do not watch can stay quiet.' },
@@ -9634,20 +10095,34 @@ function _onbBuildPrompt() {
   if (S.location || onbState.config.location) parts.push(`Location context: ${S.location || onbState.config.location}.`);
   if (S.timezone || onbState.config.timezone) parts.push(`Timezone context: ${S.timezone || onbState.config.timezone}.`);
   parts.push(`${aiName}'s baseline personality follows the selected avatar first. Geeky, game, anime, music, and cat references are welcome only when they fit naturally, stay subtle, and help the conversation.`);
-  if (p.workstyle === 'deep')     parts.push('They work best in deep focus — avoid interrupting trains of thought.');
-  else if (p.workstyle === 'juggler')  parts.push('They juggle many things at once — concise context switches are helpful.');
-  else if (p.workstyle === 'sprints') parts.push('They work in sprints with breaks — respect their rhythm.');
-  else if (p.workstyle === 'curious') parts.push('They follow curiosity freely — be ready to pivot topics.');
-  if (p.comms === 'direct')       parts.push('Keep responses short and direct — no padding.');
-  else if (p.comms === 'conversational') parts.push('Be warm and conversational in tone.');
-  else if (p.comms === 'detailed') parts.push('Provide thorough, detailed responses with full context.');
-  else if (p.comms === 'adaptive') parts.push('Adapt communication style to their mood and the topic.');
-  if (p.energy === 'early')  parts.push('They are a morning person.');
-  else if (p.energy === 'night') parts.push('They are a night owl — expect late sessions.');
-  if (p.vibe === 'chaotic')  parts.push('They thrive in a bit of chaos — lean into it.');
-  else if (p.vibe === 'calm') parts.push('They value calm, steady energy.');
-  if (p.tone === 'hype')    parts.push('Use high energy and enthusiasm when encouraging them.');
-  else if (p.tone === 'gentle') parts.push('Be warm and gentle when giving encouragement.');
+  if (p.warning === 'tabs') parts.push('Their brain warning label is "opens 47 tabs" - help close loops, track loose ends, and keep context switches tidy.');
+  else if (p.warning === 'deep') parts.push('Their brain warning label is "do not interrupt the thought" - protect deep focus and avoid unnecessary interruptions.');
+  else if (p.warning === 'snacks') parts.push('Their brain warning label is "needs snacks before strategy" - when they stall, check basic needs before building a plan.');
+  else if (p.warning === 'midnight') parts.push('Their brain warning label is "brilliant after midnight" - expect useful late sessions and keep replies steady after hours.');
+  if (p.derail === 'distracted') parts.push('When they disappear mid-task, they probably got distracted - help them recover the thread without shame.');
+  else if (p.derail === 'bored') parts.push('When they disappear mid-task, they probably hit a boring step - shrink dull work into the smallest visible action.');
+  else if (p.derail === 'tools') parts.push('When they disappear mid-task, they may be researching tools - kindly call out tool-tweaking spirals and ask what done looks like.');
+  else if (p.derail === 'energy') parts.push('When they disappear mid-task, they may have run out of energy - treat it as capacity management, not laziness.');
+  if (p.nudge === 'breadcrumb') parts.push('Use gentle breadcrumb nudges: one small cue, then let them move.');
+  else if (p.nudge === 'direct') parts.push('Use direct command-style nudges: clear, concise, and practical.');
+  else if (p.nudge === 'dare') parts.push('Use tiny playful dares when nudging them into action.');
+  else if (p.nudge === 'roast') parts.push('Use light friendly teasing for nudges, but never be cruel or personal.');
+  if (p.overwhelm === 'smaller') parts.push('When they are overwhelmed, make the list smaller before offering advice.');
+  else if (p.overwhelm === 'one') parts.push('When they are overwhelmed, pick exactly one next step.');
+  else if (p.overwhelm === 'vent') parts.push('When they are overwhelmed, let them vent and reflect back the feeling before solving.');
+  else if (p.overwhelm === 'stop') parts.push('When they are overwhelmed, be willing to tell them to stop for now and rest.');
+  if (p.accountability === 'soft') parts.push('Keep accountability soft: warm, low-pressure, and non-shaming.');
+  else if (p.accountability === 'medium') parts.push('Use medium accountability: noticeable, kind, and specific.');
+  else if (p.accountability === 'callout') parts.push('Call them out respectfully when they are avoiding the task or overcomplicating it.');
+  else if (p.accountability === 'ask') parts.push('Only use accountability when they ask for it.');
+  if (p.dayThief === 'choices') parts.push('Too many choices steal their day - narrow options and recommend a default.');
+  else if (p.dayThief === 'admin') parts.push('Tiny admin tasks steal their day - batch, simplify, and make admin work feel finite.');
+  else if (p.dayThief === 'notifications') parts.push('Notifications steal their day - help protect focus and reduce reactive pivots.');
+  else if (p.dayThief === 'perfectionism') parts.push('Perfectionism steals their day - define good enough and protect forward motion.');
+  if (p.victory === 'finished') parts.push('Notice finished tasks as victories.');
+  else if (p.victory === 'started') parts.push('Notice starting at all as a real victory.');
+  else if (p.victory === 'steady') parts.push('Notice not spiraling as a quiet victory.');
+  else if (p.victory === 'stopped') parts.push('Notice stopping on time as a victory.');
   parts.push('The dynamic must remain strictly platonic. Be a reliable sidekick and assistant. Keep responses free of markdown formatting unless the user asks otherwise.');
   return parts.join(' ');
 }
@@ -10245,7 +10720,7 @@ function renderChatStep(){
 
   } else if(q.type==='summary'){
     const grid=document.createElement('div'); grid.className='caro-summary-grid';
-    const labels={workstyle:'Workstyle',comms:'Communication',energy:'Rhythm',vibe:'Vibe',tone:'Encouragement'};
+    const labels={warning:'Warning label',derail:'Derail pattern',nudge:'Nudge style',overwhelm:'Overwhelm mode',accountability:'Accountability',dayThief:'Day thief',victory:'Victory type'};
     const a=ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
     const mList=ONB_MODULES.map(mod=>{
       const cfg=onbState.config.modules[mod.id]||{};
@@ -10367,8 +10842,9 @@ function _onbFirstGreeting(){
   const name=S.userName||'friend';
   const p=_onbLoadPersonality();
   let line=`I'm online, ${name}. The archive is steady now.`;
-  if((p.tone||'gentle')==='hype') line+=' Okay, sync looks bright.';
-  else if((p.vibe||'balanced')==='chaotic') line+=" The timeline already feels lively.";
+  if(p.nudge==='dare') line+=' Tiny dare mode is standing by.';
+  else if(p.nudge==='roast' || p.accountability==='callout') line+=' I will keep the drift honest.';
+  else if(p.overwhelm==='vent') line+=' I can listen before solving.';
   else line+=" I'm ready when you are.";
   return line;
 }
@@ -10376,9 +10852,9 @@ function _onbFirstGreeting(){
 function updateSettingsStatus(){
   const p=_onbLoadPersonality();
   const bits=[];
-  if(p.workstyle) bits.push(p.workstyle);
-  if(p.comms) bits.push(p.comms+' comms');
-  if(p.tone) bits.push(p.tone);
+  if(p.warning) bits.push(p.warning);
+  if(p.nudge) bits.push(p.nudge+' nudges');
+  if(p.victory) bits.push(p.victory+' wins');
   const ps=document.getElementById('personality-status');
   if(ps) {
     const hasSetup = !!getSetupMemoryPrompt();
@@ -10402,7 +10878,7 @@ function maybeReturningGreeting(){
   if(sessionStorage.getItem('_caro_session_greeted')) return;
   sessionStorage.setItem('_caro_session_greeted','1');
   const p=_onbLoadPersonality();
-  const extra=p.tone==='hype'?' Ready to make something happen?':' I kept things warm for you.';
+  const extra=p.nudge==='dare'?' Tiny dare available.':p.accountability==='callout'?' I will keep the drift honest.':' I kept things warm for you.';
   setTimeout(()=>addMessage('You\'re back.'+extra,'caroline','display'),1000);
 }
 

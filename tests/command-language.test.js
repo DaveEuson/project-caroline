@@ -194,6 +194,7 @@ for (const [surface, nodeId] of buildNodes) {
   test(`${surface}: remember variants`, () => {
     const cases = [
       ['Remember that Riley likes dark roast coffee', { type: 'remember', fact: 'Riley likes dark roast coffee' }],
+      ['Do you remember that Beckie is my wife?', { type: 'remember', fact: 'Beckie is my wife' }],
       ['Keep in mind that the workshop prefers morning check-ins', { type: 'remember', fact: 'the workshop prefers morning check-ins' }],
     ];
     for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} remember: ${text}`);
@@ -235,6 +236,7 @@ for (const [surface, nodeId] of buildNodes) {
     assertNoAction(nodeId, 'what is on my calendar today', 'Calendar is not linked');
     assertNoAction(nodeId, 'why are your responses so slow', 'local Ollama');
     assertNoAction(nodeId, 'hello', "I'm here");
+    assert.strictEqual(directAction(nodeId, "Do you remember my wife's name?"), undefined, `${surface}: recall question should not create memory`);
   });
 
   test(`${surface}: local Ollama disables thinking mode`, () => {
@@ -255,6 +257,10 @@ for (const [surface, nodeId] of buildNodes) {
     const reply = buildReply(nodeId, "What's my wife's name?", memoryFiles(['Beckie is my wife']));
     assert(reply.includes('Beckie'), `${surface}: expected reply to include saved wife name`);
     assert(!/do(?:n't| not) have|not.*memory|tell me/i.test(reply), `${surface}: should not claim the memory is missing`);
+
+    const normalizedReply = buildReply(nodeId, "What's my wife's name?", memoryFiles(['Do you remember that Beckie is my wife?']));
+    assert(normalizedReply.includes('Beckie'), `${surface}: expected recall from normalized question-shaped memory`);
+    assert(!normalizedReply.includes('Do you remember'), `${surface}: should not include memory command words as the name`);
   });
 
   test(`${surface}: durable memory shards are included in cloud prompt context`, () => {
@@ -334,6 +340,11 @@ test('final action router sanitizes and routes all action types', () => {
   const savedContext = JSON.parse(runNode.lastWrites['/home/davee/caroline/caroline_context.json']);
   assert.strictEqual(savedContext.memoryShards[0].text, 'Riley likes dark roast coffee');
   assert.strictEqual(savedContext.dave.notes[0], 'Riley likes dark roast coffee');
+
+  handleAction({ type: 'remember', fact: 'Do you remember that Beckie is my wife?' });
+  const normalizedContext = JSON.parse(runNode.lastWrites['/home/davee/caroline/caroline_context.json']);
+  assert.strictEqual(normalizedContext.memoryShards[0].text, 'Beckie is my wife');
+  assert.strictEqual(normalizedContext.dave.notes[0], 'Beckie is my wife');
 });
 
 let passed = 0;

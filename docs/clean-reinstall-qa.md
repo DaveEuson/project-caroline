@@ -314,6 +314,7 @@ Do not call the clean reinstall good until these pass:
 - Fresh install from public `curl` command.
 - Reboot survival.
 - Settings save/reload.
+- Settings > System Check shows no failures; optional integrations may show notes when intentionally disconnected.
 - Widget persistence.
 - Task add/complete.
 - Calendar setup error path or real Google Calendar add/delete path.
