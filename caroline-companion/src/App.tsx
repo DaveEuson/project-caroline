@@ -46,7 +46,7 @@ type HostSocketEntry = {
   socket: ReturnType<typeof createCarolineSocket>;
 };
 
-const COMPANION_VERSION = "0.1.11";
+const COMPANION_VERSION = "0.1.12";
 const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caroline/releases";
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
@@ -154,8 +154,12 @@ function isTaskUpdateNoise(message: ChatMessage) {
   return message.from === "caroline" && /^\s*(?:\uD83D\uDCCB\s*)?Task list updated\b/.test(message.text);
 }
 
+function isCalendarUpdateNoise(message: ChatMessage) {
+  return message.from === "caroline" && /^\s*Calendar updated\b/i.test(message.text);
+}
+
 function cleanChatHistory(messages: ChatMessage[]) {
-  return trimChatHistory(messages.filter((message) => !isTaskUpdateNoise(message)));
+  return trimChatHistory(messages.filter((message) => !isTaskUpdateNoise(message) && !isCalendarUpdateNoise(message)));
 }
 
 function loadChatHistory(): Record<string, ChatMessage[]> {
@@ -198,9 +202,18 @@ function deleteChatHistory() {
   }
 }
 
+function isUsableSocketUrl(url: string) {
+  const trimmed = url.trim();
+  return /^wss?:\/\//i.test(trimmed) && !/POP_OS_IP/i.test(trimmed);
+}
+
+function hostLooksReadyToConnect(host?: SavedHost) {
+  return Boolean(host?.pairingCode.trim()) && isUsableSocketUrl(host?.socketUrl || "");
+}
+
 function initialBuddyState(host?: SavedHost): BuddyState {
   return {
-    status: "offline",
+    status: hostLooksReadyToConnect(host) ? "connecting" : "offline",
     aiName: inferBuddyAiName(host),
     hostName: host?.name || "Project: Caroline",
     deviceType: inferDeviceTypeForHost(host),
@@ -284,11 +297,6 @@ function buddyStatusText(status: CarolineSocketStatus) {
   if (status === "connecting") return "signing on...";
   if (status === "rejected") return "pairing rejected";
   return "offline";
-}
-
-function isUsableSocketUrl(url: string) {
-  const trimmed = url.trim();
-  return /^wss?:\/\//i.test(trimmed) && !/POP_OS_IP/i.test(trimmed);
 }
 
 function hasPairingCode(host?: SavedHost) {
@@ -425,7 +433,7 @@ export default function App() {
       options: { unread?: boolean; updatePreview?: boolean } = {}
     ) => {
       const nextMessage = { ...message, id: message.id ?? nextMessageId() };
-      if (isTaskUpdateNoise(nextMessage)) return;
+      if (isTaskUpdateNoise(nextMessage) || isCalendarUpdateNoise(nextMessage)) return;
 
       setHostMessages((previous) => {
         const host = settingsRef.current.hosts.find((candidate) => candidate.id === hostId);

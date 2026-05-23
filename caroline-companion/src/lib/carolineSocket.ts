@@ -34,24 +34,6 @@ type CarolineSocketOptions = {
   onMessage?: (message: CarolineSocketMessage) => void;
 };
 
-function summarizeCalendarUpdate(record: Record<string, unknown>) {
-  const event = record.event && typeof record.event === "object"
-    ? record.event as Record<string, unknown>
-    : null;
-
-  if (!event) return "Calendar updated.";
-
-  const title =
-    (typeof event.title === "string" ? event.title : null) ??
-    (typeof event.summary === "string" ? event.summary : null) ??
-    "calendar event";
-  const date = typeof event.date === "string" ? event.date : "";
-  const start = typeof event.start === "string" ? event.start : "";
-  const when = [date, start].filter(Boolean).join(" at ");
-
-  return when ? `Calendar updated: ${title} (${when})` : `Calendar updated: ${title}`;
-}
-
 function stringField(record: Record<string, unknown>, key: string) {
   const value = record[key];
   return typeof value === "string" ? value.trim() : "";
@@ -145,11 +127,7 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
         };
       }
 
-      if (msgType === "todo_update") return null;
-
-      if (msgType === "calendar_update") {
-        return { text: summarizeCalendarUpdate(record), type: msgType, raw: parsed };
-      }
+      if (msgType === "todo_update" || msgType === "calendar_update") return null;
 
       if (msgType?.startsWith("spotify_")) {
         const text =
@@ -190,6 +168,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
   let socket: WebSocket | null = null;
   let heartbeatTimer: number | undefined;
   let rejectedClose = false;
+  let connectionToken = 0;
   const url = options.url || DEFAULT_CAROLINE_SOCKET_URL;
 
   function setStatus(status: CarolineSocketStatus) {
@@ -198,6 +177,8 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
 
   function connect() {
     disconnect();
+    connectionToken += 1;
+    const token = connectionToken;
     setStatus("connecting");
 
     try {
@@ -208,17 +189,22 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
     }
 
     socket.onopen = () => {
+      if (token !== connectionToken) return;
       rejectedClose = false;
       setStatus("online");
       announceClient();
       heartbeatTimer = window.setInterval(sendHeartbeat, 30_000);
     };
     socket.onclose = () => {
+      if (token !== connectionToken) return;
       clearHeartbeat();
       setStatus(rejectedClose ? "rejected" : "offline");
     };
-    socket.onerror = () => setStatus("offline");
+    socket.onerror = () => {
+      if (token === connectionToken) setStatus("offline");
+    };
     socket.onmessage = (event) => {
+      if (token !== connectionToken) return;
       const msg = parseIncomingMessage(event.data);
       if (!msg) return;
 
@@ -269,7 +255,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         clientName: client.displayName,
         userName: client.userName,
         pairingCode: client.pairingCode || undefined,
-        appVersion: "0.1.11",
+        appVersion: "0.1.12",
       })
     );
   }
@@ -300,6 +286,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
   }
 
   function disconnect() {
+    connectionToken += 1;
     clearHeartbeat();
     if (socket) {
       socket.close();
