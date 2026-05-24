@@ -730,6 +730,7 @@ export default function App() {
   const activeAiName = selectedBuddyState.aiName || aiName;
   const activeDeviceType = inferDeviceTypeForHost(selectedHost, selectedBuddyState);
   const activeHostUserName = selectedBuddyState.userName || hostUserName;
+  const activeAvatarId = selectedHost ? avatarIdForHost(selectedHost, selectedBuddyState) : "caroline";
   const messages = selectedHost ? hostMessages[selectedHost.id] || [] : [];
   const buddyHosts = settings.hosts.filter((host) =>
     hasPairingCode(host) || host.id === settings.activeHostId || settings.hosts.length === 1
@@ -1032,8 +1033,8 @@ export default function App() {
         {settingsOpen && (
           <section className="settings-panel" aria-label="Settings">
 
-            <div className="settings-group">
-              <label htmlFor="saved-host">Saved Project: Caroline Host</label>
+            <div className="settings-group settings-group-wide">
+              <label htmlFor="saved-host">Saved Buddy</label>
               <div className="settings-row">
                 <select
                   id="saved-host"
@@ -1057,52 +1058,12 @@ export default function App() {
             </div>
 
             <div className="settings-group">
-              <label htmlFor="host-name">Host Name</label>
-              <input
-                id="host-name"
-                value={activeHost()?.name || ""}
-                onChange={(e) => updateActiveHost({ name: e.target.value })}
-              />
-            </div>
-
-            <div className="settings-group">
               <label htmlFor="host-ai-name">Buddy Name</label>
               <input
                 id="host-ai-name"
                 value={activeHost()?.aiName || inferBuddyAiName(activeHost())}
                 onChange={(e) => updateActiveHost({ aiName: e.target.value, avatarId: inferAvatarId(e.target.value) })}
               />
-            </div>
-
-            <div className="settings-group">
-              <label htmlFor="host-device-type">Host Device</label>
-              <select
-                id="host-device-type"
-                value={activeHost()?.deviceType || ""}
-                onChange={(e) => updateActiveHost({ deviceType: normalizeDeviceType(e.target.value) })}
-              >
-                {HOST_DEVICE_TYPES.map((deviceType) => (
-                  <option value={deviceType} key={deviceType || "unknown"}>
-                    {deviceType || "Unknown"}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="settings-group">
-              <label htmlFor="socket-url">WebSocket URL</label>
-              <div className="settings-row">
-                <input
-                  id="socket-url"
-                  className="mono"
-                  value={settings.socketUrl}
-                  onChange={(e) => updateActiveHost({ socketUrl: e.target.value })}
-                  spellCheck={false}
-                />
-                <button type="button" onClick={handleConnect}>
-                  Connect
-                </button>
-              </div>
             </div>
 
             <div className="settings-group">
@@ -1116,57 +1077,8 @@ export default function App() {
             </div>
 
             <div className="settings-group">
-              <label htmlFor="companion-name">Client Name</label>
-              <input
-                id="companion-name"
-                value={settings.companionName}
-                onChange={(e) => setSettings({ ...settings, companionName: e.target.value })}
-                placeholder={`${chatUserName(settings, activeHostUserName)}'s Companion`}
-              />
-            </div>
-
-            <div className="settings-group">
-              <label htmlFor="avatar-id">AI Avatar</label>
-              <select
-                id="avatar-id"
-                value={settings.avatarId || "caroline"}
-                onChange={(e) => setSettings({ ...settings, avatarId: e.target.value })}
-              >
-                <option value="caroline">Caroline</option>
-                <option value="carl">Carl</option>
-                <option value="catoline">Catoline</option>
-                <option value="robot">Robot</option>
-              </select>
-            </div>
-
-            <div className="settings-group">
-              <button
-                type="button"
-                className="full-width-btn"
-                onClick={handleCheckClientUpdates}
-                disabled={isCheckingUpdate}
-              >
-                {isCheckingUpdate ? "Checking for Client Updates..." : "Check Client Updates"}
-              </button>
-              {updateMessage && <p className="settings-note">{updateMessage}</p>}
-            </div>
-
-            <div className="settings-group">
-              <label>Privacy</label>
-              <button
-                type="button"
-                className="full-width-btn danger-btn"
-                onClick={handleDeleteAllChats}
-              >
-                Delete All Chats
-              </button>
-              <p className="settings-note">Clears saved companion transcripts and unread counts on this computer.</p>
-            </div>
-
-            {/* Pairing code — host kiosk displays a code; client enters it here */}
-            <div className="settings-group">
               <label htmlFor="pairing-code">
-                Pairing Code{" "}
+                SYNC Code{" "}
                 <span
                   className="help-tip"
                   title="Enter the code shown on the Project: Caroline kiosk screen. Leave blank if the host does not require one."
@@ -1183,6 +1095,37 @@ export default function App() {
               />
             </div>
 
+            <div className="settings-group">
+              <label htmlFor="socket-url">Host Address</label>
+              <div className="settings-row">
+                <input
+                  id="socket-url"
+                  className="mono"
+                  value={settings.socketUrl}
+                  onChange={(e) => updateActiveHost({ socketUrl: e.target.value })}
+                  spellCheck={false}
+                />
+                <button type="button" onClick={handleConnect}>
+                  Connect
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-group">
+              <label htmlFor="host-device-type">Device</label>
+              <select
+                id="host-device-type"
+                value={activeHost()?.deviceType || ""}
+                onChange={(e) => updateActiveHost({ deviceType: normalizeDeviceType(e.target.value) })}
+              >
+                {HOST_DEVICE_TYPES.map((deviceType) => (
+                  <option value={deviceType} key={deviceType || "unknown"}>
+                    {deviceType || "Unknown"}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="settings-group settings-toggle-row">
               <label htmlFor="dark-mode">Dark Mode</label>
               <input
@@ -1193,7 +1136,7 @@ export default function App() {
               />
             </div>
 
-            <div className="settings-group">
+            <div className="settings-group settings-group-wide">
               <button
                 type="button"
                 className="full-width-btn"
@@ -1220,6 +1163,73 @@ export default function App() {
                 </div>
               )}
             </div>
+
+            <details className="settings-advanced">
+              <summary>More host details</summary>
+              <div className="settings-advanced-grid">
+                <div className="settings-group">
+                  <label htmlFor="host-name">Host Label</label>
+                  <input
+                    id="host-name"
+                    value={activeHost()?.name || ""}
+                    onChange={(e) => updateActiveHost({ name: e.target.value })}
+                  />
+                </div>
+
+                <div className="settings-group">
+                  <label htmlFor="host-avatar-id">Buddy Avatar</label>
+                  <select
+                    id="host-avatar-id"
+                    value={activeAvatarId}
+                    onChange={(e) => updateActiveHost({ avatarId: e.target.value })}
+                  >
+                    <option value="caroline">Caroline</option>
+                    <option value="carl">Carl</option>
+                    <option value="catoline">Catoline</option>
+                    <option value="robot">Robot</option>
+                  </select>
+                </div>
+
+                <div className="settings-group settings-group-wide">
+                  <label htmlFor="companion-name">Client Display Name</label>
+                  <input
+                    id="companion-name"
+                    value={settings.companionName}
+                    onChange={(e) => setSettings({ ...settings, companionName: e.target.value })}
+                    placeholder={`${chatUserName(settings, activeHostUserName)}'s Companion`}
+                  />
+                  <p className="settings-note">Shown to the host when this computer connects.</p>
+                </div>
+              </div>
+            </details>
+
+            <details className="settings-advanced">
+              <summary>Maintenance & privacy</summary>
+              <div className="settings-advanced-grid">
+                <div className="settings-group">
+                  <button
+                    type="button"
+                    className="full-width-btn"
+                    onClick={handleCheckClientUpdates}
+                    disabled={isCheckingUpdate}
+                  >
+                    {isCheckingUpdate ? "Checking for Client Updates..." : "Check Client Updates"}
+                  </button>
+                  {updateMessage && <p className="settings-note">{updateMessage}</p>}
+                </div>
+
+                <div className="settings-group">
+                  <button
+                    type="button"
+                    className="full-width-btn danger-btn"
+                    onClick={handleDeleteAllChats}
+                  >
+                    Delete All Chats
+                  </button>
+                  <p className="settings-note">Clears saved companion transcripts and unread counts on this computer.</p>
+                </div>
+              </div>
+            </details>
 
           </section>
         )}
@@ -1279,7 +1289,7 @@ export default function App() {
                 aria-label={`${activeAiName} buddy info`}
               >
                 <header className="profile-title">
-                  <span className="profile-running-icon" />
+                  <span className="profile-presence-chip" />
                   <strong>Buddy Info:</strong>
                   <input value={agentProfile.screenName || activeAiName} readOnly aria-label="Generated screen name" />
                   <button type="button" disabled>
