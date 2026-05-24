@@ -10,6 +10,7 @@ Start here if you are new to Raspberry Pi, Ubuntu, SSH, or home-server setup.
 | A spare PC, mini PC, VM, or server | [How to install Caroline on Ubuntu Server](how-to-ubuntu-server.md) |
 | A normal Ubuntu desktop computer | [How to install Caroline on Ubuntu Desktop](how-to-ubuntu-desktop.md) |
 | A Steam Deck in Desktop Mode | [Experimental Steam Deck / SteamOS install](how-to-steamos.md) |
+| A phone or tablet on the same Wi-Fi | No install needed: open `http://DEVICE-IP:8080/` after Caroline is running |
 | A Windows, Ubuntu/Pop!_OS, or Steam Deck desktop client | [How to install the Companion app](companion-client.md) |
 
 ## Before You Install
@@ -35,6 +36,8 @@ Open Caroline from a browser:
 ```text
 http://DEVICE-IP:8080/
 ```
+
+The same URL works from a phone or tablet on your LAN. The phone layout focuses on chat, avatar presence, connection status, settings, and compact controls instead of the full kiosk widget wall.
 
 For microphone input or activation word from another computer, use Chrome or Chromium and open:
 

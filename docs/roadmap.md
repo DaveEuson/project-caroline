@@ -16,8 +16,8 @@ Calendar read, add, and delete support for Microsoft 365 and Outlook accounts, a
 ### Nanoleaf Lights and Panels
 Smart lighting control for Nanoleaf panels and shapes, joining the existing Philips Hue integration.
 
-### Mobile Support
-A mobile-optimised view so Caroline works cleanly on a phone or tablet browser — useful as a quick remote panel when away from the main kiosk.
+### Mobile Polish
+Caroline now has a first-pass phone/tablet browser layout for quick local chat and controls. Next steps are polish: better compact settings, tighter touch targets, and more graceful handling of optional widgets on small screens.
 
 ### More Avatars
 Additional built-in avatar options. Original character art and expressive animations are the long-term goal — see [Calling Artists and Animators](../README.md#calling-artists-and-animators).

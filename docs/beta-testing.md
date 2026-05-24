@@ -1,75 +1,73 @@
-# Beta Testing Project: Caroline
+# Beta Tester Guide
 
-Project: Caroline is ready for small-group beta testing. The goal for this round is simple: get 10 people to try the app on real hardware and collect enough notes to find the rough edges before the next public release.
+Thank you for testing Project: Caroline. This guide is for testers who want to try the current beta on real hardware and send useful feedback.
 
-## Tester Invite
+Project: Caroline is a local-first AI kiosk/dashboard for Raspberry Pi, Ubuntu, Pop!_OS, experimental Steam Deck setups, and browsers on your home network. It includes chat, memory, calendar help, local tasks, weather, music, smart-home hooks, system status, phone browser access, and an optional desktop Companion app.
 
-Use this as a DM, email, Discord post, or LinkedIn message:
+This beta is not expected to be perfect. The most useful feedback is where setup is confusing, where something breaks, where AI replies feel wrong, or where the app already feels surprisingly useful.
 
-```text
-Hey! I am looking for 10 people to beta test Project: Caroline, a local AI kiosk/dashboard for Raspberry Pi, Ubuntu/Pop!_OS, Steam Deck, or a browser on your home network.
+## What You Need
 
-The test should take about 15 minutes. I am mainly looking for install friction, confusing setup steps, broken widgets, weird AI replies, and anything that feels rough or unclear.
+- A Raspberry Pi, Ubuntu/Pop!_OS computer, Ubuntu VM, or Steam Deck in Desktop Mode.
+- Internet access during install.
+- A stable local network connection.
+- About 15 minutes for a first pass.
+- Optional: a phone or tablet on the same Wi-Fi if you want to test the mobile browser layout.
+- Optional: Google Calendar, Spotify, Philips Hue, Discord, weather, tides, radio, or local AI if you want to test one integration.
 
-You do not need to be technical, but it helps if you are comfortable opening a terminal and following a checklist. If you want to try it, start here:
+Please do not paste API keys, OAuth tokens, Discord bot tokens, passwords, or private calendar details in feedback.
 
-https://github.com/Project-Caroline/project-caroline/blob/release/docs/beta-testing.md
+## Pick Your Install Path
 
-Please do not paste API keys, tokens, passwords, or private calendar details in feedback.
-```
+Choose the guide that matches your device:
 
-Shorter version:
+- Raspberry Pi OS: [How to install on Raspberry Pi OS](how-to-raspberry-pi-os.md)
+- Ubuntu Server: [How to install on Ubuntu Server](how-to-ubuntu-server.md)
+- Ubuntu Desktop / Pop!_OS: [How to install on Ubuntu Desktop](how-to-ubuntu-desktop.md)
+- Steam Deck: [Experimental Steam Deck / SteamOS install](how-to-steamos.md)
 
-```text
-I am looking for 10 beta testers for Project: Caroline, a local AI kiosk/dashboard for Pi, Ubuntu/Pop!_OS, Steam Deck, and LAN browsers. It takes about 15 minutes: install/open it, send a chat, try one widget, and report what breaks. Start here: https://github.com/Project-Caroline/project-caroline/blob/release/docs/beta-testing.md
-```
-
-## Who To Ask First
-
-Best-fit testers:
-
-- Raspberry Pi users with a spare screen or desk display.
-- Ubuntu or Pop!_OS users who are comfortable with terminal installs.
-- Steam Deck users willing to test Desktop Mode.
-- Friends who will tell you where the instructions are confusing.
-- People who use Google Calendar, Spotify, Hue, Discord, or local AI and can test one integration.
-
-Try to recruit 10, but treat 5 completed reports as the first meaningful milestone.
+If you already have Caroline installed, update from the `release` channel before testing.
 
 ## 15-Minute Test Checklist
 
-1. Pick your install path:
-   - Raspberry Pi OS: [How to install on Raspberry Pi OS](how-to-raspberry-pi-os.md)
-   - Ubuntu Server: [How to install on Ubuntu Server](how-to-ubuntu-server.md)
-   - Ubuntu Desktop / Pop!_OS: [How to install on Ubuntu Desktop](how-to-ubuntu-desktop.md)
-   - Steam Deck: [Experimental Steam Deck / SteamOS install](how-to-steamos.md)
-2. Install or update Caroline from the `release` channel.
-3. Open the dashboard at `http://YOUR-CAROLINE-IP:8080/`.
-4. Send one normal chat message, such as `What should I test first?`
-5. Open Settings and confirm the device type, AI provider, and model look reasonable.
-6. Try one widget or integration:
-   - Calendar: connect Google Calendar or confirm it asks you to connect.
+1. Install or update Caroline using the guide for your device.
+2. Open the dashboard at `http://YOUR-CAROLINE-IP:8080/` from the kiosk screen, a desktop browser, or a phone browser on the same network.
+3. Send one normal chat message, such as `What should I test first?`
+4. Open **Settings** and check whether the device type, AI provider, and model look reasonable.
+5. Try one widget or integration:
+   - Calendar: connect Google Calendar or confirm Caroline asks you to connect.
    - Tasks: add and complete a task.
-   - Hue, Spotify, Discord, weather, tides, or radio: enable only if you actually have it configured.
-7. Refresh the page and confirm the dashboard still loads.
-8. If there is an update button, check that update status is readable.
+   - Hue, Spotify, Discord, weather, tides, or radio: enable only if you already have it configured.
+6. Refresh the page and confirm the dashboard still loads.
+7. If you have a phone handy, open the same URL there and check that chat, avatar, **Settings**, and the SYNC/status pills fit without sideways scrolling.
+8. If an update button is visible, check whether the update status is readable.
 9. Write down the first thing that was confusing, broken, slow, or surprisingly good.
 10. Submit a [Beta test report](https://github.com/Project-Caroline/project-caroline/issues/new?template=beta_test_report.md).
 
-## What To Report
+## What To Include In Your Report
 
 Helpful feedback:
 
-- Where you got stuck.
+- Device type, OS version, and browser.
 - Which install guide you used.
-- Device type, OS, browser, and whether kiosk mode was enabled.
+- Fresh install or update.
+- Whether kiosk mode was enabled.
+- AI provider and model if you noticed them.
 - Whether chat worked.
 - Which widget or integration you tested.
 - The exact error message or screenshot if something broke.
 - One thing that felt polished.
 - One thing that felt confusing.
 
-Please do not include secrets:
+If something fails, a short report is still useful. "I got stuck at step 3 because the URL did not load" is exactly the kind of feedback this beta needs.
+
+## Feedback Link
+
+Submit results here:
+
+[Open a Project: Caroline beta test report](https://github.com/Project-Caroline/project-caroline/issues/new?template=beta_test_report.md)
+
+Before submitting, double-check that your report does not include secrets:
 
 - API keys
 - OAuth tokens
@@ -77,30 +75,3 @@ Please do not include secrets:
 - Passwords
 - Full credential files
 - Private calendar details
-
-## Success Criteria
-
-For this beta round, success means:
-
-- 10 people agree to test.
-- At least 5 people submit a completed report.
-- At least 3 different platform paths are covered.
-- Every critical install or first-run blocker becomes a GitHub issue.
-- The release notes get updated with the most common tester findings.
-
-## Tracking Sheet
-
-Use this lightweight tracker while recruiting:
-
-| Tester | Platform | Invited | Installed | Reported | Notes |
-|---|---|---:|---:|---:|---|
-| 1 |  |  |  |  |  |
-| 2 |  |  |  |  |  |
-| 3 |  |  |  |  |  |
-| 4 |  |  |  |  |  |
-| 5 |  |  |  |  |  |
-| 6 |  |  |  |  |  |
-| 7 |  |  |  |  |  |
-| 8 |  |  |  |  |  |
-| 9 |  |  |  |  |  |
-| 10 |  |  |  |  |  |

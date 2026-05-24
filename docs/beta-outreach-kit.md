@@ -155,6 +155,5 @@ Save these for later, after at least 5 completed beta reports:
 2. Post the GitHub Discussion announcement.
 3. DM 5 specific people who will be honest.
 4. Post in one community only after checking its rules.
-5. Track testers in `docs/beta-testing.md`.
+5. Track testers in your own notes or a private sheet.
 6. Convert every real blocker into a GitHub issue.
-

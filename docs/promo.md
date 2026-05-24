@@ -16,15 +16,15 @@ Open [demo/index.html](../demo/index.html) directly in a browser for a no-networ
 
 ## Short Copy
 
-Project: Caroline is a local-first AI sidekick kiosk for home dashboards, calendar help, reminders, music, lights, and everyday automation.
+Project: Caroline is a local-first AI sidekick kiosk for home dashboards, phone check-ins, calendar help, reminders, music, lights, and everyday automation.
 
-Built for Raspberry Pi and Ubuntu, Caroline runs as a fullscreen cyberpunk dashboard or as a small home server you open from another browser.
+Built for Raspberry Pi and Ubuntu, Caroline runs as a fullscreen cyberpunk dashboard, a small home server you open from another browser, or a quick phone-friendly local chat panel.
 
 For beta tester recruiting, use the [Beta Outreach Kit](beta-outreach-kit.md). It includes approved links, post drafts, and places to avoid until the first outside reports are in.
 
 ## v0.3.0-beta.4 Release Blurb
 
-Project: Caroline v0.3.0-beta.4 is the public beta platform-validation build: a local-first AI kiosk for Raspberry Pi OS, Ubuntu, and experimental Steam Deck setups, with chat, memory, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, video, and ambient dashboard widgets. It adds clearer Pi/Ubuntu/SteamOS install guidance, stronger companion pairing and multi-host buddy support, first-run personality questions, safer widget guardrails, and a validated `0.1.12` desktop Companion app.
+Project: Caroline v0.3.0-beta.4 is the public beta platform-validation build: a local-first AI kiosk for Raspberry Pi OS, Ubuntu, experimental Steam Deck setups, and phone browsers on your LAN, with chat, memory, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, video, and ambient dashboard widgets. It adds clearer Pi/Ubuntu/SteamOS install guidance, stronger companion pairing and multi-host buddy support, first-run personality questions, safer widget guardrails, a first-pass mobile browser layout, and a validated `0.1.12` desktop Companion app.
 
 ## One-Liners
 

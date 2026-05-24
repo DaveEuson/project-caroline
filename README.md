@@ -2,7 +2,7 @@
 
 Project: Caroline is a local AI host and kiosk for your desk, wall screen, Raspberry Pi, Ubuntu box, or experimental Steam Deck setup.
 
-It gives you a persistent assistant console with chat memory, calendar actions, local tasks, smart-home controls, music, weather, news, video, system status, and ambient widgets. It is built for your local network first: install Caroline on one host, then open it from the kiosk screen, any browser on your network, or the optional desktop companion app.
+It gives you a persistent assistant console with chat memory, calendar actions, local tasks, smart-home controls, music, weather, news, video, system status, and ambient widgets. It is built for your local network first: install Caroline on one host, then open it from the kiosk screen, a phone or tablet browser, a full desktop browser, or the optional desktop companion app.
 
 Caroline is not just a chatbot page. It is a small personal command center meant to stay open all day.
 
@@ -10,17 +10,26 @@ Caroline is not just a chatbot page. It is a small personal command center meant
 
 ![Project: Caroline Companion buddy list](Screenshots/companion-buddies.png)
 
-## Host, Kiosk, Browser, Companion
+## Host, Kiosk, Phone, Browser, Companion
 
 Caroline has one **host** and as many **clients** as you want on your local network.
 
 - The host is the device running Caroline: a Raspberry Pi, Ubuntu server/desktop, or experimental Steam Deck install.
 - The kiosk is the host's own fullscreen browser view, ideal for a wall screen or desk display.
+- A phone or tablet can open `http://YOUR-CAROLINE-IP:8080/` as a mobile-friendly touch view for quick chat, avatar presence, status, settings, and light remote control without the full widget wall.
 - Any browser on your network can open `http://YOUR-CAROLINE-IP:8080/` for the same dashboard and chat.
 - Chrome or Chromium can use the secure voice URL `https://YOUR-CAROLINE-IP:8444/` for microphone and wake-word access.
 - The Companion app is a retro messenger-style desktop client that can pair with multiple Caroline hosts, switch between buddies, keep local chat history, and clear saved chats for privacy.
 
-That means Caroline can be a visible room kiosk, a headless home server, and a desktop chat buddy at the same time.
+That means Caroline can be a visible room kiosk, a headless home server, a phone remote, and a desktop chat buddy at the same time.
+
+## How A Day Looks
+
+1. Caroline runs on a Raspberry Pi, Ubuntu box, or Steam Deck somewhere on your home network.
+2. The kiosk screen stays open in the room for glanceable weather, calendar, tasks, music, memory, and system widgets.
+3. Your phone opens the same Caroline address when you want a quick chat, status check, or setting change without walking over to the kiosk.
+4. Your desktop Companion app sits off to the side like a retro buddy list, so Caroline, Carl, Catoline, and other hosts can each feel like their own chat presence.
+5. Everything stays LAN-first: the host does the work, and each client is just another way to talk to it.
 
 ## What Caroline Can Do
 
@@ -31,6 +40,7 @@ That means Caroline can be a visible room kiosk, a headless home server, and a d
 - Spotify playback controls
 - Weather, news, video, tides, radio, Pomodoro, memory, and system widgets
 - Fullscreen kiosk mode or server/client mode from another browser
+- Mobile-friendly phone/tablet browser view for quick LAN chat and controls
 - Desktop Companion app for Caroline, Carl, Catoline, Robot, and future host personalities
 - Multiple paired hosts with per-buddy transcripts, unread message badges, and local chat-history deletion
 
@@ -89,7 +99,7 @@ https://YOUR-CAROLINE-IP:8444/
 
 On a Raspberry Pi kiosk, the installer prefers Chromium because Firefox does not support Caroline's browser wake-word input.
 
-The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat.
+The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat. On phones and tablets, the mobile layout focuses on the avatar, chat, connection status, settings, and compact controls instead of trying to squeeze every kiosk widget onto a small screen.
 The installer can optionally protect the web UI and proxied local admin APIs with a local browser login. If enabled, username is `caroline`; on the Caroline host, read the generated password with `cat ~/caroline/caroline_admin_password.txt`.
 
 ## Choose Your Setup
@@ -100,6 +110,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 | Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
 | Ubuntu Desktop 64-bit | Validated | Server/client mode from another browser; local kiosk mode is less tested |
 | Steam Deck / SteamOS | Smoke-validated nightly | Repurposed handheld desk terminal |
+| Phone / tablet browser | Mobile client view | Quick chat, status, settings, and remote controls on your LAN |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
 ## Current Beta Reality
@@ -107,6 +118,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
 - Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter as the preferred AI path, and lazy-loaded visual media.
 - Steam Deck / SteamOS support tracks nightly and is smoke-validated in server/client mode by stable IP; mDNS hostnames can be slower from Windows networks.
+- Phone and tablet browsers are lightweight Caroline clients, not separate installs; they work best on the same trusted LAN as the host.
 - OpenRouter is the best AI experience for speed and answer quality.
 - Ollama is private and local, but small hardware can be slower and less polished.
 - Ubuntu Desktop server/client mode is validated on a 50GB VM with CPU-only Ollama using `qwen2.5:1.5b`.
