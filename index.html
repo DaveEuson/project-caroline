@@ -51,8 +51,6 @@
   #wifi-icon { flex:0 0 auto; }
   #wifi-strength { display:inline-block; min-width:22px; white-space:nowrap; text-align:left; line-height:1; }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
-  #restart-btn { margin-left: 8px; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); border-radius: 20px; padding: 2px 8px; font-size: 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; }
-  #restart-btn:hover { background: rgba(244,63,94,0.2); color: #f43f5e; }
   #settings-topbar-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
   #settings-topbar-btn:hover { background: rgba(var(--t-rgb1),0.2); }
   #hist-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 8px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
@@ -114,7 +112,7 @@
   .settings-feedback.show { opacity: 1; }
   .settings-feedback.error { color: #fb7185; }
   #discord-fields { overflow:hidden; max-height:0; opacity:0; transition:max-height 0.35s ease, opacity 0.25s ease; }
-  #discord-fields.open { max-height:240px; opacity:1; }
+  #discord-fields.open { max-height:430px; opacity:1; }
   .clear-history-btn { background: none; border: 1px solid rgba(244,63,94,0.3); border-radius: 10px; padding: 6px 12px; color: #fb7185; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; }
   #settings-tabs { display: flex; gap: 4px; padding: 8px 18px; border-bottom: 1px solid rgba(var(--t-rgb1),0.1); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; }
   #settings-tabs::-webkit-scrollbar { display: none; }
@@ -394,6 +392,8 @@
   .memory-shard { padding:7px 8px; border:1px solid rgba(var(--t-rgb1),0.10); border-radius:8px; background:rgba(0,0,0,0.18); }
   .memory-text { font-size:11px; line-height:1.35; color:rgba(226,232,240,0.76); overflow-wrap:anywhere; }
   .memory-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(226,232,240,0.36); }
+  .memory-meta-left { display:flex; align-items:center; gap:5px; min-width:0; flex-wrap:wrap; }
+  .memory-source { border:1px solid rgba(var(--t-rgb1),0.16); border-radius:999px; background:rgba(var(--t-rgb1),0.06); color:rgba(var(--t-rgb1),0.68); padding:1px 6px; white-space:nowrap; }
   .memory-deny { border:1px solid rgba(248,113,113,0.28); border-radius:999px; background:rgba(248,113,113,0.07); color:#fda4af; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
   .memory-deny:hover { background:rgba(248,113,113,0.15); color:#fecdd3; }
   .memory-hide { border:1px solid rgba(148,163,184,0.22); border-radius:999px; background:rgba(148,163,184,0.05); color:rgba(148,163,184,0.55); padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:9px; cursor:pointer; white-space:nowrap; }
@@ -401,8 +401,12 @@
   .memory-shard.is-hidden { border-color:rgba(var(--t-rgb1),0.06); background:rgba(0,0,0,0.10); }
   .memory-shard.is-hidden .memory-text { filter:blur(4px); user-select:none; pointer-events:none; opacity:0.5; }
   .memory-empty { color:rgba(226,232,240,0.30); font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.4; padding:6px 2px; }
+  .smart-power-row { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px; }
   #smart-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; max-height:150px; overflow-y:auto; }
   .smart-btn { min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; border:1px solid rgba(var(--t-rgb1),0.25); border-radius:7px; background:rgba(var(--t-rgb1),0.05); color:var(--t-hex1); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:background .18s, border-color .18s, color .18s, transform .18s; }
+  .smart-power-btn { min-height:38px; flex-direction:row; }
+  .smart-power-btn[data-hue-power="on"].active { border-color:rgba(52,211,153,0.56); background:rgba(52,211,153,0.13); color:#86efac; }
+  .smart-power-btn[data-hue-power="off"].active { border-color:rgba(148,163,184,0.40); background:rgba(148,163,184,0.10); color:#cbd5e1; }
   .smart-btn i { font-size:18px; }
   .smart-btn span { font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
   .smart-btn:hover { transform:translateY(-1px); border-color:rgba(var(--t-rgb1),0.48); background:rgba(var(--t-rgb1),0.11); }
@@ -492,7 +496,11 @@
   body.pi-performance #particles,
   body.pi-performance #crt-flicker,
   body.pi-performance #corner-glow-tl,
-  body.pi-performance #corner-glow-br { display:none !important; }
+  body.pi-performance #corner-glow-br,
+  body.resource-saver #particles,
+  body.resource-saver #crt-flicker,
+  body.resource-saver #corner-glow-tl,
+  body.resource-saver #corner-glow-br { display:none !important; }
   body.pi-performance .dot,
   body.pi-performance .eq-bar,
   body.pi-performance .typing-dot,
@@ -503,9 +511,22 @@
   body.pi-performance #caro-boot-avatar,
   body.pi-performance #avatar-outer.speaking img.avatar-svg,
   body.pi-performance #mic-btn.listening,
-  body.pi-performance #hue-btn.mode-disco { animation:none !important; }
-  body.pi-performance #news-ticker-inner { transition:opacity 0.2s ease; }
-  body.pi-performance .caro-msg { transition-duration:0.16s !important; }
+  body.pi-performance #hue-btn.mode-disco,
+  body.resource-saver .dot,
+  body.resource-saver .eq-bar,
+  body.resource-saver .typing-dot,
+  body.resource-saver .caro-typing-dot,
+  body.resource-saver .pulse-ring,
+  body.resource-saver .listen-ring,
+  body.resource-saver .caro-boot-logo,
+  body.resource-saver #caro-boot-avatar,
+  body.resource-saver #avatar-outer.speaking img.avatar-svg,
+  body.resource-saver #mic-btn.listening,
+  body.resource-saver #hue-btn.mode-disco { animation:none !important; }
+  body.pi-performance #news-ticker-inner,
+  body.resource-saver #news-ticker-inner { transition:opacity 0.2s ease; }
+  body.pi-performance .caro-msg,
+  body.resource-saver .caro-msg { transition-duration:0.16s !important; }
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
@@ -819,6 +840,18 @@
   #howto-body li { margin:5px 0; }
   #howto-body code { background:rgba(var(--t-rgb1),0.1); border:1px solid rgba(var(--t-rgb1),0.2); border-radius:6px; padding:2px 7px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--t-hex1); }
   #howto-body .howto-note { font-size:12px; color:rgba(251,191,36,0.8); font-family:'JetBrains Mono',monospace; background:rgba(251,191,36,0.06); border:1px solid rgba(251,191,36,0.2); border-radius:8px; padding:8px 12px; margin-top:10px; }
+  .command-example-grid { display:grid; grid-template-columns:1fr; gap:8px; margin-top:10px; }
+  .command-example-btn { appearance:none; text-align:left; background:rgba(var(--t-rgb1),0.06); border:1px solid rgba(var(--t-rgb1),0.20); border-radius:8px; padding:9px 11px; color:#e2e8f0; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.35; cursor:pointer; }
+  .command-example-btn:hover { background:rgba(var(--t-rgb1),0.12); border-color:rgba(var(--t-rgb1),0.36); color:#f8fafc; }
+  .ai-mode-card { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-top:12px; padding:10px 12px; border:1px solid rgba(var(--t-rgb1),0.16); border-radius:10px; background:linear-gradient(180deg, rgba(var(--t-rgb1),0.07), rgba(2,6,10,0.28)); }
+  .ai-mode-kicker { display:inline-flex; align-items:center; gap:6px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+  .ai-mode-title { display:block; margin-top:4px; color:#f8fafc; font-size:13px; }
+  .ai-mode-copy { margin-top:3px; color:rgba(226,232,240,0.58); font-size:12px; line-height:1.45; }
+  #mobile-glance { display:none; }
+  .mobile-glance-label { color:rgba(var(--t-rgb1),0.62); font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.16em; text-transform:uppercase; }
+  .mobile-glance-title { color:#f8fafc; font-size:13px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mobile-glance-detail { color:rgba(226,232,240,0.52); font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.2; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mobile-glance-refresh { appearance:none; width:34px; height:34px; border-radius:9px; border:1px solid rgba(var(--t-rgb1),0.20); background:rgba(var(--t-rgb1),0.06); color:var(--t-hex1); cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
 
   /* ── WIPE MEMORY BUTTON ─────────────────── */
   #wipe-memory-btn { margin-top:18px; background:none; border:1px solid rgba(244,63,94,0.25); border-radius:20px; padding:6px 16px; font-size:11px; color:rgba(244,63,94,0.5); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:all 0.2s; letter-spacing:.08em; }
@@ -943,16 +976,11 @@
     text-shadow:1px 0 rgba(122,215,210,0.18), -1px 0 rgba(182,75,104,0.16);
   }
   body.theme-ova .topbar-version { color:rgba(100,200,183,0.46); }
-  body.theme-ova .conn-pill, body.theme-ova .net-pill, body.theme-ova .ai-config-pill, body.theme-ova #settings-topbar-btn, body.theme-ova #hist-btn, body.theme-ova #restart-btn {
+  body.theme-ova .conn-pill, body.theme-ova .net-pill, body.theme-ova .ai-config-pill, body.theme-ova #settings-topbar-btn, body.theme-ova #hist-btn {
     border-radius:6px;
     background:linear-gradient(180deg, rgba(18,27,34,0.72), rgba(5,7,10,0.74));
     border-color:rgba(100,200,183,0.26);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.035);
-  }
-  body.theme-ova #restart-btn {
-    color:#e48186;
-    border-color:rgba(212,90,98,0.34);
-    background:rgba(48,14,20,0.52);
   }
   body.theme-ova .topbar-clock {
     color:#ebe6d5;
@@ -1246,7 +1274,7 @@
     background:#facc15;
     box-shadow:0 0 10px rgba(250,204,21,0.7), 0 0 22px rgba(var(--t-rgb1),0.24);
   }
-  body.theme-cybercore .conn-pill, body.theme-cybercore .net-pill, body.theme-cybercore .ai-config-pill, body.theme-cybercore #settings-topbar-btn, body.theme-cybercore #hist-btn, body.theme-cybercore #restart-btn {
+  body.theme-cybercore .conn-pill, body.theme-cybercore .net-pill, body.theme-cybercore .ai-config-pill, body.theme-cybercore #settings-topbar-btn, body.theme-cybercore #hist-btn {
     border-radius:5px;
     background:linear-gradient(180deg, rgba(20,34,45,0.72), rgba(7,12,18,0.74));
     border-color:rgba(var(--t-rgb1),0.34);
@@ -1508,7 +1536,6 @@
     body.theme-cybercore .topbar-version, body.theme-cybercore .ai-config-pill { display:none !important; }
     body.theme-cybercore #topbar { gap:7px; padding:0 9px; }
     body.theme-cybercore .conn-pill, body.theme-cybercore .net-pill { font-size:10px; padding:2px 6px; }
-    body.theme-cybercore #restart-btn { display:none; }
     body.theme-cybercore .topbar-clock { font-size:16px; }
   }
 
@@ -1602,6 +1629,75 @@
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   }
 
+  /* READABILITY PRESETS */
+  body[data-ui-scale="normal"] { --font-bump:-1px; --font-bump-sm:-1px; --font-bump-lg:-2px; --readable-pad:0px; --readable-touch:0px; }
+  body[data-ui-scale="large"] { --font-bump:0px; --font-bump-sm:0px; --font-bump-lg:0px; --readable-pad:0px; --readable-touch:0px; }
+  body[data-ui-scale="xlarge"] { --font-bump:2px; --font-bump-sm:1px; --font-bump-lg:3px; --readable-pad:2px; --readable-touch:2px; }
+  body[data-ui-scale="jumbo"] { --font-bump:4px; --font-bump-sm:2px; --font-bump-lg:5px; --readable-pad:4px; --readable-touch:4px; }
+  body[data-ui-density="compact"] { --density-pad:-2px; --density-gap:-2px; }
+  body[data-ui-density="comfortable"] { --density-pad:0px; --density-gap:0px; }
+  body[data-ui-density="relaxed"] { --density-pad:3px; --density-gap:3px; }
+  body[data-ui-scale] .topbar-name { font-size:calc(18px + var(--font-bump-lg)); }
+  body[data-ui-scale] .topbar-clock { font-size:calc(18px + var(--font-bump-lg)); }
+  body[data-ui-scale] .conn-pill,
+  body[data-ui-scale] .net-pill,
+  body[data-ui-scale] .ai-config-pill { font-size:calc(12px + var(--font-bump-sm)); padding:calc(2px + var(--readable-pad)) calc(8px + var(--readable-pad)); }
+  body[data-ui-scale] #news-ticker-label,
+  body[data-ui-scale] .widget-label,
+  body[data-ui-scale] .news-header,
+  body[data-ui-scale] #media-label,
+  body[data-ui-scale] #spotify-label,
+  body[data-ui-scale] #todo-title { font-size:calc(10px + var(--font-bump-sm)); }
+  body[data-ui-scale] .ticker-item,
+  body[data-ui-scale] #weather-desc,
+  body[data-ui-scale] #radio-station,
+  body[data-ui-scale] #cal-title,
+  body[data-ui-scale] .news-title,
+  body[data-ui-scale] .memory-text,
+  body[data-ui-scale] .todo-text { font-size:calc(13px + var(--font-bump)); line-height:1.34; }
+  body[data-ui-scale] #weather-temp { font-size:calc(26px + var(--font-bump-lg)); }
+  body[data-ui-scale] #weather-icon,
+  body[data-ui-scale] #moon-icon { font-size:calc(20px + var(--font-bump-lg)); }
+  body[data-ui-scale] .quick-btn { font-size:calc(15px + var(--font-bump)); padding:calc(10px + var(--readable-pad) + var(--density-pad)) calc(18px + var(--readable-pad)); }
+  body[data-ui-scale] #subtitle-sender { font-size:calc(13px + var(--font-bump)); }
+  body[data-ui-scale] #subtitle-text { font-size:calc(20px + var(--font-bump-lg)); line-height:1.38; }
+  body[data-ui-scale] #bottom-chat-label,
+  body[data-ui-scale] .bc-sender,
+  body[data-ui-scale] #voice-status { font-size:calc(10px + var(--font-bump-sm)); }
+  body[data-ui-scale] .bc-msg { font-size:calc(14px + var(--font-bump)); padding:calc(5px + var(--density-pad)) calc(10px + var(--readable-pad)); line-height:1.38; }
+  body[data-ui-scale] #msg-input { font-size:calc(18px + var(--font-bump-lg)); padding:calc(16px + var(--readable-pad) + var(--density-pad)) calc(20px + var(--readable-pad)); }
+  body[data-ui-scale] .touch-btn { width:calc(46px + var(--readable-touch)); height:calc(46px + var(--readable-touch)); font-size:calc(20px + var(--font-bump-lg)); }
+  body[data-ui-scale] #send-btn i,
+  body[data-ui-scale] .touch-btn i { font-size:calc(21px + var(--font-bump-lg)); }
+  body[data-ui-scale] .settings-label { font-size:calc(15px + var(--font-bump)); }
+  body[data-ui-scale] .settings-sub,
+  body[data-ui-scale] .settings-feedback { font-size:calc(12px + var(--font-bump-sm)); }
+  body[data-ui-scale] .settings-input,
+  body[data-ui-scale] .settings-select,
+  body[data-ui-scale] .settings-save-btn { font-size:calc(13px + var(--font-bump)); padding:calc(8px + var(--density-pad)) calc(14px + var(--readable-pad)); }
+  body[data-ui-scale] .stab,
+  body[data-ui-scale] .settings-section h3 { font-size:calc(10px + var(--font-bump-sm)); }
+  body[data-ui-scale="xlarge"] #topbar,
+  body[data-ui-scale="jumbo"] #topbar { gap:6px; padding-left:10px; padding-right:10px; }
+  body[data-ui-scale="xlarge"] .topbar-version,
+  body[data-ui-scale="jumbo"] .topbar-version { display:none; }
+  body[data-ui-scale="xlarge"] .topbar-name { font-size:20px; }
+  body[data-ui-scale="jumbo"] .topbar-name { font-size:21px; }
+  body[data-ui-scale="xlarge"] .topbar-clock,
+  body[data-ui-scale="jumbo"] .topbar-clock { font-size:18px; }
+  body[data-ui-scale="xlarge"] .conn-pill,
+  body[data-ui-scale="xlarge"] .net-pill,
+  body[data-ui-scale="xlarge"] .ai-config-pill,
+  body[data-ui-scale="jumbo"] .conn-pill,
+  body[data-ui-scale="jumbo"] .net-pill,
+  body[data-ui-scale="jumbo"] .ai-config-pill { font-size:12px; padding:2px 6px; }
+  body[data-ui-scale="xlarge"] #wifi-indicator,
+  body[data-ui-scale="jumbo"] #wifi-indicator { min-width:44px; padding-left:6px; padding-right:6px; }
+  body[data-ui-scale="xlarge"] #settings-topbar-btn,
+  body[data-ui-scale="xlarge"] #hist-btn,
+  body[data-ui-scale="jumbo"] #settings-topbar-btn,
+  body[data-ui-scale="jumbo"] #hist-btn { padding-left:8px; padding-right:8px; }
+
   /* PHONE LAYOUT
      Keeps kiosk/desktop unchanged; this only applies to portrait phone-sized
      browsers where the dashboard rails crowd out chat. */
@@ -1661,8 +1757,7 @@
       order:2;
     }
     .topbar-version, #model-pill, #resource-pill,
-    .ai-config-pill, .topbar-clock, #wifi-indicator,
-    #restart-btn {
+    .ai-config-pill, .topbar-clock, #wifi-indicator {
       display:none !important;
     }
     .conn-pill, .net-pill, #companion-code-pill,
@@ -1836,6 +1931,21 @@
       font-size:12px;
       line-height:1;
       white-space:nowrap;
+    }
+    #mobile-glance {
+      width:min(100%, 560px);
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      align-items:center;
+      gap:9px;
+      padding:8px 10px;
+      border:1px solid rgba(var(--t-rgb1),0.14);
+      border-radius:10px;
+      background:rgba(2,6,10,0.42);
+      box-shadow:0 8px 18px rgba(0,0,0,0.20);
+    }
+    #mobile-glance.hidden {
+      display:none !important;
     }
 
     #news-panel {
@@ -2203,13 +2313,43 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Display preset</div><div class="settings-sub">Readable from desk, couch, or Deck</div></div>
+            <select class="settings-select" id="set-display-preset" onchange="applyDisplayPreset(this.value)">
+              <option value="desk">Desk / monitor</option>
+              <option value="pi">Raspberry Pi kiosk</option>
+              <option value="steam">Steam Deck - 3 ft</option>
+              <option value="ubuntu">Ubuntu desktop</option>
+              <option value="couch">Couch / small TV</option>
+              <option value="wall">Wall kiosk</option>
+              <option value="compact">Compact laptop</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">UI Font</div><div class="settings-sub">Larger fonts read better at distance</div></div>
-            <select class="settings-select" id="set-font" onchange="applyFont(this.value)">
+            <select class="settings-select" id="set-font" onchange="applyDisplayControls()">
               <option value="Inter">Inter — Interface default</option>
               <option value="Roboto">Roboto — Google UI</option>
               <option value="Open Sans">Open Sans — Neutral friendly</option>
               <option value="SF Pro">SF Pro — Apple system</option>
               <option value="Noto Sans">Noto Sans — Universal</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Text size</div><div class="settings-sub">Fine tune after choosing a preset</div></div>
+            <select class="settings-select" id="set-ui-scale" onchange="applyDisplayControls()">
+              <option value="normal">Normal</option>
+              <option value="large">Large</option>
+              <option value="xlarge">Deck readable</option>
+              <option value="jumbo">Across the room</option>
+            </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Spacing</div><div class="settings-sub">More room for touch and distance</div></div>
+            <select class="settings-select" id="set-ui-density" onchange="applyDisplayControls()">
+              <option value="compact">Compact</option>
+              <option value="comfortable">Comfortable</option>
+              <option value="relaxed">Relaxed</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -2261,6 +2401,13 @@
               <option value="openrouter">OpenRouter (cloud)</option>
               <option value="ollama">Ollama (local / remote)</option>
             </select>
+          </div>
+          <div id="ai-mode-card" class="ai-mode-card" aria-live="polite">
+            <div>
+              <span class="ai-mode-kicker" id="ai-mode-kicker">Cloud mode</span>
+              <strong class="ai-mode-title" id="ai-mode-title">OpenRouter: faster hosted AI</strong>
+              <div class="ai-mode-copy" id="ai-mode-copy">Best for polished conversation, calendar parsing, and lower load on Pi or Steam Deck.</div>
+            </div>
           </div>
           <div id="openrouter-model-row" style="margin-top:14px">
             <div class="settings-row">
@@ -2475,14 +2622,28 @@
           </div>
           <div id="discord-fields">
             <div class="settings-row" style="margin-top:14px">
+              <div><div class="settings-label">Destination</div><div class="settings-sub" id="discord-mode-status">Channel or direct message</div></div>
+              <select class="settings-select" id="set-discord-mode" style="width:180px" onchange="updateDiscordModeFields()">
+                <option value="channel">Server channel</option>
+                <option value="dm">Direct message</option>
+              </select>
+            </div>
+            <div class="settings-row" style="margin-top:14px">
               <div><div class="settings-label">Bot Token</div><div class="settings-sub" id="discord-token-status">Discord Developer Portal</div></div>
               <input class="settings-input" id="set-discord-token" type="password" placeholder="Bot token" style="width:180px"/>
             </div>
+            <div class="settings-row" id="discord-user-row" style="margin-top:14px;gap:14px;align-items:flex-start;display:none;">
+              <div><div class="settings-label">Your Discord User ID</div><div class="settings-sub" id="discord-user-status">Used once to open the DM</div></div>
+              <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end;max-width:260px;">
+                <input class="settings-input" id="set-discord-user-id" type="text" placeholder="Your user ID" style="width:180px;max-width:100%;"/>
+                <button type="button" onclick="createDiscordDmChannel()" title="Create a DM channel with the configured bot" style="background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.45);border-radius:10px;padding:7px 10px;color:#a5b4fc;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Create DM</button>
+              </div>
+            </div>
             <div class="settings-row" style="margin-top:14px;gap:14px;align-items:flex-start;">
-              <div><div class="settings-label">Channel ID</div><div class="settings-sub" id="discord-channel-status">Right-click channel → Copy ID</div></div>
+              <div><div class="settings-label" id="discord-channel-label">Channel ID</div><div class="settings-sub" id="discord-channel-status">Right-click channel → Copy ID</div></div>
               <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end;max-width:260px;">
                 <input class="settings-input" id="set-discord-channel" type="text" placeholder="Channel snowflake ID" style="width:180px;max-width:100%;"/>
-                <button type="button" onclick="clearDiscordChannelId()" title="Clear saved Discord channel ID immediately" style="background:rgba(239,68,68,0.08);border:1px solid rgba(248,113,113,0.35);border-radius:10px;padding:7px 10px;color:#fca5a5;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Clear saved ID</button>
+                <button type="button" onclick="clearDiscordChannelId()" title="Clear saved Discord destination ID immediately" style="background:rgba(239,68,68,0.08);border:1px solid rgba(248,113,113,0.35);border-radius:10px;padding:7px 10px;color:#fca5a5;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">Clear saved ID</button>
               </div>
             </div>
             <div class="settings-row" style="margin-top:14px">
@@ -2748,7 +2909,7 @@
           <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Kiosk mode</div><div class="settings-sub">Escape or open a terminal on this device</div></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-              <button class="sys-btn" onclick="exitKiosk()">⛶ Exit Fullscreen</button>
+              <button class="sys-btn" onclick="exitKiosk()" title="Close the local kiosk browser">⛶ Exit Kiosk</button>
               <button class="sys-btn" onclick="openTerminal()">⌨ Open Terminal</button>
             </div>
           </div>
@@ -2821,7 +2982,7 @@
         <div class="settings-section">
           <h3>Data &amp; Backup</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Export all settings</div><div class="settings-sub">Download settings, history &amp; tasks as JSON</div></div>
+            <div><div class="settings-label">Export all settings</div><div class="settings-sub">Download settings, history &amp; tasks. Safe export redacts saved credentials.</div></div>
             <button class="clear-history-btn" style="border-color:rgba(var(--t-rgb1),0.3);color:var(--t-hex1);" onclick="exportBackup()">⬇ Export</button>
           </div>
           <div class="settings-row" style="margin-top:14px;">
@@ -2967,7 +3128,6 @@
   </div>
   <button id="hist-btn" onclick="toggleHistory()" title="Chat history" aria-label="Open chat history" aria-expanded="false" aria-controls="history-panel"><i class="ti ti-message-circle"></i></button>
   <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-overlay"><i class="ti ti-settings"></i> Settings</button>
-  <span id="restart-btn"><i class="ti ti-refresh"></i> REBOOT</span>
 </div>
 
 <div id="news-ticker">
@@ -3180,11 +3340,21 @@
         </div>
       </div>
       <div id="quick-btns">
-        <button class="quick-btn" onclick="quickSend('Good morning ' + (S.aiName||'Caroline') + '! Give me a quick brief - weather, anything I should know today.')"><i class="ti ti-sun"></i> Brief me</button>
+        <button class="quick-btn" onclick="quickDailyBrief()"><i class="ti ti-sun"></i> Brief me</button>
         <button class="quick-btn" onclick="quickSend('What do I have on today? Give me a heads up on my schedule.')"><i class="ti ti-calendar"></i> Schedule</button>
+        <button class="quick-btn" onclick="quickRecap('day')"><i class="ti ti-notes"></i> Recap</button>
         <button class="quick-btn" onclick="quickSend('Give me a quick motivation boost and one focus tip for right now.')"><i class="ti ti-bolt"></i> Motivate</button>
         <button class="quick-btn" onclick="toggleTodo(); playBeep(700);"><i class="ti ti-checkbox"></i> Tasks</button>
+        <button class="quick-btn" onclick="showCommandGuide()"><i class="ti ti-terminal-2"></i> Examples</button>
         <button class="quick-btn" id="feedback-quick-btn" onclick="startFeedbackCapture()" style="display:none;"><i class="ti ti-message-report"></i> Feedback</button>
+      </div>
+      <div id="mobile-glance" class="mobile-glance hidden" aria-live="polite">
+        <div>
+          <div class="mobile-glance-label">Next up</div>
+          <div class="mobile-glance-title" id="mobile-glance-title">Calendar not connected</div>
+          <div class="mobile-glance-detail" id="mobile-glance-detail">Open Settings to connect</div>
+        </div>
+        <button class="mobile-glance-refresh" type="button" onclick="refreshCalendarWidget()" title="Refresh calendar" aria-label="Refresh calendar"><i class="ti ti-refresh"></i></button>
       </div>
     </div>
   </div>
@@ -3223,6 +3393,7 @@
           <div style="min-width:0;flex:1;">
             <div id="np-track" style="font-size:10px;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Not playing</div>
             <div id="np-artist" style="font-size:11px;color:rgba(226,232,240,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;"></div>
+            <div id="np-device" style="font-size:9px;color:rgba(var(--t-rgb1),0.55);font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;"></div>
           </div>
         </div>
         <div id="np-progress" style="display:none;width:100%;height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:5px;"><div id="np-fill" style="height:100%;background:#1db954;width:0%;transition:width 1s linear;"></div></div>
@@ -3253,11 +3424,15 @@
           <div class="rail-title"><span class="idx">10</span><span>SMART</span></div>
           <div class="rail-meta">HUE</div>
         </div>
+        <div class="smart-power-row">
+          <button class="smart-btn smart-power-btn" data-hue-power="on" onclick="setSmartHuePower(true,this)" title="Turn Hue lights on"><i class="ti ti-bulb"></i><span>On</span></button>
+          <button class="smart-btn smart-power-btn" data-hue-power="off" onclick="setSmartHuePower(false,this)" title="Turn Hue lights off"><i class="ti ti-bulb-off"></i><span>Off</span></button>
+        </div>
         <div id="smart-grid">
-          <button class="smart-btn active" data-hue-mode="relax" onclick="setSmartHueScene('office','relax',this)" title="Warm office lighting"><i class="ti ti-bulb"></i><span>Office</span></button>
-          <button class="smart-btn" data-hue-mode="focus" onclick="setSmartHueScene('kitchen','focus',this)" title="Bright kitchen lighting"><i class="ti ti-tools-kitchen-2"></i><span>Kitchen</span></button>
-          <button class="smart-btn" data-hue-mode="night" onclick="setSmartHueScene('bedroom','night',this)" title="Low bedroom lighting"><i class="ti ti-bed"></i><span>Bedroom</span></button>
-          <button class="smart-btn" data-hue-mode="party" onclick="setSmartHueScene('patio','party',this)" title="Patio color loop"><i class="ti ti-leaf"></i><span>Patio</span></button>
+          <button class="smart-btn active" data-hue-mode="relax" onclick="setSmartHueScene('morning','relax',this)" title="Warm morning lighting"><i class="ti ti-sun"></i><span>Morning</span></button>
+          <button class="smart-btn" data-hue-mode="focus" onclick="setSmartHueScene('study','focus',this)" title="Bright study lighting"><i class="ti ti-book"></i><span>Study</span></button>
+          <button class="smart-btn" data-hue-mode="night" onclick="setSmartHueScene('night','night',this)" title="Low night lighting"><i class="ti ti-moon"></i><span>Night</span></button>
+          <button class="smart-btn" data-hue-mode="party" onclick="setSmartHueScene('party','party',this)" title="Color-loop party lighting"><i class="ti ti-sparkles"></i><span>Party</span></button>
         </div>
         <div class="smart-status" id="smart-status">Configure Hue in Settings to send scenes.</div>
       </div>
@@ -3337,21 +3512,28 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordToken: '', discordChannelId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
 
-function isPiPerformanceMode() {
+function isResourceSaverMode() {
+  if (S.resourceSaverMode === true || S.performanceMode === true) return true;
+  if (S.resourceSaverMode === false || S.performanceMode === false) return false;
   const host = String(S.hostDeviceType || S.hardwareProfile || '').toLowerCase();
   const ua = String(navigator.userAgent || '').toLowerCase();
-  return /raspberry|\bpi\b/.test(host) || /raspberry/.test(ua);
+  return /raspberry|\bpi\b|steam|steamos|steam deck/.test(host) || /raspberry|steamos|steam deck/.test(ua);
+}
+function isPiPerformanceMode() {
+  return isResourceSaverMode();
 }
 function piPerfInterval(defaultMs, piMs) {
-  return isPiPerformanceMode() ? piMs : defaultMs;
+  return isResourceSaverMode() ? piMs : defaultMs;
 }
 function applyPiPerformanceMode() {
-  document.body.classList.toggle('pi-performance', isPiPerformanceMode());
+  const enabled = isResourceSaverMode();
+  document.body.classList.toggle('pi-performance', enabled);
+  document.body.classList.toggle('resource-saver', enabled);
 }
 
 function normalizeConfiguredNodeRedUrl(value) {
@@ -3482,6 +3664,7 @@ S.calendarId = normalizeCalendarIdInput(S.calendarId);
 if (!Array.isArray(S.calendarIds) || !S.calendarIds.length) { S.calendarIds = S.calendarId ? [S.calendarId] : []; }
 if (!S.defaultWriteCalendarId && S.calendarId) S.defaultWriteCalendarId = S.calendarId;
 S.nodeRedUrl = normalizeConfiguredNodeRedUrl(S.nodeRedUrl);
+S.discordMode = normalizeDiscordMode(S.discordMode);
 handleSpotifyCallback(); // handle ?code= redirect from Spotify OAuth
 localStorage.setItem('caro_settings', JSON.stringify(S));
 
@@ -3515,6 +3698,7 @@ function clearBrowserInstallState(reason) {
     'caroline_personality',
     'caroline_personality_prompt',
     'caroline_user_profile_prompt',
+    'caroline_display_preset_touched',
     'spotify_token',
     'spotify_refresh_token',
     'spotify_token_expires'
@@ -3569,6 +3753,7 @@ function mergeServerSettings(d, options = {}) {
   });
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
+  S.discordMode = normalizeDiscordMode(S.discordMode);
   if (typeof normalizeAvatarIndex === 'function') S.avatar = normalizeAvatarIndex(S.avatar);
   if (typeof syncSelectedAvatarId === 'function') syncSelectedAvatarId(S.avatar);
   S.meetingReminderMinutes = normalizeMeetingReminderMinutes(S.meetingReminderMinutes);
@@ -3582,6 +3767,7 @@ function mergeServerSettings(d, options = {}) {
     S.featuresUpdatedAt = localFeaturesUpdatedAt;
   }
   localStorage.setItem('caro_settings', JSON.stringify(S));
+  if (typeof applyUiReadability === 'function') applyUiReadability();
   if (shouldKeepLocalFeatures && typeof postSettingsToNodeRed === 'function') {
     setTimeout(() => {
       postSettingsToNodeRed({ features: S.features, featuresUpdatedAt: S.featuresUpdatedAt }, 5000).catch(e => console.warn('[Caroline] local feature state repair failed:', e));
@@ -3665,13 +3851,17 @@ function renderIntegrationStatus() {
   if (spotifyBtn) spotifyBtn.textContent = (spotifyBrowserConnected || spotifyPiConnected) ? '🔄 Reconnect' : '🔌 Connect Spotify';
 
   const discordTokenSaved = !!S.discordToken || !!S.discordTokenConfigured || !!integrationHealth.discord?.configured;
+  const discordMode = normalizeDiscordMode(S.discordMode || integrationHealth.discord?.mode);
   const discordChannelValue = String(S.discordChannelId || '').trim();
   const discordChannelSaved = !!discordChannelValue && looksLikeDiscordChannelId(discordChannelValue);
   const discordChannelLooksWrong = !!discordChannelValue && !discordChannelSaved;
   const discordEnabled = parseSettingBool(S.discordEnabled, integrationHealth.discord ? parseSettingBool(integrationHealth.discord.enabled) : false);
   setSettingsSubStatus('discord-enabled-status', discordEnabled ? (discordTokenSaved && discordChannelSaved ? 'Enabled and configured' : 'Enabled, missing setup') : 'Disabled', discordEnabled ? ((discordTokenSaved && discordChannelSaved) ? 'ok' : 'warn') : 'neutral');
+  setSettingsSubStatus('discord-mode-status', discordMode === 'dm' ? 'Private DM with the bot' : 'Server channel relay', 'neutral');
   setSettingsSubStatus('discord-token-status', discordTokenSaved ? 'Saved on device' : 'Not configured', discordTokenSaved ? 'ok' : 'neutral');
-  setSettingsSubStatus('discord-channel-status', discordChannelLooksWrong ? 'Looks wrong - clear it and paste the numeric channel ID' : (discordChannelSaved ? 'Saved on device: ' + maskDiscordChannelId(discordChannelValue) : 'Not configured'), discordChannelLooksWrong ? 'warn' : (discordChannelSaved ? 'ok' : 'neutral'));
+  const discordDestLabel = discordMode === 'dm' ? 'DM channel' : 'Channel';
+  setSettingsSubStatus('discord-channel-status', discordChannelLooksWrong ? 'Looks wrong - clear it and paste the numeric ID' : (discordChannelSaved ? discordDestLabel + ' saved: ' + maskDiscordChannelId(discordChannelValue) : (discordMode === 'dm' ? 'Create DM to fill this automatically' : 'Not configured')), discordChannelLooksWrong ? 'warn' : (discordChannelSaved ? 'ok' : 'neutral'));
+  setSettingsSubStatus('discord-user-status', S.discordUserId ? 'Saved on device: ' + maskDiscordChannelId(S.discordUserId) : 'Only needed for DM mode', S.discordUserId ? 'ok' : 'neutral');
 
   const googleConnected = integrationHealth.google ? parseSettingBool(integrationHealth.google.connected) : parseSettingBool(S.googleConnected);
   const googleClientSaved = !!S.googleClientId || !!integrationHealth.google?.clientConfigured;
@@ -3754,7 +3944,10 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-calendar-id', S.calendarId || 'primary', { allowBlank });
   setInputValue('set-sheet-id', S.sheetId || '', { allowBlank });
   setInputValue('set-discord-token', S.discordToken || '', { allowBlank });
+  const discordModeEl = document.getElementById('set-discord-mode');
+  if (discordModeEl) discordModeEl.value = normalizeDiscordMode(S.discordMode);
   setInputValue('set-discord-channel', S.discordChannelId || '', { allowBlank });
+  setInputValue('set-discord-user-id', S.discordUserId || '', { allowBlank });
   setInputValue('set-tides-station', S.tidesStation || '', { allowBlank });
   setInputValue('set-google-client-id', S.googleClientId || '', { allowBlank });
   setInputValue('set-google-client-secret', S.googleClientSecret || '', { allowBlank });
@@ -3764,6 +3957,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-wake-phrases', S.wakePhrases || DEFAULTS.wakePhrases, { allowBlank });
   const avatarEl = document.getElementById('set-avatar');
   if (avatarEl) avatarEl.value = String(normalizeAvatarIndex(S.avatar));
+  syncDisplayControls();
   updateAiNameHints();
   onProviderChange(provider);
   if (provider === 'ollama') setTimeout(fetchOllamaModels, 100);
@@ -3774,6 +3968,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   if (tempUnitEl) tempUnitEl.value = S.temperatureUnit || 'fahrenheit';
   const discordEnabledEl = document.getElementById('set-discord-enabled');
   if (discordEnabledEl) discordEnabledEl.checked = parseSettingBool(S.discordEnabled);
+  updateDiscordModeFields();
   const autoThemeEl = document.getElementById('set-auto-theme');
   if (autoThemeEl) autoThemeEl.checked = parseSettingBool(S.autoTheme);
   const wakeEl = document.getElementById('set-wake-word-enabled');
@@ -3821,6 +4016,7 @@ async function syncSettingsFromServer() {
     const installChanged = !!(d.installId && localInstallId && localInstallId !== d.installId);
     mergeServerSettings(d);
     applyPiPerformanceMode();
+    if (typeof setMediaFeatureActive === 'function') setMediaFeatureActive(videoFeatureEnabled());
     serverSettingsLoaded = true;
     if (d.setupComplete === true || (d.setupComplete === undefined && hasOnboardingMemory(d))) {
       markOnboardingCompleteLocally();
@@ -3876,11 +4072,33 @@ function renderSettingsLog() {
   const el = document.getElementById('settings-log');
   const ct = document.getElementById('log-count');
   if (!el) return;
-  if (!_clog.length) { el.innerHTML = '<span style="color:rgba(226,232,240,0.25);font-size:11px;">No events yet</span>'; if (ct) ct.textContent = ''; return; }
+  if (!_clog.length) {
+    const empty = document.createElement('span');
+    empty.style.color = 'rgba(226,232,240,0.25)';
+    empty.style.fontSize = '11px';
+    empty.textContent = 'No events yet';
+    el.replaceChildren(empty);
+    if (ct) ct.textContent = '';
+    return;
+  }
   if (ct) ct.textContent = '(' + _clog.length + ')';
-  el.innerHTML = _clog.slice().reverse().map(e =>
-    `<div class="log-entry"><span class="log-ts">${e.ts}</span><span class="log-type-${e.type}">[${e.type.toUpperCase()}]</span><span>${e.msg}</span></div>`
-  ).join('');
+  const rows = _clog.slice().reverse().map(e => {
+    const row = document.createElement('div');
+    const rawType = String(e.type || 'info');
+    const safeType = rawType.replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'info';
+    const ts = document.createElement('span');
+    const type = document.createElement('span');
+    const text = document.createElement('span');
+    row.className = 'log-entry';
+    ts.className = 'log-ts';
+    ts.textContent = String(e.ts || '');
+    type.className = 'log-type-' + safeType;
+    type.textContent = '[' + rawType.toUpperCase() + ']';
+    text.textContent = String(e.msg || '');
+    row.append(ts, type, text);
+    return row;
+  });
+  el.replaceChildren(...rows);
 }
 
 async function refreshBuildInfo(options = {}) {
@@ -4410,13 +4628,27 @@ function renderUsageStats() {
 
 // ── BACKUP EXPORT / IMPORT ────────────────────
 function exportBackup() {
-  const exportedSettings = Object.assign({}, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
+  const BACKUP_SECRET_KEYS = ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret'];
+  const sourceSettings = JSON.parse(localStorage.getItem('caro_settings') || '{}');
+  const exportedSettings = Object.assign({}, sourceSettings);
+  const configuredSecrets = BACKUP_SECRET_KEYS.filter(k => String(exportedSettings[k] || '').trim());
+  const includeSecrets = configuredSecrets.length
+    ? confirm('Include saved API keys and OAuth client secrets in this backup? Choose OK only for a private restore backup. Choose Cancel for a safer redacted backup.')
+    : false;
+  const redactedSecrets = [];
+  if (!includeSecrets) {
+    BACKUP_SECRET_KEYS.forEach(k => {
+      if (String(exportedSettings[k] || '').trim()) redactedSecrets.push(k);
+      delete exportedSettings[k];
+    });
+  }
   if (exportedSettings.features) exportedSettings.features = normalizeFeatureState(exportedSettings.features, { repairAllOff: false });
   normalizeSettingsBooleans(exportedSettings);
   const data = {
     version: VERSION,
     build: buildInfo,
     exported: new Date().toISOString(),
+    redactedSecrets,
     settings: exportedSettings,
     chatLog: JSON.parse(localStorage.getItem('caro_log') || '[]'),
     todos: JSON.parse(localStorage.getItem('caro_todos') || '[]'),
@@ -4432,7 +4664,7 @@ function exportBackup() {
   a.href = URL.createObjectURL(blob);
   a.download = 'caroline-backup-' + new Date().toISOString().slice(0, 10) + '.json';
   a.click(); URL.revokeObjectURL(a.href);
-  clog('info', 'Backup exported');
+  clog('info', includeSecrets ? 'Backup exported with saved credentials' : 'Backup exported with saved credentials redacted');
 }
 function importBackup(input) {
   const file = input.files[0]; if (!file) return;
@@ -4875,9 +5107,16 @@ window.addEventListener('message', async (event) => {
   const type = event && event.data && event.data.type;
   if (type === 'caroline_spotify_code') {
     const code = String(event.data.code || '').replace(/[^A-Za-z0-9._~+/-]/g, '');
+    const state = String(event.data.state || '').replace(/[^A-Za-z0-9._~-]/g, '');
     if (!code) return;
     try {
-      await fetch(getNodeRedUrl() + '/spotify/callback?' + new URLSearchParams({ code }).toString(), { signal: AbortSignal.timeout(10000) });
+      const resp = await fetch(getNodeRedUrl() + '/spotify/callback?' + new URLSearchParams({ code, state }).toString(), { signal: AbortSignal.timeout(10000) });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      setTimeout(() => {
+        refreshSpotifyToken()
+          .then(ok => { if (ok) fetchSpotifyNowPlaying(); })
+          .finally(() => refreshIntegrationHealth());
+      }, 900);
     } catch(e) { console.warn('[Caroline] Spotify relay forward failed:', e); }
     return;
   }
@@ -5155,6 +5394,7 @@ function toggleSettings() {
     document.getElementById('set-avatar').value = S.avatar;
     const fontSel = document.getElementById('set-font');
     if (fontSel) fontSel.value = normalizeUiFont(S.uiFont);
+    applyUiReadability();
     document.getElementById('set-zip').value = S.zipcode;
     document.getElementById('set-idle').value = S.idleTimeout;
     if (S.defaultChannel >= MEDIA_CHANNELS.length) S.defaultChannel = DEFAULTS.defaultChannel;
@@ -5347,6 +5587,7 @@ function toggleDiscordFields(enabled) {
   S.discordEnabled = parseSettingBool(enabled);
   const el = document.getElementById('discord-fields');
   if (el) el.classList.toggle('open', enabled);
+  updateDiscordModeFields();
   renderIntegrationStatus();
 }
 
@@ -5361,6 +5602,15 @@ function looksLikeDiscordChannelId(channelId) {
   return /^\d{16,22}$/.test(String(channelId || '').trim());
 }
 
+function normalizeDiscordMode(value) {
+  return String(value || 'channel').toLowerCase() === 'dm' ? 'dm' : 'channel';
+}
+
+function currentDiscordMode() {
+  const el = document.getElementById('set-discord-mode');
+  return normalizeDiscordMode(el ? el.value : S.discordMode);
+}
+
 function looksLikeApiKeyValue(value) {
   const v = String(value || '').trim();
   if (!v) return false;
@@ -5372,6 +5622,19 @@ function maskDiscordChannelId(channelId) {
   const v = String(channelId || '').trim();
   if (!v) return '';
   return v.length > 8 ? '...' + v.slice(-4) : v;
+}
+
+function updateDiscordModeFields() {
+  const mode = currentDiscordMode();
+  S.discordMode = mode;
+  const userRow = document.getElementById('discord-user-row');
+  const label = document.getElementById('discord-channel-label');
+  const input = document.getElementById('set-discord-channel');
+  if (userRow) userRow.style.display = mode === 'dm' ? '' : 'none';
+  if (label) label.textContent = mode === 'dm' ? 'DM Channel ID' : 'Channel ID';
+  if (input) input.placeholder = mode === 'dm' ? 'Created automatically' : 'Channel snowflake ID';
+  setSettingsSubStatus('discord-mode-status', mode === 'dm' ? 'Private DM with the bot' : 'Server channel relay', 'neutral');
+  renderIntegrationStatus();
 }
 
 async function clearDiscordChannelId() {
@@ -5390,6 +5653,49 @@ async function clearDiscordChannelId() {
   }
 }
 
+async function createDiscordDmChannel() {
+  const enabled = !!document.getElementById('set-discord-enabled')?.checked;
+  const token = (document.getElementById('set-discord-token')?.value || S.discordToken || '').trim();
+  const userId = (document.getElementById('set-discord-user-id')?.value || S.discordUserId || '').trim();
+  if (!enabled) { setDiscordTestStatus('Enable Discord first', true); return ''; }
+  if (!token) { setDiscordTestStatus('Paste the bot token first', true); return ''; }
+  if (!looksLikeDiscordBotToken(token)) { setDiscordTestStatus('That looks like an ID, not a bot token', true); return ''; }
+  if (!looksLikeDiscordChannelId(userId)) {
+    setDiscordTestStatus('User ID should be a numeric Discord snowflake', true);
+    document.getElementById('set-discord-user-id')?.focus();
+    return '';
+  }
+  setDiscordTestStatus('Opening DM...');
+  try {
+    await postSettingsToNodeRed({ discordEnabled: enabled, discordMode: 'dm', discordToken: token, discordUserId: userId }, NODE_RED_TIMEOUT_MS);
+    const r = await fetchJsonWithTimeout(httpBase() + '/admin/discord-dm?t=' + Date.now(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, discordUserId: userId }),
+      timeoutMs: NODE_RED_TIMEOUT_MS,
+      cache: 'no-store'
+    }, 'Discord DM setup');
+    const data = await r.json();
+    if (!r.ok || !data.ok || !looksLikeDiscordChannelId(data.channelId)) {
+      throw new Error(data.error || 'Discord did not return a DM channel');
+    }
+    S.discordEnabled = true;
+    S.discordMode = 'dm';
+    S.discordToken = token;
+    S.discordUserId = userId;
+    S.discordChannelId = data.channelId;
+    setInputValue('set-discord-channel', data.channelId, { allowBlank: true });
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    updateDiscordModeFields();
+    renderIntegrationStatus();
+    setDiscordTestStatus('DM ready. Test Discord when you are ready.');
+    return data.channelId;
+  } catch (err) {
+    setDiscordTestStatus(err.message || 'Could not open Discord DM', true);
+    return '';
+  }
+}
+
 function setDiscordTestStatus(text, isError = false) {
   const el = document.getElementById('discord-test-status');
   if (!el) return;
@@ -5400,9 +5706,14 @@ function setDiscordTestStatus(text, isError = false) {
 async function testDiscordConnection() {
   const enabled = !!document.getElementById('set-discord-enabled')?.checked;
   const token = (document.getElementById('set-discord-token')?.value || '').trim();
-  const channelId = (document.getElementById('set-discord-channel')?.value || S.discordChannelId || '').trim();
+  const mode = currentDiscordMode();
+  let channelId = (document.getElementById('set-discord-channel')?.value || S.discordChannelId || '').trim();
   if (!enabled) { setDiscordTestStatus('Enable Discord first', true); return; }
-  if (!channelId) { setDiscordTestStatus('Paste the channel ID first', true); return; }
+  if (mode === 'dm' && !channelId) {
+    channelId = await createDiscordDmChannel();
+    if (!channelId) return;
+  }
+  if (!channelId) { setDiscordTestStatus(mode === 'dm' ? 'Create the DM first' : 'Paste the channel ID first', true); return; }
   if (looksLikeApiKeyValue(channelId)) {
     setDiscordTestStatus('That looks like an API key, not a channel ID', true);
     document.getElementById('set-discord-channel')?.focus();
@@ -5419,11 +5730,15 @@ async function testDiscordConnection() {
   }
   setDiscordTestStatus('Testing...');
   try {
-    const payload = { discordEnabled: enabled, discordChannelId: channelId };
+    const payload = { discordEnabled: enabled, discordMode: mode, discordChannelId: channelId };
+    const userId = (document.getElementById('set-discord-user-id')?.value || S.discordUserId || '').trim();
+    if (userId) payload.discordUserId = userId;
     if (token) payload.discordToken = token;
     await postSettingsToNodeRed(payload, NODE_RED_TIMEOUT_MS);
     S.discordEnabled = enabled;
+    S.discordMode = mode;
     S.discordChannelId = channelId;
+    if (userId) S.discordUserId = userId;
     if (token) S.discordToken = token;
     localStorage.setItem('caro_settings', JSON.stringify(S));
     renderIntegrationStatus();
@@ -5474,7 +5789,25 @@ function onProviderChange(provider) {
     orKeyRow.style.display = '';
     olRows.style.display   = 'none';
   }
+  renderAiModeCard(provider);
   updateAiConfigIndicator(provider);
+}
+
+function renderAiModeCard(provider) {
+  const selected = provider || S.aiProvider || 'openrouter';
+  const kicker = document.getElementById('ai-mode-kicker');
+  const title = document.getElementById('ai-mode-title');
+  const copy = document.getElementById('ai-mode-copy');
+  if (!kicker || !title || !copy) return;
+  if (selected === 'ollama') {
+    kicker.textContent = 'Local mode';
+    title.textContent = 'Ollama: private on-device AI';
+    copy.textContent = 'Best when you want free local replies. Use the smallest validated model that still sounds coherent on this device.';
+  } else {
+    kicker.textContent = 'Cloud mode';
+    title.textContent = 'OpenRouter: faster hosted AI';
+    copy.textContent = 'Best for polished conversation, calendar parsing, and lower load on Pi or Steam Deck.';
+  }
 }
 
 function _shortModelName(provider, model) {
@@ -5503,8 +5836,12 @@ function updateAiConfigIndicator(provider) {
   const mPill = document.getElementById('model-pill');
   if (mPill) {
     const model = selected === 'ollama' ? S.ollamaModel : S.aiModel;
-    mPill.textContent = _shortModelName(selected, model);
+    mPill.textContent = (selected === 'ollama' ? 'LOCAL ' : 'CLOUD ') + _shortModelName(selected, model);
+    mPill.title = selected === 'ollama'
+      ? 'Local Ollama model: private and hardware-dependent'
+      : 'Cloud OpenRouter model: faster hosted AI';
   }
+  renderAiModeCard(selected);
 }
 
 const OLLAMA_RECOMMENDED_MODELS = [
@@ -6769,6 +7106,13 @@ async function saveSettings() {
   const selectedAvatarId = syncSelectedAvatarId(S.avatar);
   const nextTheme = Number(pendingSwatch);
   S.theme = Number.isInteger(nextTheme) && nextTheme >= 0 && nextTheme < THEME_COUNT ? nextTheme : DEFAULTS.theme;
+  const fontEl = document.getElementById('set-font');
+  const scaleEl = document.getElementById('set-ui-scale');
+  const densityEl = document.getElementById('set-ui-density');
+  if (fontEl) S.uiFont = normalizeUiFont(fontEl.value);
+  if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
+  if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
+  if (displayPresetTouchedThisSession) localStorage.setItem('caroline_display_preset_touched', 'true');
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
   S.autoTheme = document.getElementById('set-auto-theme').checked;
@@ -6852,6 +7196,16 @@ async function saveSettings() {
   }
   if (discordTokenVal) S.discordToken = discordTokenVal;
   else if (!S.discordTokenConfigured) delete S.discordToken;
+  S.discordMode = currentDiscordMode();
+  const discordUserVal = document.getElementById('set-discord-user-id')?.value.trim() || '';
+  if (discordUserVal && !looksLikeDiscordChannelId(discordUserVal)) {
+    setDiscordTestStatus('Discord User ID should be numeric', true);
+    if (fb) { fb.textContent = 'Discord User ID must be the numeric user ID.'; fb.classList.add('show', 'error'); }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
+    document.getElementById('set-discord-user-id')?.focus();
+    return;
+  }
+  S.discordUserId = discordUserVal;
   const discordChannelVal = document.getElementById('set-discord-channel').value.trim();
   if (discordChannelVal && looksLikeApiKeyValue(discordChannelVal)) {
     setDiscordTestStatus('That looks like an API key, not a channel ID', true);
@@ -6921,7 +7275,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordToken: S.discordToken, discordChannelId: S.discordChannelId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -6969,8 +7323,7 @@ async function saveSettings() {
     nrSaveError = e.message || String(e);
   }
 
-  const fontEl = document.getElementById('set-font');
-  if (fontEl) { S.uiFont = fontEl.value; applyFont(S.uiFont); }
+  applyUiReadability();
   applyTheme(S.theme);
   applyAvatar(S.avatar);
   applyFeatures();
@@ -7191,6 +7544,112 @@ function applyFont(fontName) {
   if (sel) sel.value = f;
 }
 
+const UI_SCALE_VALUES = ['normal', 'large', 'xlarge', 'jumbo'];
+const UI_DENSITY_VALUES = ['compact', 'comfortable', 'relaxed'];
+const DISPLAY_PRESETS = {
+  desk: { uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
+  pi: { uiFont: 'Noto Sans', uiScale: 'xlarge', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
+  steam: { uiFont: 'Noto Sans', uiScale: 'xlarge', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
+  ubuntu: { uiFont: 'Open Sans', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
+  couch: { uiFont: 'Roboto', uiScale: 'xlarge', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true },
+  wall: { uiFont: 'Noto Sans', uiScale: 'jumbo', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true },
+  compact: { uiFont: 'Inter', uiScale: 'normal', uiDensity: 'compact', highContrastText: true, reduceMonoLabels: false }
+};
+let displayPresetTouchedThisSession = false;
+function normalizeUiScale(value) {
+  const v = String(value || '').trim().toLowerCase();
+  return UI_SCALE_VALUES.includes(v) ? v : 'large';
+}
+function normalizeUiDensity(value) {
+  const v = String(value || '').trim().toLowerCase();
+  return UI_DENSITY_VALUES.includes(v) ? v : 'comfortable';
+}
+function isSteamDisplayHost() {
+  const host = String(S.hostDeviceType || S.hardwareProfile || '').toLowerCase();
+  const ua = String(navigator.userAgent || '').toLowerCase();
+  return /steam|steamos|steam deck/.test(host) || /steamos|steam deck/.test(ua);
+}
+function isPiDisplayHost() {
+  const host = String(S.hostDeviceType || S.hardwareProfile || '').toLowerCase();
+  const ua = String(navigator.userAgent || '').toLowerCase();
+  return /raspberry|\bpi\b/.test(host) || /raspberry/.test(ua);
+}
+function isUbuntuDisplayHost() {
+  const host = String(S.hostDeviceType || S.hardwareProfile || '').toLowerCase();
+  const ua = String(navigator.userAgent || '').toLowerCase();
+  return /ubuntu|pop!_?os|pop os|linux/.test(host) || /ubuntu/.test(ua);
+}
+function displayPresetTouched() {
+  return displayPresetTouchedThisSession || localStorage.getItem('caroline_display_preset_touched') === 'true';
+}
+function markDisplayPresetTouched() {
+  displayPresetTouchedThisSession = true;
+}
+function defaultDisplayPresetId() {
+  if (isSteamDisplayHost()) return 'steam';
+  if (isPiDisplayHost()) return 'pi';
+  if (isUbuntuDisplayHost()) return 'ubuntu';
+  return 'desk';
+}
+function setSelectValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = String(value || '');
+}
+function displayPresetForSettings() {
+  const font = normalizeUiFont(S.uiFont);
+  const scale = normalizeUiScale(S.uiScale);
+  const density = normalizeUiDensity(S.uiDensity);
+  const match = Object.entries(DISPLAY_PRESETS).find(([, preset]) =>
+    normalizeUiFont(preset.uiFont) === font &&
+    normalizeUiScale(preset.uiScale) === scale &&
+    normalizeUiDensity(preset.uiDensity) === density
+  );
+  return match ? match[0] : 'custom';
+}
+function syncDisplayControls() {
+  setSelectValue('set-font', normalizeUiFont(S.uiFont));
+  setSelectValue('set-ui-scale', normalizeUiScale(S.uiScale));
+  setSelectValue('set-ui-density', normalizeUiDensity(S.uiDensity));
+  const presetEl = document.getElementById('set-display-preset');
+  if (presetEl) {
+    const id = displayPresetForSettings();
+    presetEl.value = id;
+  }
+}
+function applyUiReadability() {
+  if (!displayPresetTouched()) {
+    Object.assign(S, DISPLAY_PRESETS[defaultDisplayPresetId()]);
+  }
+  S.uiFont = normalizeUiFont(S.uiFont);
+  S.uiScale = normalizeUiScale(S.uiScale);
+  S.uiDensity = normalizeUiDensity(S.uiDensity);
+  document.body.dataset.uiScale = S.uiScale;
+  document.body.dataset.uiDensity = S.uiDensity;
+  applyFont(S.uiFont);
+  syncDisplayControls();
+}
+function applyDisplayControls() {
+  const fontEl = document.getElementById('set-font');
+  const scaleEl = document.getElementById('set-ui-scale');
+  const densityEl = document.getElementById('set-ui-density');
+  if (fontEl) S.uiFont = normalizeUiFont(fontEl.value);
+  if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
+  if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
+  markDisplayPresetTouched();
+  applyUiReadability();
+}
+function applyDisplayPreset(presetId) {
+  if (presetId === 'custom') {
+    markDisplayPresetTouched();
+    syncDisplayControls();
+    return;
+  }
+  const preset = DISPLAY_PRESETS[presetId] || DISPLAY_PRESETS[defaultDisplayPresetId()];
+  Object.assign(S, preset);
+  markDisplayPresetTouched();
+  applyUiReadability();
+}
+
 function applyTheme(idx) {
   const themeIdx = Number.isFinite(Number(idx)) ? Number(idx) : 0;
   const t = THEME_PRESETS[themeIdx] || THEME_PRESETS[0];
@@ -7301,6 +7760,7 @@ let mediaChannelIndex = 0;
 let mediaMuted = true;
 let mediaHls = null;
 let mediaChannelLoaded = false;
+let mediaStartedByUser = false;
 
 function mediaIconHtml(ch) {
   const iconClass = ch && ch.iconClass ? String(ch.iconClass) : 'ti ti-device-tv';
@@ -7341,13 +7801,39 @@ function videoFeatureEnabled() {
 
 function setMediaFeatureActive(enabled) {
   if (!enabled) {
+    mediaStartedByUser = false;
     mediaChannelLoaded = false;
     stopMediaStream();
+    return;
+  }
+  if (isResourceSaverMode() && !mediaStartedByUser) {
+    mediaChannelLoaded = false;
+    showMediaStandby(MEDIA_CHANNELS[mediaChannelIndex] || MEDIA_CHANNELS[DEFAULTS.defaultChannel] || MEDIA_CHANNELS[0]);
     return;
   }
   if (!mediaChannelLoaded) {
     loadMediaChannel(Number.isFinite(Number(S.defaultChannel)) ? S.defaultChannel : DEFAULTS.defaultChannel);
   }
+}
+
+function showMediaStandby(ch) {
+  stopMediaStream();
+  const channel = ch || MEDIA_CHANNELS[0] || {};
+  const label = document.getElementById('media-channel-label');
+  const fallback = document.getElementById('media-fallback-card');
+  const muteBtn = document.getElementById('media-mute-btn');
+  if (label) {
+    label.innerHTML = mediaIconHtml(channel) + ' ' + escapeHtmlText(channel.name || 'Channel');
+    label.title = ((channel.name || 'Channel') + ' - ' + (channel.genre || 'Standby')).trim();
+  }
+  if (fallback) fallback.style.display = 'flex';
+  const title = document.getElementById('media-fallback-title');
+  const genre = document.getElementById('media-fallback-genre');
+  const icon = document.getElementById('media-fallback-icon');
+  if (icon) icon.innerHTML = mediaIconHtml(channel);
+  if (title) title.textContent = channel.name || 'Channel';
+  if (genre) genre.textContent = 'Standby - press retry to play';
+  if (muteBtn) muteBtn.style.display = 'none';
 }
 
 function showMediaFallback(ch) {
@@ -7359,7 +7845,7 @@ function showMediaFallback(ch) {
   document.getElementById('media-fallback-genre').textContent = 'Stream unavailable — retry';
 }
 
-function retryMediaChannel() { if (!videoFeatureEnabled()) return; loadMediaChannel(mediaChannelIndex); resetIdle(); }
+function retryMediaChannel() { if (!videoFeatureEnabled()) return; mediaStartedByUser = true; loadMediaChannel(mediaChannelIndex); resetIdle(); }
 
 function loadMediaChannel(idx) {
   mediaChannelLoaded = true;
@@ -7405,7 +7891,7 @@ function loadMediaChannel(idx) {
   }
 }
 
-function changeMediaChannel(dir) { if (!videoFeatureEnabled()) return; loadMediaChannel(mediaChannelIndex + dir); resetIdle(); }
+function changeMediaChannel(dir) { if (!videoFeatureEnabled()) return; mediaStartedByUser = true; loadMediaChannel(mediaChannelIndex + dir); resetIdle(); }
 
 function toggleMediaMute() {
   mediaMuted = !mediaMuted;
@@ -7433,7 +7919,7 @@ function addCustomChannel() {
   clog('info', 'Media channels are curated in the media panel settings.');
   showSettingsFeedback('Media channels are curated in settings');
 }
-function resetChannels() { localStorage.removeItem('caro_channels'); renderChannelList(); if (videoFeatureEnabled()) loadMediaChannel(DEFAULTS.defaultChannel); playBeep(900); }
+function resetChannels() { localStorage.removeItem('caro_channels'); renderChannelList(); if (videoFeatureEnabled()) { mediaStartedByUser = true; loadMediaChannel(DEFAULTS.defaultChannel); } playBeep(900); }
 
 document.addEventListener('DOMContentLoaded', () => { renderChannelList(); setMediaFeatureActive(videoFeatureEnabled()); });
 
@@ -7872,18 +8358,33 @@ function pollCarolineUpdateStatus(btn, originalText) {
 }
 
 // ── KIOSK SYSTEM CONTROLS ─────────────────────
-function exitKiosk(){
+function requestHostKioskExit(){
+  const url = httpBase() + '/admin/exit-kiosk';
+  try {
+    if (navigator.sendBeacon) {
+      const ok = navigator.sendBeacon(url, new Blob(['{}'], { type:'application/json' }));
+      if (ok) return Promise.resolve();
+    }
+  } catch(e) {}
+  return fetchJsonWithTimeout(url, { method:'POST', timeoutMs: NODE_RED_TIMEOUT_MS, keepalive:true }, 'Exit kiosk')
+    .then(r => { if(!r.ok) console.warn('[Caroline] exit-kiosk HTTP', r.status); });
+}
+
+async function exitKiosk(){
   if(!confirm('Exit kiosk? This will close the kiosk browser.')) return;
-  // Kiosk browsers on Wayland may not set fullscreenElement — try all APIs.
-  if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-  else if(document.mozCancelFullScreen) document.mozCancelFullScreen();
-  else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
-  // If none of the above apply (true kiosk mode), fall back to window.close()
-  // and post to Node-RED so it can kill the process at the OS level if needed
-  if(!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement){
-    window.close();
-    fetchJsonWithTimeout(httpBase()+'/admin/exit-kiosk',{method:'POST', timeoutMs: NODE_RED_TIMEOUT_MS}, 'Exit kiosk').catch(()=>{});
+  // True kiosk launchers, especially SteamOS Chromium --kiosk, ignore normal
+  // fullscreen APIs. Ask the host to close the kiosk browser first, then try
+  // browser-level fullscreen/window exits as a graceful fallback.
+  const exitRequest = requestHostKioskExit();
+  try {
+    if(document.exitFullscreen && document.fullscreenElement) await document.exitFullscreen();
+    else if(document.mozCancelFullScreen && document.mozFullScreenElement) document.mozCancelFullScreen();
+    else if(document.webkitExitFullscreen && document.webkitFullscreenElement) document.webkitExitFullscreen();
+  } catch(e) {
+    console.warn('[Caroline] browser fullscreen exit failed:', e);
   }
+  try { window.close(); } catch(e) {}
+  exitRequest.catch(e => console.warn('[Caroline] exit-kiosk request failed:', e));
 }
 function openTerminal(){
   fetchJsonWithTimeout(httpBase()+'/admin/open-terminal',{method:'POST', timeoutMs: NODE_RED_TIMEOUT_MS}, 'Open terminal')
@@ -7953,6 +8454,21 @@ const HOWTO_CONTENT = {
     title:'VOICE / SPEECH',
     html:`<h4>No setup required!</h4><p>Voice uses your browser's built-in <strong>Web Speech API</strong>.</p>
 <h4>Notes</h4><ul><li>Works best in <strong>Chromium</strong> on localhost or HTTPS</li><li>Firefox does not support speech recognition — use Chromium for voice input</li><li>You may need to allow microphone permission the first time</li></ul>`
+  },
+  commands: {
+    title:'COMMAND EXAMPLES',
+    html:`<h4>Try saying</h4><p>Tap one to drop it into chat, then edit or send it.</p>
+<div class="command-example-grid">
+<button class="command-example-btn" type="button" onclick="useCommandExample('Brief me')">Brief me</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('What is on my calendar today?')">What is on my calendar today?</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('Add take out the recycling to my tasks')">Add take out the recycling to my tasks</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('Remember that Beckie is my wife')">Remember that Beckie is my wife</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('Give me a ten-minute plan to get unstuck')">Give me a ten-minute plan to get unstuck</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('Turn on Study lights')">Turn on Study lights</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('Give me a weekly recap')">Give me a weekly recap</button>
+<button class="command-example-btn" type="button" onclick="useCommandExample('Send beta feedback: the mobile layout feels good but the settings text is small')">Send beta feedback: the mobile layout feels good but the settings text is small</button>
+</div>
+<div class="howto-note">Caroline works best when commands are plain English and specific: what, when, and where if a calendar or task is involved.</div>`
   }
 };
 // ── WIZARD COLOR PREVIEW ──────────────────────
@@ -7976,6 +8492,20 @@ function showHowTo(id){
   document.getElementById('howto-title').textContent='// '+c.title;
   document.getElementById('howto-body').innerHTML=c.html;
   document.getElementById('howto-overlay').classList.add('show');
+}
+function showCommandGuide() {
+  playBeep(700);
+  showHowTo('commands');
+}
+function useCommandExample(text) {
+  const overlay = document.getElementById('howto-overlay');
+  const input = document.getElementById('msg-input');
+  if (overlay) overlay.classList.remove('show');
+  if (input) {
+    input.value = text || '';
+    input.focus();
+  }
+  resetIdle();
 }
 
 // ── MESSAGES ──────────────────────────────────
@@ -8198,7 +8728,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','uiFont','uiScale','uiDensity','aiModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();
@@ -8463,8 +8993,12 @@ async function sendAiHttpMessage(text, context) {
       'caroline', 'display');
   }
 }
-function sendMessage(){
-  const t=input.value.trim(); if(!t) return;
+function sendMessage(options = {}){
+  const rawInput = input.value.trim();
+  const t = String(options.sendText || rawInput).trim();
+  const displayText = String(options.displayText || rawInput || t).trim();
+  const extraContext = options.context && typeof options.context === 'object' ? options.context : {};
+  if(!t) return;
   if (!serverSettingsLoaded) {
     const sendBtn = document.getElementById('send-btn');
     const origHTML = sendBtn?.innerHTML;
@@ -8474,7 +9008,7 @@ function sendMessage(){
       if (serverSettingsLoaded || Date.now() > deadline) {
         clearInterval(poll);
         if (sendBtn) { sendBtn.innerHTML = origHTML || '<i class="ti ti-send"></i>'; sendBtn.disabled = false; }
-        if (serverSettingsLoaded) sendMessage();
+        if (serverSettingsLoaded) sendMessage(options);
       }
     }, 100);
     return;
@@ -8490,35 +9024,35 @@ function sendMessage(){
   input.value='';
   if (pendingFeedbackCapture) {
     pendingFeedbackCapture = false;
-    addMessage(t, 'user', 'display');
-    submitBetaFeedback(t);
+    addMessage(displayText || t, 'user', 'display');
+    submitBetaFeedback(displayText || t);
     return;
   }
-  if (handlePendingMemoryAnswer(t)) {
+  if (handlePendingMemoryAnswer(displayText || t)) {
     input.value = '';
     return;
   }
-  const memFact = checkRememberCommand(t);
+  const memFact = checkRememberCommand(displayText || t);
   if (memFact) {
-    addMessage(t,'user','display'); saveToMemory(memFact);
+    addMessage(displayText || t,'user','display'); saveToMemory(memFact);
     const reply = 'Got it! Saved to memory: "' + memFact + '"';
     setTimeout(()=>{ addMessage(reply,'caroline','display'); speak(reply); }, 400);
     return;
   }
   if ((S.aiProvider || 'openrouter') !== 'ollama' && !(S.openrouterKey || '').trim() && !S.openrouterKeyConfigured) {
-    addMessage(t,'user','display');
+    addMessage(displayText || t,'user','display');
     addMessage('I need an OpenRouter API key to respond. Add it in Settings -> AI.', 'caroline', 'display');
     updateAiConfigIndicator();
     return;
   }
-  addMessage(t,'user','display'); showTyping();
+  addMessage(displayText || t,'user','display'); showTyping();
   if ((S.aiProvider || 'openrouter') === 'ollama') startLocalAiThinkingStatus();
   nudgeAiMoodForInteraction(0.5);
-  _trackSend(t);
+  _trackSend(displayText || t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
-  const ctx = { activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) };
+  const ctx = Object.assign({ activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) }, extraContext);
   if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
-  queuedMemorySuggestion = suggestMemoryCandidate(t);
+  queuedMemorySuggestion = suggestMemoryCandidate(displayText || t);
   sendAiHttpMessage(t, ctx);
 }
 input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ playBeep(600); sendMessage(); } });
@@ -8528,7 +9062,7 @@ input.addEventListener('focus',()=>{ requestAnimationFrame(()=>{ window.scrollTo
 const micBtn=document.getElementById('mic-btn'), stopBtn=document.getElementById('stop-btn');
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null, isListening=false, listenMode='manual', wakeCommandPending=false;
-let wakeArmed=false, wakeRestartTimer=null, stopRequested=false, micBlockedReason='';
+let wakeArmed=false, wakeRestartTimer=null, stopRequested=false, micBlockedReason='', micBlockedStatus='';
 
 function micOriginHint() {
   const host = window.location.hostname || '';
@@ -8562,7 +9096,7 @@ function setMicHealthStatus(text, kind='neutral') {
 function setMicIdleStatus() {
   if (!voiceStatus) return;
   voiceStatus.className = '';
-  if (micBlockedReason) voiceStatus.textContent = '● MIC CHECK NEEDED';
+  if (micBlockedReason) voiceStatus.textContent = '● ' + (micBlockedStatus || 'MIC CHECK NEEDED');
   else if (wakeArmed && parseSettingBool(S.wakeWordEnabled, false)) voiceStatus.textContent = '● WAKE WORD ARMED';
   else voiceStatus.textContent = voiceEnabled ? '● READY TO CHAT · ENTER TO SEND' : '● READY · SPEAKER MUTED';
   updateMicButtonHint();
@@ -8574,10 +9108,40 @@ function updateMicButtonHint() {
     ? (wakeArmed ? 'Wake word active: ' + phrases : 'Arm wake word: ' + phrases)
     : 'Dictate one message';
 }
+function describeMicFailure(e, originHint='') {
+  const name = e && e.name ? String(e.name) : 'blocked';
+  const base = originHint ? ' ' + originHint : '';
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    return {
+      status: 'NO MIC DEVICE',
+      detail: 'I do not see a microphone input on this device. Plug in a USB mic, select an input in the OS audio settings, or use the secure voice URL from a phone/laptop.'
+    };
+  }
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+    return {
+      status: 'MIC PERMISSION BLOCKED',
+      detail: 'Mic permission was blocked by the browser.' + base
+    };
+  }
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    return {
+      status: 'MIC BUSY',
+      detail: 'The microphone exists, but the browser could not open it. Another app may be using it, or the OS input device needs a quick check.'
+    };
+  }
+  return {
+    status: 'MIC CHECK NEEDED',
+    detail: 'Mic permission failed: ' + name + (base ? '.' + base : '')
+  };
+}
 async function checkMicHealth(showResult=false) {
+  const showSuccess = showResult === true || showResult === 'success';
+  const showFailure = !!showResult;
   micBlockedReason = '';
+  micBlockedStatus = '';
   if (!SR) {
     micBlockedReason = 'Speech recognition is not available. Use Chromium/Chrome for kiosk voice input.';
+    micBlockedStatus = 'MIC UNSUPPORTED';
     if (showResult) addMessage(micBlockedReason, 'caroline', 'display');
     setMicHealthStatus('Speech recognition unsupported', 'err');
     setMicIdleStatus();
@@ -8586,6 +9150,7 @@ async function checkMicHealth(showResult=false) {
   const originHint = micOriginHint();
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     micBlockedReason = originHint || 'Browser microphone API is unavailable on this page.';
+    micBlockedStatus = originHint ? 'MIC NEEDS HTTPS' : 'MIC API UNAVAILABLE';
     if (showResult) addMessage(micBlockedReason, 'caroline', 'display');
     setMicHealthStatus('Browser mic API unavailable', 'err');
     setMicIdleStatus();
@@ -8595,23 +9160,25 @@ async function checkMicHealth(showResult=false) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     stream.getTracks().forEach(t => t.stop());
     micBlockedReason = '';
+    micBlockedStatus = '';
     setMicHealthStatus(originHint ? 'Mic allowed, origin may still block STT' : 'Mic permission OK', originHint ? 'warn' : 'ok');
     if (parseSettingBool(S.wakeWordEnabled, false) && !isListening) {
       wakeArmed = true;
       setMicHealthStatus('Wake word armed', 'ok');
-      if (showResult) addMessage(originHint || 'Mic permission is OK. Wake word is armed now.', 'caroline', 'display');
+      if (showSuccess) addMessage(originHint || 'Mic permission is OK. Wake word is armed now.', 'caroline', 'display');
       setTimeout(() => {
         if (wakeArmed && parseSettingBool(S.wakeWordEnabled, false) && !isListening) startListening('wake');
       }, 0);
-    } else if (showResult) {
+    } else if (showSuccess) {
       addMessage(originHint || 'Mic permission is OK. Try the microphone button now.', 'caroline', 'display');
     }
     setMicIdleStatus();
     return true;
   } catch(e) {
-    micBlockedReason = 'Mic permission failed: ' + (e && e.name ? e.name : 'blocked');
-    if (originHint) micBlockedReason += '. ' + originHint;
-    if (showResult) addMessage(micBlockedReason, 'caroline', 'display');
+    const failure = describeMicFailure(e, originHint);
+    micBlockedReason = failure.detail;
+    micBlockedStatus = failure.status;
+    if (showFailure) addMessage(micBlockedReason, 'caroline', 'display');
     setMicHealthStatus(micBlockedReason, 'err');
     setMicIdleStatus();
     return false;
@@ -8686,6 +9253,7 @@ function buildRecognition(mode) {
     const err = (e && e.error) || 'unknown';
     if (err === 'no-speech' && wakeArmed) return;
     micBlockedReason = ['not-allowed','service-not-allowed','audio-capture'].includes(err) ? 'Mic error: ' + err + '. ' + micOriginHint() : '';
+    micBlockedStatus = micBlockedReason ? (err === 'audio-capture' ? 'NO MIC DEVICE' : 'MIC PERMISSION BLOCKED') : '';
     input.placeholder = 'Mic error: ' + err;
     voiceStatus.textContent = '● MIC ERROR: ' + String(err).toUpperCase();
     voiceStatus.className = '';
@@ -8758,7 +9326,7 @@ if(SR){
   micBtn.onclick=async()=>{
     playBeep(800);
     if(isListening){ stopListening(false, { disarmWake: true }); return; }
-    const micOk = await checkMicHealth(false);
+    const micOk = await checkMicHealth('failure');
     if (!micOk) return;
     if (parseSettingBool(S.wakeWordEnabled, false)) {
       wakeArmed = true;
@@ -9139,21 +9707,77 @@ async function fetchNews() {
 }
 fetchNews(); setInterval(fetchNews, piPerfInterval(15*60*1000, 30*60*1000));
 
-// ── HOLIDAYS ──────────────────────────────────
-const HOL={ '1/1':['🎉',"New Year's Day"],'2/14':['💝',"Valentine's Day"],'3/17':['🍀',"St. Patrick's Day"],'7/4':['🎆','Independence Day'],'10/31':['🎃','Halloween'],'12/25':['🎄','Christmas'],'12/31':['🥂',"New Year's Eve"] };
-const DOW=['☀️ Sunday Funday','🎵 Music Monday','💻 Tech Tuesday','🧘 Wellness Wednesday','💭 Thoughtful Thursday','🎯 Focus Friday','🎨 Studio Saturday'];
-function updateDate(){ const n=new Date(); document.getElementById('date-text').textContent=n.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}); const k=(n.getMonth()+1)+'/'+n.getDate(); const [ic,tx]=HOL[k]||['✨',DOW[n.getDay()]]; document.getElementById('holiday-icon').innerHTML=ic; document.getElementById('holiday-text').textContent=tx; }
+// ── FUN HOLIDAYS ──────────────────────────────
+const FUN_HOLIDAYS = {
+  '1/1':['🎉',"New Year's Day"], '1/2':['🚀','Science Fiction Day'], '1/4':['🧠','Trivia Day'], '1/5':['🐦','Bird Day'], '1/6':['🛋️','Cuddle Up Day'], '1/8':['🛁','Bubble Bath Day'], '1/10':['🪴','Houseplant Day'], '1/13':['🦆','Rubber Duckie Day'], '1/14':['🐾','Dress Up Your Pet Day'], '1/15':['🎩','Hat Day'], '1/16':['🫥','Nothing Day'], '1/19':['🍿','Popcorn Day'], '1/20':['🧀','Cheese Lovers Day'], '1/21':['🤗','Hugging Day'], '1/23':['🥧','Pie Day'], '1/24':['💬','Compliment Day'], '1/25':['🔁','Opposite Day'], '1/27':['🍰','Chocolate Cake Day'], '1/29':['🧩','Puzzle Day'], '1/31':['☕','Hot Chocolate Day'],
+  '2/1':['🍰','Baked Alaska Day'], '2/2':['🦫','Groundhog Day'], '2/3':['🥕','Carrot Cake Day'], '2/4':['📬','Mail Carrier Day'], '2/5':['🌦️','Weatherperson Day'], '2/7':['💌','Send a Card Day'], '2/9':['🍕','Pizza Day'], '2/10':['☂️','Umbrella Day'], '2/11':['🤝','Make a Friend Day'], '2/14':['💝',"Valentine's Day"], '2/15':['🍬','Gumdrop Day'], '2/17':['💚','Random Acts of Kindness Day'], '2/18':['🍷','Drink Wine Day'], '2/20':['🐾','Love Your Pet Day'], '2/22':['🐕','Walking the Dog Day'], '2/23':['🍌','Banana Bread Day'], '2/24':['🔺','Tortilla Chip Day'], '2/26':['🧚','Tell a Fairy Tale Day'], '2/27':['🐻‍❄️','Polar Bear Day'], '2/28':['🦷','Tooth Fairy Day'],
+  '3/1':['🥜','Peanut Butter Lovers Day'], '3/2':['📦','Old Stuff Day'], '3/3':['😊','I Want You To Be Happy Day'], '3/4':['✍️','Grammar Day'], '3/7':['🥣','Cereal Day'], '3/8':['🔎','Proofreading Day'], '3/9':['🍝','Meatball Day'], '3/10':['🥪','Pack Your Lunch Day'], '3/12':['🌱','Plant a Flower Day'], '3/14':['🥧','Pi Day'], '3/16':['🐼','Panda Day'], '3/17':['🍀',"St. Patrick's Day"], '3/19':['😂',"Let's Laugh Day"], '3/20':['🍝','Ravioli Day'], '3/21':['🎩','Common Courtesy Day'], '3/23':['🐶','Puppy Day'], '3/25':['🧇','Waffle Day'], '3/26':['🥬','Spinach Day'], '3/28':['🍡','Something on a Stick Day'], '3/30':['🚶','Take a Walk in the Park Day'], '3/31':['🖍️','Crayon Day'],
+  '4/1':['🃏',"April Fools' Day"], '4/2':['🦦','Ferret Day'], '4/3':['🌈','Find a Rainbow Day'], '4/4':['🍊','Vitamin C Day'], '4/6':['🍿','Caramel Popcorn Day'], '4/7':['🧺','No Housework Day'], '4/10':['👫','Siblings Day'], '4/11':['🐾','Pet Day'], '4/12':['🧀','Grilled Cheese Day'], '4/13':['🎲','Board Game Day'], '4/14':['🌿','Gardening Day'], '4/15':['🤔','Take a Wild Guess Day'], '4/16':['🛌','Wear Pajamas to Work Day'], '4/17':['🌸','Haiku Poetry Day'], '4/18':['🦁','Animal Crackers Day'], '4/20':['🪞','Look Alike Day'], '4/22':['🌎','Earth Day'], '4/23':['🧺','Picnic Day'], '4/24':['🥐','Pigs in a Blanket Day'], '4/25':['🔧','Hug a Plumber Day'], '4/26':['🥨','Pretzel Day'], '4/28':['🦸','Superhero Day'], '4/29':['🤐','Zipper Day'], '4/30':['🍇','Raisin Day'],
+  '5/1':['🌼','May Day'], '5/2':['🍫','Truffle Day'], '5/3':['👟','Two Different Colored Shoes Day'], '5/4':['🍊','Orange Juice Day'], '5/5':['🎺','Cinco de Mayo'], '5/6':['🍰','No Diet Day'], '5/8':['🧦','No Socks Day'], '5/9':['🧦','Lost Sock Memorial Day'], '5/10':['🧹','Clean Up Your Room Day'], '5/11':['🍽️','Eat What You Want Day'], '5/12':['📝','Limerick Day'], '5/13':['🐸','Frog Jumping Day'], '5/14':['🐔','Dance Like a Chicken Day'], '5/15':['🍪','Chocolate Chip Day'], '5/16':['🏡','Good Neighbor Day'], '5/17':['🍕','Pizza Party Day'], '5/18':['🍽️','No Dirty Dishes Day'], '5/19':['🍫',"Devil's Food Cake Day"], '5/20':['🐕','Rescue Dog Day'], '5/21':['📝','Memo Day'], '5/22':['🎸','Buy a Musical Instrument Day'], '5/23':['🪙','Lucky Penny Day'], '5/24':['🕵️','Scavenger Hunt Day'], '5/25':['🕺','Tap Dance Day'], '5/26':['✈️','Paper Airplane Day'], '5/27':['🧴','Sunscreen Day'], '5/28':['🍔','Hamburger Day'], '5/29':['📎','Paperclip Day'], '5/30':['🎨','Creativity Day'], '5/31':['🥥','Macaroon Day'],
+  '6/1':['💬','Say Something Nice Day'], '6/2':['🍦','Rocky Road Day'], '6/3':['🥚','Egg Day'], '6/4':['🧀','Cheese Day'], '6/5':['🍪','Gingerbread Day'], '6/6':['🪀','Yo-Yo Day'], '6/8':['👯','Best Friends Day'], '6/9':['🥧','Strawberry Rhubarb Pie Day'], '6/10':['🧊','Iced Tea Day'], '6/11':['🌽','Corn on the Cob Day'], '6/12':['🥜','Peanut Butter Cookie Day'], '6/13':['🧵','Sewing Machine Day'], '6/14':['🥃','Bourbon Day'], '6/15':['😁','Smile Power Day'], '6/16':['🍫','Fudge Day'], '6/17':['🥦','Eat Your Vegetables Day'], '6/18':['🎣','Go Fishing Day'], '6/20':['🥤','Vanilla Milkshake Day'], '6/21':['🤳','Selfie Day'], '6/22':['🧅','Onion Ring Day'], '6/23':['💗','Pink Day'], '6/24':['🍬','Pralines Day'], '6/25':['🐟','Catfish Day'], '6/26':['🍮','Chocolate Pudding Day'], '6/27':['😎','Sunglasses Day'], '6/28':['🧋','Tapioca Day'], '6/29':['📷','Camera Day'], '6/30':['☄️','Meteor Watch Day'],
+  '7/1':['😂','Joke Day'], '7/2':['🛸','UFO Day'], '7/3':['🪞','Compliment Your Mirror Day'], '7/4':['🎆','Independence Day'], '7/5':['🥧','Apple Turnover Day'], '7/6':['🍗','Fried Chicken Day'], '7/7':['🍫','Chocolate Day'], '7/8':['🎮','Video Game Day'], '7/9':['🍪','Sugar Cookie Day'], '7/10':['🧸','Teddy Bear Picnic Day'], '7/11':['💌','Cheer Up the Lonely Day'], '7/12':['🍃','Simplicity Day'], '7/13':['🍟','French Fry Day'], '7/14':['🧀','Mac and Cheese Day'], '7/15':['🎁','Give Something Away Day'], '7/16':['🍦','Ice Cream Day'], '7/17':['😀','Emoji Day'], '7/20':['🌕','Moon Day'], '7/21':['🍬','Junk Food Day'], '7/22':['🛌','Hammock Day'], '7/23':['👵','Gorgeous Grandma Day'], '7/24':['🧑‍🤝‍🧑','Cousins Day'], '7/25':['🍨','Hot Fudge Sundae Day'], '7/26':['👨‍👩‍👧','Aunt and Uncle Day'], '7/27':['🤹','Walk on Stilts Day'], '7/28':['🍫','Milk Chocolate Day'], '7/29':['🍝','Lasagna Day'], '7/30':['🍰','Cheesecake Day'], '7/31':['🐶','Mutt Day'],
+  '8/1':['🥧','Raspberry Cream Pie Day'], '8/2':['🍦','Ice Cream Sandwich Day'], '8/3':['🍉','Watermelon Day'], '8/4':['🍪','Chocolate Chip Cookie Day'], '8/5':['🐕','Work Like a Dog Day'], '8/6':['🍺','Root Beer Float Day'], '8/7':['🗼','Lighthouse Day'], '8/8':['🐈','Cat Day'], '8/9':['📚','Book Lovers Day'], '8/10':['😴','Lazy Day'], '8/11':['🧒','Son and Daughter Day'], '8/12':['🥪','Middle Child Day'], '8/13':['✋','Left-Handers Day'], '8/14':['🍊','Creamsicle Day'], '8/15':['🧘','Relaxation Day'], '8/16':['😂','Tell a Joke Day'], '8/17':['🛍️','Thrift Shop Day'], '8/18':['📝','Bad Poetry Day'], '8/19':['🥔','Potato Day'], '8/20':['📻','Radio Day'], '8/21':['👵','Senior Citizens Day'], '8/22':['🦷','Tooth Fairy Day'], '8/23':['🌬️','Ride the Wind Day'], '8/24':['🧇','Waffle Day'], '8/25':['🍌','Banana Split Day'], '8/26':['🐕','Dog Day'], '8/27':['✨','Just Because Day'], '8/28':['🎀','Bow Tie Day'], '8/29':['🍋','Lemon Juice Day'], '8/30':['🏖️','Beach Day'], '8/31':['🥜','Trail Mix Day'],
+  '9/1':['✉️','Letter Writing Day'], '9/2':['🫐','Blueberry Popsicle Day'], '9/3':['🏙️','Skyscraper Day'], '9/4':['🦊','Wildlife Day'], '9/5':['🍕','Cheese Pizza Day'], '9/6':['📖','Read a Book Day'], '9/7':['🥪','Salami Day'], '9/8':['&','Ampersand Day'], '9/9':['🧸','Teddy Bear Day'], '9/10':['💡','Swap Ideas Day'], '9/11':['🛏️','Make Your Bed Day'], '9/12':['🥤','Chocolate Milkshake Day'], '9/13':['🥜','Peanut Day'], '9/14':['🍩','Cream-Filled Donut Day'], '9/15':['🧀','Cheese Toast Day'], '9/16':['🥑','Guacamole Day'], '9/17':['🥟','Apple Dumpling Day'], '9/18':['🍔','Cheeseburger Day'], '9/19':['🏴‍☠️','Talk Like a Pirate Day'], '9/20':['🍕','Pepperoni Pizza Day'], '9/21':['⛳','Mini Golf Day'], '9/22':['🍦','Ice Cream Cone Day'], '9/23':['🔴','Checkers Day'], '9/24':['⁉️','Punctuation Day'], '9/25':['💥','Comic Book Day'], '9/26':['🥞','Pancake Day'], '9/27':['🥛','Chocolate Milk Day'], '9/28':['🏡','Good Neighbor Day'], '9/29':['☕','Coffee Day'], '9/30':['🍎','Hot Mulled Cider Day'],
+  '10/1':['🍪','Homemade Cookies Day'], '10/2':['🧹','Custodial Worker Day'], '10/3':['💻','Techies Day'], '10/4':['🌮','Taco Day'], '10/5':['💚','Do Something Nice Day'], '10/6':['🍜','Noodle Day'], '10/7':['🥤','Frappe Day'], '10/8':['🥪','Fluffernutter Day'], '10/9':['🧀','Moldy Cheese Day'], '10/10':['👜','Handbag Day'], '10/11':['🍕','Sausage Pizza Day'], '10/12':['🌾',"Farmer's Day"], '10/13':['🧠','Train Your Brain Day'], '10/14':['🍰','Dessert Day'], '10/15':['😾','Grouch Day'], '10/16':['📚','Dictionary Day'], '10/17':['🍝','Pasta Day'], '10/18':['🧁','Chocolate Cupcake Day'], '10/19':['🧐','Evaluate Your Life Day'], '10/20':['🦥','Sloth Day'], '10/21':['🦎','Reptile Day'], '10/22':['🌰','Nut Day'], '10/23':['⚗️','Mole Day'], '10/24':['🥪','Bologna Day'], '10/25':['🍟','Greasy Food Day'], '10/26':['🎃','Pumpkin Day'], '10/27':['🐈‍⬛','Black Cat Day'], '10/28':['🍫','Chocolate Day'], '10/29':['🐈','Cat Day'], '10/30':['✅','Checklist Day'], '10/31':['🎃','Halloween'],
+  '11/1':['🧂','Cinnamon Day'], '11/2':['🥚','Deviled Egg Day'], '11/3':['🥪','Sandwich Day'], '11/4':['🍬','Candy Day'], '11/5':['🧑‍🦰','Red Hair Day'], '11/6':['🧀','Nachos Day'], '11/7':['🍫','Chocolate Almond Day'], '11/8':['☕','Cappuccino Day'], '11/9':['🍳','Scrapple Day'], '11/10':['🧁','Vanilla Cupcake Day'], '11/11':['🍨','Sundae Day'], '11/12':['🍹','Happy Hour Day'], '11/13':['💚','World Kindness Day'], '11/14':['🥒','Pickle Day'], '11/15':['🧊','Clean Out Your Fridge Day'], '11/16':['🍔','Fast Food Day'], '11/17':['🥾','Take a Hike Day'], '11/18':['👑','Princess Day'], '11/19':['🙃','Have a Bad Day Day'], '11/20':['🥜','Peanut Butter Fudge Day'], '11/21':['🍪','Gingerbread Cookie Day'], '11/22':['🚗','Go for a Ride Day'], '11/23':['☕','Espresso Day'], '11/24':['🐟','Sardines Day'], '11/25':['🍨','Parfait Day'], '11/26':['🍰','Cake Day'], '11/27':['🥧','Bavarian Cream Pie Day'], '11/28':['🍞','French Toast Day'], '11/29':['🍫','Chocolates Day'], '11/30':['🫙','Mason Jar Day'],
+  '12/1':['🍎','Eat a Red Apple Day'], '12/2':['🍩','Fritters Day'], '12/3':['🏠','Roof Over Your Head Day'], '12/4':['🍪','Cookie Day'], '12/5':['🥷','Ninja Day'], '12/6':['📻','Microwave Oven Day'], '12/7':['🍭','Cotton Candy Day'], '12/8':['🍫','Brownie Day'], '12/9':['🥐','Pastry Day'], '12/10':['🍺','Lager Day'], '12/11':['🍜','Noodle Ring Day'], '12/12':['🏠','Gingerbread House Day'], '12/13':['☕','Cocoa Day'], '12/14':['🐒','Monkey Day'], '12/15':['🧁','Cupcake Day'], '12/16':['🍫','Chocolate-Covered Anything Day'], '12/17':['🍁','Maple Syrup Day'], '12/18':['🍪','Bake Cookies Day'], '12/19':['🍬','Hard Candy Day'], '12/20':['🎲','Games Day'], '12/21':['🧩','Crossword Puzzle Day'], '12/22':['🍞','Date Nut Bread Day'], '12/23':['🍪','Pfeffernusse Day'], '12/24':['🥛','Eggnog Day'], '12/25':['🎄','Christmas'], '12/26':['🍬','Candy Cane Day'], '12/27':['🍰','Fruitcake Day'], '12/28':['🃏','Card Playing Day'], '12/29':['🍲','Pepper Pot Day'], '12/30':['🥓','Bacon Day'], '12/31':['🥂',"New Year's Eve"]
+};
+const SILLY_FALLBACKS = [
+  ['✨','Tiny Adventure Day'], ['🧁','Emergency Cupcake Day'], ['🧦','Mismatched Socks Day'], ['🪩','Living Room Dance Day'],
+  ['📚','One More Chapter Day'], ['🍕','Bonus Slice Day'], ['🛋️','Excellent Couch Day'], ['🧩','Tiny Puzzle Day'],
+  ['🌈','Find the Weird Color Day'], ['📝','Silly Note Day'], ['🎧','Theme Song Day'], ['🪴','Compliment a Plant Day']
+];
+function nthWeekdayOfMonth(year, monthIndex, weekday, nth) {
+  const d = new Date(year, monthIndex, 1);
+  d.setDate(1 + ((7 + weekday - d.getDay()) % 7) + (nth - 1) * 7);
+  return d;
+}
+function lastWeekdayOfMonth(year, monthIndex, weekday) {
+  const d = new Date(year, monthIndex + 1, 0);
+  d.setDate(d.getDate() - ((7 + d.getDay() - weekday) % 7));
+  return d;
+}
+function funHolidayKey(d) {
+  return (d.getMonth() + 1) + '/' + d.getDate();
+}
+function computedFunHoliday(d) {
+  const y = d.getFullYear();
+  const key = funHolidayKey(d);
+  const laborDay = nthWeekdayOfMonth(y, 8, 1, 1);
+  const grandparentsDay = new Date(y, 8, laborDay.getDate() + 6);
+  const dynamic = [
+    { date: nthWeekdayOfMonth(y, 4, 0, 2), value: ['💐',"Mother's Day"] },
+    { date: nthWeekdayOfMonth(y, 5, 0, 3), value: ['🧢',"Father's Day"] },
+    { date: nthWeekdayOfMonth(y, 5, 5, 1), value: ['🍩','Donut Day'] },
+    { date: grandparentsDay, value: ['👵','Grandparents Day'] }
+  ];
+  const hit = dynamic.find(item => funHolidayKey(item.date) === key);
+  return hit && hit.value;
+}
+function getFunHoliday(d = new Date()) {
+  const key = funHolidayKey(d);
+  const fallback = SILLY_FALLBACKS[(d.getMonth() * 31 + d.getDate()) % SILLY_FALLBACKS.length];
+  return computedFunHoliday(d) || FUN_HOLIDAYS[key] || fallback;
+}
+function updateDate(){
+  const n=new Date();
+  document.getElementById('date-text').textContent=n.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+  const [ic,tx]=getFunHoliday(n);
+  document.getElementById('holiday-icon').innerHTML=ic;
+  const holidayText=document.getElementById('holiday-text');
+  holidayText.textContent=tx;
+  holidayText.title=tx;
+}
 updateDate(); setInterval(updateDate,60*60*1000);
 
 // ── UPTIME + RESTART ──────────────────────────
 let up=0; setInterval(()=>{ up++; document.getElementById('uptime').innerHTML='⏱ UPTIME: '+Math.floor(up/60)+'h '+up%60+'m'; },60000);
 const modal=document.getElementById('modal-overlay');
-document.getElementById('restart-btn').onclick=()=>{ playBeep(800); modal.classList.add('show'); };
 document.getElementById('modal-cancel').onclick=()=>{ playBeep(400); modal.classList.remove('show'); };
 document.getElementById('modal-confirm').onclick=()=>{ playBeep(200); modal.classList.remove('show'); triggerCarolineReboot(); };
 
 // ── PARTICLES ─────────────────────────────────
-function drawParticles(){ const pc=document.getElementById('particles'); if(!pc) return; pc.innerHTML=''; if(isPiPerformanceMode()) return; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
+function drawParticles(){ const pc=document.getElementById('particles'); if(!pc) return; pc.innerHTML=''; if(isResourceSaverMode()) return; const s=getComputedStyle(document.documentElement); const r1=s.getPropertyValue('--t-rgb1').trim(),r2=s.getPropertyValue('--t-rgb2').trim(); for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';const c=Math.random()>0.5?r1:r2;p.style.width=p.style.height=(Math.random()*60+20)+'px';p.style.left=(Math.random()*100)+'%';p.style.background='radial-gradient(circle, rgba('+c+',0.4), transparent 70%)';p.style.animationDuration=(Math.random()*25+15)+'s';p.style.animationDelay='-'+(Math.random()*20)+'s';pc.appendChild(p);} }
 drawParticles();
 
 // ── AVATAR UPLOAD ─────────────────────────────
@@ -9192,6 +9816,146 @@ function handleAvatarUpload(input) {
 })();
 
 // ── QUICK TAP BUTTONS ─────────────────────────
+function textFromEl(id) {
+  return String(document.getElementById(id)?.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function localHourForBrief(timeZone) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone, hour: '2-digit', hour12: false }).formatToParts(new Date());
+    const raw = parts.find(p => p.type === 'hour')?.value || '0';
+    return parseInt(raw, 10) % 24;
+  } catch(e) {
+    return new Date().getHours();
+  }
+}
+
+function summarizeBriefWeather() {
+  if ((S.features || {}).weather === false) return 'Weather widget is off.';
+  const city = textFromEl('weather-city-label') || S.cityName || S.location || '';
+  const temp = textFromEl('weather-temp');
+  const desc = textFromEl('weather-desc');
+  const sunrise = textFromEl('sunrise-time');
+  const sunset = textFromEl('sunset-time');
+  const current = [city, [temp, desc].filter(Boolean).join(' ')].filter(Boolean).join(': ') || 'Weather unavailable.';
+  const forecast = Array.from(document.querySelectorAll('#forecast .fc-day')).slice(0, 3).map(el => el.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  return { current, forecast, sunrise, sunset };
+}
+
+function summarizeBriefCalendar() {
+  if ((S.features || {}).calendar === false) return { status: 'Calendar widget is off.', events: [] };
+  if (!isCalendarConnected()) return { status: 'Google Calendar is not connected.', events: [] };
+  const events = (Array.isArray(latestCalendarEvents) ? latestCalendarEvents : []).slice(0, 5).map(ev => ({
+    title: calendarEventText(ev),
+    time: calendarEventTime(ev) || 'Time not set'
+  }));
+  return { status: events.length ? 'Connected' : 'Connected, no upcoming events.', events };
+}
+
+function summarizeBriefTasks() {
+  const open = (Array.isArray(todos) ? todos : []).filter(t => t && !t.done);
+  return {
+    openCount: open.length,
+    top: open.slice(0, 5).map(t => String(t.text || '').trim()).filter(Boolean)
+  };
+}
+
+function buildDailyBriefSnapshot() {
+  const tz = S.timezone || (Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles');
+  const now = new Date();
+  const hour = localHourForBrief(tz);
+  const partOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  const holiday = typeof getFunHoliday === 'function' ? getFunHoliday(now) : ['', ''];
+  return {
+    mode: partOfDay,
+    localTime: now.toLocaleString('en-US', { timeZone: tz, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
+    userName: S.userName || '',
+    aiName: S.aiName || 'Caroline',
+    location: S.cityName || S.location || '',
+    funHoliday: holiday[1] || '',
+    weather: summarizeBriefWeather(),
+    calendar: summarizeBriefCalendar(),
+    tasks: summarizeBriefTasks(),
+    mood: { user: clampMood(S.userMood), assistant: clampMood(S.aiMood) },
+    activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k])
+  };
+}
+
+function buildDailyBriefPrompt(snapshot) {
+  const lowMood = Number(snapshot?.mood?.user || 7) <= 3;
+  const guidance = lowMood
+    ? 'The user mood is low. Keep it gentle. Do not push productivity; mention tasks/calendar only as a soft heads-up if useful.'
+    : 'Include one clear next step, but keep it light and doable.';
+  return [
+    'Give me a ' + (snapshot.mode || 'daily') + ' Project: Caroline briefing from this dashboard snapshot.',
+    'Use only the facts below. Do not invent calendar events, weather, tasks, names, or integrations.',
+    'Keep it warm, useful, and compact: 4 short sentences max. Include weather, calendar, tasks, today fun holiday, and one friendly question.',
+    guidance,
+    '',
+    'DASHBOARD SNAPSHOT:',
+    JSON.stringify(snapshot, null, 2)
+  ].join('\n');
+}
+
+function quickDailyBrief() {
+  const snapshot = buildDailyBriefSnapshot();
+  playBeep(700);
+  sendMessage({
+    displayText: 'Brief me',
+    sendText: buildDailyBriefPrompt(snapshot),
+    context: { dailyBrief: snapshot }
+  });
+  resetIdle();
+}
+
+function buildRecapSnapshot(period = 'day') {
+  const log = Array.isArray(chatLog) ? chatLog.slice(period === 'week' ? -30 : -12) : [];
+  const recentChat = log.map(entry => ({
+    role: entry.role,
+    sender: entry.sender || '',
+    text: cleanDisplayText(entry.text || '').slice(0, 180)
+  })).filter(entry => entry.text);
+  const openTasks = Array.isArray(todos)
+    ? todos.filter(t => !t.done).slice(0, 8).map(t => ({ text: t.text, tag: t.tag || 'work' }))
+    : [];
+  const doneTasks = Array.isArray(todos)
+    ? todos.filter(t => t.done).slice(-8).map(t => ({ text: t.text, tag: t.tag || 'work' }))
+    : [];
+  return {
+    period,
+    localTime: new Date().toLocaleString('en-US', { timeZone: S.timezone || undefined, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
+    calendar: summarizeBriefCalendar(),
+    openTasks,
+    doneTasks,
+    recentChat,
+    mood: { user: clampMood(S.userMood), assistant: clampMood(S.aiMood) }
+  };
+}
+
+function buildRecapPrompt(snapshot) {
+  const periodLabel = snapshot.period === 'week' ? 'weekly' : 'daily';
+  return [
+    'Give me a short ' + periodLabel + ' Project: Caroline recap from this local snapshot.',
+    'Use only the provided facts. Do not invent accomplishments, calendar events, or task progress.',
+    'Make it useful and kind: what happened, what is still open, one tiny next step, and one light/fun observation.',
+    'Keep it under 5 short sentences.',
+    '',
+    'RECAP SNAPSHOT:',
+    JSON.stringify(snapshot, null, 2)
+  ].join('\n');
+}
+
+function quickRecap(period = 'day') {
+  const snapshot = buildRecapSnapshot(period);
+  playBeep(700);
+  sendMessage({
+    displayText: period === 'week' ? 'Weekly recap' : 'Recap today',
+    sendText: buildRecapPrompt(snapshot),
+    context: { recap: snapshot }
+  });
+  resetIdle();
+}
+
 function quickSend(text) { playBeep(700); document.getElementById('msg-input').value = text; sendMessage(); resetIdle(); }
 
 // ── POMODORO TIMER ────────────────────────────
@@ -9390,6 +10154,33 @@ function isCalendarConnected() {
     || !!integrationHealth.google?.serviceAccountConfigured;
 }
 
+function renderMobileGlance(events = latestCalendarEvents) {
+  const box = document.getElementById('mobile-glance');
+  const title = document.getElementById('mobile-glance-title');
+  const detail = document.getElementById('mobile-glance-detail');
+  if (!box || !title || !detail) return;
+  if (S.features && S.features.calendar === false) {
+    box.classList.add('hidden');
+    return;
+  }
+  const upcoming = Array.isArray(events) ? events : [];
+  if (upcoming.length) {
+    const next = upcoming[0];
+    title.textContent = calendarEventText(next);
+    detail.textContent = calendarEventTime(next) || 'All day';
+    box.classList.remove('hidden');
+    return;
+  }
+  if (isCalendarConnected()) {
+    title.textContent = 'No upcoming events';
+    detail.textContent = 'Calendar is clear';
+  } else {
+    title.textContent = 'Calendar not connected';
+    detail.textContent = 'Open Settings to connect';
+  }
+  box.classList.remove('hidden');
+}
+
 function setCalendarEmptyState(text, detail) {
   const title = document.getElementById('cal-title');
   const time = document.getElementById('cal-time');
@@ -9398,6 +10189,7 @@ function setCalendarEmptyState(text, detail) {
   if (time) time.textContent = detail || '';
   if (list) list.innerHTML = '';
   if (/not connected/i.test(text || '')) latestCalendarEvents = [];
+  renderMobileGlance(latestCalendarEvents);
   renderIdleCalendar();
 }
 
@@ -9408,6 +10200,7 @@ function updateCalendar(event, events) {
   if (!title) return;
   const upcoming = Array.isArray(events) && events.length ? events : (event ? [event] : []);
   latestCalendarEvents = upcoming;
+  renderMobileGlance(upcoming);
   renderIdleCalendar();
   if (!upcoming.length) {
     if (isCalendarConnected()) setCalendarEmptyState('No upcoming events', '');
@@ -9467,6 +10260,7 @@ async function refreshCalendarWidget() {
   }
 }
 setInterval(checkMeetingReminders, 60000);
+setTimeout(() => renderMobileGlance(latestCalendarEvents), 500);
 
 // ── BOTTOM BAR ────────────────────────────────
 function updateBottomChat() {
@@ -9549,7 +10343,7 @@ async function refreshSpotifyToken() {
 function renderSpotifyState(d) {
   const item = d && d.item;
   if (!item) {
-    showSpotifyIdle('Not playing');
+    showSpotifyIdle('Not playing', d && d.device);
     return;
   }
 
@@ -9566,6 +10360,7 @@ function renderSpotifyState(d) {
 
   document.getElementById('np-track').textContent = item.name || 'Unknown track';
   document.getElementById('np-artist').textContent = (item.artists || []).map(a => a.name).join(', ');
+  setSpotifyDeviceLabel(d.device);
   document.getElementById('np-progress').style.display = 'block';
   document.getElementById('np-fill').style.width = Math.max(0, Math.min(100, progress)) + '%';
 
@@ -9577,6 +10372,31 @@ async function spotifyApiGet(url) {
   return fetch(url, {
     headers: { 'Authorization': 'Bearer ' + spotifyToken }
   });
+}
+
+function setSpotifyDeviceLabel(device) {
+  const el = document.getElementById('np-device');
+  if (!el) return;
+  if (!device || !device.name) {
+    el.textContent = '';
+    el.title = '';
+    return;
+  }
+  const type = String(device.type || '').trim();
+  const name = String(device.name || '').trim();
+  const label = 'Playing on ' + name + (type ? ' · ' + type : '');
+  el.textContent = label;
+  el.title = label;
+}
+
+async function spotifyFetchWithRefresh(url) {
+  let r = await spotifyApiGet(url);
+  if (r.status === 401) {
+    const refreshed = await refreshSpotifyToken();
+    if (!refreshed) return r;
+    r = await spotifyApiGet(url);
+  }
+  return r;
 }
 
 async function fetchSpotifyNowPlaying() {
@@ -9593,46 +10413,38 @@ async function fetchSpotifyNowPlaying() {
   }
 
   try {
-    let r = await spotifyApiGet("https://api.spoti" + "fy.com/v1/me/player/currently-playing");
+    let playerState = await spotifyFetchWithRefresh("https://api.spoti" + "fy.com/v1/me/player");
 
-    if (r.status === 401) {
-      const refreshed = await refreshSpotifyToken();
-      if (!refreshed) {
-        showSpotifyIdle('Reconnect needed');
+    if (playerState.status === 401) {
+      showSpotifyIdle('Reconnect needed');
+      return;
+    }
+
+    if (playerState.status !== 204 && playerState.ok) {
+      const playback = await playerState.json();
+      if (playback && playback.item) {
+        renderSpotifyState(playback);
         return;
       }
-      r = await spotifyApiGet("https://api.spoti" + "fy.com/v1/me/player/currently-playing");
+      if (playback && playback.device) {
+        showSpotifyIdle('Not playing', playback.device);
+        return;
+      }
+    } else if (playerState.status !== 204 && playerState.status !== 403) {
+      showSpotifyIdle('Unavailable');
+      return;
+    }
+
+    let r = await spotifyFetchWithRefresh("https://api.spoti" + "fy.com/v1/me/player/currently-playing");
+
+    if (r.status === 401) {
+      showSpotifyIdle('Reconnect needed');
+      return;
     }
 
     if (r.status === 204) {
-      let r2 = await spotifyApiGet("https://api.spoti" + "fy.com/v1/me/player");
-      if (r2.status === 401) {
-        const refreshed = await refreshSpotifyToken();
-        if (!refreshed) {
-          showSpotifyIdle('Reconnect needed');
-          return;
-        }
-        r2 = await spotifyApiGet("https://api.spoti" + "fy.com/v1/me/player");
-      }
-
-      if (r2.status === 204) {
         showSpotifyIdle('No active device');
         return;
-      }
-
-      if (!r2.ok) {
-        showSpotifyIdle('Unavailable');
-        return;
-      }
-
-      const d2 = await r2.json();
-      if (!d2 || !d2.item) {
-        showSpotifyIdle('No active device');
-        return;
-      }
-
-      renderSpotifyState(d2);
-      return;
     }
 
     if (!r.ok) {
@@ -9642,7 +10454,7 @@ async function fetchSpotifyNowPlaying() {
 
     const d = await r.json();
     if (!d || !d.item) {
-      showSpotifyIdle('Not playing');
+      showSpotifyIdle('Not playing', d && d.device);
       return;
     }
 
@@ -9653,9 +10465,10 @@ async function fetchSpotifyNowPlaying() {
   }
 }
 
-function showSpotifyIdle(msg) {
+function showSpotifyIdle(msg, device) {
   const t = document.getElementById('np-track'); if (t) t.textContent = msg;
   const a = document.getElementById('np-artist'); if (a) a.textContent = '';
+  setSpotifyDeviceLabel(device);
   const art = document.getElementById('np-art'); if (art) art.style.display = 'none';
   const prog = document.getElementById('np-progress'); if (prog) prog.style.display = 'none';
 }
@@ -9962,6 +10775,19 @@ function setSmartHueScene(zone, mode, btn) {
   resetIdle();
 }
 
+function setSmartHuePower(on, btn) {
+  if (btn) {
+    document.querySelectorAll('.smart-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  if (discoInterval) { clearInterval(discoInterval); discoInterval = null; }
+  const body = on ? hueBodyForMode('on') : hueBodyForMode('off');
+  hueWS('/groups/' + HUE_GROUP + '/action', 'PUT', body);
+  updateSmartStatus('Hue lights ' + (on ? 'ON' : 'OFF') + ' sent to ' + (S.hueGroupName || 'Hue'));
+  playBeep(on ? 900 : 420);
+  resetIdle();
+}
+
 function cycleHue() {
   hueModeIdx = (hueModeIdx + 1) % HUE_MODES.length;
   const mode = HUE_MODES[hueModeIdx];
@@ -10149,6 +10975,15 @@ function memoryAgeLabel(ts) {
   return d.toLocaleDateString([], { month:'short', day:'numeric' });
 }
 
+function memoryTrustLabel(source) {
+  const s = String(source || '').toLowerCase();
+  if (s === 'manual') return 'confirmed';
+  if (s === 'action') return 'assistant saved';
+  if (s === 'server') return 'synced';
+  if (s === 'legacy') return 'legacy';
+  return 'local';
+}
+
 function renderMemoryWidget() {
   const list = document.getElementById('memory-list');
   const count = document.getElementById('memory-count');
@@ -10170,9 +11005,12 @@ function renderMemoryWidget() {
     index: idx,
     kind: 'note',
     text: cleanMemoryText(note.text),
-    ts: note.ts
+    ts: note.ts,
+    source: note.source || 'local'
   }));
-  if (count) count.textContent = shards.length + ' SHARDS';
+  const hiddenIds = getHiddenShardIds();
+  const hiddenCount = shards.filter(m => hiddenIds.has(m.id)).length;
+  if (count) count.textContent = shards.length + ' SHARDS' + (hiddenCount ? ' / ' + hiddenCount + ' HIDDEN' : '');
   list.replaceChildren();
   if (setupSaved || importedSaved) {
     const status = document.createElement('div');
@@ -10180,10 +11018,9 @@ function renderMemoryWidget() {
     const labels = [];
     if (setupSaved) labels.push('setup memory saved');
     if (importedSaved) labels.push('imported profile saved');
-    status.innerHTML = '<div class="memory-text">' + labels.join(' · ') + '</div><div class="memory-meta"><span>core memory</span><span></span></div>';
+    status.innerHTML = '<div class="memory-text">' + labels.join(' · ') + '</div><div class="memory-meta"><span class="memory-meta-left"><span>core memory</span><span class="memory-source">generated</span></span><span></span></div>';
     list.appendChild(status);
   }
-  const hiddenIds = getHiddenShardIds();
   shards.forEach((m) => {
     const isHidden = hiddenIds.has(m.id);
     const item = document.createElement('div');
@@ -10193,8 +11030,14 @@ function renderMemoryWidget() {
     text.textContent = m.text || 'Untitled memory';
     const meta = document.createElement('div');
     meta.className = 'memory-meta';
+    const metaLeft = document.createElement('span');
+    metaLeft.className = 'memory-meta-left';
     const age = document.createElement('span');
     age.textContent = memoryAgeLabel(m.ts);
+    const source = document.createElement('span');
+    source.className = 'memory-source';
+    source.textContent = memoryTrustLabel(m.source);
+    metaLeft.append(age, source);
     const btns = document.createElement('span');
     btns.style.cssText = 'display:flex;gap:5px;';
     const hide = document.createElement('button');
@@ -10216,7 +11059,7 @@ function renderMemoryWidget() {
       markMemoryNotTrue(m.index);
     };
     btns.append(hide, deny);
-    meta.append(age, btns);
+    meta.append(metaLeft, btns);
     item.append(text, meta);
     list.appendChild(item);
   });
@@ -10311,6 +11154,7 @@ setInterval(updateWifi, piPerfInterval(30000, 60000));
 })();
 applyTheme(S.theme);
 applyFont(S.uiFont);
+applyUiReadability();
 applyAvatar(S.avatar);
 applyPiPerformanceMode();
 applyAutoTheme();
@@ -10495,6 +11339,12 @@ const ONB_QUESTIONS = [
     { label:'Let me vent',            value:'vent',    reply:'Listening before solving. Good rule.' },
     { label:'Tell me to stop for now', value:'stop',   reply:'I can call the shutdown cue.' }
   ]},
+  { id:'unstick', type:'chips', save:'personality.unstick', prompt:'If your brain is buffering, what usually gets the video playing again?', options:[
+    { label:'Music first',              value:'music',      reply:'Soundtrack ignition noted.' },
+    { label:'Body double',              value:'bodydouble', reply:'Parallel work mode noted.' },
+    { label:'Ten-minute timer',         value:'timer',      reply:'Tiny timer lever installed.' },
+    { label:'Permission to do it badly', value:'messy',     reply:'Messy first pass permission granted.' }
+  ]},
   { id:'accountability', type:'chips', save:'personality.accountability', prompt:'How spicy should accountability be?', options:[
     { label:'Soft',          value:'soft',    reply:'Soft accountability. Warm, not pushy.' },
     { label:'Medium',        value:'medium',  reply:'Medium spice. Noticeable, still kind.' },
@@ -10567,6 +11417,10 @@ function _onbBuildPrompt() {
   else if (p.overwhelm === 'one') parts.push('When they are overwhelmed, pick exactly one next step.');
   else if (p.overwhelm === 'vent') parts.push('When they are overwhelmed, let them vent and reflect back the feeling before solving.');
   else if (p.overwhelm === 'stop') parts.push('When they are overwhelmed, be willing to tell them to stop for now and rest.');
+  if (p.unstick === 'music') parts.push('When their brain is buffering, suggest music first to help them initiate.');
+  else if (p.unstick === 'bodydouble') parts.push('When their brain is buffering, suggest body doubling or parallel work.');
+  else if (p.unstick === 'timer') parts.push('When their brain is buffering, suggest a ten-minute timer and a tiny start.');
+  else if (p.unstick === 'messy') parts.push('When their brain is buffering, give explicit permission to make a messy first pass.');
   if (p.accountability === 'soft') parts.push('Keep accountability soft: warm, low-pressure, and non-shaming.');
   else if (p.accountability === 'medium') parts.push('Use medium accountability: noticeable, kind, and specific.');
   else if (p.accountability === 'callout') parts.push('Call them out respectfully when they are avoiding the task or overcomplicating it.');
@@ -11176,7 +12030,7 @@ function renderChatStep(){
 
   } else if(q.type==='summary'){
     const grid=document.createElement('div'); grid.className='caro-summary-grid';
-    const labels={warning:'Warning label',derail:'Derail pattern',nudge:'Nudge style',overwhelm:'Overwhelm mode',accountability:'Accountability',dayThief:'Day thief',victory:'Victory type'};
+    const labels={warning:'Warning label',derail:'Derail pattern',nudge:'Nudge style',overwhelm:'Overwhelm mode',unstick:'Unstick move',accountability:'Accountability',dayThief:'Day thief',victory:'Victory type'};
     const a=ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
     const mList=ONB_MODULES.map(mod=>{
       const cfg=onbState.config.modules[mod.id]||{};
@@ -11279,7 +12133,7 @@ async function finalizeOnboarding(){
     }
   }
 
-  applyFont(S.uiFont); applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
+  applyFont(S.uiFont); applyUiReadability(); applyTheme(S.theme); applyAvatar(S.avatar); applyFeatures();
   fetchWeather();
   const tn = document.getElementById('topbar-name');
   if(tn) tn.textContent = S.aiName;
@@ -11358,8 +12212,8 @@ const OSK_ROWS = [
 ];
 const OSK_NUMS = [
   ['1','2','3','4','5','6','7','8','9','0'],
-  ['-','/',':', ';','(',')','$','&','@','"'],
-  ['#','.', ',','?','!','\'','⌫'],
+  ['-','_','/',':',';','&','=','@','(',')'],
+  ['#','.', ',','?','!','\'','"','+','~','⌫'],
   ['ABC','','',' ','','','.','↵']
 ];
 let _oskShift=false, _oskNumMode=false, _oskTarget=null;
@@ -11447,20 +12301,32 @@ function toggleOsk(){
   if(osk&&osk.classList.contains('show')){ hideOsk(); }
   else { const inp=document.getElementById('msg-input'); showOsk(inp); inp.focus(); document.getElementById('kbd-btn').classList.add('active'); }
 }
+function isTextEntryTarget(target){
+  if(!target || !target.tagName) return false;
+  if(target.tagName==='TEXTAREA') return true;
+  if(target.tagName!=='INPUT') return false;
+  return !['file','checkbox','radio','range','button','submit','reset','color'].includes(String(target.type || '').toLowerCase());
+}
+function shouldAutoShowOsk(target){
+  if(!isTextEntryTarget(target) || target.id==='msg-input') return false;
+  const inSettings = !!target.closest('#settings-modal');
+  const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  return _lastWasTouch || coarsePointer || (inSettings && parseSettingBool(S.kioskMode, false));
+}
 let _lastWasTouch=false;
 document.addEventListener('touchstart',()=>{_lastWasTouch=true;},{passive:true});
 document.addEventListener('mousedown',()=>{_lastWasTouch=false;});
 document.addEventListener('focusin',e=>{
   const t=e.target;
-  if((t.tagName==='INPUT'&&t.type!=='file'&&t.type!=='checkbox'&&t.type!=='range')||t.tagName==='TEXTAREA'){
-    if(_lastWasTouch&&t.id!=='msg-input'&&!t.closest('#settings-modal')){ showOsk(t); } // settings modal + msg-input use dedicated controls
+  if(isTextEntryTarget(t)){
+    if(shouldAutoShowOsk(t)){ showOsk(t); }
     else if(_oskTarget){ _oskTarget=t; _oskUpdatePreview(); } // physical keyboard: update target silently
   }
 });
 document.addEventListener('focusout',e=>{
   setTimeout(()=>{
     const f=document.activeElement;
-    if(!f||(f.tagName!=='INPUT'&&f.tagName!=='TEXTAREA')){
+    if(!isTextEntryTarget(f)){
       hideOsk();
     }
   },120);

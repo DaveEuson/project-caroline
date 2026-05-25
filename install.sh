@@ -1083,15 +1083,15 @@ if [ -z "$LOCAL_AUTH_ENABLED" ] && [ -s "$SETTINGS_PATH" ] && jq empty "$SETTING
 fi
 if [ -z "$LOCAL_AUTH_ENABLED" ]; then
   if [ "$CAROLINE_NONINTERACTIVE" = "true" ]; then
-    LOCAL_AUTH_ENABLED="false"
+    LOCAL_AUTH_ENABLED="true"
   else
     echo ""
     echo -e "${MAGENTA}  // LOCAL ACCESS${RESET}"
     echo ""
     echo -e "${DIM}  Optional browser login protects Caroline's local admin controls from other devices on your LAN.${RESET}"
-    echo -e "${DIM}  Choose No for a private test box or dedicated home kiosk where sign-in friction matters more.${RESET}"
+    echo -e "${DIM}  Recommended for public beta installs. Choose No only for a private test box or dedicated home kiosk.${RESET}"
     echo ""
-    if ask_yes_no "Require a local browser login for Caroline?" "n"; then
+    if ask_yes_no "Require a local browser login for Caroline?" "y"; then
       LOCAL_AUTH_ENABLED="true"
     else
       LOCAL_AUTH_ENABLED="false"

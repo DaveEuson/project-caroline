@@ -110,6 +110,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 | Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
 | Ubuntu Desktop 64-bit | Validated | Server/client mode from another browser; local kiosk mode is less tested |
 | Steam Deck / SteamOS | Smoke-validated nightly | Repurposed handheld desk terminal |
+| Bazzite 44 / NVIDIA laptop | Smoke-validated beta | GPU-backed local AI host in server/client mode |
 | Phone / tablet browser | Mobile client view | Quick chat, status, settings, and remote controls on your LAN |
 | WSL Ubuntu | Dev/test only | Windows-side browser testing |
 
@@ -118,6 +119,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
 - Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter as the preferred AI path, and lazy-loaded visual media.
 - Steam Deck / SteamOS support tracks nightly and is smoke-validated in server/client mode by stable IP; mDNS hostnames can be slower from Windows networks.
+- Bazzite 44 with NVIDIA RTX 2070 Max-Q is smoke-validated as a LAN host with local Ollama using `qwen3:1.7b`.
 - Phone and tablet browsers are lightweight Caroline clients, not separate installs; they work best on the same trusted LAN as the host.
 - OpenRouter is the best AI experience for speed and answer quality.
 - Ollama is private and local, but small hardware can be slower and less polished.
@@ -137,7 +139,9 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - [How to install the Companion app](docs/companion-client.md)
 - [How to set up SSH and a stable IP](docs/network-prep.md)
 - [How to set up Google Calendar OAuth](docs/google-oauth.md)
+- [How to set up Discord](docs/discord.md)
 - [How to beta test Project: Caroline](docs/beta-testing.md)
+- [Public beta health snapshot](docs/beta-health.md)
 - [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
 - [Architecture overview](docs/architecture.md)
 - [Backup and restore](docs/backup-restore.md)
@@ -152,6 +156,7 @@ The installer detects your hardware, RAM, and platform, then preselects the loca
 - Fast Raspberry Pi / Ubuntu local fallback: **qwen2.5:0.5b**
 - Recommended Steam Deck local quality: **qwen3:1.7b**
 - Fast Steam Deck local fallback: **qwen3:0.6b**
+- Steam Deck non-Qwen alternatives from direct Ollama testing: **Mistral 7B** is strongest but slow; **Gemma3 4B** and **Phi4 Mini** are good quality fallbacks; **SmolLM2 1.7B** is a useful lightweight fallback.
 - Safe/legacy fallback: **gemma3:1b**
 - Ubuntu Desktop VM validation: **50GB disk**, CPU-only Ollama, **qwen2.5:1.5b**
 
@@ -172,7 +177,7 @@ Add these later in **Settings**:
 - Google Calendar OAuth
 - Spotify client ID
 - Philips Hue bridge/key
-- Discord bot token and channel ID
+- Discord bot token and channel or DM destination
 - NOAA tide station
 
 ## Update

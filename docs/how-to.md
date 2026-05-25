@@ -50,7 +50,7 @@ Accept the local certificate warning once. The normal HTTP URL remains best for 
 Then open **Settings** and add only what you need:
 
 - **AI:** OpenRouter API key for the best experience, or local Ollama with the installer-recommended model for your hardware
-- **Connect:** Google Calendar, Spotify, Hue, or Discord
+- **Connect:** Google Calendar, Spotify, Hue, or [Discord](discord.md)
 - **Widgets:** location, weather, tides, and video channels
 
 ## Quick Test Lines
@@ -88,5 +88,6 @@ journalctl -u caroline -n 120 --no-pager
 
 - [Architecture overview](architecture.md)
 - [Backup and restore](backup-restore.md)
+- [Discord setup](discord.md)
 - [Release process](release.md)
 - [Release notes](releases/README.md)

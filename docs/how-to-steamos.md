@@ -11,7 +11,8 @@ This path is experimental and installs everything under the `deck` user's home d
 - Installs Node-RED locally under `~/caroline/node-red-runtime`
 - Runs Caroline as a user systemd service
 - Optionally installs portable Ollama under `~/.local/ollama` and runs it as a user systemd service
-- Serves the UI locally at `http://localhost:8080/` and on your private LAN at `http://STEAM_DECK_IP:8080/`
+- Serves the UI locally at `http://localhost:8080/`
+- Uses the Steam Deck readable display preset by default: Noto Sans, larger text, and comfortable spacing
 - Keeps browser API access limited to localhost/private-network origins and writes private settings/token files with owner-only permissions
 - Asks the same first-run identity/privacy/AI questions as the main installer, adapted for SteamOS
 
@@ -39,17 +40,15 @@ For a fullscreen/kiosk-style launch:
 caroline-steamos-kiosk
 ```
 
+To leave kiosk mode, open **Settings -> System** in Caroline and use **Exit Kiosk**. On SteamOS this closes the local fullscreen browser process; it is not just a normal browser fullscreen toggle.
+
 Or open Firefox and go to:
 
 ```text
 http://localhost:8080/
 ```
 
-From another computer on the same private network, use:
-
-```text
-http://STEAM_DECK_IP:8080/
-```
+If the Deck is across the room, open `Settings` -> `Look & Feel` -> `Display preset` and choose `Steam Deck - 3 ft`, `Couch / small TV`, or `Wall kiosk`.
 
 ## Useful Commands
 
@@ -69,15 +68,22 @@ journalctl --user -u ollama -f
 ~/.local/bin/ollama pull qwen3:1.7b
 ```
 
-Node-RED editor:
+## Local Model Notes
 
-```text
-http://localhost:8080/red
-```
+The current Steam Deck recommendation is `qwen3:1.7b`. A direct Ollama benchmark across Qwen, Llama, Gemma, Phi, DeepSeek, Mistral, SmolLM2, and TinyLlama kept `qwen3:1.7b` as the best balance: coherent enough for Caroline behavior while still averaging around a few seconds per reply on the Deck.
+
+Good non-Qwen experiments:
+
+- `mistral:7b` scored well but is slow enough to feel heavy.
+- `gemma3:4b` and `phi4-mini` are reasonable quality fallbacks.
+- `smollm2:1.7b` is a lightweight fallback when speed matters.
+- `deepseek-r1` was not a good fit for Caroline-style short conversational replies in this test.
+
+The SteamOS beta install disables the Node-RED editor route by default.
 
 ## View From Another Computer
 
-The experimental SteamOS install listens on your private LAN. If you prefer not to expose Carl directly on the LAN, use an SSH tunnel instead:
+The experimental SteamOS install binds Caroline to localhost by default. To view it from another computer on your private network, use an SSH tunnel:
 
 ```bash
 ssh -L 8088:127.0.0.1:8080 deck@STEAM_DECK_IP

@@ -13,7 +13,7 @@ This beta is not expected to be perfect. The most useful feedback is where setup
 - A stable local network connection.
 - About 15 minutes for a first pass.
 - Optional: a phone or tablet on the same Wi-Fi if you want to test the mobile browser layout.
-- Optional: Google Calendar, Spotify, Philips Hue, Discord, weather, tides, radio, or local AI if you want to test one integration.
+- Optional: Google Calendar, Spotify, Philips Hue, [Discord](discord.md), weather, tides, radio, or local AI if you want to test one integration.
 
 Please do not paste API keys, OAuth tokens, Discord bot tokens, passwords, or private calendar details in feedback.
 

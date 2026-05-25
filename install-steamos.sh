@@ -23,6 +23,7 @@ RESET="\033[0m"
 REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME="$(eval echo "~$REAL_USER")"
 CAROLINE_DIR="$REAL_HOME/caroline"
+CAROLINE_PUBLIC_DIR="$CAROLINE_DIR/public"
 CLONE_DIR="$REAL_HOME/project-caroline"
 NODE_ROOT="$REAL_HOME/.local/caroline-node"
 NODE_CURRENT="$NODE_ROOT/current"
@@ -30,7 +31,7 @@ OLLAMA_ROOT="$REAL_HOME/.local/ollama"
 OLLAMA_BIN="$OLLAMA_ROOT/bin/ollama"
 OLLAMA_MODELS_DIR="$REAL_HOME/.local/share/ollama/models"
 NODERED_RUNTIME="$CAROLINE_DIR/node-red-runtime"
-export CAROLINE_DIR
+export CAROLINE_DIR CAROLINE_PUBLIC_DIR
 
 say() { echo -e "$*"; }
 need_cmd() {
@@ -228,13 +229,19 @@ OLLAMA_SERVICE_EOF
   return 0
 }
 
-is_steamos() {
-  [ -r /etc/os-release ] && . /etc/os-release && [ "${ID:-}" = "steamos" ]
+supported_home_linux_profile() {
+  [ -r /etc/os-release ] || return 1
+  . /etc/os-release
+  case "${ID:-}" in
+    steamos|bazzite) printf '%s' "$ID"; return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
-if ! is_steamos; then
-  say "${RED}This experimental installer is only for SteamOS.${RESET}"
-  say "${DIM}Use install.sh for Raspberry Pi OS, Ubuntu, or Debian.${RESET}"
+HOME_LINUX_PROFILE="$(supported_home_linux_profile || true)"
+if [ -z "$HOME_LINUX_PROFILE" ]; then
+  say "${RED}This experimental installer is only for SteamOS-compatible home-directory installs.${RESET}"
+  say "${DIM}Supported here: SteamOS and Bazzite. Use install.sh for Raspberry Pi OS, Ubuntu, or Debian.${RESET}"
   exit 1
 fi
 
@@ -258,13 +265,31 @@ say "${MAGENTA} |  __/| | | (_) | |  __/ (__| |_    | |__| (_| | | | (_) | | | |
 say "${CYAN} |_|   |_|  \\___// |\\___|\\___|\\__|    \\____\\__,_|_|  \\___/|_|_|_| |_|\\___|${RESET}"
 say "${CYAN}              |__/                                                        ${RESET}"
 say ""
-say "${BOLD}${CYAN}  Project: Caroline${RESET} ${DIM}SteamOS experimental installer v${CAROLINE_VERSION}${RESET}"
-say "${DIM}  Home-directory install. No pacman installs. No SteamOS read-only changes.${RESET}"
+case "$HOME_LINUX_PROFILE" in
+  bazzite)
+    CAROLINE_PLATFORM="bazzite"
+    CAROLINE_HOST_DEVICE_TYPE="Bazzite"
+    CAROLINE_HARDWARE_PROFILE="Bazzite / SteamOS-compatible PC"
+    CAROLINE_HOME_LABEL="Bazzite"
+    ;;
+  *)
+    CAROLINE_PLATFORM="steamos"
+    CAROLINE_HOST_DEVICE_TYPE="Steam"
+    CAROLINE_HARDWARE_PROFILE="Steam Deck / SteamOS"
+    CAROLINE_HOME_LABEL="SteamOS"
+    ;;
+esac
+export CAROLINE_PLATFORM CAROLINE_HOST_DEVICE_TYPE CAROLINE_HARDWARE_PROFILE CAROLINE_HOME_LABEL
+CAROLINE_BIND_HOST="${CAROLINE_BIND_HOST:-127.0.0.1}"
+export CAROLINE_BIND_HOST
+
+say "${BOLD}${CYAN}  Project: Caroline${RESET} ${DIM}${CAROLINE_HOME_LABEL} experimental installer v${CAROLINE_VERSION}${RESET}"
+say "${DIM}  Home-directory install. No system package manager changes.${RESET}"
 say ""
 
-say "${MAGENTA}  // STEAMOS PREFLIGHT${RESET}"
+say "${MAGENTA}  // ${CAROLINE_HOME_LABEL^^} PREFLIGHT${RESET}"
 . /etc/os-release
-say "${DIM}  OS: ${PRETTY_NAME:-SteamOS} ${VERSION_ID:-unknown}${RESET}"
+say "${DIM}  OS: ${PRETTY_NAME:-$CAROLINE_HOME_LABEL} ${VERSION_ID:-unknown}${RESET}"
 say "${DIM}  Arch: ${ARCH}${RESET}"
 if command -v steamos-readonly >/dev/null 2>&1; then
   READONLY_STATUS="$(steamos-readonly status 2>/dev/null || true)"
@@ -326,25 +351,40 @@ TOTAL_RAM_MB="$(total_ram_mb)"
 CPU_MODEL="$(cpu_model_summary)"
 RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB")"
 say "${DIM}  Best experience: OpenRouter. Use your API key in Settings -> AI.${RESET}"
-say "${DIM}  Recommended Steam Deck local model: qwen3:1.7b.${RESET}"
-say "${DIM}  Fast Deck fallback: qwen3:0.6b.${RESET}"
+say "${DIM}  Recommended local model: qwen3:1.7b.${RESET}"
+say "${DIM}  Fast fallback: qwen3:0.6b.${RESET}"
 say "${DIM}  Safe/legacy fallback: gemma3:1b.${RESET}"
-say "${CYAN}  Detected hardware:${RESET} ${BOLD}Steam Deck / SteamOS${RESET} ${DIM}(${ARCH}, ${TOTAL_RAM_MB:-0}MB RAM)${RESET}"
+say "${CYAN}  Detected hardware:${RESET} ${BOLD}${CAROLINE_HARDWARE_PROFILE}${RESET} ${DIM}(${ARCH}, ${TOTAL_RAM_MB:-0}MB RAM)${RESET}"
 if [ -n "$CPU_MODEL" ]; then
   say "${DIM}    CPU: ${CPU_MODEL}${RESET}"
 fi
 say "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
-say "${DIM}    SteamOS local model support is experimental; Ollama can be installed as a user service without changing read-only mode.${RESET}"
+    say "${DIM}    Local model support is experimental; Ollama can be installed as a user service without changing system packages.${RESET}"
 say ""
 INSTALL_OLLAMA="n"
 OLLAMA_USER_SERVICE_ENABLED="false"
 EXISTING_AI_PROVIDER="$(existing_setting aiProvider)"
 EXISTING_OLLAMA_MODEL="$(existing_setting ollamaModel)"
-if ! can_prompt && [ -n "$EXISTING_AI_PROVIDER" ]; then
+if [ -n "${CAROLINE_AI_PROVIDER:-}" ]; then
+  AI_PROVIDER="$CAROLINE_AI_PROVIDER"
+  OLLAMA_MODEL="${CAROLINE_OLLAMA_MODEL:-${EXISTING_OLLAMA_MODEL:-$RECOMMENDED_OLLAMA_MODEL}}"
+  if [ "$AI_PROVIDER" = "ollama" ] && [ "${CAROLINE_INSTALL_OLLAMA:-false}" = "true" ]; then
+    INSTALL_OLLAMA="y"
+    say "${MAGENTA}  // LOCAL AI - OLLAMA${RESET}"
+    if install_portable_ollama "$OLLAMA_MODEL"; then
+      say "${GREEN}  ✓ Ollama setup complete${RESET}"
+    else
+      AI_PROVIDER="openrouter"
+      INSTALL_OLLAMA="n"
+      say "${YELLOW}  ! Falling back to OpenRouter mode. Local Ollama remains available later in Settings.${RESET}"
+    fi
+    say ""
+  fi
+elif ! can_prompt && [ -n "$EXISTING_AI_PROVIDER" ]; then
   AI_PROVIDER="$EXISTING_AI_PROVIDER"
   OLLAMA_MODEL="${EXISTING_OLLAMA_MODEL:-$RECOMMENDED_OLLAMA_MODEL}"
   say "${DIM}  Existing AI provider preserved: ${AI_PROVIDER}${RESET}"
-elif ask_yes_no "Configure Caroline to try local Ollama mode on this Deck?" "n"; then
+elif ask_yes_no "Configure Caroline to try local Ollama mode on this device?" "n"; then
   AI_PROVIDER="ollama"
   OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
   if ask_yes_no "Install/start portable Ollama now and pull ${OLLAMA_MODEL}?" "y"; then
@@ -405,13 +445,13 @@ say ""
 LOCAL_AUTH_ENABLED="$(existing_setting localAuthEnabled)"
 if [ "$LOCAL_AUTH_ENABLED" != "true" ] && [ "$LOCAL_AUTH_ENABLED" != "false" ]; then
   say "${MAGENTA}  // LOCAL ACCESS${RESET}"
-  say "${DIM}  SteamOS currently binds Caroline to localhost only, so LAN devices cannot reach it without an SSH tunnel.${RESET}"
-  say "${DIM}  This choice is saved for future SteamOS remote-access support.${RESET}"
-  if ask_yes_no "Require local browser login when remote access is added?" "n"; then
-    LOCAL_AUTH_ENABLED="true"
+  if [ "$CAROLINE_BIND_HOST" = "127.0.0.1" ] || [ "$CAROLINE_BIND_HOST" = "localhost" ]; then
+    say "${DIM}  This home-directory install currently binds Caroline to localhost only; use an SSH tunnel from another computer.${RESET}"
   else
-    LOCAL_AUTH_ENABLED="false"
+    say "${DIM}  This home-directory install binds Caroline to ${CAROLINE_BIND_HOST}; keep port ${CAROLINE_PORT} on a trusted LAN.${RESET}"
   fi
+  say "${DIM}  Local browser login is recorded for future remote-access support.${RESET}"
+  LOCAL_AUTH_ENABLED="true"
 else
   say "${DIM}  Local access choice preserved from existing settings.${RESET}"
 fi
@@ -500,12 +540,18 @@ const build = {
   repo: process.env.CAROLINE_REPO_URL || '',
   installedAt: process.env.BUILD_INSTALLED_AT || new Date().toISOString(),
   hostname: process.env.BUILD_HOSTNAME || '',
-  platform: 'steamos',
-  deviceType: 'Steam',
-  hardwareProfile: 'Steam Deck / SteamOS'
+  platform: process.env.CAROLINE_PLATFORM || 'steamos',
+  deviceType: process.env.CAROLINE_HOST_DEVICE_TYPE || 'Steam',
+  hardwareProfile: process.env.CAROLINE_HARDWARE_PROFILE || 'Steam Deck / SteamOS'
 };
 fs.writeFileSync(`${path}/caroline_build.json`, JSON.stringify(build, null, 2) + '\n');
 NODE_BUILD
+
+rm -rf "$CAROLINE_PUBLIC_DIR"
+mkdir -p "$CAROLINE_PUBLIC_DIR"
+cp -f "$CAROLINE_DIR/index.html" "$CAROLINE_PUBLIC_DIR/index.html"
+cp -f "$CAROLINE_DIR/caroline_build.json" "$CAROLINE_PUBLIC_DIR/caroline_build.json"
+if [ -d "$CAROLINE_DIR/assets" ]; then cp -R "$CAROLINE_DIR/assets" "$CAROLINE_PUBLIC_DIR/assets"; fi
 
 CAROLINE_DIR_SED="$(printf '%s' "$CAROLINE_DIR" | sed 's/[&#]/\\&/g')"
 for json in "$CAROLINE_DIR/flows.json" "$CAROLINE_DIR/caroline-agent-loop.json" "$CAROLINE_DIR/caroline-auto-tasks.json" "$CAROLINE_DIR/caroline-wonder-loop.json"; do
@@ -573,9 +619,9 @@ const defaults = {
   temperatureUnit: existing.temperatureUnit || 'fahrenheit',
   piIp: '127.0.0.1',
   nodeRedUrl: `http://localhost:${process.env.CAROLINE_PORT || 8080}`,
-  hostDeviceType: 'Steam',
-  uiFont: existing.uiFont || 'Inter',
-  uiScale: existing.uiScale || 'large',
+  hostDeviceType: process.env.CAROLINE_HOST_DEVICE_TYPE || 'Steam',
+  uiFont: existing.uiFont || 'Noto Sans',
+  uiScale: existing.uiScale || 'xlarge',
   uiDensity: existing.uiDensity || 'comfortable',
   highContrastText: existing.highContrastText ?? true,
   reduceMonoLabels: existing.reduceMonoLabels ?? true,
@@ -630,6 +676,7 @@ cat > "$CAROLINE_DIR/settings.js" <<SETTINGS_EOF
 const path = require('path');
 const fs = require('fs');
 const carolineDir = process.env.CAROLINE_DIR || __dirname;
+const publicDir = process.env.CAROLINE_PUBLIC_DIR || path.join(carolineDir, "public");
 const credentialSecretPath = path.join(carolineDir, ".credential_secret");
 const allowedBrowserOrigin = /^https?:\\/\\/(localhost|127\\.0\\.0\\.1|10(?:\\.\\d{1,3}){3}|192\\.168(?:\\.\\d{1,3}){2}|172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})(:\\d+)?$/i;
 
@@ -645,10 +692,10 @@ function localhostOriginGuard(req, res, next) {
 
 module.exports = {
   uiPort: process.env.PORT || ${CAROLINE_PORT},
-  uiHost: "0.0.0.0",
-  httpAdminRoot: "/red",
+  uiHost: process.env.CAROLINE_BIND_HOST || "${CAROLINE_BIND_HOST}",
+  httpAdminRoot: false,
   httpNodeRoot: "/",
-  httpStatic: carolineDir,
+  httpStatic: publicDir,
   flowFile: "flows.json",
   httpRequestTimeout: 120000,
   httpNodeCors: {
@@ -716,7 +763,8 @@ cat > "$REAL_HOME/.local/bin/caroline-steamos-kiosk" <<KIOSK_EOF
 set -e
 URL="http://localhost:${CAROLINE_PORT}/"
 PROFILE="\$HOME/.local/share/caroline/firefox-kiosk"
-mkdir -p "\$PROFILE"
+CHROMIUM_PROFILE="\$HOME/.local/share/caroline/chromium-kiosk"
+mkdir -p "\$PROFILE" "\$CHROMIUM_PROFILE"
 if command -v flatpak >/dev/null 2>&1 && flatpak info org.mozilla.firefox >/dev/null 2>&1; then
   exec flatpak run org.mozilla.firefox --kiosk --new-window "\$URL"
 fi
@@ -724,7 +772,15 @@ if command -v firefox >/dev/null 2>&1; then
   exec firefox --no-remote --new-instance --profile "\$PROFILE" --kiosk "\$URL"
 fi
 if command -v chromium >/dev/null 2>&1; then
-  exec chromium --kiosk --app="\$URL"
+  exec chromium \\
+    --user-data-dir="\$CHROMIUM_PROFILE" \\
+    --no-first-run \\
+    --no-default-browser-check \\
+    --password-store=basic \\
+    --disable-session-crashed-bubble \\
+    --disable-infobars \\
+    --autoplay-policy=no-user-gesture-required \\
+    --kiosk "\$URL"
 fi
 exec xdg-open "\$URL"
 KIOSK_EOF
@@ -886,11 +942,16 @@ fi
 say ""
 say "${BOLD}${GREEN}  Project: Caroline SteamOS experimental install complete.${RESET}"
 say "${CYAN}  URL on Steam Deck:${RESET} ${BOLD}http://localhost:${CAROLINE_PORT}/${RESET}"
+if [ "$CAROLINE_BIND_HOST" != "127.0.0.1" ] && [ "$CAROLINE_BIND_HOST" != "localhost" ]; then
+  say "${CYAN}  LAN URL:${RESET} ${BOLD}http://$(hostname -I 2>/dev/null | awk '{print $1}'):${CAROLINE_PORT}/${RESET}"
+fi
 say "${CYAN}  Open command:${RESET} ${BOLD}caroline-steamos-open${RESET}"
 say "${CYAN}  Kiosk command:${RESET} ${BOLD}caroline-steamos-kiosk${RESET}"
 say "${CYAN}  Logs:${RESET} ${BOLD}journalctl --user -u caroline -f${RESET}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
   say "${CYAN}  Ollama logs:${RESET} ${BOLD}journalctl --user -u ollama -f${RESET}"
 fi
-say "${CYAN}  Editor:${RESET} ${BOLD}http://localhost:${CAROLINE_PORT}/red${RESET}"
+if [ "$CAROLINE_BIND_HOST" = "127.0.0.1" ] || [ "$CAROLINE_BIND_HOST" = "localhost" ]; then
+  say "${CYAN}  Remote view:${RESET} ${BOLD}ssh -L 8088:127.0.0.1:${CAROLINE_PORT} ${REAL_USER}@STEAM_DECK_IP${RESET}"
+fi
 say ""

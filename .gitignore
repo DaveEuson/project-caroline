@@ -50,3 +50,5 @@ Screenshots/PXL_*
 Screenshot_*.png.jpg
 qa-artifacts/
 .deploy/
+reports/
+scripts/__pycache__/

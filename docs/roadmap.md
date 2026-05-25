@@ -4,8 +4,11 @@ This is a living document of planned features and long-term goals. Order within 
 
 ## Coming Soon
 
+### Companion Setup Hub
+Use the desktop Companion app as a friendly setup location for Caroline hosts. The goal is to let users pair with a host, edit host settings, connect integrations, check system status, and finish confusing setup steps from a normal desktop window instead of doing everything on the kiosk screen.
+
 ### Discord Messaging
-Send and receive Discord messages directly from the kiosk — no need to set up a dedicated channel. Chat with Caroline and have her relay messages through your existing Discord account.
+Send and receive Discord messages directly from the kiosk. Short term: keep the advanced self-hosted bot-token setup, with either a server channel or a direct-message destination. Longer term: add a managed Project Caroline Discord bridge so beta users can pair with a code instead of creating their own Discord developer bot.
 
 ### Telegram Support
 Connect a Telegram bot so Caroline can send and receive messages, alerts, and reminders through Telegram.
