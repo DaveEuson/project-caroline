@@ -1,6 +1,8 @@
 export default function handler(req, res) {
   const code = (req.query.code || '').replace(/[^A-Za-z0-9._~+/-]/g, '');
+  const state = (req.query.state || '').replace(/[^A-Za-z0-9._~-]/g, '');
   const error = (req.query.error || '').replace(/[<>"'&]/g, '');
+  const localCallback = decodeLocalCallback(state);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.status(200).send(`<!doctype html>
@@ -24,15 +26,26 @@ export default function handler(req, res) {
   </div>
   <script>
     (function() {
+      var code = ${JSON.stringify(code)};
+      var state = ${JSON.stringify(state)};
+      var localCallback = ${JSON.stringify(localCallback)};
+      function finishLocally() {
+        if (!localCallback || !code) return false;
+        var joiner = localCallback.indexOf('?') === -1 ? '?' : '&';
+        window.location.replace(localCallback + joiner + new URLSearchParams({ code: code, state: state }).toString());
+        return true;
+      }
       try {
         if (window.opener) {
           window.opener.postMessage(
             ${error
               ? `{ type: 'caroline_spotify_error', message: 'Spotify error: ${error}' }`
-              : `{ type: 'caroline_spotify_code', code: ${JSON.stringify(code)} }`
+              : `{ type: 'caroline_spotify_code', code: code, state: state }`
             },
             '*'
           );
+        } else if (${error ? 'false' : 'true'} && finishLocally()) {
+          return;
         }
       } catch(e) {}
       setTimeout(function() { try { window.close(); } catch(e) {} }, 1200);
@@ -40,4 +53,19 @@ export default function handler(req, res) {
   </script>
 </body>
 </html>`);
+}
+
+function decodeLocalCallback(state) {
+  try {
+    const encoded = String(state || '').trim();
+    if (!encoded) return '';
+    const padded = encoded.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - encoded.length % 4) % 4);
+    const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+    const cb = String((payload && payload.cb) || '').trim();
+    const u = new URL(cb);
+    if ((u.protocol === 'http:' || u.protocol === 'https:') && u.pathname === '/spotify/callback') {
+      return u.toString();
+    }
+  } catch (e) {}
+  return '';
 }
