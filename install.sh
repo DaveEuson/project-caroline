@@ -20,6 +20,17 @@ DIM='\033[2m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  CYAN=''
+  MAGENTA=''
+  YELLOW=''
+  GREEN=''
+  RED=''
+  DIM=''
+  BOLD=''
+  RESET=''
+fi
+
 CAROLINE_NONINTERACTIVE="${CAROLINE_NONINTERACTIVE:-false}"
 CAROLINE_CHANNEL="${CAROLINE_CHANNEL:-release}"
 _expect_channel_value="false"
@@ -65,6 +76,13 @@ spin() {
   local pid=$1 msg=$2
   local spin='⣾⣽⣻⢿⡿⣟⣯⣷'
   local i=0
+  if [ "$CAROLINE_NONINTERACTIVE" = "true" ] || [ ! -t 1 ]; then
+    printf "  %s\n" "$msg"
+    while kill -0 "$pid" 2>/dev/null; do
+      sleep 1
+    done
+    return 0
+  fi
   tput civis 2>/dev/null || true
   while kill -0 "$pid" 2>/dev/null; do
     printf "\r  ${CYAN}${spin:$i:1}${RESET}  %s" "$msg"
@@ -2063,7 +2081,7 @@ if [ -n "$LOCAL_COMMIT" ] && [ -n "$REMOTE_COMMIT" ] && [ "${REMOTE_COMMIT#${LOC
   exit 0
 fi
 echo "$(date -Is) Update available: ${LOCAL_COMMIT:-unknown} -> ${REMOTE_COMMIT:0:7}" >> "$LOG"
-SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true CAROLINE_PRESERVE_UPDATE_LOG=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="$REPO_CHANNEL" bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
+NO_COLOR=1 TERM=dumb SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true CAROLINE_PRESERVE_UPDATE_LOG=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="$REPO_CHANNEL" bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
 echo "$(date -Is) Project: Caroline GUI update complete" >> "$LOG"
 RESTART_CMD="$(command -v systemctl || true)"
 RESTART_UNIT="caroline-restart-$(date +%s)"

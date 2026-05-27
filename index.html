@@ -8606,10 +8606,23 @@ function showUpdateCommand(btn) {
 
 let carolineUpdatePollTimer = null;
 
+function cleanUpdateStatusText(value, fallback = '') {
+  const cleaned = String(value || '')
+    .replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1B\\))/g, '')
+    .replace(/\uFFFD\[[0-?]*[ -/]*[@-~]/g, '')
+    .replace(/\r(?!\n)/g, '\n')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+  const lines = cleaned.split(/\n+/)
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  const text = lines.length ? lines[lines.length - 1] : String(fallback || '').trim();
+  return text.length > 280 ? text.slice(0, 277) + '...' : text;
+}
+
 function setUpdateStatus(text, color = 'rgba(34,211,238,0.95)') {
   const status = document.getElementById('update-command-status');
   if (!status) return;
-  status.textContent = text;
+  status.textContent = cleanUpdateStatusText(text, text);
   status.style.color = color;
 }
 
@@ -8680,10 +8693,11 @@ function pollCarolineUpdateStatus(btn, originalText) {
       const resp = await fetchJsonWithTimeout(getNodeRedUrl() + '/admin/update/status', { timeoutMs: 3500 }, 'Caroline update status');
       const data = await resp.json();
       if (data.running) {
-        setUpdateStatus('Updating... ' + (data.lastLine || 'installer is running'));
+        const progressLine = cleanUpdateStatusText(data.lastLine, 'installer is running');
+        setUpdateStatus('Updating... ' + (progressLine || 'installer is running'));
         return;
       }
-      const lastLine = data.lastLine || '';
+      const lastLine = cleanUpdateStatusText(data.lastLine, '');
       const isComplete = /complete/i.test(lastLine);
       const isAlreadyCurrent = /already current/i.test(lastLine);
       const isFailed = /failed|unavailable/i.test(lastLine);

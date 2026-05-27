@@ -20,6 +20,17 @@ BOLD="\033[1m"
 DIM="\033[2m"
 RESET="\033[0m"
 
+if [ ! -t 1 ] || [ -n "${NO_COLOR:-}" ]; then
+  CYAN=""
+  MAGENTA=""
+  GREEN=""
+  YELLOW=""
+  RED=""
+  BOLD=""
+  DIM=""
+  RESET=""
+fi
+
 REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME="$(eval echo "~$REAL_USER")"
 CAROLINE_DIR="$REAL_HOME/caroline"
@@ -907,7 +918,7 @@ fi
 echo "\$(date -Is) Update available: \${LOCAL_COMMIT:-unknown} -> \${REMOTE_COMMIT:0:7}" >> "\$LOG"
 curl -fsSL "https://raw.githubusercontent.com/\${REPO_OWNER}/\${REPO_NAME}/\${REPO_CHANNEL}/install-steamos.sh" -o "\$INSTALLER" >> "\$LOG" 2>&1
 chmod 700 "\$INSTALLER"
-CAROLINE_NONINTERACTIVE=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="\$REPO_CHANNEL" CAROLINE_REPO_URL="\$REPO_URL" bash "\$INSTALLER" >> "\$LOG" 2>&1
+NO_COLOR=1 TERM=dumb CAROLINE_NONINTERACTIVE=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="\$REPO_CHANNEL" CAROLINE_REPO_URL="\$REPO_URL" bash "\$INSTALLER" >> "\$LOG" 2>&1
 echo "\$(date -Is) Project: Caroline GUI update complete" >> "\$LOG"
 RESTART_CMD="\$(command -v systemctl || true)"
 RESTART_UNIT="caroline-restart-\$(date +%s)"

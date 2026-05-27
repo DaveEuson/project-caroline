@@ -19,6 +19,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 ## Fixed
 
 - Clear Chat and Clear Memory now clear host-side Caroline data as well as browser-local data when the host endpoint is available.
+- Update Caroline status now strips terminal color/spinner control codes before showing progress in Settings.
 
 ## Removed
 
