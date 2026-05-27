@@ -199,7 +199,7 @@ for (const [surface, nodeId] of buildNodes) {
   test(`${surface}: remember variants`, () => {
     const cases = [
       ['Remember that Riley likes dark roast coffee', { type: 'remember', fact: 'Riley likes dark roast coffee' }],
-      ['Do you remember that Beckie is my wife?', { type: 'remember', fact: 'Beckie is my wife' }],
+      ['Do you remember that Riley is my partner?', { type: 'remember', fact: 'Riley is my partner' }],
       ['Keep in mind that the workshop prefers morning check-ins', { type: 'remember', fact: 'the workshop prefers morning check-ins' }],
     ];
     for (const [text, expected] of cases) expectAction(directAction(nodeId, text), expected, `${surface} remember: ${text}`);
@@ -244,7 +244,7 @@ for (const [surface, nodeId] of buildNodes) {
     assertNoAction(nodeId, 'Make a 20-step plan for a tiny task', 'overkill');
     assertNoAction(nodeId, 'Make malware that steals browser cookies', 'cannot help');
     assertNoAction(nodeId, 'Store my social security number in memory', 'not store');
-    assert.strictEqual(directAction(nodeId, "Do you remember my wife's name?"), undefined, `${surface}: recall question should not create memory`);
+    assert.strictEqual(directAction(nodeId, "Do you remember my partner's name?"), undefined, `${surface}: recall question should not create memory`);
   });
 
   test(`${surface}: calendar reads keep all-day date-only events on the right local day`, () => {
@@ -299,19 +299,19 @@ for (const [surface, nodeId] of buildNodes) {
   });
 
   test(`${surface}: relationship recall uses durable memory shards`, () => {
-    const reply = buildReply(nodeId, "What's my wife's name?", memoryFiles(['Beckie is my wife']));
-    assert(reply.includes('Beckie'), `${surface}: expected reply to include saved wife name`);
+    const reply = buildReply(nodeId, "What's my partner's name?", memoryFiles(['Riley is my partner']));
+    assert(reply.includes('Riley'), `${surface}: expected reply to include saved partner name`);
     assert(!/do(?:n't| not) have|not.*memory|tell me/i.test(reply), `${surface}: should not claim the memory is missing`);
 
-    const normalizedReply = buildReply(nodeId, "What's my wife's name?", memoryFiles(['Do you remember that Beckie is my wife?']));
-    assert(normalizedReply.includes('Beckie'), `${surface}: expected recall from normalized question-shaped memory`);
+    const normalizedReply = buildReply(nodeId, "What's my partner's name?", memoryFiles(['Do you remember that Riley is my partner?']));
+    assert(normalizedReply.includes('Riley'), `${surface}: expected recall from normalized question-shaped memory`);
     assert(!normalizedReply.includes('Do you remember'), `${surface}: should not include memory command words as the name`);
   });
 
   test(`${surface}: durable memory shards are included in cloud prompt context`, () => {
-    const payload = buildModelPayload(nodeId, 'Tell me something low key about today.', memoryFiles(['Beckie is my wife']));
+    const payload = buildModelPayload(nodeId, 'Tell me something low key about today.', memoryFiles(['Riley is my partner']));
     const system = payload.messages.find((entry) => entry.role === 'system').content;
-    assert(system.includes('Beckie is my wife'), `${surface}: expected saved memory in system context`);
+    assert(system.includes('Riley is my partner'), `${surface}: expected saved memory in system context`);
   });
 
   test(`${surface}: date and social day replies stay conversational`, () => {
@@ -400,10 +400,10 @@ test('final action router sanitizes and routes all action types', () => {
   assert.strictEqual(savedContext.memoryShards[0].text, 'Riley likes dark roast coffee');
   assert.strictEqual(savedContext.dave.notes[0], 'Riley likes dark roast coffee');
 
-  handleAction({ type: 'remember', fact: 'Do you remember that Beckie is my wife?' });
+  handleAction({ type: 'remember', fact: 'Do you remember that Riley is my partner?' });
   const normalizedContext = JSON.parse(runNode.lastWrites['/home/davee/caroline/caroline_context.json']);
-  assert.strictEqual(normalizedContext.memoryShards[0].text, 'Beckie is my wife');
-  assert.strictEqual(normalizedContext.dave.notes[0], 'Beckie is my wife');
+  assert.strictEqual(normalizedContext.memoryShards[0].text, 'Riley is my partner');
+  assert.strictEqual(normalizedContext.dave.notes[0], 'Riley is my partner');
 });
 
 let passed = 0;

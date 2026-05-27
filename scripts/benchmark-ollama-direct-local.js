@@ -66,7 +66,7 @@ function todayParts() {
 const TODAY = todayParts();
 const SYSTEM_PROMPT = [
   'You are Carl, a local Project: Caroline companion running on a desktop host.',
-  'Dave is the user. Dave has a wife named Beckie.',
+  'The user is a test operator. The QA codename is Signal Blue.',
   `Today is ${TODAY.label} in America/Los_Angeles.`,
   'Google Calendar is not connected on this host.',
   'Stay strictly platonic. Keep replies short: 1-3 sentences.',
@@ -110,18 +110,18 @@ const PROMPTS = [
     ],
   },
   {
-    id: 'remember-beckie',
-    text: "My wife's name is Beckie. Can you remember that?",
+    id: 'remember-codename',
+    text: 'The QA codename is Signal Blue. Can you remember that?',
     checks: [
-      ['mentions Beckie', includes('Beckie')],
+      ['mentions codename', includes('Signal Blue')],
       ['acknowledges memory', includes('remember|got it|noted|saved|keep')],
     ],
   },
   {
-    id: 'recall-beckie',
-    text: "What is my wife's name?",
+    id: 'recall-codename',
+    text: 'What is the QA codename?',
     checks: [
-      ['answers Beckie', includes('Beckie')],
+      ['answers codename', includes('Signal Blue')],
       ['does not say unknown', excludes("\\b(don't know|do not know|not sure|tell me)\\b")],
     ],
   },

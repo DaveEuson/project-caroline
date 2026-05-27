@@ -137,7 +137,7 @@ async function captureChat(target, message, extraBody, opts) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message,
-      userName: 'Dave',
+      userName: 'Smoke Tester',
       aiName: 'Caroline',
       ...(extraBody || {}),
     }),

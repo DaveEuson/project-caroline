@@ -95,9 +95,9 @@ const PROMPTS = [
   },
   {
     id: 'memory',
-    text: "My wife's name is Beckie. Can you remember that?",
+    text: 'The QA codename is Signal Blue. Can you remember that?',
     checks: [
-      { label: 'acknowledges Beckie', test: /Beckie/i },
+      { label: 'acknowledges codename', test: /Signal Blue/i },
       { label: 'remember action', test: /\[ACTION\]\s*\{\s*"type"\s*:\s*"remember"/i },
     ],
   },
@@ -137,10 +137,10 @@ const PROMPTS = [
   },
   {
     id: 'correction',
-    text: "If I say my wife's name is Sarah, correct me based on memory: it's Beckie.",
+    text: 'If I say the QA codename is Orange Kite, correct me based on memory: it is Signal Blue.',
     checks: [
-      { label: 'uses Beckie', test: /Beckie/i },
-      { label: 'does not accept Sarah', test: (r) => !/Sarah is your wife/i.test(r) },
+      { label: 'uses codename', test: /Signal Blue/i },
+      { label: 'does not accept wrong codename', test: (r) => !/Orange Kite is the QA codename/i.test(r) },
     ],
   },
   {
@@ -295,7 +295,7 @@ async function askModel(opts, model, prompt) {
   const body = {
     message: prompt.text,
     content: prompt.text,
-    userName: 'Dave',
+    userName: 'Test User',
     aiName: 'Carl',
     aiProvider: 'ollama',
     ollamaModel: model,

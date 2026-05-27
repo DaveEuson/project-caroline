@@ -88,7 +88,7 @@ const TODAY = todayParts();
 
 const SYSTEM_PROMPT = [
   'You are Carl, a local Project: Caroline companion running on a Linux host.',
-  'Dave is the user. Dave has a wife named Beckie.',
+  'The user is a test operator. The QA codename is Signal Blue.',
   `Today is ${todayLabel()} in America/Los_Angeles.`,
   'Google Calendar is not connected on this host.',
   'Stay strictly platonic. Keep replies short: 1-3 sentences.',
@@ -122,18 +122,18 @@ const PROMPTS = [
     ],
   },
   {
-    id: 'remember-beckie',
-    text: "My wife's name is Beckie. Can you remember that?",
+    id: 'remember-codename',
+    text: 'The QA codename is Signal Blue. Can you remember that?',
     checks: [
-      { label: 'mentions Beckie', test: /Beckie/i },
+      { label: 'mentions codename', test: /Signal Blue/i },
       { label: 'acknowledges memory', test: /remember|got it|noted|saved|keep/i },
     ],
   },
   {
-    id: 'recall-beckie',
-    text: "What is my wife's name?",
+    id: 'recall-codename',
+    text: 'What is the QA codename?',
     checks: [
-      { label: 'answers Beckie', test: /Beckie/i },
+      { label: 'answers codename', test: /Signal Blue/i },
       { label: 'does not say unknown', test: (r) => !/\b(don't know|do not know|not sure|tell me)\b/i.test(r) },
     ],
   },

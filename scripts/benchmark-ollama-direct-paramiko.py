@@ -101,7 +101,7 @@ TODAY = today_parts()
 SYSTEM_PROMPT = " ".join(
     [
         "You are Carl, a local Project: Caroline companion running on a Linux host.",
-        "Dave is the user. Dave has a wife named Beckie.",
+        "The user is a test operator. The QA codename is Signal Blue.",
         f"Today is {TODAY['label']} in America/Los_Angeles.",
         "Google Calendar is not connected on this host.",
         "Stay strictly platonic. Keep replies short: 1-3 sentences.",
@@ -147,18 +147,18 @@ PROMPTS = [
         ],
     },
     {
-        "id": "remember-beckie",
-        "text": "My wife's name is Beckie. Can you remember that?",
+        "id": "remember-codename",
+        "text": "The QA codename is Signal Blue. Can you remember that?",
         "checks": [
-            ("mentions Beckie", includes(r"Beckie")),
+            ("mentions codename", includes(r"Signal Blue")),
             ("acknowledges memory", includes(r"remember|got it|noted|saved|keep")),
         ],
     },
     {
-        "id": "recall-beckie",
-        "text": "What is my wife's name?",
+        "id": "recall-codename",
+        "text": "What is the QA codename?",
         "checks": [
-            ("answers Beckie", includes(r"Beckie")),
+            ("answers codename", includes(r"Signal Blue")),
             ("does not say unknown", excludes(r"\b(don't know|do not know|not sure|tell me)\b")),
         ],
     },
