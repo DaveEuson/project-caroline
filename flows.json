@@ -5722,7 +5722,7 @@
     "type": "function",
     "z": "1497b6d50e1369f5",
     "name": "Start Caroline update",
-    "func": "const CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nlet body = msg.payload || {};\nif (Buffer.isBuffer(body)) body = body.toString('utf8');\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { body = {}; } }\nconst rawChannel = String(body.channel || '').toLowerCase().trim();\nconst channel = /^[a-z0-9._/-]+$/.test(rawChannel) ? rawChannel : 'release';\nconst CHANNEL_FILE = '/home/davee/caroline/caroline_channel';\ntry { fs.writeFileSync(CHANNEL_FILE, channel + '\\n', 'utf8'); } catch(e) { node.warn('Could not write channel file: ' + e.message); }\nnode.log('[Caroline] Update requested on channel: ' + channel);\nconst response = { req: msg.req, res: msg.res, statusCode: 202, headers: CORS, payload: { ok: true, message: 'Update started on the Caroline host', channel } };\nconst run = { payload: '' };\nreturn [response, run];",
+    "func": "const CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nlet body = msg.payload || {};\nif (Buffer.isBuffer(body)) body = body.toString('utf8');\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { body = {}; } }\nconst rawChannel = String(body.channel || '').toLowerCase().trim();\nconst channel = /^[a-z0-9._/-]+$/.test(rawChannel) ? rawChannel : 'release';\nconst homeDir = String(process.env.HOME || (os.homedir && os.homedir()) || '/home/davee').replace(/\\/$/, '');\nconst CHANNEL_FILE = homeDir + '/caroline/caroline_channel';\ntry { fs.writeFileSync(CHANNEL_FILE, channel + '\\n', 'utf8'); } catch(e) { node.warn('Could not write channel file: ' + e.message); }\nnode.log('[Caroline] Update requested on channel: ' + channel);\nconst response = { req: msg.req, res: msg.res, statusCode: 202, headers: CORS, payload: { ok: true, message: 'Update started on the Caroline host', channel } };\nconst run = { payload: '' };\nreturn [response, run];",
     "outputs": 2,
     "timeout": 0,
     "noerr": 0,
@@ -5732,6 +5732,10 @@
       {
         "var": "fs",
         "module": "fs"
+      },
+      {
+        "var": "os",
+        "module": "os"
       }
     ],
     "x": 390,
