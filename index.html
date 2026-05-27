@@ -102,6 +102,25 @@
   .settings-input:focus { border-color: rgba(var(--t-rgb1), 0.6); }
   .settings-select { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; outline: none; width: 160px; cursor: pointer; }
   .settings-select option { background: #0c0814; }
+  .privacy-dashboard { margin-top:14px; display:flex; flex-direction:column; gap:12px; }
+  .privacy-status { font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(226,232,240,0.46); }
+  .privacy-status strong { color:var(--t-hex1); font-weight:600; }
+  .privacy-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
+  .privacy-stat { border:1px solid rgba(var(--t-rgb1),0.15); border-radius:8px; padding:9px 10px; background:rgba(0,0,0,0.22); min-width:0; }
+  .privacy-stat-label { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:rgba(226,232,240,0.42); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .privacy-stat-value { margin-top:4px; font-size:18px; line-height:1.1; color:#f8fafc; }
+  .privacy-chip-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .privacy-chip { border:1px solid rgba(148,163,184,0.18); border-radius:999px; padding:4px 8px; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(226,232,240,0.62); background:rgba(148,163,184,0.06); }
+  .privacy-chip.on { color:#86efac; border-color:rgba(74,222,128,0.28); background:rgba(34,197,94,0.08); }
+  .privacy-chip.warn { color:#fbbf24; border-color:rgba(251,191,36,0.28); background:rgba(251,191,36,0.07); }
+  .privacy-chip.off { color:rgba(226,232,240,0.36); }
+  .privacy-path-list { display:flex; flex-direction:column; gap:6px; font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(226,232,240,0.55); }
+  .privacy-path-row { display:grid; grid-template-columns:minmax(92px,0.42fr) minmax(0,1fr) auto; align-items:center; gap:8px; border-bottom:1px solid rgba(148,163,184,0.08); padding-bottom:5px; }
+  .privacy-path-row:last-child { border-bottom:none; padding-bottom:0; }
+  .privacy-path-key { color:rgba(226,232,240,0.38); text-transform:uppercase; letter-spacing:.08em; }
+  .privacy-path-value { color:rgba(226,232,240,0.7); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .privacy-path-state { color:rgba(226,232,240,0.34); white-space:nowrap; }
+  .privacy-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
   .theme-swatches { display: flex; gap: 10px; }
   .theme-swatch { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
   .theme-swatch.active { border-color: #f8fafc; transform: scale(1.15); }
@@ -2119,6 +2138,10 @@
       flex-direction:column;
       gap:8px;
     }
+    .privacy-path-row {
+      grid-template-columns:1fr;
+      gap:3px;
+    }
     .settings-input, .settings-select {
       width:100%;
     }
@@ -2936,7 +2959,24 @@
         </div>
         <div class="settings-section">
           <h3>Privacy &amp; Data</h3>
-          <div class="settings-row">
+          <div class="privacy-dashboard" aria-live="polite">
+            <div class="privacy-status" id="privacy-dashboard-status">Loading privacy status...</div>
+            <div class="privacy-summary-grid" id="privacy-summary-stats"></div>
+            <div>
+              <div class="settings-sub" style="margin-bottom:6px;">Connected integrations</div>
+              <div class="privacy-chip-row" id="privacy-integration-list"></div>
+            </div>
+            <div>
+              <div class="settings-sub" style="margin-bottom:6px;">Data locations</div>
+              <div class="privacy-path-list" id="privacy-location-list"></div>
+            </div>
+            <div class="privacy-actions">
+              <button class="sys-btn" type="button" onclick="refreshPrivacyDashboard()">Refresh Privacy</button>
+              <button class="sys-btn" type="button" onclick="exportBackup()">Export Privacy Data</button>
+              <button class="sys-btn danger" type="button" onclick="resetPrivacyData(this)">Reset Privacy Data</button>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Privacy mode</div><div class="settings-sub">Hide and stop saving chat history &amp; memory this session</div></div>
             <input type="checkbox" id="set-privacy-mode" style="width:20px;height:20px;cursor:pointer;accent-color:#fb7185;" onchange="applyPrivacyMode()"/>
           </div>
@@ -3510,6 +3550,7 @@ const BOOLEAN_DEFAULTS = {
   setupComplete: false,
   highContrastText: true,
   reduceMonoLabels: true,
+  privacyMode: false,
   kioskMode: false,
   telemetryInstallCount: undefined,
   telemetryTroubleshooting: undefined,
@@ -4364,13 +4405,15 @@ async function runSystemCheck(options = {}) {
   let health = null;
   let resources = null;
   let memory = null;
+  let privacy = null;
   let updateStatus = null;
 
   try {
-    const [healthResult, resourceResult, memoryResult, updateResult] = await Promise.allSettled([
+    const [healthResult, resourceResult, memoryResult, privacyResult, updateResult] = await Promise.allSettled([
       systemCheckFetch('/health', 'System check health'),
       systemCheckFetch('/system-resources', 'System check resources'),
       systemCheckFetch('/admin/memory-shards', 'System check memory'),
+      systemCheckFetch('/admin/privacy-summary', 'System check privacy'),
       systemCheckFetch('/admin/update/status', 'System check updates')
     ]);
 
@@ -4440,6 +4483,22 @@ async function runSystemCheck(options = {}) {
       );
     } else {
       addSystemCheckRow(checks, 'fail', 'Memory shards', 'Memory endpoint failed: ' + systemCheckEndpointError(memoryResult.reason), '/admin/memory-shards');
+    }
+
+    if (privacyResult.status === 'fulfilled') {
+      privacy = privacyResult.value || {};
+      const pCounts = privacy.counts || {};
+      addSystemCheckRow(
+        checks,
+        'pass',
+        'Privacy dashboard',
+        'Privacy summary is readable without exposing saved secret values.',
+        (pCounts.chatMessages || 0) + ' chat / ' + (pCounts.memoryShards || 0) + ' memory'
+      );
+      hostPrivacySummary = privacy;
+      renderPrivacyDashboard(privacy);
+    } else {
+      addSystemCheckRow(checks, 'warn', 'Privacy dashboard', 'Privacy summary unavailable: ' + systemCheckEndpointError(privacyResult.reason), '/admin/privacy-summary');
     }
 
     if (resourceResult.status === 'fulfilled') {
@@ -4704,6 +4763,205 @@ function importBackup(input) {
     } catch (err) { showSettingsFeedback('Import failed: ' + err.message, true); }
   };
   reader.readAsText(file);
+}
+
+let hostPrivacySummary = null;
+function parseStoredArray(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch(e) {
+    return [];
+  }
+}
+function privacyFormatRetention(ms) {
+  const n = Number(ms) || 0;
+  if (n <= 0) return 'Never';
+  const units = [
+    ['month', 2592000000],
+    ['week', 604800000],
+    ['day', 86400000],
+    ['hour', 3600000]
+  ];
+  for (const [label, size] of units) {
+    if (n >= size && n % size === 0) {
+      const count = n / size;
+      return count + ' ' + label + (count === 1 ? '' : 's');
+    }
+  }
+  return Math.round(n / 86400000) + ' days';
+}
+function privacyFormatBytes(bytes) {
+  const n = Number(bytes) || 0;
+  if (n <= 0) return '0 B';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function localPrivacySummary() {
+  const localSettings = JSON.parse(localStorage.getItem('caro_settings') || '{}');
+  const memories = parseStoredArray('caro_notes');
+  const history = parseStoredArray('caro_log');
+  const hidden = parseStoredArray('caro_hidden_shards');
+  const settings = Object.assign({}, S || {}, localSettings);
+  return {
+    ok: true,
+    localOnly: true,
+    host: { storageBase: 'Browser local storage', aiName: settings.aiName || 'Caroline', deviceType: settings.hostDeviceType || '' },
+    counts: { chatMessages: history.length, memoryShards: memories.length, hiddenMemoryShards: hidden.length, tasks: parseStoredArray('caro_todos').length },
+    retention: { privacyMode: !!settings.privacyMode, historyRetentionMs: settings.historyRetentionMs || 0, memoryRetentionMs: settings.memoryRetentionMs || 0 },
+    integrations: {
+      openrouter: { configured: !!(settings.openrouterKey || settings.openrouterKeyConfigured), label: 'OpenRouter' },
+      ollama: { configured: !!settings.ollamaUrl, label: 'Ollama', model: settings.ollamaModel || '' },
+      google: { configured: !!settings.googleClientId, connected: !!settings.googleConnected, label: 'Google Calendar' },
+      spotify: { configured: !!settings.spotifyClientId, connected: !!localStorage.getItem('spotify_token'), label: 'Spotify' },
+      hue: { configured: !!(settings.hueIp && (settings.hueKey || settings.hueKeyConfigured)), label: 'Hue' },
+      discord: { enabled: !!settings.discordEnabled, configured: !!(settings.discordToken || settings.discordTokenConfigured) && !!(settings.discordChannelId || settings.discordUserId), label: 'Discord' }
+    },
+    files: [],
+    browserStorageHints: [
+      { label: 'Browser settings', key: 'caro_settings' },
+      { label: 'Browser chat', key: 'caro_log' },
+      { label: 'Browser memory shards', key: 'caro_notes' },
+      { label: 'Hidden memory IDs', key: 'caro_hidden_shards' },
+      { label: 'Setup memory prompt', key: 'caroline_personality_prompt' },
+      { label: 'Imported memory prompt', key: 'caroline_user_profile_prompt' }
+    ],
+    lastUpdated: new Date().toISOString()
+  };
+}
+function buildPrivacyStat(label, value) {
+  const item = document.createElement('div');
+  item.className = 'privacy-stat';
+  const l = document.createElement('div');
+  l.className = 'privacy-stat-label';
+  l.textContent = label;
+  const v = document.createElement('div');
+  v.className = 'privacy-stat-value';
+  v.textContent = value;
+  item.append(l, v);
+  return item;
+}
+function renderPrivacyDashboard(summary = localPrivacySummary(), opts = {}) {
+  const status = document.getElementById('privacy-dashboard-status');
+  const stats = document.getElementById('privacy-summary-stats');
+  const integrations = document.getElementById('privacy-integration-list');
+  const locations = document.getElementById('privacy-location-list');
+  if (!stats || !integrations || !locations) return;
+  const counts = summary.counts || {};
+  const retention = summary.retention || {};
+  stats.replaceChildren(
+    buildPrivacyStat('Chat', String(counts.chatMessages || 0)),
+    buildPrivacyStat('Memory', String(counts.memoryShards || 0)),
+    buildPrivacyStat('Mode', retention.privacyMode ? 'Private' : 'Normal'),
+    buildPrivacyStat('History TTL', privacyFormatRetention(retention.historyRetentionMs)),
+    buildPrivacyStat('Memory TTL', privacyFormatRetention(retention.memoryRetentionMs))
+  );
+  integrations.replaceChildren();
+  Object.entries(summary.integrations || {}).forEach(([key, info]) => {
+    const chip = document.createElement('span');
+    const enabled = info.enabled !== false;
+    const connected = !!info.connected;
+    const configured = !!info.configured;
+    const state = !enabled ? 'off' : (connected ? 'connected' : (configured ? 'configured' : 'off'));
+    chip.className = 'privacy-chip ' + (state === 'off' ? 'off' : (state === 'configured' ? 'warn' : 'on'));
+    chip.textContent = (info.label || key) + ': ' + state + (info.model ? ' / ' + info.model : '');
+    integrations.appendChild(chip);
+  });
+  locations.replaceChildren();
+  (summary.files || []).forEach(file => {
+    const row = document.createElement('div');
+    row.className = 'privacy-path-row';
+    const key = document.createElement('span');
+    key.className = 'privacy-path-key';
+    key.textContent = file.label || file.kind || 'Host file';
+    const value = document.createElement('span');
+    value.className = 'privacy-path-value';
+    value.textContent = file.path || '';
+    const state = document.createElement('span');
+    state.className = 'privacy-path-state';
+    state.textContent = file.exists ? privacyFormatBytes(file.bytes) : 'not saved';
+    row.append(key, value, state);
+    locations.appendChild(row);
+  });
+  (summary.browserStorageHints || []).forEach(hint => {
+    const exists = localStorage.getItem(hint.key) !== null;
+    const row = document.createElement('div');
+    row.className = 'privacy-path-row';
+    const key = document.createElement('span');
+    key.className = 'privacy-path-key';
+    key.textContent = hint.label || 'Browser';
+    const value = document.createElement('span');
+    value.className = 'privacy-path-value';
+    value.textContent = 'localStorage.' + hint.key;
+    const state = document.createElement('span');
+    state.className = 'privacy-path-state';
+    state.textContent = exists ? 'saved' : 'empty';
+    row.append(key, value, state);
+    locations.appendChild(row);
+  });
+  if (status) {
+    const source = summary.localOnly ? 'local browser' : 'host';
+    const stamp = summary.lastUpdated ? new Date(summary.lastUpdated).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'now';
+    status.innerHTML = '<strong>Privacy Dashboard</strong> - ' + (opts.error ? opts.error : ('showing ' + source + ' data, refreshed ' + stamp));
+  }
+}
+async function refreshPrivacyDashboard(opts = {}) {
+  if (!opts.quiet) renderPrivacyDashboard(hostPrivacySummary || localPrivacySummary(), { error: opts.loadingText || 'checking host...' });
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/privacy-summary', { timeoutMs: 4000 }, 'Privacy summary');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    hostPrivacySummary = await resp.json();
+    renderPrivacyDashboard(hostPrivacySummary);
+    return hostPrivacySummary;
+  } catch(e) {
+    renderPrivacyDashboard(localPrivacySummary(), { error: 'host privacy endpoint unavailable; showing browser-only data' });
+    if (!opts.quiet) console.warn('[Caroline] privacy summary unavailable:', e.message);
+    return null;
+  }
+}
+async function postPrivacyClear(payload, label) {
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/privacy-clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      timeoutMs: 5000
+    }, label || 'Privacy clear');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json().catch(() => ({}));
+    showSettingsFeedback((label || 'Privacy clear') + ' complete');
+    return data;
+  } catch(e) {
+    showSettingsFeedback((label || 'Privacy clear') + ' updated locally; host clear failed', true);
+    console.warn('[Caroline] privacy clear failed:', e.message);
+    return null;
+  }
+}
+async function resetPrivacyData(btn) {
+  const ok = confirm('Reset privacy data on this browser and host? This clears chat, memory shards, hidden memory state, and profile prompts. Integration credentials and device settings stay.');
+  if (!ok) return;
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Resetting...'; }
+  chatLog = [];
+  stickyNotes = [];
+  S.personalityPrompt = '';
+  S.userProfilePrompt = '';
+  localStorage.removeItem('caro_log');
+  localStorage.removeItem('caro_notes');
+  localStorage.removeItem('caro_hidden_shards');
+  localStorage.removeItem('caroline_personality_prompt');
+  localStorage.removeItem('caroline_user_profile_prompt');
+  localStorage.setItem('caro_settings', JSON.stringify(S));
+  const personalityInp = document.getElementById('personalityPrompt');
+  const profileInp = document.getElementById('userProfilePrompt');
+  if (personalityInp) personalityInp.value = '';
+  if (profileInp) profileInp.value = '';
+  renderHistory();
+  renderMemoryWidget();
+  await postPrivacyClear({ history: true, memory: true, profile: true }, 'Privacy reset');
+  await refreshPrivacyDashboard({ quiet: true });
+  if (btn) { btn.disabled = false; btn.textContent = original || 'Reset Privacy Data'; }
 }
 let pendingSwatch = S.theme;
 let spotifyToken = localStorage.getItem('spotify_token') || '';
@@ -5440,6 +5698,7 @@ function toggleSettings() {
     renderUsageStats();
     renderSettingsLog();
     updateAboutPanel();
+    refreshPrivacyDashboard({ quiet: true });
     refreshBuildInfo({ quiet: true });
     const runtimeProvider = integrationHealth.aiProvider || S.aiProvider || 'openrouter';
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
@@ -5488,6 +5747,7 @@ function toggleSettings() {
         syncFeatureCheckboxes();
         checkGoogleStatus();
         refreshIntegrationHealth();
+        refreshPrivacyDashboard({ quiet: true });
       })
       .catch(() => {});
     setTimeout(() => { const first = document.querySelector('#settings-modal button, #settings-modal input, #settings-modal select'); if (first) first.focus(); }, 50);
@@ -7357,6 +7617,7 @@ async function saveSettings() {
     fb.classList.add('show', 'error');
     setTimeout(() => { fb.classList.remove('show', 'error'); fb.textContent = '✓ Saved!'; }, 3000);
   }
+  refreshPrivacyDashboard({ quiet: true });
 
   } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Apply'; }
@@ -8166,11 +8427,24 @@ function renderHistory(){
     c.appendChild(d);
   });
 }
-function clearHistory(){
-  if(confirm('Clear all conversation history?')){ chatLog=[]; localStorage.removeItem('caro_log'); renderHistory(); }
+async function clearHistory(){
+  if(confirm('Clear all conversation history?')){
+    chatLog=[];
+    localStorage.removeItem('caro_log');
+    renderHistory();
+    await postPrivacyClear({ history: true }, 'Chat history clear');
+    refreshPrivacyDashboard({ quiet: true });
+  }
 }
-function clearMemoryShards(){
-  if(confirm('Clear all memory shards?')){ stickyNotes=[]; localStorage.removeItem('caro_notes'); renderMemoryWidget(); }
+async function clearMemoryShards(){
+  if(confirm('Clear all memory shards?')){
+    stickyNotes=[];
+    localStorage.removeItem('caro_notes');
+    localStorage.removeItem('caro_hidden_shards');
+    renderMemoryWidget();
+    await postPrivacyClear({ memory: true }, 'Memory clear');
+    refreshPrivacyDashboard({ quiet: true });
+  }
 }
 function applyPrivacyMode() {
   const el = document.getElementById('set-privacy-mode');
@@ -8180,6 +8454,7 @@ function applyPrivacyMode() {
   if (pill) pill.style.display = S.privacyMode ? '' : 'none';
   renderHistory();
   renderMemoryWidget();
+  refreshPrivacyDashboard({ quiet: true });
 }
 function applyRetentionPurge() {
   const now = Date.now();
@@ -11104,6 +11379,7 @@ function markMemoryNotTrue(idx) {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'memory_correction', action:'not_true', id, content:text }));
   });
   renderMemoryWidget();
+  refreshPrivacyDashboard({ quiet: true });
   addMessage('Memory shard deleted.', 'caroline', 'display');
   playBeep(360);
 }

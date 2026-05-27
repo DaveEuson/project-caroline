@@ -6156,7 +6156,7 @@
     "type": "function",
     "z": "161d0c4cebe17cda",
     "name": "Delete memory shard",
-    "func": "const CONTEXT_PATH = '/home/davee/caroline/caroline_context.json';\nfunction readContext() {\n  try {\n    if (fs.existsSync(CONTEXT_PATH)) {\n      const parsed = JSON.parse(fs.readFileSync(CONTEXT_PATH, 'utf8'));\n      if (parsed && typeof parsed === 'object') return parsed;\n    }\n  } catch (e) {}\n  return {};\n}\nfunction writeContext(ctx) {\n  if (!ctx || typeof ctx !== 'object') ctx = {};\n  fs.writeFileSync(CONTEXT_PATH, JSON.stringify(ctx, null, 2), 'utf8');\n  try { fs.chmodSync(CONTEXT_PATH, 0o600); } catch(e) {}\n}\nfunction cleanFact(text) {\n  return String(text || '')\n    .replace(/^\\s*(?:do you\\s+)?(?:remember|save|note|keep in mind|don'?t forget|store|log)\\s+(?:that|the fact that|this)?\\s*/i, '')\n    .replace(/^\\s*(?:my|i)\\s+/i, '')\n    .replace(/^\\s*[\"']+|[\"']+\\s*$/g, '')\n    .replace(/[?.!]+$/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .slice(0, 240);\n}\nfunction noteText(value) {\n  return cleanFact(String(value || '')\n    .replace(/^\\s*\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}:\\s*/, '')\n    .replace(/^\\s*\\d{4}-\\d{2}-\\d{2}:\\s*/, '')\n    .replace(/^\\s*\\[[^\\]]+\\]:\\s*/, ''));\n}\nfunction isUserMemoryNote(value) {\n  const s = String(value || '');\n  if (!noteText(s)) return false;\n  if (/\\[(?:BRIEFING|AGENT)\\]/i.test(s)) return false;\n  if (/^No headlines available$/i.test(s)) return false;\n  return true;\n}\nfunction slug(text) {\n  return cleanFact(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 72) || 'memory';\n}\nfunction shardId(text) {\n  return 'mem-' + Date.now().toString(36) + '-' + slug(text);\n}\nfunction ensureMemoryContainers(ctx) {\n  if (!ctx || typeof ctx !== 'object') ctx = {};\n  if (!ctx.dave || typeof ctx.dave !== 'object') ctx.dave = {};\n  if (!Array.isArray(ctx.dave.notes)) ctx.dave.notes = [];\n  if (!ctx.user || typeof ctx.user !== 'object') ctx.user = {};\n  if (!Array.isArray(ctx.user.notes)) ctx.user.notes = [];\n  if (!Array.isArray(ctx.memoryShards)) ctx.memoryShards = [];\n  return ctx;\n}\nfunction addMemoryShard(ctx, fact, source, id) {\n  ctx = ensureMemoryContainers(ctx);\n  const text = cleanFact(fact);\n  if (!text) return null;\n  const lower = text.toLowerCase();\n  ctx.memoryShards = ctx.memoryShards.filter(s => cleanFact(s && s.text).toLowerCase() !== lower && (!id || s.id !== id));\n  const shard = {\n    id: id || shardId(text),\n    text,\n    createdAt: new Date().toISOString(),\n    source: source || 'assistant'\n  };\n  ctx.memoryShards.unshift(shard);\n  ctx.memoryShards = ctx.memoryShards.slice(0, 50);\n  ctx.dave.notes = ctx.dave.notes.filter(n => noteText(n).toLowerCase() !== lower);\n  ctx.dave.notes.unshift(text);\n  ctx.dave.notes = ctx.dave.notes.slice(0, 50);\n  return shard;\n}\nfunction listMemoryShards(ctx) {\n  ctx = ensureMemoryContainers(ctx);\n  const seen = new Set();\n  const out = [];\n  for (const shard of ctx.memoryShards) {\n    const text = cleanFact(shard && shard.text);\n    if (!text) continue;\n    const key = text.toLowerCase();\n    if (seen.has(key)) continue;\n    seen.add(key);\n    out.push({ id: shard.id || ('mem-' + slug(text)), text, createdAt: shard.createdAt || shard.ts || '', source: shard.source || 'assistant' });\n  }\n  const legacyNotes = [];\n  if (ctx.dave && Array.isArray(ctx.dave.notes)) legacyNotes.push(...ctx.dave.notes);\n  if (ctx.user && Array.isArray(ctx.user.notes)) legacyNotes.push(...ctx.user.notes);\n  for (const note of legacyNotes) {\n    if (!isUserMemoryNote(note)) continue;\n    const text = noteText(note);\n    const key = text.toLowerCase();\n    if (seen.has(key)) continue;\n    seen.add(key);\n    out.push({ id: 'legacy-' + slug(text), text, createdAt: '', source: 'legacy' });\n  }\n  return out.slice(0, 50);\n}\nfunction deleteMemoryShard(ctx, id, text) {\n  ctx = ensureMemoryContainers(ctx);\n  const target = cleanFact(text).toLowerCase();\n  const targetId = String(id || '').trim();\n  let removed = false;\n  ctx.memoryShards = ctx.memoryShards.filter(shard => {\n    const match = (targetId && shard && shard.id === targetId) || (target && cleanFact(shard && shard.text).toLowerCase() === target);\n    if (match) removed = true;\n    return !match;\n  });\n  function keepNote(note) {\n    const match = target && noteText(note).toLowerCase() === target;\n    if (match) removed = true;\n    return !match;\n  }\n  if (ctx.dave && Array.isArray(ctx.dave.notes)) ctx.dave.notes = ctx.dave.notes.filter(keepNote);\n  if (ctx.user && Array.isArray(ctx.user.notes)) ctx.user.notes = ctx.user.notes.filter(keepNote);\n  return removed;\n}\nconst body = msg.payload || {};\nconst ctx = readContext();\nconst removed = deleteMemoryShard(ctx, body.id, body.text || body.fact || body.content);\nwriteContext(ctx);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, removed, shards: listMemoryShards(ctx) };\nreturn msg;",
+    "func": "const CONTEXT_PATH = '/home/davee/caroline/caroline_context.json';\nfunction readContext() {\n  try {\n    if (fs.existsSync(CONTEXT_PATH)) {\n      const parsed = JSON.parse(fs.readFileSync(CONTEXT_PATH, 'utf8'));\n      if (parsed && typeof parsed === 'object') return parsed;\n    }\n  } catch (e) {}\n  return {};\n}\nfunction writeContext(ctx) {\n  if (!ctx || typeof ctx !== 'object') ctx = {};\n  fs.writeFileSync(CONTEXT_PATH, JSON.stringify(ctx, null, 2), 'utf8');\n  try { fs.chmodSync(CONTEXT_PATH, 0o600); } catch(e) {}\n}\nfunction cleanFact(text) {\n  return String(text || '')\n    .replace(/^\\s*(?:do you\\s+)?(?:remember|save|note|keep in mind|don'?t forget|store|log)\\s+(?:that|the fact that|this)?\\s*/i, '')\n    .replace(/^\\s*(?:my|i)\\s+/i, '')\n    .replace(/^\\s*[\"']+|[\"']+\\s*$/g, '')\n    .replace(/[?.!]+$/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .slice(0, 240);\n}\nfunction noteText(value) {\n  return cleanFact(String(value || '')\n    .replace(/^\\s*\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}:\\s*/, '')\n    .replace(/^\\s*\\d{4}-\\d{2}-\\d{2}:\\s*/, '')\n    .replace(/^\\s*\\[[^\\]]+\\]:\\s*/, ''));\n}\nfunction isUserMemoryNote(value) {\n  const s = String(value || '');\n  if (!noteText(s)) return false;\n  if (/\\[(?:BRIEFING|AGENT)\\]/i.test(s)) return false;\n  if (/^No headlines available$/i.test(s)) return false;\n  return true;\n}\nfunction slug(text) {\n  return cleanFact(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 72) || 'memory';\n}\nfunction shardId(text) {\n  return 'mem-' + Date.now().toString(36) + '-' + slug(text);\n}\nfunction ensureMemoryContainers(ctx) {\n  if (!ctx || typeof ctx !== 'object') ctx = {};\n  if (!ctx.dave || typeof ctx.dave !== 'object') ctx.dave = {};\n  if (!Array.isArray(ctx.dave.notes)) ctx.dave.notes = [];\n  if (!ctx.user || typeof ctx.user !== 'object') ctx.user = {};\n  if (!Array.isArray(ctx.user.notes)) ctx.user.notes = [];\n  if (!Array.isArray(ctx.memoryShards)) ctx.memoryShards = [];\n  return ctx;\n}\nfunction addMemoryShard(ctx, fact, source, id) {\n  ctx = ensureMemoryContainers(ctx);\n  const text = cleanFact(fact);\n  if (!text) return null;\n  const lower = text.toLowerCase();\n  ctx.memoryShards = ctx.memoryShards.filter(s => cleanFact(s && s.text).toLowerCase() !== lower && (!id || s.id !== id));\n  const shard = {\n    id: id || shardId(text),\n    text,\n    createdAt: new Date().toISOString(),\n    source: source || 'assistant'\n  };\n  ctx.memoryShards.unshift(shard);\n  ctx.memoryShards = ctx.memoryShards.slice(0, 50);\n  ctx.dave.notes = ctx.dave.notes.filter(n => noteText(n).toLowerCase() !== lower);\n  ctx.dave.notes.unshift(text);\n  ctx.dave.notes = ctx.dave.notes.slice(0, 50);\n  return shard;\n}\nfunction listMemoryShards(ctx) {\n  ctx = ensureMemoryContainers(ctx);\n  const seen = new Set();\n  const out = [];\n  for (const shard of ctx.memoryShards) {\n    const text = cleanFact(shard && shard.text);\n    if (!text) continue;\n    const key = text.toLowerCase();\n    if (seen.has(key)) continue;\n    seen.add(key);\n    out.push({ id: shard.id || ('mem-' + slug(text)), text, createdAt: shard.createdAt || shard.ts || '', source: shard.source || 'assistant' });\n  }\n  const legacyNotes = [];\n  if (ctx.dave && Array.isArray(ctx.dave.notes)) legacyNotes.push(...ctx.dave.notes);\n  if (ctx.user && Array.isArray(ctx.user.notes)) legacyNotes.push(...ctx.user.notes);\n  for (const note of legacyNotes) {\n    if (!isUserMemoryNote(note)) continue;\n    const text = noteText(note);\n    const key = text.toLowerCase();\n    if (seen.has(key)) continue;\n    seen.add(key);\n    out.push({ id: 'legacy-' + slug(text), text, createdAt: '', source: 'legacy' });\n  }\n  return out.slice(0, 50);\n}\nfunction deleteMemoryShard(ctx, id, text) {\n  ctx = ensureMemoryContainers(ctx);\n  const target = cleanFact(text).toLowerCase();\n  const targetId = String(id || '').trim();\n  let removed = false;\n  ctx.memoryShards = ctx.memoryShards.filter(shard => {\n    const match = (targetId && shard && shard.id === targetId) || (target && cleanFact(shard && shard.text).toLowerCase() === target);\n    if (match) removed = true;\n    return !match;\n  });\n  function keepNote(note) {\n    const match = target && noteText(note).toLowerCase() === target;\n    if (match) removed = true;\n    return !match;\n  }\n  if (ctx.dave && Array.isArray(ctx.dave.notes)) ctx.dave.notes = ctx.dave.notes.filter(keepNote);\n  if (ctx.user && Array.isArray(ctx.user.notes)) ctx.user.notes = ctx.user.notes.filter(keepNote);\n  return removed;\n}\nlet body = msg.payload || {};\nif (Buffer.isBuffer(body)) body = body.toString('utf8');\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { body = {}; } }\nconst ctx = readContext();\nconst removed = deleteMemoryShard(ctx, body.id, body.text || body.fact || body.content);\nwriteContext(ctx);\nmsg.statusCode = 200;\nmsg.headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };\nmsg.payload = { ok: true, removed, shards: listMemoryShards(ctx) };\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -6894,5 +6894,168 @@
     "y": 640,
     "wires": [],
     "g": "codex-layout-settings-discord"
+  },
+  {
+    "id": "caro-privacy-summary-in",
+    "type": "http in",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "GET /admin/privacy-summary",
+    "method": "get",
+    "url": "/admin/privacy-summary",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 180,
+    "y": 920,
+    "wires": [
+      [
+        "caro-privacy-summary-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-privacy-summary-fn",
+    "type": "function",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "Build privacy summary",
+    "func": "const BASE = '/home/davee/caroline';\nconst PATHS = {\n  settings: BASE + '/caroline_settings.json',\n  history: BASE + '/caroline_history.json',\n  context: BASE + '/caroline_context.json',\n  tasks: BASE + '/caroline_tasks.json',\n  google: BASE + '/google_oauth.json',\n  spotify: BASE + '/spotify_auth.json'\n};\nfunction readJson(path, fallback) {\n  try {\n    if (fs.existsSync(path)) {\n      const parsed = JSON.parse(fs.readFileSync(path, 'utf8'));\n      return parsed === undefined || parsed === null ? fallback : parsed;\n    }\n  } catch (e) {}\n  return fallback;\n}\nfunction fileInfo(label, path, kind) {\n  try {\n    if (!fs.existsSync(path)) return { label, path: path.replace(BASE, '~/caroline'), kind, exists: false, bytes: 0 };\n    const st = fs.statSync(path);\n    return { label, path: path.replace(BASE, '~/caroline'), kind, exists: true, bytes: st.size, updatedAt: st.mtime.toISOString() };\n  } catch (e) {\n    return { label, path: path.replace(BASE, '~/caroline'), kind, exists: false, bytes: 0, error: 'unreadable' };\n  }\n}\nfunction getShared(k, fallback) {\n  const gv = global.get(k);\n  if (gv !== undefined && gv !== null && gv !== '') return gv;\n  const fv = flow.get(k);\n  if (fv !== undefined && fv !== null && fv !== '') return fv;\n  return fallback;\n}\nfunction countHistory(value) {\n  if (Array.isArray(value)) return value.length;\n  if (value && Array.isArray(value.chatLog)) return value.chatLog.length;\n  if (value && Array.isArray(value.messages)) return value.messages.length;\n  if (value && Array.isArray(value.history)) return value.history.length;\n  return 0;\n}\nfunction noteText(value) {\n  return String(value || '')\n    .replace(/^\\s*\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}:\\s*/, '')\n    .replace(/^\\s*\\d{4}-\\d{2}-\\d{2}:\\s*/, '')\n    .replace(/^\\s*\\[[^\\]]+\\]:\\s*/, '')\n    .replace(/^\\s*(?:do you\\s+)?(?:remember|save|note|keep in mind|don'?t forget|store|log)\\s+(?:that|the fact that|this)?\\s*/i, '')\n    .replace(/^\\s*[\"']+|[\"']+\\s*$/g, '')\n    .replace(/[?.!]+$/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .slice(0, 240);\n}\nfunction listMemoryShards(ctx) {\n  const seen = new Set();\n  const out = [];\n  const add = (item, source) => {\n    const text = noteText(item && item.text !== undefined ? item.text : item);\n    if (!text) return;\n    const key = text.toLowerCase();\n    if (seen.has(key)) return;\n    seen.add(key);\n    out.push({ id: (item && item.id) || ('mem-' + key.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 72)), text, createdAt: (item && (item.createdAt || item.ts)) || '', source: (item && item.source) || source || 'host' });\n  };\n  if (ctx && Array.isArray(ctx.memoryShards)) ctx.memoryShards.forEach(s => add(s, 'assistant'));\n  if (ctx && ctx.dave && Array.isArray(ctx.dave.notes)) ctx.dave.notes.forEach(n => add(n, 'legacy'));\n  if (ctx && ctx.user && Array.isArray(ctx.user.notes)) ctx.user.notes.forEach(n => add(n, 'legacy'));\n  return out.slice(0, 50);\n}\nfunction hasToken(obj) {\n  if (!obj || typeof obj !== 'object') return false;\n  return ['access_token','refresh_token','token','expires_at'].some(k => String(obj[k] || '').trim());\n}\nfunction parseBool(value) {\n  if (value === true || value === false) return value;\n  if (value === 1 || value === 0) return !!value;\n  if (value === undefined || value === null || value === '') return false;\n  const s = String(value).trim().toLowerCase();\n  if (['true','1','yes','y','on','enabled'].includes(s)) return true;\n  if (['false','0','no','n','off','disabled'].includes(s)) return false;\n  return false;\n}\nconst settings = readJson(PATHS.settings, {});\nconst history = readJson(PATHS.history, []);\nconst context = readJson(PATHS.context, {});\nconst tasks = readJson(PATHS.tasks, []);\nconst googleAuth = readJson(PATHS.google, {});\nconst spotifyAuth = readJson(PATHS.spotify, {});\nconst memoryShards = listMemoryShards(context);\nconst privacyMode = parseBool(getShared('privacyMode', settings.privacyMode || false));\nconst historyRetentionMs = Number(getShared('historyRetentionMs', settings.historyRetentionMs || 0)) || 0;\nconst memoryRetentionMs = Number(getShared('memoryRetentionMs', settings.memoryRetentionMs || 0)) || 0;\nconst openrouterKey = getShared('openrouterKey', settings.openrouterKey || '');\nconst hueKey = getShared('hueKey', settings.hueKey || '');\nconst discordToken = getShared('discordToken', settings.discordToken || '');\nconst googleSecret = getShared('googleClientSecret', settings.googleClientSecret || '');\nmsg.statusCode = 200;\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Cache-Control': 'no-store',\n  'Access-Control-Allow-Origin': '*'\n};\nmsg.payload = {\n  ok: true,\n  host: {\n    storageBase: '~/caroline',\n    deviceType: getShared('hostDeviceType', settings.hostDeviceType || ''),\n    aiName: getShared('aiName', settings.aiName || 'Caroline')\n  },\n  counts: {\n    chatMessages: countHistory(history),\n    memoryShards: memoryShards.length,\n    tasks: Array.isArray(tasks) ? tasks.length : 0\n  },\n  retention: { privacyMode, historyRetentionMs, memoryRetentionMs },\n  integrations: {\n    openrouter: { configured: !!String(openrouterKey).trim(), label: 'OpenRouter' },\n    ollama: { configured: !!String(getShared('ollamaUrl', settings.ollamaUrl || '')).trim(), label: 'Ollama', model: getShared('ollamaModel', settings.ollamaModel || '') },\n    google: { configured: !!String(getShared('googleClientId', settings.googleClientId || '')).trim(), connected: hasToken(googleAuth) || parseBool(getShared('googleConnected', settings.googleConnected || false)), label: 'Google Calendar' },\n    spotify: { configured: !!String(getShared('spotifyClientId', settings.spotifyClientId || '')).trim(), connected: hasToken(spotifyAuth), label: 'Spotify' },\n    hue: { configured: !!(String(getShared('hueIp', settings.hueIp || '')).trim() && String(hueKey).trim()), label: 'Hue' },\n    discord: { enabled: parseBool(getShared('discordEnabled', settings.discordEnabled || false)), configured: !!(String(discordToken).trim() && (String(getShared('discordChannelId', settings.discordChannelId || '')).trim() || String(getShared('discordUserId', settings.discordUserId || '')).trim())), label: 'Discord' }\n  },\n  files: [\n    fileInfo('Settings', PATHS.settings, 'settings'),\n    fileInfo('Chat history', PATHS.history, 'conversation'),\n    fileInfo('Memory/context', PATHS.context, 'memory'),\n    fileInfo('Tasks', PATHS.tasks, 'tasks'),\n    fileInfo('Google OAuth token', PATHS.google, 'credential'),\n    fileInfo('Spotify OAuth token', PATHS.spotify, 'credential')\n  ],\n  browserStorageHints: [\n    { label: 'Browser settings', key: 'caro_settings' },\n    { label: 'Browser chat', key: 'caro_log' },\n    { label: 'Browser memory shards', key: 'caro_notes' },\n    { label: 'Hidden memory IDs', key: 'caro_hidden_shards' },\n    { label: 'Setup memory prompt', key: 'caroline_personality_prompt' },\n    { label: 'Imported memory prompt', key: 'caroline_user_profile_prompt' }\n  ],\n  secrets: {\n    openrouterKey: !!String(openrouterKey).trim(),\n    hueKey: !!String(hueKey).trim(),\n    discordToken: !!String(discordToken).trim(),\n    googleClientSecret: !!String(googleSecret).trim()\n  },\n  lastUpdated: new Date().toISOString()\n};\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "var": "fs",
+        "module": "fs"
+      }
+    ],
+    "x": 420,
+    "y": 920,
+    "wires": [
+      [
+        "caro-privacy-summary-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-privacy-summary-res",
+    "type": "http response",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 660,
+    "y": 920,
+    "wires": []
+  },
+  {
+    "id": "caro-privacy-clear-in",
+    "type": "http in",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "POST /admin/privacy-clear",
+    "method": "post",
+    "url": "/admin/privacy-clear",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 180,
+    "y": 960,
+    "wires": [
+      [
+        "caro-privacy-clear-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-privacy-clear-fn",
+    "type": "function",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "Clear privacy data",
+    "func": "const BASE = '/home/davee/caroline';\nconst PATHS = {\n  settings: BASE + '/caroline_settings.json',\n  history: BASE + '/caroline_history.json',\n  context: BASE + '/caroline_context.json'\n};\nfunction readJson(path, fallback) {\n  try {\n    if (fs.existsSync(path)) {\n      const parsed = JSON.parse(fs.readFileSync(path, 'utf8'));\n      return parsed === undefined || parsed === null ? fallback : parsed;\n    }\n  } catch (e) {}\n  return fallback;\n}\nfunction writeJson(path, value) {\n  fs.mkdirSync(BASE, { recursive: true });\n  fs.writeFileSync(path, JSON.stringify(value, null, 2), 'utf8');\n  try { fs.chmodSync(path, 0o600); } catch(e) {}\n}\nfunction setShared(k, v) {\n  flow.set(k, v);\n  global.set(k, v);\n}\nfunction parseBody(value) {\n  if (Buffer.isBuffer(value)) value = value.toString('utf8');\n  if (typeof value === 'string') {\n    try { return JSON.parse(value); } catch(e) { return {}; }\n  }\n  return value && typeof value === 'object' ? value : {};\n}\nfunction emptyMemoryContext(ctx) {\n  if (!ctx || typeof ctx !== 'object') ctx = {};\n  ctx.memoryShards = [];\n  if (!ctx.dave || typeof ctx.dave !== 'object') ctx.dave = {};\n  if (!ctx.user || typeof ctx.user !== 'object') ctx.user = {};\n  ctx.dave.notes = [];\n  ctx.user.notes = [];\n  return ctx;\n}\nconst body = parseBody(msg.payload);\nconst wantsHistory = body.history === true || body.chatHistory === true || body.all === true;\nconst wantsMemory = body.memory === true || body.memoryShards === true || body.all === true;\nconst wantsProfile = body.profile === true || body.profilePrompts === true || body.all === true;\nif (!wantsHistory && !wantsMemory && !wantsProfile) {\n  msg.statusCode = 400;\n  msg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*',\n    'Access-Control-Allow-Methods': 'POST, OPTIONS',\n    'Access-Control-Allow-Headers': 'Content-Type'\n  };\n  msg.payload = { ok: false, error: 'Choose at least one privacy area to clear.' };\n  return msg;\n}\nconst cleared = [];\ntry {\n  if (wantsHistory) {\n    writeJson(PATHS.history, []);\n    cleared.push('chatHistory');\n  }\n  if (wantsMemory) {\n    const ctx = emptyMemoryContext(readJson(PATHS.context, {}));\n    writeJson(PATHS.context, ctx);\n    setShared('memoryShards', []);\n    cleared.push('memoryShards');\n  }\n  if (wantsProfile) {\n    const settings = readJson(PATHS.settings, {});\n    settings.personalityPrompt = '';\n    settings.userProfilePrompt = '';\n    writeJson(PATHS.settings, settings);\n    setShared('personalityPrompt', '');\n    setShared('userProfilePrompt', '');\n    cleared.push('profilePrompts');\n  }\n  msg.statusCode = 200;\n  msg.payload = { ok: true, cleared, lastUpdated: new Date().toISOString() };\n} catch (e) {\n  node.error('[Caroline] Privacy clear failed: ' + e.message);\n  msg.statusCode = 500;\n  msg.payload = { ok: false, error: 'Privacy clear failed. Check file permissions and disk space.' };\n}\nmsg.headers = {\n  'Content-Type': 'application/json',\n  'Cache-Control': 'no-store',\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Methods': 'POST, OPTIONS',\n  'Access-Control-Allow-Headers': 'Content-Type'\n};\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "var": "fs",
+        "module": "fs"
+      }
+    ],
+    "x": 420,
+    "y": 960,
+    "wires": [
+      [
+        "caro-privacy-clear-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-privacy-clear-res",
+    "type": "http response",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 660,
+    "y": 960,
+    "wires": []
+  },
+  {
+    "id": "caro-privacy-clear-options-in",
+    "type": "http in",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "OPTIONS /admin/privacy-clear",
+    "method": "options",
+    "url": "/admin/privacy-clear",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 190,
+    "y": 1000,
+    "wires": [
+      [
+        "caro-privacy-clear-options-fn"
+      ]
+    ]
+  },
+  {
+    "id": "caro-privacy-clear-options-fn",
+    "type": "function",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "CORS privacy clear",
+    "func": "msg.statusCode = 204;\nmsg.headers = {\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Methods': 'POST, OPTIONS',\n  'Access-Control-Allow-Headers': 'Content-Type'\n};\nmsg.payload = '';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 430,
+    "y": 1000,
+    "wires": [
+      [
+        "caro-privacy-clear-options-res"
+      ]
+    ]
+  },
+  {
+    "id": "caro-privacy-clear-options-res",
+    "type": "http response",
+    "z": "161d0c4cebe17cda",
+    "g": "codex-layout-admin-memory-ollama",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 690,
+    "y": 1000,
+    "wires": []
   }
 ]

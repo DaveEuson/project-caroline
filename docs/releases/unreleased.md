@@ -4,15 +4,16 @@ Draft notes for the next public beta. Move these into a versioned release note f
 
 ## Added
 
-- None yet.
+- Added a Privacy Dashboard for nightly builds that shows chat/memory counts, retention state, integration status, and host/browser data locations without exposing saved secrets.
+- Added host privacy endpoints for companion setup workflows: `/admin/privacy-summary` and `/admin/privacy-clear`.
 
 ## Changed
 
-- None yet.
+- Companion Host Setup Hub can now refresh privacy status, view host memory shards, and clear host chat, memory, or profile prompts from the desktop app.
 
 ## Fixed
 
-- None yet.
+- Clear Chat and Clear Memory now clear host-side Caroline data as well as browser-local data when the host endpoint is available.
 
 ## Removed
 
