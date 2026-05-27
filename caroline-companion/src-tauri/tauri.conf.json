@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src ws: wss: https://api.github.com; img-src 'self' data: blob:; font-src 'self' data:"
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src http: https: ws: wss:; img-src 'self' data: blob:; font-src 'self' data:"
     }
   },
   "bundle": {

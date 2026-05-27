@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   createCarolineSocket,
   type CarolineSocketMessage,
@@ -46,12 +46,118 @@ type HostSocketEntry = {
   socket: ReturnType<typeof createCarolineSocket>;
 };
 
+type HostSetupSettings = {
+  userName: string;
+  aiName: string;
+  hostDeviceType: string;
+  timezone: string;
+  location: string;
+  cityName: string;
+  aiProvider: "openrouter" | "ollama";
+  aiModel: string;
+  ollamaUrl: string;
+  ollamaModel: string;
+  spotifyClientId: string;
+  googleClientId: string;
+  googleRedirectUri: string;
+  calendarId: string;
+  defaultWriteCalendarId: string;
+};
+
+type HostHealth = {
+  aiProvider?: string;
+  aiModel?: string;
+  ollamaModel?: string;
+  hostDeviceType?: string;
+  openrouter?: {
+    configured?: boolean;
+  };
+  google?: {
+    connected?: boolean;
+    clientConfigured?: boolean;
+    hasClientSecret?: boolean;
+    serviceAccountConfigured?: boolean;
+  };
+  spotify?: {
+    connected?: boolean;
+    clientConfigured?: boolean;
+  };
+  calendar?: {
+    configured?: boolean;
+  };
+  hue?: {
+    configured?: boolean;
+  };
+  discord?: {
+    enabled?: boolean;
+    configured?: boolean;
+    channelConfigured?: boolean;
+    mode?: string;
+  };
+};
+
+type HostPrivacySummary = {
+  localOnly?: boolean;
+  counts?: {
+    chatMessages?: number;
+    memoryShards?: number;
+    tasks?: number;
+  };
+  retention?: {
+    privacyMode?: boolean;
+    historyRetentionMs?: number;
+    memoryRetentionMs?: number;
+  };
+  integrations?: Record<string, {
+    label?: string;
+    configured?: boolean;
+    connected?: boolean;
+    enabled?: boolean;
+    model?: string;
+  }>;
+  files?: Array<{
+    label?: string;
+    path?: string;
+    exists?: boolean;
+    bytes?: number;
+  }>;
+  browserStorageHints?: Array<{
+    label?: string;
+    key?: string;
+  }>;
+  lastUpdated?: string;
+};
+
+type HostMemoryShard = {
+  id?: string;
+  text?: string;
+  createdAt?: string;
+  source?: string;
+};
+
 const COMPANION_VERSION = "0.1.12";
 const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caroline/releases";
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
 const MAX_MESSAGES_PER_HOST = 500;
 const HOST_DEVICE_TYPES: HostDeviceType[] = ["", "Pi", "Steam", "Ubuntu", "Mac", "Windows"];
+const HOST_SETUP_DEFAULTS: HostSetupSettings = {
+  userName: "",
+  aiName: "Caroline",
+  hostDeviceType: "",
+  timezone: "",
+  location: "",
+  cityName: "",
+  aiProvider: "openrouter",
+  aiModel: "anthropic/claude-haiku-4.5",
+  ollamaUrl: "http://localhost:11434",
+  ollamaModel: "qwen2.5:1.5b",
+  spotifyClientId: "",
+  googleClientId: "",
+  googleRedirectUri: "",
+  calendarId: "primary",
+  defaultWriteCalendarId: "",
+};
 
 let localMessageId = Date.now();
 
@@ -307,6 +413,202 @@ function hostSocketSignature(url: string) {
   return url.trim();
 }
 
+function stringSetting(record: Record<string, unknown>, key: string, fallback = "") {
+  const value = record[key];
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
+function normalizeHostSetupSettings(value: unknown): HostSetupSettings {
+  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const provider = stringSetting(record, "aiProvider", HOST_SETUP_DEFAULTS.aiProvider).toLowerCase();
+  return {
+    userName: stringSetting(record, "userName"),
+    aiName: stringSetting(record, "aiName", HOST_SETUP_DEFAULTS.aiName),
+    hostDeviceType: stringSetting(record, "hostDeviceType"),
+    timezone: stringSetting(record, "timezone"),
+    location: stringSetting(record, "location"),
+    cityName: stringSetting(record, "cityName"),
+    aiProvider: provider === "ollama" ? "ollama" : "openrouter",
+    aiModel: stringSetting(record, "aiModel", HOST_SETUP_DEFAULTS.aiModel),
+    ollamaUrl: stringSetting(record, "ollamaUrl", HOST_SETUP_DEFAULTS.ollamaUrl),
+    ollamaModel: stringSetting(record, "ollamaModel", HOST_SETUP_DEFAULTS.ollamaModel),
+    spotifyClientId: stringSetting(record, "spotifyClientId"),
+    googleClientId: stringSetting(record, "googleClientId"),
+    googleRedirectUri: stringSetting(record, "googleRedirectUri"),
+    calendarId: stringSetting(record, "calendarId", HOST_SETUP_DEFAULTS.calendarId),
+    defaultWriteCalendarId: stringSetting(record, "defaultWriteCalendarId"),
+  };
+}
+
+function hostHttpBaseFromSocket(socketUrl: string) {
+  const trimmed = socketUrl.trim();
+  if (!trimmed) return "";
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "ws:" || parsed.protocol === "wss:") {
+      parsed.protocol = parsed.protocol === "wss:" ? "https:" : "http:";
+      parsed.pathname = "";
+      parsed.search = "";
+      parsed.hash = "";
+      return parsed.toString().replace(/\/+$/, "");
+    }
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      parsed.pathname = "";
+      parsed.search = "";
+      parsed.hash = "";
+      return parsed.toString().replace(/\/+$/, "");
+    }
+  } catch {
+    // Let the caller show a useful status message.
+  }
+  return "";
+}
+
+function hostSecureVoiceUrlFromBase(baseUrl: string) {
+  if (!baseUrl) return "";
+  try {
+    const parsed = new URL(baseUrl);
+    parsed.protocol = "https:";
+    parsed.port = "8444";
+    parsed.pathname = "/";
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+function hostSettingsPayload(setup: HostSetupSettings) {
+  const calendarId = setup.calendarId || "primary";
+  return {
+    userName: setup.userName,
+    aiName: setup.aiName,
+    hostDeviceType: setup.hostDeviceType,
+    timezone: setup.timezone,
+    location: setup.location,
+    cityName: setup.cityName,
+    aiProvider: setup.aiProvider,
+    aiModel: setup.aiModel,
+    ollamaUrl: setup.ollamaUrl,
+    ollamaModel: setup.ollamaModel,
+    spotifyClientId: setup.spotifyClientId,
+    googleClientId: setup.googleClientId,
+    googleRedirectUri: setup.googleRedirectUri,
+    calendarId,
+    defaultWriteCalendarId: setup.defaultWriteCalendarId || calendarId,
+    setupComplete: true,
+  };
+}
+
+async function fetchHostSettings(base: string) {
+  let lastError: Error | null = null;
+  for (const path of ["/admin/settings", "/admin/get-settings"]) {
+    try {
+      const response = await fetch(`${base}${path}`, { cache: "no-store" });
+      if (response.status === 404) {
+        lastError = new Error(`HTTP 404 at ${path}`);
+        continue;
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("host settings unavailable");
+    }
+  }
+  throw lastError || new Error("host settings unavailable");
+}
+
+async function saveHostSettings(base: string, setup: HostSetupSettings) {
+  let lastError: Error | null = null;
+  for (const path of ["/admin/settings", "/admin/save-settings"]) {
+    try {
+      const response = await fetch(`${base}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(hostSettingsPayload(setup)),
+      });
+      if (response.status === 404) {
+        lastError = new Error(`HTTP 404 at ${path}`);
+        continue;
+      }
+      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+      if (!response.ok || data?.ok === false) throw new Error(data?.error || `HTTP ${response.status}`);
+      return data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("save failed");
+    }
+  }
+  throw lastError || new Error("save failed");
+}
+
+async function fetchHostPrivacySummary(base: string) {
+  const response = await fetch(`${base}/admin/privacy-summary`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return await response.json() as HostPrivacySummary;
+}
+
+async function fetchHostMemoryShards(base: string) {
+  const response = await fetch(`${base}/admin/memory-shards`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json() as { shards?: HostMemoryShard[] };
+  return Array.isArray(data.shards) ? data.shards : [];
+}
+
+async function clearHostPrivacy(base: string, payload: Record<string, boolean>) {
+  const response = await fetch(`${base}/admin/privacy-clear`, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+  if (!response.ok || data?.ok === false) throw new Error(data?.error || `HTTP ${response.status}`);
+  return data;
+}
+
+async function deleteHostMemoryShard(base: string, shard: HostMemoryShard) {
+  const response = await fetch(`${base}/admin/memory-shards/delete`, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ id: shard.id || "", text: shard.text || "" }),
+  });
+  const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+  if (!response.ok || data?.ok === false) throw new Error(data?.error || `HTTP ${response.status}`);
+  return data;
+}
+
+function formatHostRetention(ms?: number) {
+  const value = Number(ms) || 0;
+  if (value <= 0) return "Never";
+  const units: Array<[string, number]> = [
+    ["month", 2_592_000_000],
+    ["week", 604_800_000],
+    ["day", 86_400_000],
+    ["hour", 3_600_000],
+  ];
+  for (const [label, size] of units) {
+    if (value >= size && value % size === 0) {
+      const count = value / size;
+      return `${count} ${label}${count === 1 ? "" : "s"}`;
+    }
+  }
+  return `${Math.round(value / 86_400_000)} days`;
+}
+
+function formatHostBytes(bytes?: number) {
+  const value = Number(bytes) || 0;
+  if (value <= 0) return "0 B";
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function hostHealthLabel(value?: boolean, configured?: boolean) {
+  if (value) return "connected";
+  if (configured) return "configured";
+  return "not set";
+}
+
 function previewText(value: string) {
   const text = value.replace(/\s+/g, " ").trim();
   return text.length > 42 ? `${text.slice(0, 39)}...` : text;
@@ -360,6 +662,15 @@ export default function App() {
   const [connectionUrls, setConnectionUrls] = useState<Record<string, string>>(() =>
     Object.fromEntries(settings.hosts.map((host) => [host.id, host.socketUrl]))
   );
+  const [hostSetup, setHostSetup] = useState<HostSetupSettings>(HOST_SETUP_DEFAULTS);
+  const [hostHealth, setHostHealth] = useState<HostHealth | null>(null);
+  const [hostSetupStatus, setHostSetupStatus] = useState("");
+  const [hostSetupLoadedFrom, setHostSetupLoadedFrom] = useState("");
+  const [hostSetupBusy, setHostSetupBusy] = useState(false);
+  const [hostPrivacy, setHostPrivacy] = useState<HostPrivacySummary | null>(null);
+  const [hostMemoryShards, setHostMemoryShards] = useState<HostMemoryShard[]>([]);
+  const [hostPrivacyStatus, setHostPrivacyStatus] = useState("");
+  const [hostPrivacyBusy, setHostPrivacyBusy] = useState(false);
 
   const [clientId] = useState(getOrCreateClientId);
 
@@ -732,6 +1043,13 @@ export default function App() {
   const activeHostUserName = selectedBuddyState.userName || hostUserName;
   const activeAvatarId = selectedHost ? avatarIdForHost(selectedHost, selectedBuddyState) : "caroline";
   const messages = selectedHost ? hostMessages[selectedHost.id] || [] : [];
+  const activeHostHttpBase = hostHttpBaseFromSocket(selectedHost?.socketUrl || settings.socketUrl);
+  const activeHostSecureVoiceUrl = hostSecureVoiceUrlFromBase(activeHostHttpBase);
+  const hostSetupBaseAvailable = Boolean(activeHostHttpBase || hostSetupLoadedFrom);
+  const hostPrivacyCounts = hostPrivacy?.counts || {};
+  const hostPrivacyRetention = hostPrivacy?.retention || {};
+  const hostPrivacyIntegrations = Object.entries(hostPrivacy?.integrations || {});
+  const hostPrivacyFiles = (hostPrivacy?.files || []).slice(0, 6);
   const buddyHosts = settings.hosts.filter((host) =>
     hasPairingCode(host) || host.id === settings.activeHostId || settings.hosts.length === 1
   );
@@ -743,6 +1061,22 @@ export default function App() {
       behavior: "smooth",
     });
   }, [messages]);
+
+  useEffect(() => {
+    const current = activeHost();
+    setHostHealth(null);
+    setHostSetupStatus("");
+    setHostSetupLoadedFrom("");
+    setHostPrivacy(null);
+    setHostMemoryShards([]);
+    setHostPrivacyStatus("");
+    setHostSetup(normalizeHostSetupSettings({
+      ...HOST_SETUP_DEFAULTS,
+      userName: settings.userName || activeHostUserName,
+      aiName: current?.aiName || inferBuddyAiName(current),
+      hostDeviceType: current?.deviceType || "",
+    }));
+  }, [settings.activeHostId]);
 
   function handleConnect() {
     const url = settings.socketUrl.trim();
@@ -891,6 +1225,180 @@ export default function App() {
     setAiName(inferBuddyAiName(nextHost));
     setStatus((buddyStates[nextHost.id] || initialBuddyState(nextHost)).status);
     setDiscoveredHosts([]);
+  }
+
+  function handleHostSetupField(field: keyof HostSetupSettings, value: string) {
+    const nextValue = field === "aiProvider" && value !== "ollama" ? "openrouter" : value;
+    setHostSetup((previous) => ({ ...previous, [field]: nextValue } as HostSetupSettings));
+  }
+
+  function hostSetupRequestBase() {
+    return activeHostHttpBase || hostSetupLoadedFrom;
+  }
+
+  async function handleRefreshHostPrivacy() {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostPrivacyStatus("Enter a host address first, then refresh privacy.");
+      return;
+    }
+
+    setHostPrivacyBusy(true);
+    setHostPrivacyStatus("Loading privacy data...");
+    try {
+      const [summaryResult, memoryResult] = await Promise.allSettled([
+        fetchHostPrivacySummary(base),
+        fetchHostMemoryShards(base),
+      ]);
+
+      if (summaryResult.status === "fulfilled") setHostPrivacy(summaryResult.value);
+      else throw summaryResult.reason;
+
+      if (memoryResult.status === "fulfilled") setHostMemoryShards(memoryResult.value);
+      setHostPrivacyStatus("Privacy data loaded.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "privacy data unavailable";
+      setHostPrivacyStatus(`Could not load privacy data: ${message}`);
+    } finally {
+      setHostPrivacyBusy(false);
+    }
+  }
+
+  async function handleClearHostPrivacy(payload: Record<string, boolean>, label: string) {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostPrivacyStatus("Enter a host address first, then clear privacy data.");
+      return;
+    }
+    const confirmed = window.confirm(`${label}? This changes the connected Caroline host.`);
+    if (!confirmed) return;
+
+    setHostPrivacyBusy(true);
+    setHostPrivacyStatus(`${label}...`);
+    try {
+      await clearHostPrivacy(base, payload);
+      await handleRefreshHostPrivacy();
+      setHostPrivacyStatus(`${label} complete.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "clear failed";
+      setHostPrivacyStatus(`${label} failed: ${message}`);
+    } finally {
+      setHostPrivacyBusy(false);
+    }
+  }
+
+  async function handleDeleteHostMemoryShard(shard: HostMemoryShard) {
+    const base = hostSetupRequestBase();
+    if (!base || !shard.text) return;
+    const confirmed = window.confirm(`Delete this memory shard?\n\n${shard.text}`);
+    if (!confirmed) return;
+
+    setHostPrivacyBusy(true);
+    setHostPrivacyStatus("Deleting memory shard...");
+    try {
+      await deleteHostMemoryShard(base, shard);
+      await handleRefreshHostPrivacy();
+      setHostPrivacyStatus("Memory shard deleted.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "delete failed";
+      setHostPrivacyStatus(`Memory delete failed: ${message}`);
+    } finally {
+      setHostPrivacyBusy(false);
+    }
+  }
+
+  async function handleLoadHostSetup() {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostSetupStatus("Enter a host address first, then load setup.");
+      return;
+    }
+
+    setHostSetupBusy(true);
+    setHostSetupStatus("Loading host setup...");
+    try {
+      const [settingsResult, healthResult] = await Promise.allSettled([
+        fetchHostSettings(base),
+        fetch(`${base}/health`, { cache: "no-store" }),
+      ]);
+
+      if (healthResult.status === "fulfilled" && healthResult.value.ok) {
+        setHostHealth(await healthResult.value.json() as HostHealth);
+      }
+
+      if (settingsResult.status === "rejected") throw settingsResult.reason;
+      const loaded = normalizeHostSetupSettings(await settingsResult.value.json());
+      setHostSetup(loaded);
+      setHostSetupLoadedFrom(base);
+      setHostSetupStatus("Host setup loaded.");
+      await handleRefreshHostPrivacy();
+
+      const current = activeHost();
+      if (current && loaded.aiName) {
+        const deviceType = normalizeDeviceType(loaded.hostDeviceType);
+        const hosts = settings.hosts.map((host) =>
+          host.id === current.id
+            ? {
+                ...host,
+                aiName: loaded.aiName,
+                avatarId: inferAvatarId(loaded.aiName),
+                deviceType: deviceType || host.deviceType,
+              }
+            : host
+        );
+        setSettings({ ...settings, userName: loaded.userName || settings.userName, hosts });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "host setup unavailable";
+      setHostSetupStatus(`Could not load host setup: ${message}`);
+    } finally {
+      setHostSetupBusy(false);
+    }
+  }
+
+  async function handleSaveHostSetup() {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostSetupStatus("Enter a host address first, then save setup.");
+      return;
+    }
+
+    setHostSetupBusy(true);
+    setHostSetupStatus("Saving host setup...");
+    try {
+      await saveHostSettings(base, hostSetup);
+
+      const current = activeHost();
+      if (current) {
+        const deviceType = normalizeDeviceType(hostSetup.hostDeviceType);
+        const hosts = settings.hosts.map((host) =>
+          host.id === current.id
+            ? {
+                ...host,
+                aiName: hostSetup.aiName || host.aiName,
+                name: host.name || hostSetup.aiName || "Project: Caroline",
+                avatarId: inferAvatarId(hostSetup.aiName || host.aiName || host.name),
+                deviceType: deviceType || host.deviceType,
+              }
+            : host
+        );
+        setSettings({ ...settings, userName: hostSetup.userName || settings.userName, hosts });
+      }
+
+      setHostSetupLoadedFrom(base);
+      setHostSetupStatus("Saved to host.");
+      await handleLoadHostSetup();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "save failed";
+      setHostSetupStatus(`Could not save host setup: ${message}`);
+    } finally {
+      setHostSetupBusy(false);
+    }
+  }
+
+  function openExternalUrl(url: string) {
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   async function handleCheckClientUpdates() {
@@ -1125,6 +1633,279 @@ export default function App() {
                 ))}
               </select>
             </div>
+
+            <details className="settings-advanced host-setup-panel" open>
+              <summary>Host Setup Hub</summary>
+              <div className="host-setup-body">
+                <div className="host-setup-actions">
+                  <button type="button" onClick={handleLoadHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                    {hostSetupBusy ? "Working..." : "Load From Host"}
+                  </button>
+                  <button type="button" onClick={handleSaveHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                    Save To Host
+                  </button>
+                  <button type="button" onClick={() => openExternalUrl(activeHostHttpBase)} disabled={!activeHostHttpBase}>
+                    Open Host UI
+                  </button>
+                  <button type="button" onClick={() => openExternalUrl(activeHostSecureVoiceUrl)} disabled={!activeHostSecureVoiceUrl}>
+                    Secure Voice
+                  </button>
+                </div>
+
+                <div className="host-setup-status-row">
+                  <span>{activeHostHttpBase || "No host address yet"}</span>
+                  {hostSetupStatus && <strong>{hostSetupStatus}</strong>}
+                </div>
+
+                {hostHealth && (
+                  <div className="host-health-list" aria-label="Host integration status">
+                    <span className="host-health-chip">AI: {hostHealth.aiProvider || hostSetup.aiProvider}</span>
+                    <span className="host-health-chip">Model: {hostHealth.ollamaModel || hostHealth.aiModel || (hostSetup.aiProvider === "ollama" ? hostSetup.ollamaModel : hostSetup.aiModel)}</span>
+                    <span className="host-health-chip">Google: {hostHealthLabel(hostHealth.google?.connected || hostHealth.google?.serviceAccountConfigured, hostHealth.google?.clientConfigured || hostHealth.google?.hasClientSecret)}</span>
+                    <span className="host-health-chip">Spotify: {hostHealthLabel(hostHealth.spotify?.connected, hostHealth.spotify?.clientConfigured)}</span>
+                    <span className="host-health-chip">Calendar: {hostHealthLabel(hostHealth.calendar?.configured, hostHealth.google?.connected)}</span>
+                    <span className="host-health-chip">Hue: {hostHealthLabel(hostHealth.hue?.configured, hostHealth.hue?.configured)}</span>
+                    <span className="host-health-chip">Discord: {hostHealthLabel(hostHealth.discord?.configured, hostHealth.discord?.enabled || hostHealth.discord?.channelConfigured)}</span>
+                  </div>
+                )}
+
+                <div className="host-privacy-panel">
+                  <div className="host-setup-section-title">Privacy</div>
+                  <div className="host-privacy-actions">
+                    <button type="button" onClick={handleRefreshHostPrivacy} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      {hostPrivacyBusy ? "Working..." : "Refresh Privacy"}
+                    </button>
+                    <button type="button" onClick={() => handleClearHostPrivacy({ history: true }, "Clear host chat")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      Clear Chat
+                    </button>
+                    <button type="button" onClick={() => handleClearHostPrivacy({ memory: true }, "Clear host memory")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      Clear Memory
+                    </button>
+                    <button type="button" onClick={() => handleClearHostPrivacy({ history: true, memory: true, profile: true }, "Reset host privacy data")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      Reset Privacy
+                    </button>
+                  </div>
+
+                  <div className="host-privacy-status">
+                    {hostPrivacyStatus || (hostPrivacy ? "Host privacy data loaded." : "Load host setup or refresh privacy to view host data.")}
+                  </div>
+
+                  <div className="host-privacy-stats">
+                    <span><strong>{hostPrivacyCounts.chatMessages || 0}</strong> chat</span>
+                    <span><strong>{hostPrivacyCounts.memoryShards || 0}</strong> memory</span>
+                    <span><strong>{hostPrivacyCounts.tasks || 0}</strong> tasks</span>
+                    <span><strong>{hostPrivacyRetention.privacyMode ? "Private" : "Normal"}</strong> mode</span>
+                    <span><strong>{formatHostRetention(hostPrivacyRetention.historyRetentionMs)}</strong> chat TTL</span>
+                    <span><strong>{formatHostRetention(hostPrivacyRetention.memoryRetentionMs)}</strong> memory TTL</span>
+                  </div>
+
+                  {hostPrivacyIntegrations.length > 0 && (
+                    <div className="host-health-list" aria-label="Host privacy integration status">
+                      {hostPrivacyIntegrations.map(([key, info]) => {
+                        const enabled = info.enabled !== false;
+                        const state = !enabled ? "off" : (info.connected ? "connected" : (info.configured ? "configured" : "off"));
+                        return (
+                          <span className="host-health-chip" key={`privacy-${key}`}>
+                            {info.label || key}: {state}{info.model ? ` / ${info.model}` : ""}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {hostPrivacyFiles.length > 0 && (
+                    <div className="host-privacy-files">
+                      {hostPrivacyFiles.map((file) => (
+                        <div className="host-privacy-file" key={`${file.label || "file"}-${file.path || ""}`}>
+                          <span>{file.label || "Host file"}</span>
+                          <code>{file.path || "unknown path"}</code>
+                          <em>{file.exists ? formatHostBytes(file.bytes) : "empty"}</em>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="host-memory-list">
+                    {hostMemoryShards.slice(0, 6).map((shard) => (
+                      <div className="host-memory-item" key={shard.id || shard.text}>
+                        <span>{shard.text || "Untitled memory"}</span>
+                        <button type="button" onClick={() => handleDeleteHostMemoryShard(shard)} disabled={hostPrivacyBusy}>
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                    {hostMemoryShards.length === 0 && <div className="host-memory-empty">No host memory shards loaded.</div>}
+                  </div>
+                </div>
+
+                <div className="host-setup-grid">
+                  <div className="host-setup-section-title">Identity</div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-user-name">Your Name</label>
+                    <input
+                      id="host-setup-user-name"
+                      value={hostSetup.userName}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("userName", e.target.value)}
+                      placeholder="Dave"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-ai-name">Buddy Name</label>
+                    <input
+                      id="host-setup-ai-name"
+                      value={hostSetup.aiName}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("aiName", e.target.value)}
+                      placeholder="Caroline"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-device-type">Host Device</label>
+                    <select
+                      id="host-setup-device-type"
+                      value={normalizeDeviceType(hostSetup.hostDeviceType)}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleHostSetupField("hostDeviceType", e.target.value)}
+                    >
+                      {HOST_DEVICE_TYPES.map((deviceType) => (
+                        <option value={deviceType} key={`host-setup-${deviceType || "unknown"}`}>
+                          {deviceType || "Unknown"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="host-setup-section-title">Place & Time</div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-timezone">Timezone</label>
+                    <input
+                      id="host-setup-timezone"
+                      value={hostSetup.timezone}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("timezone", e.target.value)}
+                      placeholder="America/Los_Angeles"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-location">Location</label>
+                    <input
+                      id="host-setup-location"
+                      value={hostSetup.location}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("location", e.target.value)}
+                      placeholder="Chula Vista, CA"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-city">City</label>
+                    <input
+                      id="host-setup-city"
+                      value={hostSetup.cityName}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("cityName", e.target.value)}
+                      placeholder="Chula Vista"
+                    />
+                  </div>
+
+                  <div className="host-setup-section-title">AI</div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-provider">AI Provider</label>
+                    <select
+                      id="host-setup-provider"
+                      value={hostSetup.aiProvider}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleHostSetupField("aiProvider", e.target.value)}
+                    >
+                      <option value="openrouter">OpenRouter</option>
+                      <option value="ollama">Ollama</option>
+                    </select>
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-ai-model">Cloud Model</label>
+                    <input
+                      id="host-setup-ai-model"
+                      value={hostSetup.aiModel}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("aiModel", e.target.value)}
+                      placeholder="anthropic/claude-haiku-4.5"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-ollama-url">Ollama URL</label>
+                    <input
+                      id="host-setup-ollama-url"
+                      value={hostSetup.ollamaUrl}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("ollamaUrl", e.target.value)}
+                      placeholder="http://localhost:11434"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-ollama-model">Ollama Model</label>
+                    <input
+                      id="host-setup-ollama-model"
+                      value={hostSetup.ollamaModel}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("ollamaModel", e.target.value)}
+                      placeholder="qwen2.5:1.5b"
+                    />
+                  </div>
+
+                  <div className="host-setup-section-title">Integrations</div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-spotify">Spotify Client ID</label>
+                    <input
+                      id="host-setup-spotify"
+                      value={hostSetup.spotifyClientId}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("spotifyClientId", e.target.value)}
+                      placeholder="Optional custom app"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-google">Google Client ID</label>
+                    <input
+                      id="host-setup-google"
+                      value={hostSetup.googleClientId}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("googleClientId", e.target.value)}
+                      placeholder="OAuth client ID"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-google-redirect">Google Redirect URI</label>
+                    <input
+                      id="host-setup-google-redirect"
+                      value={hostSetup.googleRedirectUri}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("googleRedirectUri", e.target.value)}
+                      placeholder="http://127.0.0.1:1880/admin/google/callback"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-calendar">Read Calendar</label>
+                    <input
+                      id="host-setup-calendar"
+                      value={hostSetup.calendarId}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("calendarId", e.target.value)}
+                      placeholder="primary"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-write-calendar">Write Calendar</label>
+                    <input
+                      id="host-setup-write-calendar"
+                      value={hostSetup.defaultWriteCalendarId}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("defaultWriteCalendarId", e.target.value)}
+                      placeholder="primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            </details>
 
             <div className="settings-group settings-toggle-row">
               <label htmlFor="dark-mode">Dark Mode</label>
