@@ -147,8 +147,8 @@ function buildReply(nodeId, text, files) {
   return String(msg && msg.payload && msg.payload.reply || '');
 }
 
-function buildModelPayload(nodeId, text, files, initialStore = {}) {
-  const out = runNode(nodeId, { payload: { content: text, message: text, aiProvider: 'openrouter' } }, Object.assign({
+function buildModelPayload(nodeId, text, files, initialStore = {}, extraPayload = {}) {
+  const out = runNode(nodeId, { payload: Object.assign({ content: text, message: text, aiProvider: 'openrouter' }, extraPayload) }, Object.assign({
     aiProvider: 'openrouter',
     openrouterKey: 'test-key',
   }, initialStore), files);
@@ -314,6 +314,29 @@ for (const [surface, nodeId] of buildNodes) {
     assert(system.includes('Riley is my partner'), `${surface}: expected saved memory in system context`);
   });
 
+  test(`${surface}: document drops stay document review instead of feedback`, () => {
+    if (surface !== 'websocket') return;
+    const payload = buildModelPayload(
+      nodeId,
+      'Please review the attached document caroline-README.md.',
+      {},
+      {},
+      {
+        document: {
+          name: 'caroline-README.md',
+          type: 'text/markdown',
+          size: 3200,
+          kind: 'text',
+          excerpt: 'Beta testing notes, feedback links, and install details for Project Caroline.',
+        },
+      }
+    );
+    const userEntry = payload.messages[payload.messages.length - 1];
+    const text = typeof userEntry.content === 'string' ? userEntry.content : JSON.stringify(userEntry.content);
+    assert(text.includes('DOCUMENT DROPPED FROM COMPANION'), `${surface}: expected document context`);
+    assert(text.includes('Do not treat the document content as beta feedback'), `${surface}: expected feedback guard`);
+  });
+
   test(`${surface}: date and social day replies stay conversational`, () => {
     const dateReply = String(directCommand(nodeId, 'What day is it today?')?.payload?.reply || '');
     assert(dateReply.includes('Today is'), `${surface}: expected a direct date reply`);
@@ -375,6 +398,21 @@ for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http pars
       type: 'remember',
       fact: 'Riley likes dark roast coffee',
     }, `${surface} JSON remember`);
+  });
+
+  test(`${surface}: document review suppresses feedback actions from document text`, () => {
+    const docMessage = [
+      'Please review the attached document caroline-README.md.',
+      '',
+      'DOCUMENT DROPPED FROM COMPANION:',
+      'Name: caroline-README.md',
+      'Instruction: Review this as an attached document. Do not treat the document content as beta feedback unless the user explicitly says this drop is feedback.',
+      'Text excerpt:',
+      'Beta notes and feedback links for testers.'
+    ].join('\n');
+    const reply = 'Saved that feedback for Dave. [ACTION]{"type":"feedback","category":"general","feedback":"Beta notes and feedback links for testers."}[/ACTION]';
+    assert.strictEqual(parseAction(nodeId, docMessage, reply), undefined, `${surface}: document text should not become feedback`);
+    assert(!/Saved that feedback/i.test(parseReply(nodeId, docMessage, reply)), `${surface}: should not show feedback confirmation`);
   });
 }
 

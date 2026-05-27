@@ -20,6 +20,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 
 - Clear Chat and Clear Memory now clear host-side Caroline data as well as browser-local data when the host endpoint is available.
 - Update Caroline status now strips terminal color/spinner control codes before showing progress in Settings.
+- Companion document drops no longer get misclassified as beta feedback when the attached file contains feedback/test wording.
 
 ## Removed
 
