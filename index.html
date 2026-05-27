@@ -278,6 +278,35 @@
   #todo-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb1),0.25); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:var(--ui-font, 'Inter'),sans-serif; font-size:13px; outline:none; }
   #todo-add-btn { background:rgba(var(--t-rgb1),0.1); border:1px solid rgba(var(--t-rgb1),0.3); border-radius:20px; padding:8px 16px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:13px; cursor:pointer; }
   #todo-clear-btn { background:none; border:1px solid rgba(244,63,94,0.3); border-radius:20px; padding:8px 12px; color:#fb7185; font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; }
+  #routine-panel { position:absolute; bottom:0; left:0; right:0; height:66%; background:rgba(5,5,10,0.97); border-top:1px solid rgba(var(--t-rgb1),0.3); border-radius:20px 20px 0 0; z-index:705; transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; backdrop-filter:blur(20px); }
+  #routine-panel.open { transform:translateY(0); }
+  #routine-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px 10px; border-bottom:1px solid rgba(var(--t-rgb1),0.1); flex-shrink:0; }
+  #routine-title { font-size:14px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; letter-spacing:0; }
+  #routine-subtitle { font-size:12px; color:rgba(var(--t-rgb1),0.4); font-family:'JetBrains Mono',monospace; }
+  #routine-close { background:none; border:1px solid rgba(var(--t-rgb1),0.3); border-radius:20px; padding:3px 14px; font-size:13px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; cursor:pointer; white-space:nowrap; flex:0 0 auto; }
+  #routine-body { flex:1; min-height:0; overflow:auto; padding:12px 16px; display:grid; grid-template-columns:minmax(180px,0.38fr) minmax(0,1fr); gap:14px; }
+  #routine-presets { display:flex; flex-direction:column; gap:8px; }
+  .routine-preset { text-align:left; border:1px solid rgba(var(--t-rgb1),0.18); border-radius:10px; background:rgba(var(--t-rgb1),0.05); padding:10px 12px; cursor:pointer; color:#e2e8f0; transition:all 0.2s; }
+  .routine-preset:hover, .routine-preset.active { background:rgba(var(--t-rgb1),0.12); border-color:rgba(var(--t-rgb1),0.42); }
+  .routine-preset-title { font-size:13px; color:var(--t-hex1); font-weight:700; }
+  .routine-recommended { font-size:10px; opacity:.65; font-weight:500; }
+  .routine-preset-desc { font-size:11px; color:rgba(226,232,240,0.48); margin-top:3px; line-height:1.35; }
+  #routine-active { border:1px solid rgba(var(--t-rgb1),0.16); border-radius:12px; background:rgba(0,0,0,0.22); padding:14px; min-height:220px; display:flex; flex-direction:column; gap:12px; }
+  .routine-active-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; border-bottom:1px solid rgba(var(--t-rgb1),0.1); padding-bottom:10px; }
+  .routine-active-name { font-size:16px; color:#f8fafc; font-weight:700; }
+  .routine-active-meta { font-size:11px; color:rgba(226,232,240,0.42); font-family:'JetBrains Mono',monospace; margin-top:3px; }
+  .routine-progress { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--t-hex1); white-space:nowrap; }
+  .routine-step-list { display:flex; flex-direction:column; gap:8px; }
+  .routine-step { display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border:1px solid rgba(var(--t-rgb1),0.12); border-radius:9px; background:rgba(var(--t-rgb1),0.04); cursor:pointer; }
+  .routine-step.done { opacity:.5; }
+  .routine-step-box { width:18px; height:18px; border-radius:5px; border:1px solid rgba(var(--t-rgb1),0.34); display:flex; align-items:center; justify-content:center; color:var(--t-hex1); flex:0 0 auto; margin-top:1px; }
+  .routine-step-text { font-size:13px; color:#e2e8f0; line-height:1.35; }
+  .routine-step.done .routine-step-text { text-decoration:line-through; color:rgba(226,232,240,0.52); }
+  .routine-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+  .routine-actions button { background:rgba(var(--t-rgb1),0.08); border:1px solid rgba(var(--t-rgb1),0.25); border-radius:10px; padding:7px 12px; color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:11px; cursor:pointer; }
+  .routine-actions button:hover { background:rgba(var(--t-rgb1),0.16); }
+  .routine-empty { font-family:'JetBrains Mono',monospace; font-size:12px; color:rgba(226,232,240,0.38); line-height:1.6; }
+  .routine-empty strong { color:var(--t-hex1); }
   #note-input { flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(var(--t-rgb2),0.3); border-radius:20px; padding:8px 14px; color:#f8fafc; font-family:var(--ui-font, 'Inter'),sans-serif; font-size:13px; outline:none; }
   #note-add-btn { background:linear-gradient(135deg,var(--t-hex2),rgba(var(--t-rgb2),0.4)); border:1px solid var(--t-hex2); border-radius:20px; padding:8px 16px; color:white; font-size:12px; cursor:pointer; }
   #pomo-widget { display:flex; align-items:center; gap:8px; }
@@ -2111,6 +2140,17 @@
       font-size:15px;
       line-height:1.42;
     }
+    #routine-panel {
+      position:fixed;
+      height:auto;
+      top:calc(64px + env(safe-area-inset-top, 0px));
+      bottom:calc(76px + env(safe-area-inset-bottom, 0px));
+      border-radius:14px 14px 0 0;
+    }
+    #routine-body {
+      grid-template-columns:1fr;
+      padding:12px;
+    }
 
     #settings-overlay {
       position:fixed;
@@ -3161,6 +3201,20 @@
   </div>
 </div>
 
+<div id="routine-panel" style="transform:translateY(110%);display:none;" aria-label="Routine Coach">
+  <div id="routine-header">
+    <div>
+      <div id="routine-title">ROUTINE COACH</div>
+      <div id="routine-subtitle">Pick a practical lane, then check off the steps.</div>
+    </div>
+    <button id="routine-close" onclick="toggleRoutineCoach()">CLOSE ✕</button>
+  </div>
+  <div id="routine-body">
+    <div id="routine-presets"></div>
+    <div id="routine-active"></div>
+  </div>
+</div>
+
 <div id="topbar">
   <div class="dot"></div>
   <span class="topbar-name" id="topbar-name">Caroline</span>
@@ -3394,6 +3448,7 @@
       <div id="quick-btns">
         <button class="quick-btn" onclick="quickDailyBrief()"><i class="ti ti-sun"></i> Brief me</button>
         <button class="quick-btn" onclick="quickSend('What do I have on today? Give me a heads up on my schedule.')"><i class="ti ti-calendar"></i> Schedule</button>
+        <button class="quick-btn" onclick="toggleRoutineCoach(); playBeep(700);"><i class="ti ti-route"></i> Routine</button>
         <button class="quick-btn" onclick="quickRecap('day')"><i class="ti ti-notes"></i> Recap</button>
         <button class="quick-btn" onclick="quickSend('Give me a quick motivation boost and one focus tip for right now.')"><i class="ti ti-bolt"></i> Motivate</button>
         <button class="quick-btn" onclick="toggleTodo(); playBeep(700);"><i class="ti ti-checkbox"></i> Tasks</button>
@@ -5646,6 +5701,15 @@ function closeTransientPanels(except = '') {
       todo.classList.remove('open');
       setTimeout(() => {
         if (!todo.classList.contains('open')) todo.style.display = 'none';
+      }, 420);
+    }
+  }
+  if (except !== 'routine') {
+    const routine = document.getElementById('routine-panel');
+    if (routine && routine.classList.contains('open')) {
+      routine.classList.remove('open');
+      setTimeout(() => {
+        if (!routine.classList.contains('open')) routine.style.display = 'none';
       }, 420);
     }
   }
@@ -9864,7 +9928,7 @@ async function fetchTides(){
 
 // ── POMODORO TIMER ────────────────────────────
 const POMO_WORK = 25*60, POMO_BREAK = 5*60;
-let pomoSeconds = POMO_WORK, pomoRunning = false, pomoIsBreak = false, pomoInterval = null, pomoSession = 0;
+let pomoSeconds = POMO_WORK, pomoTotalSeconds = POMO_WORK, pomoRunning = false, pomoIsBreak = false, pomoInterval = null, pomoSession = 0;
 
 fetchWeather(); setInterval(fetchWeather,10*60*1000); updatePomoDisplay(); setTimeout(function(){ fetchTides(); setInterval(fetchTides, 30*60*1000); }, 500);
 
@@ -10245,6 +10309,269 @@ function quickRecap(period = 'day') {
   resetIdle();
 }
 
+const ROUTINE_PRESETS = [
+  { id:'morning', name:'Morning', desc:'Start clean: schedule, weather, first task.', timer:25 },
+  { id:'focus', name:'Focus', desc:'One work block with fewer escape hatches.', timer:25 },
+  { id:'study', name:'Study', desc:'Read, practice, capture what you learned.', timer:25 },
+  { id:'reset', name:'Reset', desc:'When everything feels noisy, shrink the target.', timer:10 },
+  { id:'winddown', name:'Wind Down', desc:'Close loops and make tomorrow easier.', timer:0 }
+];
+let activeRoutine = loadRoutineState();
+
+function loadRoutineState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('caro_active_routine') || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch(e) {
+    return {};
+  }
+}
+
+function saveRoutineState() {
+  localStorage.setItem('caro_active_routine', JSON.stringify(activeRoutine || {}));
+}
+
+function suggestedRoutineId() {
+  const hour = localHourForBrief(S.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles');
+  if (clampMood(S.userMood) <= 4) return 'reset';
+  if (hour < 11) return 'morning';
+  if (hour >= 19) return 'winddown';
+  return 'focus';
+}
+
+function topOpenRoutineTask() {
+  const open = (Array.isArray(todos) ? todos : []).filter(t => t && !t.done && String(t.text || '').trim());
+  return open[0]?.text || '';
+}
+
+function nextRoutineEventText() {
+  const cal = summarizeBriefCalendar();
+  const ev = Array.isArray(cal.events) && cal.events.length ? cal.events[0] : null;
+  return ev ? [ev.time, ev.title].filter(Boolean).join(' - ') : '';
+}
+
+function routineStepsFor(id) {
+  const topTask = topOpenRoutineTask();
+  const nextEvent = nextRoutineEventText();
+  const weather = summarizeBriefWeather();
+  const weatherText = typeof weather === 'string' ? '' : (weather.current || '');
+  const steps = {
+    morning: [
+      nextEvent ? 'Check the next calendar item: ' + nextEvent : 'Check today’s calendar for anything time-sensitive.',
+      weatherText ? 'Glance at weather: ' + weatherText : 'Check the weather before you leave or start deep work.',
+      topTask ? 'Pick the first task: ' + topTask : 'Write down the first useful task for today.',
+      'Start one focus block before opening the internet rabbit hole.'
+    ],
+    focus: [
+      topTask ? 'Put this task in front of you: ' + topTask : 'Choose one task that would make the next hour count.',
+      'Close or mute one distraction.',
+      'Start a focus timer.',
+      'When the timer ends, write one sentence about what changed.'
+    ],
+    study: [
+      'Open the one thing you are studying.',
+      'Write the question this session should answer.',
+      'Start a focus timer and take rough notes.',
+      'End by writing a three-line summary.'
+    ],
+    reset: [
+      'Take one breath and look at what is physically in front of you.',
+      'Clear one tiny surface or close one noisy tab.',
+      topTask ? 'Shrink this task to the smallest visible step: ' + topTask : 'Pick the smallest visible step you can finish in ten minutes.',
+      'Do ten minutes. That is the whole deal.'
+    ],
+    winddown: [
+      'Capture loose thoughts before they turn into bedtime tabs.',
+      topTask ? 'Choose tomorrow’s first task: ' + topTask : 'Choose tomorrow’s first task.',
+      nextEvent ? 'Check tomorrow/next calendar item: ' + nextEvent : 'Check tomorrow’s calendar.',
+      'Stop adding new work unless it is truly urgent.'
+    ]
+  };
+  return (steps[id] || steps.focus).map((text, idx) => ({ id: id + '-' + idx, text, done:false }));
+}
+
+function routinePresetById(id) {
+  return ROUTINE_PRESETS.find(p => p.id === id) || ROUTINE_PRESETS[1];
+}
+
+function toggleRoutineCoach() {
+  const panel = document.getElementById('routine-panel');
+  if (!panel) return;
+  const open = !panel.classList.contains('open');
+  if (open) closeTransientPanels('routine');
+  panel.style.display = 'flex';
+  panel.style.transform = '';
+  setTimeout(() => {
+    panel.classList.toggle('open', open);
+    if (open) renderRoutineCoach();
+    else setTimeout(() => { if (!panel.classList.contains('open')) panel.style.display = 'none'; }, 420);
+    resetIdle();
+  }, 10);
+}
+
+function selectRoutinePreset(id) {
+  const preset = routinePresetById(id);
+  activeRoutine = {
+    id: preset.id,
+    name: preset.name,
+    desc: preset.desc,
+    timer: preset.timer,
+    startedAt: Date.now(),
+    steps: routineStepsFor(preset.id)
+  };
+  saveRoutineState();
+  renderRoutineCoach();
+  playBeep(760);
+}
+
+function routineProgressLabel() {
+  const steps = Array.isArray(activeRoutine.steps) ? activeRoutine.steps : [];
+  const done = steps.filter(s => s.done).length;
+  return done + ' / ' + steps.length;
+}
+
+function toggleRoutineStep(idx) {
+  if (!activeRoutine || !Array.isArray(activeRoutine.steps) || !activeRoutine.steps[idx]) return;
+  activeRoutine.steps[idx].done = !activeRoutine.steps[idx].done;
+  saveRoutineState();
+  renderRoutineCoach();
+  playBeep(activeRoutine.steps[idx].done ? 900 : 500);
+}
+
+function addRoutineStepsToTasks() {
+  const steps = Array.isArray(activeRoutine.steps) ? activeRoutine.steps : [];
+  let added = 0;
+  steps.filter(step => !step.done).forEach(step => {
+    const text = String(step.text || '').trim();
+    const exists = todos.some(t => String(t.text || '').toLowerCase() === text.toLowerCase());
+    if (text && !exists) {
+      todos.push({ text, done:false, autoDone:false, tag:normalizeTodoTag('', text), createdAt:Date.now(), doneAt:null });
+      added++;
+    }
+  });
+  if (added) {
+    saveTodos();
+    renderTodos();
+    addMessage(added + ' routine step' + (added === 1 ? '' : 's') + ' added to Tasks.', 'caroline', 'display');
+  }
+  playBeep(700);
+}
+
+function startRoutineTimer() {
+  const preset = routinePresetById(activeRoutine.id || suggestedRoutineId());
+  if (!preset.timer) {
+    addMessage('This routine does not need a timer. Nice and civilized.', 'caroline', 'display');
+    return;
+  }
+  if (pomoRunning) {
+    addMessage('Timer is already running. Stay with this block.', 'caroline', 'display');
+    return;
+  }
+  clearInterval(pomoInterval);
+  pomoRunning = false;
+  pomoIsBreak = false;
+  pomoSeconds = Math.max(1, Number(preset.timer || 25)) * 60;
+  pomoTotalSeconds = pomoSeconds;
+  const btn = document.getElementById('pomo-btn');
+  if (btn) { btn.innerHTML = '▶'; btn.classList.remove('running'); }
+  const display = document.getElementById('pomo-display');
+  const fill = document.getElementById('pomo-fill');
+  const label = document.getElementById('pomo-label');
+  if (display) display.classList.remove('break-mode');
+  if (fill) fill.classList.remove('break-mode');
+  if (label) label.textContent = preset.name.toUpperCase() + ' TIMER';
+  updatePomoDisplay();
+  togglePomo();
+}
+
+function buildRoutineCoachPrompt() {
+  const preset = routinePresetById(activeRoutine.id || suggestedRoutineId());
+  const snapshot = {
+    routine: activeRoutine.name || preset.name,
+    steps: Array.isArray(activeRoutine.steps) ? activeRoutine.steps : routineStepsFor(preset.id),
+    progress: routineProgressLabel(),
+    calendar: summarizeBriefCalendar(),
+    tasks: summarizeBriefTasks(),
+    mood: { user: clampMood(S.userMood), assistant: clampMood(S.aiMood) },
+    localTime: new Date().toLocaleString('en-US', { timeZone: S.timezone || undefined, weekday:'long', hour:'numeric', minute:'2-digit' })
+  };
+  return [
+    'Coach me through this Project: Caroline routine.',
+    'Use only the snapshot facts. Do not invent tasks or calendar items.',
+    'Keep it warm and practical: 3 short sentences max, one next step, one question.',
+    '',
+    'ROUTINE SNAPSHOT:',
+    JSON.stringify(snapshot, null, 2)
+  ].join('\n');
+}
+
+function coachRoutine() {
+  if (!activeRoutine.id) selectRoutinePreset(suggestedRoutineId());
+  playBeep(700);
+  sendMessage({
+    displayText: 'Coach my ' + (activeRoutine.name || 'routine') + ' routine',
+    sendText: buildRoutineCoachPrompt(),
+    context: { routineCoach: activeRoutine }
+  });
+  resetIdle();
+}
+
+function clearRoutineCoach() {
+  activeRoutine = {};
+  saveRoutineState();
+  renderRoutineCoach();
+}
+
+function renderRoutineCoach() {
+  const presets = document.getElementById('routine-presets');
+  const active = document.getElementById('routine-active');
+  if (!presets || !active) return;
+  const suggested = suggestedRoutineId();
+  presets.innerHTML = '';
+  ROUTINE_PRESETS.forEach(preset => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'routine-preset' + (activeRoutine.id === preset.id ? ' active' : '');
+    btn.onclick = () => selectRoutinePreset(preset.id);
+    btn.innerHTML = '<div class="routine-preset-title">' + escapeHtmlText(preset.name) + (preset.id === suggested ? ' <span class="routine-recommended">recommended</span>' : '') + '</div><div class="routine-preset-desc">' + escapeHtmlText(preset.desc) + '</div>';
+    presets.appendChild(btn);
+  });
+  if (!activeRoutine.id) {
+    const suggestedPreset = routinePresetById(suggested);
+    active.replaceChildren();
+    const empty = document.createElement('div');
+    empty.className = 'routine-empty';
+    empty.append('Pick a routine on the left, or start the recommended ');
+    const strong = document.createElement('strong');
+    strong.textContent = suggestedPreset.name;
+    empty.append(strong, ' routine for this moment.');
+    const actions = document.createElement('div');
+    actions.className = 'routine-actions';
+    const startBtn = document.createElement('button');
+    startBtn.type = 'button';
+    startBtn.textContent = 'Start Recommended';
+    startBtn.onclick = () => selectRoutinePreset(suggestedPreset.id);
+    const nudgeBtn = document.createElement('button');
+    nudgeBtn.type = 'button';
+    nudgeBtn.textContent = 'Ask for a nudge';
+    nudgeBtn.onclick = () => coachRoutine();
+    actions.append(startBtn, nudgeBtn);
+    active.append(empty, actions);
+    return;
+  }
+  const steps = Array.isArray(activeRoutine.steps) ? activeRoutine.steps : [];
+  const started = activeRoutine.startedAt ? new Date(activeRoutine.startedAt).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'now';
+  active.innerHTML = '<div class="routine-active-head"><div><div class="routine-active-name">' + escapeHtmlText(activeRoutine.name || 'Routine') + '</div><div class="routine-active-meta">Started ' + escapeHtmlText(started) + ' · ' + escapeHtmlText(activeRoutine.desc || '') + '</div></div><div class="routine-progress">' + routineProgressLabel() + '</div></div><div class="routine-step-list"></div><div class="routine-actions"><button type="button" onclick="addRoutineStepsToTasks()">Add to Tasks</button><button type="button" onclick="startRoutineTimer()">Start Timer</button><button type="button" onclick="coachRoutine()">Coach Me</button><button type="button" onclick="clearRoutineCoach()">Clear</button></div>';
+  const list = active.querySelector('.routine-step-list');
+  steps.forEach((step, idx) => {
+    const row = document.createElement('div');
+    row.className = 'routine-step' + (step.done ? ' done' : '');
+    row.onclick = () => toggleRoutineStep(idx);
+    row.innerHTML = '<div class="routine-step-box">' + (step.done ? '✓' : '') + '</div><div class="routine-step-text">' + escapeHtmlText(step.text) + '</div>';
+    list.appendChild(row);
+  });
+}
+
 function quickSend(text) { playBeep(700); document.getElementById('msg-input').value = text; sendMessage(); resetIdle(); }
 
 // ── POMODORO TIMER ────────────────────────────
@@ -10259,15 +10586,15 @@ function tickPomo() {
     clearInterval(pomoInterval); pomoRunning=false;
     document.getElementById('pomo-btn').innerHTML='▶'; document.getElementById('pomo-btn').classList.remove('running');
     playBeep(1200);
-    if (!pomoIsBreak) { pomoSession++; pomoIsBreak=true; pomoSeconds=POMO_BREAK; speak('Focus session complete! Great work'+(S.userName?' '+S.userName:'')+'. Take a 5 minute break.'); document.getElementById('pomo-label') && (document.getElementById('pomo-label').textContent='BREAK \u2014 Session '+pomoSession); }
-    else { pomoIsBreak=false; pomoSeconds=POMO_WORK; speak('Break over! Ready for another focus session?'); document.getElementById('pomo-label') && (document.getElementById('pomo-label').textContent='FOCUS SESSION'); }
+    if (!pomoIsBreak) { pomoSession++; pomoIsBreak=true; pomoSeconds=POMO_BREAK; pomoTotalSeconds=POMO_BREAK; speak('Focus session complete! Great work'+(S.userName?' '+S.userName:'')+'. Take a 5 minute break.'); document.getElementById('pomo-label') && (document.getElementById('pomo-label').textContent='BREAK \u2014 Session '+pomoSession); }
+    else { pomoIsBreak=false; pomoSeconds=POMO_WORK; pomoTotalSeconds=POMO_WORK; speak('Break over! Ready for another focus session?'); document.getElementById('pomo-label') && (document.getElementById('pomo-label').textContent='FOCUS SESSION'); }
     document.getElementById('pomo-display').classList.toggle('break-mode',pomoIsBreak);
     document.getElementById('pomo-fill').classList.toggle('break-mode',pomoIsBreak);
     updatePomoDisplay();
   }
 }
 function updatePomoDisplay() {
-  const total = pomoIsBreak?POMO_BREAK:POMO_WORK; const pct=((total-pomoSeconds)/total)*100;
+  const total = pomoTotalSeconds || (pomoIsBreak?POMO_BREAK:POMO_WORK); const pct=((total-pomoSeconds)/total)*100;
   const m=Math.floor(pomoSeconds/60).toString().padStart(2,'0'); const s=(pomoSeconds%60).toString().padStart(2,'0');
   if(document.getElementById('pomo-display')) document.getElementById('pomo-display').textContent=m+':'+s;
   if(document.getElementById('pomo-fill')) document.getElementById('pomo-fill').style.width=pct+'%';
@@ -10278,6 +10605,7 @@ function resetPomo() {
   pomoRunning = false;
   pomoIsBreak = false;
   pomoSeconds = POMO_WORK;
+  pomoTotalSeconds = POMO_WORK;
   const btn = document.getElementById('pomo-btn');
   if (btn) { btn.innerHTML = '▶'; btn.classList.remove('running'); }
   const display = document.getElementById('pomo-display');
