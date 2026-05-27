@@ -62,6 +62,7 @@ type HostSetupSettings = {
   openrouterKey: string;
   openrouterKeyConfigured: boolean;
   aiModel: string;
+  visionModel: string;
   ollamaUrl: string;
   ollamaModel: string;
   spotifyClientId: string;
@@ -90,6 +91,7 @@ type HostSetupSettings = {
 type HostHealth = {
   aiProvider?: string;
   aiModel?: string;
+  visionModel?: string;
   ollamaModel?: string;
   hostDeviceType?: string;
   openrouter?: {
@@ -234,6 +236,7 @@ const HOST_SETUP_DEFAULTS: HostSetupSettings = {
   openrouterKey: "",
   openrouterKeyConfigured: false,
   aiModel: "anthropic/claude-haiku-4.5",
+  visionModel: "google/gemini-2.5-flash-lite",
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "qwen2.5:1.5b",
   spotifyClientId: "",
@@ -658,6 +661,7 @@ function normalizeHostSetupSettings(value: unknown): HostSetupSettings {
     openrouterKey: stringSetting(record, "openrouterKey"),
     openrouterKeyConfigured: boolSetting(record, "openrouterKeyConfigured"),
     aiModel: stringSetting(record, "aiModel", HOST_SETUP_DEFAULTS.aiModel),
+    visionModel: stringSetting(record, "visionModel", HOST_SETUP_DEFAULTS.visionModel),
     ollamaUrl: stringSetting(record, "ollamaUrl", HOST_SETUP_DEFAULTS.ollamaUrl),
     ollamaModel: stringSetting(record, "ollamaModel", HOST_SETUP_DEFAULTS.ollamaModel),
     spotifyClientId: stringSetting(record, "spotifyClientId"),
@@ -828,6 +832,7 @@ function hostSettingsPayload(setup: HostSetupSettings) {
     aiProvider: setup.aiProvider,
     openrouterKey: setup.openrouterKey,
     aiModel: setup.aiModel,
+    visionModel: setup.visionModel,
     ollamaUrl: setup.ollamaUrl,
     ollamaModel: setup.ollamaModel,
     spotifyClientId: setup.spotifyClientId,
@@ -2512,6 +2517,16 @@ export default function App() {
                       value={hostSetup.aiModel}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("aiModel", e.target.value)}
                       placeholder="anthropic/claude-haiku-4.5"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-vision-model">Screen Ask Model</label>
+                    <input
+                      id="host-setup-vision-model"
+                      value={hostSetup.visionModel}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("visionModel", e.target.value)}
+                      placeholder="google/gemini-2.5-flash-lite"
                     />
                   </div>
 
