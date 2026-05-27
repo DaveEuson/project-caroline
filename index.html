@@ -3828,10 +3828,14 @@ function mergeServerSettings(d, options = {}) {
   try { storedSettings = JSON.parse(localStorage.getItem('caro_settings') || '{}') || {}; } catch(e) {}
   const localFeaturesUpdatedAt = Number(storedSettings.featuresUpdatedAt || S.featuresUpdatedAt || 0);
   const serverFeaturesUpdatedAt = Number(d.featuresUpdatedAt || 0);
-  const shouldKeepLocalFeatures = !!d.features
+  const serverFeatureState = d.features ? normalizeFeatureState(d.features, { repairAllOff: false }) : null;
+  const serverFeaturesLookCustomized = !!serverFeatureState
+    && FEATURE_KEYS.some(k => serverFeatureState[k] !== FEATURE_DEFAULTS[k]);
+  const shouldKeepLocalFeatures = !!serverFeatureState
     && localFeaturesUpdatedAt > serverFeaturesUpdatedAt
     && storedSettings.features
-    && typeof storedSettings.features === 'object';
+    && typeof storedSettings.features === 'object'
+    && (serverFeaturesUpdatedAt > 0 || !serverFeaturesLookCustomized);
   const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
@@ -3845,7 +3849,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = SAME_ORIGIN_NODE_RED_URL || ('http://' + d.piIp + ':8080');
   if (d.nodeRedUrl) d.nodeRedUrl = normalizeConfiguredNodeRedUrl(d.nodeRedUrl);
-  if (d.features) d.features = normalizeFeatureState(d.features, { repairAllOff: false });
+  if (serverFeatureState) d.features = serverFeatureState;
   normalizeSettingsBooleans(d);
   Object.keys(d).forEach(k => {
     if (skip.has(k)) return;
@@ -3890,6 +3894,48 @@ function mergeServerSettings(d, options = {}) {
     }, 500);
   }
   return true;
+}
+
+let runtimeSettingsRefreshInFlight = false;
+let lastRuntimeSettingsSignature = '';
+function applySyncedSettings(reason = 'settings sync') {
+  applyUiReadability();
+  applyPiPerformanceMode();
+  applyFeatures();
+  syncFeatureCheckboxes();
+  updateFeatWarnings();
+  if (typeof updateAboutPanel === 'function') updateAboutPanel();
+  if (typeof updateSettingsStatus === 'function') updateSettingsStatus();
+  if (typeof renderIntegrationStatus === 'function') renderIntegrationStatus();
+  if (typeof updateAiConfigIndicator === 'function') updateAiConfigIndicator();
+  if (S.features?.memes) {
+    if (!currentMeme) fetchMeme();
+    scheduleMemeRotation();
+  }
+  if (typeof clog === 'function') clog('info', reason + ' applied');
+}
+
+async function refreshRuntimeSettingsFromServer(reason = 'background settings sync') {
+  if (runtimeSettingsRefreshInFlight) return false;
+  runtimeSettingsRefreshInFlight = true;
+  try {
+    const settingsUrl = getNodeRedUrl() + '/admin/get-settings';
+    const r = await fetchJsonWithTimeout(settingsUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'GET settings');
+    if (!r.ok) return false;
+    const d = await r.json();
+    if (!d || !Object.keys(d).length) return false;
+    const signature = JSON.stringify(d);
+    if (signature === lastRuntimeSettingsSignature) return false;
+    lastRuntimeSettingsSignature = signature;
+    mergeServerSettings(d, { skip: new Set(['setupComplete']) });
+    applySyncedSettings(reason);
+    return true;
+  } catch(e) {
+    console.warn('[Caroline] background settings sync failed:', e);
+    return false;
+  } finally {
+    runtimeSettingsRefreshInFlight = false;
+  }
 }
 
 function setInputValue(id, value, options = {}) {
@@ -4122,7 +4168,9 @@ async function syncSettingsFromServer() {
     }
     const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
     const installChanged = !!(d.installId && localInstallId && localInstallId !== d.installId);
+    lastRuntimeSettingsSignature = JSON.stringify(d);
     mergeServerSettings(d);
+    applySyncedSettings('server settings sync');
     applyPiPerformanceMode();
     if (typeof setMediaFeatureActive === 'function') setMediaFeatureActive(videoFeatureEnabled());
     serverSettingsLoaded = true;
@@ -5824,6 +5872,7 @@ function toggleSettings() {
 
 // ── MEME WIDGET ───────────────────────────────
 let currentMeme = null;
+let memeRotationTimer = null;
 const MEME_SUBREDDITS = ['memes','dankmemes','me_irl','ProgrammerHumor','Unexpected','TIHI','Showerthoughts'];
 
 async function fetchMeme() {
@@ -5876,8 +5925,14 @@ async function fetchMeme() {
 }
 
 function scheduleMemeRotation() {
+  if (memeRotationTimer) return;
   const delay = (2 + Math.random() * 2) * 60 * 60 * 1000;
-  setTimeout(() => { fetchMeme(); scheduleMemeRotation(); }, delay);
+  memeRotationTimer = setTimeout(() => {
+    memeRotationTimer = null;
+    if (!S.features?.memes) return;
+    fetchMeme();
+    scheduleMemeRotation();
+  }, delay);
 }
 
 function openMemeOverlay() {
@@ -9112,6 +9167,27 @@ function connectWS(){
   try {
     const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
 
+    if (d.type === 'settings_changed' || d.type === 'settings_confirmed') {
+      if (d.type === 'settings_confirmed' && !d.settings && !d.features) {
+        refreshRuntimeSettingsFromServer('settings confirmation');
+        return;
+      }
+      const payload = Object.assign({}, d.settings && typeof d.settings === 'object' ? d.settings : d);
+      delete payload.type;
+      delete payload.source;
+      delete payload.ts;
+      delete payload.saved;
+      Object.keys(payload).forEach(k => {
+        if (!(k in DEFAULTS) && !k.endsWith('Configured')) delete payload[k];
+      });
+      if (Object.keys(payload).length) {
+        lastRuntimeSettingsSignature = '';
+        mergeServerSettings(payload, { skip: new Set(['setupComplete']) });
+        applySyncedSettings(d.type === 'settings_changed' ? 'remote settings change' : 'settings confirmation');
+      }
+      return;
+    }
+
     if (d.type === 'conversation_event') {
       const eventText = d.content || d.message || d.text || '';
       const eventSource = d.source || 'display';
@@ -9217,6 +9293,10 @@ ws.onclose = ()=>{
   };
 }
 connectWS();
+setInterval(() => {
+  if (document.hidden || !settingsHydrated) return;
+  refreshRuntimeSettingsFromServer('background settings sync');
+}, piPerfInterval(15000, 30000));
 
 function retryNodeRedConnection() {
   clog('ws', 'Manual reconnect requested');
