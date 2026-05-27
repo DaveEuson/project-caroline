@@ -494,7 +494,7 @@ if [ -d "$CLONE_DIR/.git" ]; then
   else
     say "${DIM}  Existing repo found; syncing ${CAROLINE_CHANNEL}.${RESET}"
     git -C "$CLONE_DIR" remote set-url origin "$CAROLINE_REPO_URL" >/dev/null 2>&1 || true
-    git -C "$CLONE_DIR" fetch --tags origin
+    git -C "$CLONE_DIR" fetch --tags --force origin
   fi
 elif [ -e "$CLONE_DIR" ]; then
   CLONE_BACKUP_DIR="${CLONE_DIR}.old.$(date +%Y%m%d-%H%M%S)"

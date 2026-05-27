@@ -1373,7 +1373,7 @@ if [ -d "$CLONE_DIR/.git" ]; then
   echo -e "${DIM}    Repo already present — syncing ${CAROLINE_CHANNEL}...${RESET}"
   git config --global --add safe.directory "$CLONE_DIR" >/dev/null 2>&1 || true
   git -C "$CLONE_DIR" remote set-url origin "$CAROLINE_REPO_URL" >/tmp/caroline-git.log 2>&1 || true
-  git -C "$CLONE_DIR" fetch --tags origin >>/tmp/caroline-git.log 2>&1 || {
+  git -C "$CLONE_DIR" fetch --tags --force origin >>/tmp/caroline-git.log 2>&1 || {
     echo -e "${YELLOW}    ⚠ git fetch failed — using existing clone${RESET}"
   }
 else
