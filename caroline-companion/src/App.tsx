@@ -236,7 +236,7 @@ const HOST_SETUP_DEFAULTS: HostSetupSettings = {
   openrouterKey: "",
   openrouterKeyConfigured: false,
   aiModel: "anthropic/claude-haiku-4.5",
-  visionModel: "google/gemini-2.5-flash-lite",
+  visionModel: "google/gemini-2.5-flash",
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "qwen2.5:1.5b",
   spotifyClientId: "",
@@ -2526,7 +2526,7 @@ export default function App() {
                       id="host-setup-vision-model"
                       value={hostSetup.visionModel}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("visionModel", e.target.value)}
-                      placeholder="google/gemini-2.5-flash-lite"
+                      placeholder="google/gemini-2.5-flash"
                     />
                   </div>
 
