@@ -92,18 +92,30 @@ cpu_model_summary() {
   awk -F: '/model name|Hardware|Processor/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null
 }
 
-OLLAMA_MODEL_VALUES=("qwen3:1.7b" "qwen3:0.6b" "qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
+OLLAMA_MODEL_VALUES=("qwen3:1.7b" "mistral:7b" "gemma4:e4b" "qwen3:0.6b" "qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
 OLLAMA_MODEL_LABELS=(
   "Recommended Steam Deck quality; best Deck balance in Caroline tests"
+  "Recommended Bazzite/NVIDIA quality; best RTX 2070 balance in Caroline tests"
+  "Bazzite/NVIDIA quality mode; excellent replies, may spill to CPU on 8GB VRAM"
   "Fast Steam Deck fallback; very quick, weaker calendar parsing"
   "Recommended Raspberry Pi quality; balanced local fallback"
   "Tiny fallback for constrained hardware"
   "Safe legacy fallback when Qwen is unavailable"
 )
+gpu_vram_mb() {
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null |
+      awk 'NR==1 {gsub(/[^0-9]/, "", $1); found=1; print int($1)} END {if (!found) print 0}'
+  else
+    echo 0
+  fi
+}
 recommended_ollama_model() {
   local ram_mb="${1:-$(total_ram_mb)}"
   if [ "$ram_mb" -gt 0 ] && [ "$ram_mb" -lt 4096 ]; then
     printf 'qwen2.5:0.5b'
+  elif [ "${HOME_LINUX_PROFILE:-}" = "bazzite" ] && [ "$(gpu_vram_mb)" -ge 7000 ]; then
+    printf 'mistral:7b'
   else
     printf 'qwen3:1.7b'
   fi
@@ -131,6 +143,8 @@ choose_ollama_model() {
     3) printf '%s' "${OLLAMA_MODEL_VALUES[2]}" ;;
     4) printf '%s' "${OLLAMA_MODEL_VALUES[3]}" ;;
     5) printf '%s' "${OLLAMA_MODEL_VALUES[4]}" ;;
+    6) printf '%s' "${OLLAMA_MODEL_VALUES[5]}" ;;
+    7) printf '%s' "${OLLAMA_MODEL_VALUES[6]}" ;;
     *) printf '%s' "$choice" ;;
   esac
 }
@@ -349,14 +363,24 @@ say ""
 say "${MAGENTA}  // CAROLINE ARCHIVE - ASSISTANT CORE${RESET}"
 TOTAL_RAM_MB="$(total_ram_mb)"
 CPU_MODEL="$(cpu_model_summary)"
+GPU_VRAM_MB="$(gpu_vram_mb)"
 RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB")"
 say "${DIM}  Best experience: OpenRouter. Use your API key in Settings -> AI.${RESET}"
-say "${DIM}  Recommended local model: qwen3:1.7b.${RESET}"
-say "${DIM}  Fast fallback: qwen3:0.6b.${RESET}"
+if [ "$CAROLINE_PLATFORM" = "bazzite" ] && [ "$GPU_VRAM_MB" -ge 7000 ]; then
+  say "${DIM}  Recommended local model: mistral:7b for RTX 2070-class Bazzite hosts.${RESET}"
+  say "${DIM}  Fast fallback: qwen3:1.7b.${RESET}"
+  say "${DIM}  Quality mode: gemma4:e4b, but it may spill CPU/GPU on 8GB VRAM.${RESET}"
+else
+  say "${DIM}  Recommended local model: qwen3:1.7b.${RESET}"
+  say "${DIM}  Fast fallback: qwen3:0.6b.${RESET}"
+fi
 say "${DIM}  Safe/legacy fallback: gemma3:1b.${RESET}"
 say "${CYAN}  Detected hardware:${RESET} ${BOLD}${CAROLINE_HARDWARE_PROFILE}${RESET} ${DIM}(${ARCH}, ${TOTAL_RAM_MB:-0}MB RAM)${RESET}"
 if [ -n "$CPU_MODEL" ]; then
   say "${DIM}    CPU: ${CPU_MODEL}${RESET}"
+fi
+if [ "$GPU_VRAM_MB" -gt 0 ]; then
+  say "${DIM}    NVIDIA VRAM: ${GPU_VRAM_MB}MB${RESET}"
 fi
 say "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
     say "${DIM}    Local model support is experimental; Ollama can be installed as a user service without changing system packages.${RESET}"

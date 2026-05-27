@@ -119,7 +119,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
 - Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter as the preferred AI path, and lazy-loaded visual media.
 - Steam Deck / SteamOS support tracks nightly and is smoke-validated in server/client mode by stable IP; mDNS hostnames can be slower from Windows networks.
-- Bazzite 44 with NVIDIA RTX 2070 Max-Q is smoke-validated as a LAN host with local Ollama using `qwen3:1.7b`.
+- Bazzite 44 with NVIDIA RTX 2070 Max-Q is smoke-validated as a LAN host with local Ollama. `mistral:7b` is the recommended default; `qwen3:1.7b` is the fast fallback.
 - Phone and tablet browsers are lightweight Caroline clients, not separate installs; they work best on the same trusted LAN as the host.
 - OpenRouter is the best AI experience for speed and answer quality.
 - Ollama is private and local, but small hardware can be slower and less polished.
@@ -153,7 +153,8 @@ The installer detects your hardware, RAM, and platform, then preselects the loca
 
 - Best experience: **OpenRouter**
 - Raspberry Pi / Ubuntu local quality: **qwen2.5:1.5b**
-- Steam Deck / Bazzite local quality: **qwen3:1.7b**
+- Steam Deck local quality: **qwen3:1.7b**
+- Bazzite / RTX 2070 local quality: **mistral:7b**
 - RTX 4070-class desktop local quality: **gemma4:e4b**
 - Fast general local fallback: **qwen2.5:1.5b**
 - Safe/legacy fallback: **gemma3:1b**

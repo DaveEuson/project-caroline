@@ -2446,6 +2446,8 @@
                   <tbody>
                     <tr class="rec-table-row"><td>OpenRouter</td><td>Cloud</td><td>⚡⚡⚡⚡⚡</td><td>Best experience</td><td></td></tr>
                     <tr class="rec-table-row"><td>qwen3:1.7b</td><td>~1.4 GB</td><td>⚡⚡⚡⚡</td><td>Steam Deck quality pick</td><td><button type="button" class="detect-btn" onclick="startPull('qwen3:1.7b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>mistral:7b</td><td>~4.1 GB</td><td>⚡⚡⚡</td><td>Bazzite / RTX 2070 quality pick</td><td><button type="button" class="detect-btn" onclick="startPull('mistral:7b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma4:e4b</td><td>~7.4 GB</td><td>⚡⚡</td><td>Desktop quality mode</td><td><button type="button" class="detect-btn" onclick="startPull('gemma4:e4b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>qwen3:0.6b</td><td>~522 MB</td><td>⚡⚡⚡⚡⚡</td><td>Steam Deck fast fallback</td><td><button type="button" class="detect-btn" onclick="startPull('qwen3:0.6b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>qwen2.5:1.5b</td><td>~986 MB</td><td>⚡⚡⚡</td><td>Raspberry Pi local quality</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:1.5b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>qwen2.5:0.5b</td><td>~397 MB</td><td>⚡⚡⚡⚡</td><td>Tiny local fallback</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:0.5b')">Pull</button></td></tr>
@@ -2482,6 +2484,16 @@
                   <span class="ollama-pull-preset-title">Steam Deck best</span>
                   <span class="ollama-pull-preset-model">qwen3:1.7b</span>
                   <span class="ollama-pull-preset-meta">Passed Caroline command tests. Best local balance on Deck.</span>
+                </button>
+                <button type="button" class="ollama-pull-preset" onclick="selectOllamaPullModel('mistral:7b')">
+                  <span class="ollama-pull-preset-title">Bazzite best</span>
+                  <span class="ollama-pull-preset-model">mistral:7b</span>
+                  <span class="ollama-pull-preset-meta">Best RTX 2070 balance. Coherent, fast, and 100% GPU-resident.</span>
+                </button>
+                <button type="button" class="ollama-pull-preset" onclick="selectOllamaPullModel('gemma4:e4b')">
+                  <span class="ollama-pull-preset-title">Desktop quality</span>
+                  <span class="ollama-pull-preset-model">gemma4:e4b</span>
+                  <span class="ollama-pull-preset-meta">Excellent replies on strong GPUs; may spill CPU/GPU on 8GB VRAM.</span>
                 </button>
                 <button type="button" class="ollama-pull-preset" onclick="selectOllamaPullModel('qwen2.5:1.5b')">
                   <span class="ollama-pull-preset-title">Pi quality</span>
@@ -5846,6 +5858,8 @@ function updateAiConfigIndicator(provider) {
 
 const OLLAMA_RECOMMENDED_MODELS = [
   'qwen3:1.7b',
+  'mistral:7b',
+  'gemma4:e4b',
   'qwen3:0.6b',
   'qwen2.5:1.5b',
   'qwen2.5:0.5b',

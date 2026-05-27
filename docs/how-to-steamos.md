@@ -72,9 +72,11 @@ journalctl --user -u ollama -f
 
 The current Steam Deck recommendation is `qwen3:1.7b`. A direct Ollama benchmark across Qwen, Llama, Gemma, Phi, DeepSeek, Mistral, SmolLM2, and TinyLlama kept `qwen3:1.7b` as the best balance: coherent enough for Caroline behavior while still averaging around a few seconds per reply on the Deck.
 
+On Bazzite NVIDIA laptops with RTX 2070-class GPUs and 8GB VRAM, the current recommendation is `mistral:7b`. It scored 10/10 in the Caroline conversational sweep, averaged under a second for warm replies, and stayed 100% GPU-resident on the RTX 2070 Max-Q. Use `qwen3:1.7b` as the fast fallback. `gemma4:e4b` also scored 10/10, but it spills across CPU/GPU on 8GB VRAM.
+
 Good non-Qwen experiments:
 
-- `mistral:7b` scored well but is slow enough to feel heavy.
+- `mistral:7b` scored well on Steam Deck but is slow enough to feel heavy there.
 - `gemma3:4b` and `phi4-mini` are reasonable quality fallbacks.
 - `smollm2:1.7b` is a lightweight fallback when speed matters.
 - `deepseek-r1` was not a good fit for Caroline-style short conversational replies in this test.

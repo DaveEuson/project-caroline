@@ -9,7 +9,7 @@ These recommendations are based on direct Ollama benchmark runs using Project: C
 | Raspberry Pi OS Desktop | `qwen2.5:1.5b` | `qwen2.5:0.5b` | Prefer OpenRouter on Pi when possible. Local AI is experimental on small hardware. |
 | Ubuntu Desktop / Server CPU-only | `qwen2.5:1.5b` | `qwen2.5:0.5b` | Validated as the conservative Linux/VM path. Use at least a 50GB disk if testing local Ollama. |
 | Steam Deck / SteamOS | `qwen3:1.7b` | `smollm2:1.7b` or `qwen3:0.6b` | Best measured Steam Deck balance. `mistral:7b` is higher quality but too slow for default. |
-| Bazzite / RTX 2070 Max-Q | `qwen3:1.7b` | `qwen2.5:1.5b` | Current validated Bazzite result. Expanded popular + Gemma 4 sweep is pending because the laptop left the LAN mid-pull. |
+| Bazzite / RTX 2070 Max-Q | `mistral:7b` | `qwen3:1.7b` | Best 2070 balance from the full popular + Gemma 4 sweep. `gemma4:e4b` matched quality but spills CPU/GPU on 8GB VRAM. |
 | Pop!_OS / RTX A2000 laptop | `qwen3:1.7b` | `qwen2.5:1.5b` | `llama3.2:3b` is a decent conversational alternate. |
 | Windows desktop / RTX 4070 | `gemma4:e4b` | `mistral:7b` or `qwen2.5:1.5b` | Best quality from the full popular + Gemma 4 sweep. Use `qwen2.5:1.5b` when response speed matters most. |
 
@@ -54,18 +54,21 @@ Direct Ollama benchmark of installed/current model set.
 
 ### Bazzite / Razer RTX 2070 Max-Q Laptop
 
-Current direct Ollama benchmark only completed for the installed `qwen3:1.7b` model. A later popular + Gemma 4 pull started successfully, but the laptop left the LAN before the expanded benchmark could run.
+Full popular + Gemma 4 direct Ollama benchmark, May 26, 2026. Warm average excludes the first cold-load prompt and better reflects normal chat after the model is loaded.
 
-| Rank | Model | Rating | Avg reply | Notes |
+| Rank | Model | Rating | Warm avg reply | Notes |
 | ---: | --- | ---: | ---: | --- |
-| 1 | `qwen3:1.7b` | 4.75/5 | 0.46s | Excellent current Bazzite default. |
-| 2 | Pending | - | - | Run expanded benchmark once the laptop stays awake. |
-| 3 | Pending | - | - | Run expanded benchmark once the laptop stays awake. |
+| 1 | `mistral:7b` | 5.0/5 | 0.87s | Best Bazzite/2070 default; 10/10 coherence and 100% GPU residency. |
+| 2 | `gemma4:e4b` | 5.0/5 | 1.38s | Excellent quality mode, but runs about 68% CPU / 32% GPU because it exceeds 8GB VRAM. |
+| 3 | `qwen3:1.7b` | 4.5/5 | 0.35s | Best fast fallback; 100% GPU residency. |
+| 4 | `gemma3:4b` | 4.5/5 | 0.73s | Good GPU-friendly alternate. |
+| 5 | `gemma4:e2b` | 4.25/5 | 0.66s | Fast Gemma 4 option, slightly less reliable in recall/pick-one checks. |
 
 ## Practical Guidance
 
 - Use OpenRouter for the public beta default if API use is acceptable.
-- Use `qwen3:1.7b` for Steam Deck and Bazzite handheld/laptop-style hosts.
+- Use `qwen3:1.7b` for Steam Deck and low-power Bazzite handheld/laptop-style hosts.
+- Use `mistral:7b` for Bazzite or Linux NVIDIA laptops with RTX 2070-class GPUs and 8GB VRAM.
 - Use `gemma4:e4b` on RTX 4070-class desktops when quality matters more than first-token delay.
 - Use `mistral:7b` on strong GPUs when you want a faster high-quality desktop local model.
 - Use `qwen2.5:1.5b` as the fast, safe Linux fallback for VMs, Ubuntu hosts, and desktops where latency matters.
