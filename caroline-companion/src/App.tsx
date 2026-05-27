@@ -1,8 +1,10 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   createCarolineSocket,
   type CarolineSocketMessage,
   type CarolineSocketStatus,
+  type DocumentDropPayload,
+  type ScreenAskPayload,
 } from "./lib/carolineSocket";
 import { buildWeeklyAgentProfile } from "./lib/agentProfile";
 import { discoverCarolineHosts, type DiscoveredHost } from "./lib/hostDiscovery";
@@ -51,17 +53,38 @@ type HostSetupSettings = {
   aiName: string;
   hostDeviceType: string;
   timezone: string;
+  timeFormat: string;
+  temperatureUnit: string;
   location: string;
   cityName: string;
+  meetingReminderMinutes: string;
   aiProvider: "openrouter" | "ollama";
+  openrouterKey: string;
+  openrouterKeyConfigured: boolean;
   aiModel: string;
   ollamaUrl: string;
   ollamaModel: string;
   spotifyClientId: string;
   googleClientId: string;
+  googleClientSecret: string;
+  googleClientSecretConfigured: boolean;
   googleRedirectUri: string;
+  googleConnected: boolean;
   calendarId: string;
   defaultWriteCalendarId: string;
+  hueIp: string;
+  hueGroup: string;
+  hueGroupName: string;
+  tidesStation: string;
+  discordEnabled: boolean;
+  discordToken: string;
+  discordTokenConfigured: boolean;
+  discordChannelId: string;
+  ttsEnabled: boolean;
+  voiceMuted: boolean;
+  wakeWordEnabled: boolean;
+  wakePhrases: string;
+  features: HostFeatureSettings;
 };
 
 type HostHealth = {
@@ -140,23 +163,100 @@ const COMPANION_RELEASES_URL = "https://github.com/Project-Caroline/project-caro
 const COMPANION_TAGS_URL = "https://api.github.com/repos/Project-Caroline/project-caroline/tags?per_page=30";
 const CHAT_HISTORY_KEY = "caroline-companion-chat-history-v1";
 const MAX_MESSAGES_PER_HOST = 500;
+const DOCUMENT_DROP_MAX_BYTES = 96 * 1024;
+const DOCUMENT_DROP_MAX_CHARS = 12_000;
+const SCREEN_ASK_MAX_WIDTH = 1280;
+const SCREEN_ASK_JPEG_QUALITY = 0.72;
+const TEXT_DOCUMENT_EXTENSIONS = new Set([
+  "txt",
+  "md",
+  "markdown",
+  "csv",
+  "json",
+  "jsonl",
+  "yaml",
+  "yml",
+  "log",
+  "xml",
+  "html",
+  "css",
+  "js",
+  "jsx",
+  "ts",
+  "tsx",
+  "py",
+  "ps1",
+  "sh",
+  "sql",
+]);
 const HOST_DEVICE_TYPES: HostDeviceType[] = ["", "Pi", "Steam", "Ubuntu", "Mac", "Windows"];
+const HOST_FEATURES = [
+  ["weather", "Weather"],
+  ["datetime", "Date"],
+  ["radio", "Radio"],
+  ["spotify", "Spotify"],
+  ["calendar", "Calendar"],
+  ["news", "News"],
+  ["video", "Video"],
+  ["hue", "Hue"],
+  ["pomodoro", "Pomodoro"],
+  ["tides", "Tides"],
+  ["mood", "Mood"],
+  ["memes", "Memes"],
+] as const;
+type HostFeatureKey = typeof HOST_FEATURES[number][0];
+type HostFeatureSettings = Record<HostFeatureKey, boolean>;
+const HOST_FEATURE_DEFAULTS: HostFeatureSettings = {
+  weather: true,
+  datetime: true,
+  radio: true,
+  spotify: false,
+  calendar: true,
+  news: true,
+  video: true,
+  hue: false,
+  pomodoro: true,
+  tides: true,
+  mood: true,
+  memes: false,
+};
 const HOST_SETUP_DEFAULTS: HostSetupSettings = {
   userName: "",
   aiName: "Caroline",
   hostDeviceType: "",
   timezone: "",
+  timeFormat: "12",
+  temperatureUnit: "fahrenheit",
   location: "",
   cityName: "",
+  meetingReminderMinutes: "0",
   aiProvider: "openrouter",
+  openrouterKey: "",
+  openrouterKeyConfigured: false,
   aiModel: "anthropic/claude-haiku-4.5",
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "qwen2.5:1.5b",
   spotifyClientId: "",
   googleClientId: "",
+  googleClientSecret: "",
+  googleClientSecretConfigured: false,
   googleRedirectUri: "",
+  googleConnected: false,
   calendarId: "primary",
   defaultWriteCalendarId: "",
+  hueIp: "",
+  hueGroup: "",
+  hueGroupName: "",
+  tidesStation: "",
+  discordEnabled: false,
+  discordToken: "",
+  discordTokenConfigured: false,
+  discordChannelId: "",
+  ttsEnabled: false,
+  voiceMuted: true,
+  wakeWordEnabled: false,
+  wakePhrases: "hey caroline, hey ai",
+  features: HOST_FEATURE_DEFAULTS,
 };
 
 let localMessageId = Date.now();
@@ -164,6 +264,105 @@ let localMessageId = Date.now();
 function nextMessageId() {
   localMessageId += 1;
   return localMessageId;
+}
+
+function formatFileSize(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 102.4) / 10} KB`;
+  return `${Math.round(bytes / 104857.6) / 10} MB`;
+}
+
+function fileExtension(name: string) {
+  const match = name.toLowerCase().match(/\.([a-z0-9]+)$/);
+  return match ? match[1] : "";
+}
+
+function documentKindForFile(file: File): DocumentDropPayload["kind"] {
+  const ext = fileExtension(file.name);
+  if (["js", "jsx", "ts", "tsx", "py", "ps1", "sh", "sql", "css", "html"].includes(ext)) return "code";
+  if (["json", "jsonl", "yaml", "yml", "csv", "xml"].includes(ext)) return "data";
+  return "text";
+}
+
+function canReadDroppedFile(file: File) {
+  const ext = fileExtension(file.name);
+  return file.type.startsWith("text/") || TEXT_DOCUMENT_EXTENSIONS.has(ext);
+}
+
+async function readDroppedDocument(file: File): Promise<DocumentDropPayload> {
+  const slice = file.slice(0, DOCUMENT_DROP_MAX_BYTES);
+  const raw = await slice.text();
+  const excerpt = raw
+    .replace(/\u0000/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{4,}/g, "\n\n\n")
+    .slice(0, DOCUMENT_DROP_MAX_CHARS)
+    .trim();
+
+  return {
+    name: file.name || "untitled.txt",
+    type: file.type || "text/plain",
+    size: file.size,
+    kind: documentKindForFile(file),
+    excerpt,
+    truncated: file.size > DOCUMENT_DROP_MAX_BYTES || raw.length > DOCUMENT_DROP_MAX_CHARS,
+  };
+}
+
+function waitForVideoMetadata(video: HTMLVideoElement) {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("Screen capture timed out")), 5000);
+    video.onloadedmetadata = () => {
+      window.clearTimeout(timeout);
+      resolve();
+    };
+    video.onerror = () => {
+      window.clearTimeout(timeout);
+      reject(new Error("Screen capture failed"));
+    };
+  });
+}
+
+async function captureScreenAskImage(): Promise<ScreenAskPayload> {
+  if (!navigator.mediaDevices?.getDisplayMedia) {
+    throw new Error("Screen capture is not available in this WebView.");
+  }
+
+  const stream = await navigator.mediaDevices.getDisplayMedia({
+    video: true,
+    audio: false,
+  });
+
+  try {
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.muted = true;
+    video.playsInline = true;
+    await waitForVideoMetadata(video);
+    await video.play();
+
+    const sourceWidth = video.videoWidth || 1280;
+    const sourceHeight = video.videoHeight || 720;
+    const scale = Math.min(1, SCREEN_ASK_MAX_WIDTH / sourceWidth);
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Screen capture canvas failed.");
+    context.drawImage(video, 0, 0, width, height);
+
+    return {
+      dataUrl: canvas.toDataURL("image/jpeg", SCREEN_ASK_JPEG_QUALITY),
+      width,
+      height,
+      capturedAt: new Date().toISOString(),
+    };
+  } finally {
+    stream.getTracks().forEach((track) => track.stop());
+  }
 }
 
 function inferBuddyAiName(host?: SavedHost) {
@@ -415,7 +614,31 @@ function hostSocketSignature(url: string) {
 
 function stringSetting(record: Record<string, unknown>, key: string, fallback = "") {
   const value = record[key];
-  return typeof value === "string" ? value.trim() : fallback;
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  return fallback;
+}
+
+function boolSetting(record: Record<string, unknown>, key: string, fallback = false) {
+  const value = record[key];
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "y", "on", "enabled"].includes(normalized)) return true;
+    if (["false", "0", "no", "n", "off", "disabled"].includes(normalized)) return false;
+  }
+  return fallback;
+}
+
+function normalizeHostFeatures(value: unknown): HostFeatureSettings {
+  const source = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  return HOST_FEATURES.reduce<HostFeatureSettings>((features, [key]) => {
+    features[key] = boolSetting(source, key, HOST_FEATURE_DEFAULTS[key]);
+    return features;
+  }, { ...HOST_FEATURE_DEFAULTS });
 }
 
 function normalizeHostSetupSettings(value: unknown): HostSetupSettings {
@@ -426,17 +649,38 @@ function normalizeHostSetupSettings(value: unknown): HostSetupSettings {
     aiName: stringSetting(record, "aiName", HOST_SETUP_DEFAULTS.aiName),
     hostDeviceType: stringSetting(record, "hostDeviceType"),
     timezone: stringSetting(record, "timezone"),
+    timeFormat: stringSetting(record, "timeFormat", HOST_SETUP_DEFAULTS.timeFormat),
+    temperatureUnit: stringSetting(record, "temperatureUnit", HOST_SETUP_DEFAULTS.temperatureUnit),
     location: stringSetting(record, "location"),
     cityName: stringSetting(record, "cityName"),
+    meetingReminderMinutes: stringSetting(record, "meetingReminderMinutes", HOST_SETUP_DEFAULTS.meetingReminderMinutes),
     aiProvider: provider === "ollama" ? "ollama" : "openrouter",
+    openrouterKey: stringSetting(record, "openrouterKey"),
+    openrouterKeyConfigured: boolSetting(record, "openrouterKeyConfigured"),
     aiModel: stringSetting(record, "aiModel", HOST_SETUP_DEFAULTS.aiModel),
     ollamaUrl: stringSetting(record, "ollamaUrl", HOST_SETUP_DEFAULTS.ollamaUrl),
     ollamaModel: stringSetting(record, "ollamaModel", HOST_SETUP_DEFAULTS.ollamaModel),
     spotifyClientId: stringSetting(record, "spotifyClientId"),
     googleClientId: stringSetting(record, "googleClientId"),
+    googleClientSecret: stringSetting(record, "googleClientSecret"),
+    googleClientSecretConfigured: boolSetting(record, "googleClientSecretConfigured"),
     googleRedirectUri: stringSetting(record, "googleRedirectUri"),
+    googleConnected: boolSetting(record, "googleConnected"),
     calendarId: stringSetting(record, "calendarId", HOST_SETUP_DEFAULTS.calendarId),
     defaultWriteCalendarId: stringSetting(record, "defaultWriteCalendarId"),
+    hueIp: stringSetting(record, "hueIp"),
+    hueGroup: stringSetting(record, "hueGroup"),
+    hueGroupName: stringSetting(record, "hueGroupName"),
+    tidesStation: stringSetting(record, "tidesStation"),
+    discordEnabled: boolSetting(record, "discordEnabled"),
+    discordToken: stringSetting(record, "discordToken"),
+    discordTokenConfigured: boolSetting(record, "discordTokenConfigured"),
+    discordChannelId: stringSetting(record, "discordChannelId"),
+    ttsEnabled: boolSetting(record, "ttsEnabled"),
+    voiceMuted: boolSetting(record, "voiceMuted", true),
+    wakeWordEnabled: boolSetting(record, "wakeWordEnabled"),
+    wakePhrases: stringSetting(record, "wakePhrases", HOST_SETUP_DEFAULTS.wakePhrases),
+    features: normalizeHostFeatures(record.features),
   };
 }
 
@@ -479,24 +723,131 @@ function hostSecureVoiceUrlFromBase(baseUrl: string) {
   }
 }
 
+function hostUrl(baseUrl: string, path: string, params?: Record<string, string>) {
+  if (!baseUrl) return "";
+  try {
+    const parsed = new URL(baseUrl);
+    parsed.pathname = path;
+    parsed.search = "";
+    parsed.hash = "";
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value) parsed.searchParams.set(key, value);
+    });
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+function hostSpotifyRedirectUri(baseUrl: string) {
+  if (!baseUrl) return "";
+  try {
+    const parsed = new URL(baseUrl);
+    const protocol = parsed.protocol === "https:" ? "https:" : "http:";
+    return `${protocol}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ""}/spotify/callback`;
+  } catch {
+    return "";
+  }
+}
+
+function setupStateLabel(ready: boolean, partial = false) {
+  if (ready) return "Ready";
+  if (partial) return "Partial";
+  return "Needs setup";
+}
+
+function setupStateClass(ready: boolean, partial = false) {
+  if (ready) return "ready";
+  if (partial) return "partial";
+  return "missing";
+}
+
+function buildHostSetupCards(setup: HostSetupSettings, health: HostHealth | null) {
+  const openrouterReady = setup.aiProvider !== "openrouter" || !!(setup.openrouterKey || setup.openrouterKeyConfigured || health?.openrouter?.configured);
+  const ollamaReady = setup.aiProvider !== "ollama" || !!(setup.ollamaUrl && setup.ollamaModel);
+  const aiReady = openrouterReady && ollamaReady;
+  const googleReady = !!(setup.googleConnected || health?.google?.connected || health?.google?.serviceAccountConfigured);
+  const googlePartial = !!(setup.googleClientId && (setup.googleClientSecret || setup.googleClientSecretConfigured || health?.google?.hasClientSecret));
+  const spotifyReady = !!health?.spotify?.connected;
+  const spotifyPartial = !!(setup.spotifyClientId || health?.spotify?.clientConfigured);
+  const discordReady = !!(health?.discord?.configured || (setup.discordEnabled && setup.discordChannelId && (setup.discordToken || setup.discordTokenConfigured)));
+  const discordPartial = !!(setup.discordEnabled || setup.discordChannelId || health?.discord?.channelConfigured);
+  const voiceReady = !!(setup.ttsEnabled && !setup.voiceMuted);
+  return [
+    {
+      key: "ai",
+      title: "AI",
+      detail: setup.aiProvider === "ollama" ? setup.ollamaModel || "Local model" : setup.aiModel || "Cloud model",
+      state: setupStateLabel(aiReady, false),
+      tone: setupStateClass(aiReady, false),
+    },
+    {
+      key: "calendar",
+      title: "Calendar",
+      detail: setup.calendarId || "primary",
+      state: setupStateLabel(googleReady, googlePartial),
+      tone: setupStateClass(googleReady, googlePartial),
+    },
+    {
+      key: "spotify",
+      title: "Spotify",
+      detail: setup.spotifyClientId ? "Client ID set" : "Optional",
+      state: setupStateLabel(spotifyReady, spotifyPartial),
+      tone: setupStateClass(spotifyReady, spotifyPartial),
+    },
+    {
+      key: "discord",
+      title: "Discord",
+      detail: setup.discordEnabled ? "Enabled" : "Off",
+      state: setupStateLabel(discordReady, discordPartial),
+      tone: setupStateClass(discordReady, discordPartial),
+    },
+    {
+      key: "voice",
+      title: "Voice",
+      detail: setup.wakeWordEnabled ? setup.wakePhrases || "Wake word" : "Manual mic",
+      state: voiceReady ? "Spoken" : "Muted",
+      tone: voiceReady ? "ready" : "partial",
+    },
+  ];
+}
+
 function hostSettingsPayload(setup: HostSetupSettings) {
   const calendarId = setup.calendarId || "primary";
+  const reminder = Number(setup.meetingReminderMinutes);
   return {
     userName: setup.userName,
     aiName: setup.aiName,
     hostDeviceType: setup.hostDeviceType,
     timezone: setup.timezone,
+    timeFormat: setup.timeFormat,
+    temperatureUnit: setup.temperatureUnit,
     location: setup.location,
     cityName: setup.cityName,
+    meetingReminderMinutes: Number.isFinite(reminder) ? Math.max(0, Math.round(reminder)) : 0,
     aiProvider: setup.aiProvider,
+    openrouterKey: setup.openrouterKey,
     aiModel: setup.aiModel,
     ollamaUrl: setup.ollamaUrl,
     ollamaModel: setup.ollamaModel,
     spotifyClientId: setup.spotifyClientId,
     googleClientId: setup.googleClientId,
+    googleClientSecret: setup.googleClientSecret,
     googleRedirectUri: setup.googleRedirectUri,
     calendarId,
     defaultWriteCalendarId: setup.defaultWriteCalendarId || calendarId,
+    hueIp: setup.hueIp,
+    hueGroup: setup.hueGroup,
+    hueGroupName: setup.hueGroupName,
+    tidesStation: setup.tidesStation,
+    discordEnabled: setup.discordEnabled,
+    discordToken: setup.discordToken,
+    discordChannelId: setup.discordChannelId,
+    ttsEnabled: setup.ttsEnabled,
+    voiceMuted: setup.voiceMuted,
+    wakeWordEnabled: setup.wakeWordEnabled,
+    wakePhrases: setup.wakePhrases,
+    features: normalizeHostFeatures(setup.features),
     setupComplete: true,
   };
 }
@@ -671,6 +1022,10 @@ export default function App() {
   const [hostMemoryShards, setHostMemoryShards] = useState<HostMemoryShard[]>([]);
   const [hostPrivacyStatus, setHostPrivacyStatus] = useState("");
   const [hostPrivacyBusy, setHostPrivacyBusy] = useState(false);
+  const [documentDropStatus, setDocumentDropStatus] = useState("");
+  const [documentDragActive, setDocumentDragActive] = useState(false);
+  const [screenAskStatus, setScreenAskStatus] = useState("");
+  const [screenAskBusy, setScreenAskBusy] = useState(false);
 
   const [clientId] = useState(getOrCreateClientId);
 
@@ -678,6 +1033,7 @@ export default function App() {
   const activeHostIdRef = useRef(settings.activeHostId);
   const hostSocketsRef = useRef<Map<string, HostSocketEntry>>(new Map());
   const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const documentInputRef = useRef<HTMLInputElement | null>(null);
   const hostUserNameRef = useRef("");
 
   // Apply dark mode to <html> element whenever the setting changes
@@ -1045,7 +1401,18 @@ export default function App() {
   const messages = selectedHost ? hostMessages[selectedHost.id] || [] : [];
   const activeHostHttpBase = hostHttpBaseFromSocket(selectedHost?.socketUrl || settings.socketUrl);
   const activeHostSecureVoiceUrl = hostSecureVoiceUrlFromBase(activeHostHttpBase);
-  const hostSetupBaseAvailable = Boolean(activeHostHttpBase || hostSetupLoadedFrom);
+  const hostSetupBase = activeHostHttpBase || hostSetupLoadedFrom;
+  const activeHostGoogleAuthUrl = hostUrl(hostSetupBase, "/admin/google/auth", {
+    clientId: hostSetup.googleClientId,
+    clientSecret: hostSetup.googleClientSecret,
+    redirectUri: hostSetup.googleRedirectUri,
+  });
+  const activeHostSpotifyUrl = hostUrl(hostSetupBase, "/spotify/start", {
+    clientId: hostSetup.spotifyClientId,
+    redirectUri: hostSpotifyRedirectUri(hostSetupBase),
+  });
+  const hostSetupBaseAvailable = Boolean(hostSetupBase);
+  const hostSetupCards = buildHostSetupCards(hostSetup, hostHealth);
   const hostPrivacyCounts = hostPrivacy?.counts || {};
   const hostPrivacyRetention = hostPrivacy?.retention || {};
   const hostPrivacyIntegrations = Object.entries(hostPrivacy?.integrations || {});
@@ -1227,9 +1594,19 @@ export default function App() {
     setDiscoveredHosts([]);
   }
 
-  function handleHostSetupField(field: keyof HostSetupSettings, value: string) {
+  function handleHostSetupField<K extends keyof HostSetupSettings>(field: K, value: HostSetupSettings[K]) {
     const nextValue = field === "aiProvider" && value !== "ollama" ? "openrouter" : value;
     setHostSetup((previous) => ({ ...previous, [field]: nextValue } as HostSetupSettings));
+  }
+
+  function handleHostSetupFeature(field: HostFeatureKey, value: boolean) {
+    setHostSetup((previous) => ({
+      ...previous,
+      features: {
+        ...normalizeHostFeatures(previous.features),
+        [field]: value,
+      },
+    }));
   }
 
   function hostSetupRequestBase() {
@@ -1396,6 +1773,78 @@ export default function App() {
     }
   }
 
+  async function handleOpenGoogleSetup() {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostSetupStatus("Enter a host address first, then connect Google.");
+      return;
+    }
+    if (!hostSetup.googleClientId) {
+      setHostSetupStatus("Add a Google OAuth Client ID first.");
+      return;
+    }
+    if (!hostSetup.googleClientSecret && !hostSetup.googleClientSecretConfigured) {
+      setHostSetupStatus("Add a Google client secret, or load saved host setup first.");
+      return;
+    }
+    setHostSetupStatus("Opening Google connection...");
+    try {
+      await saveHostSettings(base, hostSetup);
+      openExternalUrl(activeHostGoogleAuthUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "save failed";
+      setHostSetupStatus(`Could not prepare Google setup: ${message}`);
+    }
+  }
+
+  async function handleOpenSpotifySetup() {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostSetupStatus("Enter a host address first, then connect Spotify.");
+      return;
+    }
+    if (!hostSetup.spotifyClientId) {
+      setHostSetupStatus("Add a Spotify Client ID first.");
+      return;
+    }
+    setHostSetupStatus("Opening Spotify connection...");
+    try {
+      await saveHostSettings(base, hostSetup);
+      openExternalUrl(activeHostSpotifyUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "save failed";
+      setHostSetupStatus(`Could not prepare Spotify setup: ${message}`);
+    }
+  }
+
+  async function handleTestDiscord() {
+    const base = hostSetupRequestBase();
+    if (!base) {
+      setHostSetupStatus("Enter a host address first, then test Discord.");
+      return;
+    }
+    if (hostSetup.discordEnabled && (!hostSetup.discordChannelId || (!hostSetup.discordToken && !hostSetup.discordTokenConfigured))) {
+      setHostSetupStatus("Discord needs a token and channel ID before testing.");
+      return;
+    }
+    setHostSetupBusy(true);
+    setHostSetupStatus("Testing Discord...");
+    try {
+      await saveHostSettings(base, hostSetup);
+      const response = await fetch(`${base}/admin/discord-test?t=${Date.now()}`, { cache: "no-store" });
+      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+      if (!response.ok || data?.ok === false) throw new Error(data?.error || `HTTP ${response.status}`);
+      setHostSetupStatus("Discord test sent.");
+      const health = await fetch(`${base}/health`, { cache: "no-store" });
+      if (health.ok) setHostHealth(await health.json() as HostHealth);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Discord test failed";
+      setHostSetupStatus(`Discord test failed: ${message}`);
+    } finally {
+      setHostSetupBusy(false);
+    }
+  }
+
   function openExternalUrl(url: string) {
     if (!url) return;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -1429,6 +1878,174 @@ export default function App() {
       setUpdateMessage(`Could not check GitHub. Releases live at ${COMPANION_RELEASES_URL}.`);
     } finally {
       setIsCheckingUpdate(false);
+    }
+  }
+
+  async function handleDocumentFile(file: File) {
+    const current = activeHost();
+    if (!current) return;
+
+    if (!canReadDroppedFile(file)) {
+      const typeLabel = file.type || fileExtension(file.name).toUpperCase() || "unknown type";
+      setDocumentDropStatus(`${file.name} is not a readable text document yet.`);
+      appendHostMessage(
+        current.id,
+        {
+          from: "system",
+          text: `Document Drop reads text, Markdown, JSON, CSV, logs, and code files for now. ${file.name} is ${typeLabel}; use Screen Ask for visual files once that feature lands.`,
+        },
+        { unread: false }
+      );
+      return;
+    }
+
+    setDocumentDropStatus(`Reading ${file.name}...`);
+
+    try {
+      const document = await readDroppedDocument(file);
+      if (!document.excerpt) {
+        setDocumentDropStatus(`${file.name} did not contain readable text.`);
+        appendHostMessage(
+          current.id,
+          {
+            from: "system",
+            text: `${file.name} opened, but I could not find readable text in it.`,
+          },
+          { unread: false }
+        );
+        return;
+      }
+
+      const instruction = draft.trim();
+      const displayText = instruction
+        ? `${instruction} [attached: ${document.name}, ${formatFileSize(document.size)}]`
+        : `Dropped ${document.name} (${formatFileSize(document.size)}) for review.`;
+
+      appendHostMessage(
+        current.id,
+        { from: "you", sender: chatUserName(settings, activeHostUserName), text: displayText },
+        { unread: false }
+      );
+      setDraft("");
+
+      const socket = hostSocketsRef.current.get(current.id)?.socket;
+      if (!socket?.sendDocument(document, instruction)) {
+        setDocumentDropStatus(`${activeAiName} is offline; document was not sent.`);
+        appendHostMessage(
+          current.id,
+          {
+            from: "system",
+            text: "Project: Caroline is offline. Connect this buddy before dropping a document.",
+          },
+          { unread: false }
+        );
+        return;
+      }
+
+      setDocumentDropStatus(
+        `${document.name} sent${document.truncated ? " as a capped excerpt" : ""}.`
+      );
+    } catch {
+      setDocumentDropStatus(`Could not read ${file.name}.`);
+      appendHostMessage(
+        current.id,
+        {
+          from: "system",
+          text: `I could not read ${file.name}. Try a plain text, Markdown, JSON, CSV, log, or code file.`,
+        },
+        { unread: false }
+      );
+    }
+  }
+
+  async function handleDocumentFiles(files: FileList | File[]) {
+    const file = Array.from(files)[0];
+    if (!file) return;
+    if (files.length > 1) {
+      const current = activeHost();
+      if (current) {
+        appendHostMessage(
+          current.id,
+          {
+            from: "system",
+            text: "Document Drop handles one file at a time right now. I grabbed the first one.",
+          },
+          { unread: false }
+        );
+      }
+    }
+    await handleDocumentFile(file);
+  }
+
+  function handleDocumentDragOver(event: DragEvent<HTMLElement>) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setDocumentDragActive(true);
+  }
+
+  function handleDocumentDragLeave(event: DragEvent<HTMLElement>) {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+    setDocumentDragActive(false);
+  }
+
+  async function handleDocumentDrop(event: DragEvent<HTMLElement>) {
+    event.preventDefault();
+    setDocumentDragActive(false);
+    await handleDocumentFiles(event.dataTransfer.files);
+  }
+
+  async function handleDocumentInputChange(event: ChangeEvent<HTMLInputElement>) {
+    if (event.target.files?.length) await handleDocumentFiles(event.target.files);
+    event.target.value = "";
+  }
+
+  async function handleScreenAsk() {
+    const current = activeHost();
+    if (!current || screenAskBusy) return;
+
+    const question = draft.trim() || "What should I notice on this screen?";
+    setScreenAskBusy(true);
+    setScreenAskStatus("Choose a screen or window to share...");
+
+    try {
+      const screen = await captureScreenAskImage();
+      const displayText = `${question} [screen capture: ${screen.width}x${screen.height}]`;
+      appendHostMessage(
+        current.id,
+        { from: "you", sender: chatUserName(settings, activeHostUserName), text: displayText },
+        { unread: false }
+      );
+      setDraft("");
+
+      const socket = hostSocketsRef.current.get(current.id)?.socket;
+      if (!socket?.sendScreenAsk(screen, question)) {
+        setScreenAskStatus(`${activeAiName} is offline; screenshot was not sent.`);
+        appendHostMessage(
+          current.id,
+          {
+            from: "system",
+            text: "Project: Caroline is offline. Connect this buddy before using Screen Ask.",
+          },
+          { unread: false }
+        );
+        return;
+      }
+
+      setScreenAskStatus("Screen sent for cloud vision review.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Screen capture was cancelled.";
+      setScreenAskStatus(message);
+      appendHostMessage(
+        current.id,
+        {
+          from: "system",
+          text: `Screen Ask did not capture a screen. ${message}`,
+        },
+        { unread: false }
+      );
+    } finally {
+      setScreenAskBusy(false);
     }
   }
 
@@ -1644,17 +2261,36 @@ export default function App() {
                   <button type="button" onClick={handleSaveHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
                     Save To Host
                   </button>
+                  <button type="button" onClick={handleOpenGoogleSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                    Connect Google
+                  </button>
+                  <button type="button" onClick={handleOpenSpotifySetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                    Connect Spotify
+                  </button>
+                  <button type="button" onClick={handleTestDiscord} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                    Test Discord
+                  </button>
                   <button type="button" onClick={() => openExternalUrl(activeHostHttpBase)} disabled={!activeHostHttpBase}>
                     Open Host UI
                   </button>
                   <button type="button" onClick={() => openExternalUrl(activeHostSecureVoiceUrl)} disabled={!activeHostSecureVoiceUrl}>
-                    Secure Voice
+                    Voice Page
                   </button>
                 </div>
 
                 <div className="host-setup-status-row">
-                  <span>{activeHostHttpBase || "No host address yet"}</span>
+                  <span>{hostSetupBase || "No host address yet"}</span>
                   {hostSetupStatus && <strong>{hostSetupStatus}</strong>}
+                </div>
+
+                <div className="host-setup-cards" aria-label="Host setup status">
+                  {hostSetupCards.map((card) => (
+                    <div className={`host-setup-card ${card.tone}`} key={card.key}>
+                      <strong>{card.title}</strong>
+                      <span>{card.detail}</span>
+                      <em>{card.state}</em>
+                    </div>
+                  ))}
                 </div>
 
                 {hostHealth && (
@@ -1789,6 +2425,18 @@ export default function App() {
                   </div>
 
                   <div className="settings-group">
+                    <label htmlFor="host-setup-time-format">Time Format</label>
+                    <select
+                      id="host-setup-time-format"
+                      value={hostSetup.timeFormat}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleHostSetupField("timeFormat", e.target.value)}
+                    >
+                      <option value="12">12-hour</option>
+                      <option value="24">24-hour</option>
+                    </select>
+                  </div>
+
+                  <div className="settings-group">
                     <label htmlFor="host-setup-location">Location</label>
                     <input
                       id="host-setup-location"
@@ -1796,6 +2444,18 @@ export default function App() {
                       onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("location", e.target.value)}
                       placeholder="Chula Vista, CA"
                     />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-temperature">Temperature</label>
+                    <select
+                      id="host-setup-temperature"
+                      value={hostSetup.temperatureUnit}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleHostSetupField("temperatureUnit", e.target.value)}
+                    >
+                      <option value="fahrenheit">Fahrenheit</option>
+                      <option value="celsius">Celsius</option>
+                    </select>
                   </div>
 
                   <div className="settings-group">
@@ -1808,6 +2468,18 @@ export default function App() {
                     />
                   </div>
 
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-reminder">Meeting Reminder</label>
+                    <input
+                      id="host-setup-reminder"
+                      type="number"
+                      min="0"
+                      value={hostSetup.meetingReminderMinutes}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("meetingReminderMinutes", e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+
                   <div className="host-setup-section-title">AI</div>
 
                   <div className="settings-group">
@@ -1815,11 +2487,22 @@ export default function App() {
                     <select
                       id="host-setup-provider"
                       value={hostSetup.aiProvider}
-                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleHostSetupField("aiProvider", e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => handleHostSetupField("aiProvider", e.target.value === "ollama" ? "ollama" : "openrouter")}
                     >
                       <option value="openrouter">OpenRouter</option>
                       <option value="ollama">Ollama</option>
                     </select>
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-openrouter-key">OpenRouter Key</label>
+                    <input
+                      id="host-setup-openrouter-key"
+                      type="password"
+                      value={hostSetup.openrouterKey}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("openrouterKey", e.target.value)}
+                      placeholder={hostSetup.openrouterKeyConfigured ? "Saved on host" : "Optional for cloud AI"}
+                    />
                   </div>
 
                   <div className="settings-group">
@@ -1875,6 +2558,17 @@ export default function App() {
                   </div>
 
                   <div className="settings-group">
+                    <label htmlFor="host-setup-google-secret">Google Secret</label>
+                    <input
+                      id="host-setup-google-secret"
+                      type="password"
+                      value={hostSetup.googleClientSecret}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("googleClientSecret", e.target.value)}
+                      placeholder={hostSetup.googleClientSecretConfigured ? "Saved on host" : "Desktop OAuth secret"}
+                    />
+                  </div>
+
+                  <div className="settings-group">
                     <label htmlFor="host-setup-google-redirect">Google Redirect URI</label>
                     <input
                       id="host-setup-google-redirect"
@@ -1902,6 +2596,116 @@ export default function App() {
                       onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("defaultWriteCalendarId", e.target.value)}
                       placeholder="primary"
                     />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-hue-ip">Hue Bridge IP</label>
+                    <input
+                      id="host-setup-hue-ip"
+                      value={hostSetup.hueIp}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("hueIp", e.target.value)}
+                      placeholder="192.168.1.20"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-hue-group">Hue Group</label>
+                    <input
+                      id="host-setup-hue-group"
+                      value={hostSetup.hueGroup}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("hueGroup", e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-tides">NOAA Tides Station</label>
+                    <input
+                      id="host-setup-tides"
+                      value={hostSetup.tidesStation}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("tidesStation", e.target.value)}
+                      placeholder="9410170"
+                    />
+                  </div>
+
+                  <div className="host-setup-section-title">Discord</div>
+
+                  <label className="host-setup-check">
+                    <input
+                      type="checkbox"
+                      checked={hostSetup.discordEnabled}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("discordEnabled", e.target.checked)}
+                    />
+                    <span>Enable Discord bridge</span>
+                  </label>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-discord-token">Bot Token</label>
+                    <input
+                      id="host-setup-discord-token"
+                      type="password"
+                      value={hostSetup.discordToken}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("discordToken", e.target.value)}
+                      placeholder={hostSetup.discordTokenConfigured ? "Saved on host" : "Bot token"}
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-setup-discord-channel">Channel ID</label>
+                    <input
+                      id="host-setup-discord-channel"
+                      value={hostSetup.discordChannelId}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("discordChannelId", e.target.value)}
+                      placeholder="Numeric Discord channel ID"
+                    />
+                  </div>
+
+                  <div className="host-setup-section-title">Voice</div>
+
+                  <label className="host-setup-check">
+                    <input
+                      type="checkbox"
+                      checked={hostSetup.ttsEnabled && !hostSetup.voiceMuted}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        handleHostSetupField("ttsEnabled", e.target.checked);
+                        handleHostSetupField("voiceMuted", !e.target.checked);
+                      }}
+                    />
+                    <span>Spoken replies</span>
+                  </label>
+
+                  <label className="host-setup-check">
+                    <input
+                      type="checkbox"
+                      checked={hostSetup.wakeWordEnabled}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("wakeWordEnabled", e.target.checked)}
+                    />
+                    <span>Wake word listening</span>
+                  </label>
+
+                  <div className="settings-group settings-group-wide">
+                    <label htmlFor="host-setup-wake-phrases">Wake Phrases</label>
+                    <input
+                      id="host-setup-wake-phrases"
+                      value={hostSetup.wakePhrases}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupField("wakePhrases", e.target.value)}
+                      placeholder="hey caroline, hey ai"
+                    />
+                  </div>
+
+                  <div className="host-setup-section-title">Widgets</div>
+
+                  <div className="host-feature-grid">
+                    {HOST_FEATURES.map(([key, label]) => (
+                      <label className="host-setup-check" key={key}>
+                        <input
+                          type="checkbox"
+                          checked={normalizeHostFeatures(hostSetup.features)[key]}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupFeature(key, e.target.checked)}
+                        />
+                        <span>{label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -2143,12 +2947,51 @@ export default function App() {
               <button type="button" onClick={handleCheckClientUpdates} disabled={isCheckingUpdate}>
                 {isCheckingUpdate ? "Checking..." : "Updates"}
               </button>
+              <button type="button" onClick={handleScreenAsk} disabled={!isOnline || screenAskBusy}>
+                {screenAskBusy ? "Capturing..." : "Screen"}
+              </button>
             </div>
             {updateMessage && !settingsOpen && (
               <p className="update-status" role="status">
                 {updateMessage}
               </p>
             )}
+            {screenAskStatus && !settingsOpen && (
+              <p className="update-status screen-ask-status" role="status">
+                {screenAskStatus}
+              </p>
+            )}
+
+            <section
+              className={`document-drop-zone${documentDragActive ? " active" : ""}`}
+              aria-label="Document drop zone"
+              onDragOver={handleDocumentDragOver}
+              onDragLeave={handleDocumentDragLeave}
+              onDrop={handleDocumentDrop}
+            >
+              <button
+                type="button"
+                onClick={() => documentInputRef.current?.click()}
+                disabled={!isOnline}
+                title="Attach a text, Markdown, JSON, CSV, log, or code file"
+              >
+                File
+              </button>
+              <span>
+                {documentDropStatus ||
+                  (isOnline
+                    ? "Drop a text document here for Caroline to read."
+                    : "Connect this buddy before dropping a document.")}
+              </span>
+              <input
+                ref={documentInputRef}
+                type="file"
+                className="document-file-input"
+                accept=".txt,.md,.markdown,.csv,.json,.jsonl,.yaml,.yml,.log,.xml,.html,.css,.js,.jsx,.ts,.tsx,.py,.ps1,.sh,.sql,text/*,application/json"
+                onChange={handleDocumentInputChange}
+                tabIndex={-1}
+              />
+            </section>
 
             <form className="compose" onSubmit={handleSubmit}>
               <input

@@ -26,6 +26,22 @@ export type CompanionClientInfo = {
   pairingCode?: string;
 };
 
+export type DocumentDropPayload = {
+  name: string;
+  type: string;
+  size: number;
+  kind: "text" | "data" | "code";
+  excerpt: string;
+  truncated: boolean;
+};
+
+export type ScreenAskPayload = {
+  dataUrl: string;
+  width: number;
+  height: number;
+  capturedAt: string;
+};
+
 type CarolineSocketOptions = {
   url?: string;
   // Getter so the socket always reads current settings without being recreated on name/code changes
@@ -240,6 +256,46 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
     return true;
   }
 
+  function sendDocument(document: DocumentDropPayload, prompt?: string) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+
+    const client = options.getClient();
+    socket.send(
+      JSON.stringify({
+        type: "document_drop",
+        source: "caroline-companion",
+        clientId: client.clientId,
+        clientName: client.displayName,
+        userName: client.userName,
+        message:
+          prompt?.trim() ||
+          `I dropped ${document.name}. Please summarize what matters and suggest one useful next step.`,
+        document,
+      })
+    );
+
+    return true;
+  }
+
+  function sendScreenAsk(screen: ScreenAskPayload, prompt?: string) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+
+    const client = options.getClient();
+    socket.send(
+      JSON.stringify({
+        type: "screen_ask",
+        source: "caroline-companion",
+        clientId: client.clientId,
+        clientName: client.displayName,
+        userName: client.userName,
+        message: prompt?.trim() || "What should I notice on this screen?",
+        screen,
+      })
+    );
+
+    return true;
+  }
+
   function announceClient() {
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
 
@@ -294,5 +350,5 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
     }
   }
 
-  return { connect, disconnect, send, get url() { return url; } };
+  return { connect, disconnect, send, sendDocument, sendScreenAsk, get url() { return url; } };
 }
