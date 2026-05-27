@@ -269,7 +269,7 @@ export function createCarolineSocket(options: CarolineSocketOptions) {
         userName: client.userName,
         message:
           prompt?.trim() ||
-          `I dropped ${document.name}. Please summarize what matters and suggest one useful next step.`,
+          `Please review the attached document ${document.name}. Summarize what matters and suggest one useful next step. Do not save this as beta feedback.`,
         document,
       })
     );

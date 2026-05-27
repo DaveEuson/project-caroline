@@ -1924,7 +1924,7 @@ export default function App() {
       const instruction = draft.trim();
       const displayText = instruction
         ? `${instruction} [attached: ${document.name}, ${formatFileSize(document.size)}]`
-        : `Dropped ${document.name} (${formatFileSize(document.size)}) for review.`;
+        : `Asked ${activeAiName} to review ${document.name} (${formatFileSize(document.size)}).`;
 
       appendHostMessage(
         current.id,
