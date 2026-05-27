@@ -3839,12 +3839,22 @@ function mergeServerSettings(d, options = {}) {
   const localInstallId = S.installId || localStorage.getItem('caro_install_id') || '';
   const localOnboardingComplete = S.setupComplete === true || localStorage.getItem('caro_onboarded') === 'true';
   const serverLooksPreOnboarding = d.setupComplete === false || d.setupComplete === undefined;
+  const localPairingCode = normalizeCompanionPairingCode(
+    S.companionPairingCode ||
+    storedSettings.companionPairingCode ||
+    localStorage.getItem('caroline_companion_pairing_code')
+  );
+  const serverPairingCode = normalizeCompanionPairingCode(d.companionPairingCode);
+  const pairingCodeNeedsRepair = localPairingCode.length === 6 && localPairingCode !== serverPairingCode
+    ? localPairingCode
+    : '';
   let restoredSecrets = {};
   if (d.installId && localInstallId && localInstallId !== d.installId) {
     restoredSecrets = clearBrowserInstallState('installId changed from ' + localInstallId + ' to ' + d.installId);
   } else if (serverLooksPreOnboarding && localOnboardingComplete) {
     skip.add('setupComplete');
   }
+  if (pairingCodeNeedsRepair) skip.add('companionPairingCode');
   if (d.zipCode && !d.zipcode) d.zipcode = d.zipCode;
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = SAME_ORIGIN_NODE_RED_URL || ('http://' + d.piIp + ':8080');
@@ -3878,6 +3888,10 @@ function mergeServerSettings(d, options = {}) {
     S.features = normalizeFeatureState(storedSettings.features, { repairAllOff: false });
     S.featuresUpdatedAt = localFeaturesUpdatedAt;
   }
+  if (pairingCodeNeedsRepair) {
+    S.companionPairingCode = pairingCodeNeedsRepair;
+    localStorage.setItem('caroline_companion_pairing_code', pairingCodeNeedsRepair);
+  }
   localStorage.setItem('caro_settings', JSON.stringify(S));
   if (typeof applyUiReadability === 'function') applyUiReadability();
   if (shouldKeepLocalFeatures && typeof postSettingsToNodeRed === 'function') {
@@ -3891,6 +3905,11 @@ function mergeServerSettings(d, options = {}) {
     restoreKeys.forEach(k => { payload[k] = restoredSecrets[k]; });
     setTimeout(() => {
       postSettingsToNodeRed(payload, 5000).catch(e => console.warn('[Caroline] Local secret restore failed:', e));
+    }, 500);
+  }
+  if (pairingCodeNeedsRepair && typeof postSettingsToNodeRed === 'function') {
+    setTimeout(() => {
+      postSettingsToNodeRed({ companionPairingCode: pairingCodeNeedsRepair }, 5000).catch(e => console.warn('[Caroline] companion pairing code repair failed:', e));
     }, 500);
   }
   return true;
@@ -9112,6 +9131,8 @@ function syncCompanionPairingCode() {
   updateCompanionCodePill();
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'settings_update', companionPairingCode: code }));
+  } else if (typeof postSettingsToNodeRed === 'function') {
+    postSettingsToNodeRed({ companionPairingCode: code }, 5000).catch(e => console.warn('[Caroline] companion pairing code sync failed:', e));
   }
 }
 async function copyCompanionPairingCode() {
