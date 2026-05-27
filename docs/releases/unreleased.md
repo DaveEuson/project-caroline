@@ -22,6 +22,7 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Update Caroline status now strips terminal color/spinner control codes before showing progress in Settings.
 - Companion document drops no longer get misclassified as beta feedback when the attached file contains feedback/test wording.
 - Companion-saved widget changes now re-apply on open kiosks, including enabling the Memes widget without a manual refresh.
+- Kiosk chat placeholders now use the configured bot name instead of always saying Caroline.
 
 ## Removed
 

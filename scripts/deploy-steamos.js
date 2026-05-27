@@ -159,7 +159,7 @@ function verifyRemote(opts, payload) {
     '-o', 'BatchMode=yes',
     '-o', 'ConnectTimeout=8',
     remote,
-    `sha256sum ${shellQuote(`${opts.remoteDir}/index.html`)} ${shellQuote(`${opts.remoteDir}/flows.json`)}; systemctl --user is-active caroline.service`,
+    `sha256sum ${shellQuote(`${opts.remoteDir}/index.html`)} ${shellQuote(`${opts.remoteDir}/flows.json`)}; if [ -f ${shellQuote(`${opts.remoteDir}/public/index.html`)} ]; then sha256sum ${shellQuote(`${opts.remoteDir}/public/index.html`)}; fi; systemctl --user is-active caroline.service`,
   ], { capture: true });
   const lines = output.trim().split(/\r?\n/).filter(Boolean);
   const remoteHashes = {};
@@ -188,6 +188,7 @@ function deploy(opts, payload) {
       'set -e',
       `test -d ${shellQuote(opts.remoteDir)}`,
       `for f in index.html flows.json; do cp -p ${shellQuote(opts.remoteDir)}/$f ${shellQuote(opts.remoteDir)}/$f.codex-backup-${ts}; done`,
+      `if [ -f ${shellQuote(`${opts.remoteDir}/public/index.html`)} ]; then cp -p ${shellQuote(`${opts.remoteDir}/public/index.html`)} ${shellQuote(`${opts.remoteDir}/public/index.html.codex-backup-${ts}`)}; fi`,
     ].join('; '),
   ]);
   run(command('scp'), [
@@ -196,6 +197,12 @@ function deploy(opts, payload) {
     payload.indexOut,
     payload.flowsOut,
     `${remote}:${opts.remoteDir}/`,
+  ]);
+  run(command('ssh'), [
+    '-o', 'BatchMode=yes',
+    '-o', 'ConnectTimeout=8',
+    remote,
+    `if [ -d ${shellQuote(`${opts.remoteDir}/public`)} ]; then cp -p ${shellQuote(`${opts.remoteDir}/index.html`)} ${shellQuote(`${opts.remoteDir}/public/index.html`)}; fi`,
   ]);
   if (opts.restart) {
     run(command('ssh'), [

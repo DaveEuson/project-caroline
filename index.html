@@ -3552,13 +3552,13 @@
 <div id="bottom-bar">
   <div id="bottom-chat">
     <div id="bottom-chat-label">💬 Recent conversation</div>
-    <div id="bottom-chat-msgs"><div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:8px;">Say something to Caroline...</div></div>
+    <div id="bottom-chat-msgs"><div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:8px;">Say something...</div></div>
     <div id="voice-status" style="font-size:11px;color:rgba(var(--t-rgb1),0.4);font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;padding:4px 0 2px;flex-shrink:0;">● READY TO CHAT · ENTER TO SEND</div>
     <div id="input-row">
       <button class="touch-btn" id="focus-btn" onclick="toggleFocusMode(); playBeep(900);" title="Focus mode" aria-label="Focus mode"><i class="ti ti-headphones"></i></button>
       <button class="touch-btn" id="mic-btn" onclick="playBeep(800)" title="Voice input" aria-label="Voice input"><i class="ti ti-microphone"></i></button>
       <button class="touch-btn" id="stop-btn" onclick="playBeep(400)" title="Stop" aria-label="Stop"><i class="ti ti-player-stop"></i></button>
-      <input id="msg-input" type="text" placeholder="Say something to Caroline..." autocomplete="off"/>
+      <input id="msg-input" type="text" placeholder="Say something..." autocomplete="off"/>
       <button class="touch-btn" id="send-btn" onclick="playBeep(600); sendMessage();" title="Send message" aria-label="Send message"><i class="ti ti-send"></i></button>
       <button class="touch-btn" id="kbd-btn" onclick="toggleOsk()" title="On-screen keyboard" aria-label="On-screen keyboard"><i class="ti ti-keyboard"></i></button>
       <button id="hue-btn" class="touch-btn mode-off" onclick="cycleHue()" title="Hue lights" aria-label="Hue lights"><span id="hue-icon"><i class="ti ti-bulb-off"></i></span></button>
@@ -3904,6 +3904,7 @@ function applySyncedSettings(reason = 'settings sync') {
   applyFeatures();
   syncFeatureCheckboxes();
   updateFeatWarnings();
+  if (typeof updateChatComposePlaceholder === 'function') updateChatComposePlaceholder();
   if (typeof updateAboutPanel === 'function') updateAboutPanel();
   if (typeof updateSettingsStatus === 'function') updateSettingsStatus();
   if (typeof renderIntegrationStatus === 'function') renderIntegrationStatus();
@@ -4193,6 +4194,7 @@ async function syncSettingsFromServer() {
       localStorage.setItem('caro_settings', JSON.stringify(S));
     }
     document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
+    updateChatComposePlaceholder(true);
     updateAvatarFrameLabel();
     const rebuiltPrompt = getSetupMemoryPrompt();
     if (rebuiltPrompt && !d.personalityPrompt) {
@@ -7514,6 +7516,7 @@ async function saveSettings() {
   const newName = resolveSettingsAiName(S.aiName);
   S.aiName = newName;
   document.getElementById('topbar-name').textContent = newName;
+  updateChatComposePlaceholder(true);
   updateAvatarFrameLabel();
   document.getElementById('subtitle-sender') && (document.getElementById('subtitle-sender').textContent = newName.toUpperCase());
   idleLimit = S.idleTimeout;
@@ -9315,12 +9318,43 @@ document.getElementById('topbar-name').textContent = S.aiName || 'Caroline';
 updateAvatarFrameLabel();
 updateAiConfigIndicator();
 updateCompanionCodePill();
+updateChatComposePlaceholder(true);
 
 // ── SEND ──────────────────────────────────────
 const input=document.getElementById('msg-input');
 let _lastSendMs = 0;
 const SEND_COOLDOWN_MS = 1500;
 let pendingFeedbackCapture = false;
+
+function assistantDisplayName() {
+  return String(S.aiName || 'Caroline').trim() || 'Caroline';
+}
+
+function chatComposePlaceholder() {
+  return 'Say something to ' + assistantDisplayName() + '...';
+}
+
+function updateChatComposePlaceholder(force = false) {
+  const field = document.getElementById('msg-input');
+  if (!field) return;
+  if (force || !field.placeholder || /^Say something(\s+to\s+.+)?\.\.\.$/i.test(field.placeholder)) {
+    field.placeholder = chatComposePlaceholder();
+  }
+}
+
+function renderBottomChatEmptyPrompt() {
+  const container = document.getElementById('bottom-chat-msgs');
+  if (!container) return;
+  container.innerHTML = '';
+  const div = document.createElement('div');
+  div.style.color = 'rgba(226,232,240,0.2)';
+  div.style.fontSize = '10px';
+  div.style.fontFamily = "'JetBrains Mono', monospace";
+  div.style.textAlign = 'center';
+  div.style.marginTop = '8px';
+  div.textContent = chatComposePlaceholder();
+  container.appendChild(div);
+}
 
 function feedbackOptedIn() {
   return parseSettingBool(S.telemetryTroubleshooting, false);
@@ -9374,8 +9408,7 @@ async function submitBetaFeedback(text) {
     clog('err', 'Feedback save failed: ' + e.message);
     addMessage('I could not save that feedback locally. Check Node-RED, then try again.', 'caroline', 'display');
   } finally {
-    const field = document.getElementById('msg-input');
-    if (field) field.placeholder = 'Say something to ' + (S.aiName || 'Caroline') + '...';
+    updateChatComposePlaceholder(true);
   }
 }
 
@@ -9691,7 +9724,7 @@ function buildRecognition(mode) {
     stopBtn.classList.remove('show');
     avatarOuter.classList.remove('listening');
     input.classList.remove('listening');
-    input.placeholder = shouldRestart ? 'Say "' + getWakePhrases()[0] + '"...' : 'Say something to Caroline...';
+    input.placeholder = shouldRestart ? 'Say "' + getWakePhrases()[0] + '"...' : chatComposePlaceholder();
     if (voiceEnabled) window.speechSynthesis.resume();
     if (isPlaying) radioAudio.play();
     setMicIdleStatus();
@@ -9744,7 +9777,7 @@ function stopListening(send=true, opts={}) {
   stopBtn.classList.remove('show');
   avatarOuter.classList.remove('listening');
   input.classList.remove('listening');
-  input.placeholder = 'Say something to Caroline...';
+  updateChatComposePlaceholder(true);
   if (voiceEnabled) window.speechSynthesis.resume();
   if (isPlaying) radioAudio.play();
   if (shouldSend) sendMessage();
@@ -10979,7 +11012,10 @@ function updateBottomChat() {
   const container = document.getElementById('bottom-chat-msgs');
   if (!container) return;
   const log = JSON.parse(localStorage.getItem('caro_log') || '[]');
-  if (!log.length) return;
+  if (!log.length) {
+    renderBottomChatEmptyPrompt();
+    return;
+  }
   container.innerHTML = '';
   log.slice(-6).forEach(entry => {
     const div = document.createElement('div');
@@ -12850,6 +12886,7 @@ async function finalizeOnboarding(){
   fetchWeather();
   const tn = document.getElementById('topbar-name');
   if(tn) tn.textContent = S.aiName;
+  updateChatComposePlaceholder(true);
   updateAvatarFrameLabel();
   updateSettingsStatus();
   document.getElementById('onboarding-overlay').classList.remove('show');
