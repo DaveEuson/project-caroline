@@ -5,6 +5,7 @@ Project: Caroline keeps human-readable release notes in this folder.
 ## Current Draft
 
 - [Unreleased](unreleased.md)
+- [Beta 1.0 draft](beta-1.0-draft.md)
 
 ## Published Notes
 

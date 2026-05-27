@@ -1571,7 +1571,7 @@ elif git -C "$CLONE_DIR" show-ref --verify --quiet "refs/tags/${CAROLINE_CHANNEL
   }
 else
   echo -e "${RED}  ✗ Project: Caroline channel not found: ${CAROLINE_CHANNEL}${RESET}"
-  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.3.${RESET}"
+  echo -e "${DIM}    Use release, nightly, or a published tag such as v0.3.0-beta.4.${RESET}"
   echo -e "${DIM}    Log: cat /tmp/caroline-git.log${RESET}"
   exit 1
 fi

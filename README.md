@@ -144,6 +144,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - [How to set up Google Calendar OAuth](docs/google-oauth.md)
 - [How to set up Discord](docs/discord.md)
 - [How to beta test Project: Caroline](docs/beta-testing.md)
+- [Beta 1.0 readiness checklist](docs/beta-1-readiness.md)
 - [Public beta health snapshot](docs/beta-health.md)
 - [Clean uninstall/reinstall QA checklist](docs/clean-reinstall-qa.md)
 - [Architecture overview](docs/architecture.md)
