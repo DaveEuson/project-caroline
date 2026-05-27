@@ -85,7 +85,7 @@ Recommended answers:
 - Telemetry: your choice; it is optional
 
 Ubuntu Server should be used from another browser, not from a local kiosk browser.
-For local Ollama, use `qwen2.5:1.5b` for recommended quality, `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice.
+For local Ollama, use `qwen2.5:1.5b` for recommended quality, `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice. GPU-backed servers can use the [local model recommendations](local-ai-models.md) instead.
 
 ## 5. Open Caroline
 

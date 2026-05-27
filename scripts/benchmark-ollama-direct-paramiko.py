@@ -43,6 +43,25 @@ MODEL_PRESETS = {
         "tinyllama:1.1b",
         "qwen2.5:1.5b",
     ],
+    "gemma4": ["gemma4:e2b", "gemma4:e4b"],
+    "popular-gemma4": [
+        "qwen3:1.7b",
+        "qwen3:4b",
+        "llama3.2:1b",
+        "llama3.2:3b",
+        "gemma3:1b",
+        "gemma3:4b",
+        "phi4-mini",
+        "deepseek-r1:1.5b",
+        "deepseek-r1:7b",
+        "mistral:7b",
+        "llama3.1:8b",
+        "smollm2:1.7b",
+        "tinyllama:1.1b",
+        "qwen2.5:1.5b",
+        "gemma4:e2b",
+        "gemma4:e4b",
+    ],
     "steam-full": [
         "qwen3:0.6b",
         "qwen3:1.7b",
@@ -63,7 +82,7 @@ MODEL_PRESETS = {
         "smollm2:1.7b",
         "tinyllama:1.1b",
     ],
-    "gpu": ["qwen3:1.7b", "qwen3:4b", "gemma3:4b", "phi4-mini", "mistral:7b", "deepseek-r1:7b", "llama3.1:8b", "gpt-oss:20b"],
+    "gpu": ["qwen3:1.7b", "qwen3:4b", "gemma3:4b", "phi4-mini", "mistral:7b", "deepseek-r1:7b", "llama3.1:8b", "gemma4:e2b", "gemma4:e4b", "gpt-oss:20b"],
 }
 
 

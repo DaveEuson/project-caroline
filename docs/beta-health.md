@@ -19,7 +19,8 @@ This page is the human-verified public beta health snapshot. It is not live tele
 | Ubuntu Desktop / Pop!_OS | Validated beta path | Good host/client balance for ordinary Linux PCs and VMs. |
 | Ubuntu Server | Active beta target | Best for headless hosts, GPU laptops, and server-style testing. Needs browser access from another device. |
 | Steam Deck / SteamOS | Experimental beta path | Strong local-AI candidate. Keep an eye on CPU, thermals, and model choice. |
-| Bazzite 44 / NVIDIA laptop | Smoke-validated beta path | Validated on RTX 2070 Max-Q with local Ollama `qwen3:1.7b` and LAN browser/Companion access. |
+| Bazzite 44 / NVIDIA laptop | Smoke-validated beta path | Validated on RTX 2070 Max-Q with local Ollama `qwen3:1.7b` and LAN browser/Companion access. Expanded model sweep is pending a stable awake session. |
+| Windows desktop / RTX 4070 | Local benchmark host | `gemma4:e4b` won the full popular + Gemma 4 direct Ollama sweep; `mistral:7b` is the faster high-quality option. |
 | Phone / tablet browser | Active mobile client | Intended for chat, avatar presence, status, settings, sync code, and compact controls. |
 | Companion App | Validated desktop client | Pairing, chat, buddy switching, updates, and early host setup are the priority surfaces. |
 
@@ -28,7 +29,7 @@ This page is the human-verified public beta health snapshot. It is not live tele
 | Area | Health | What beta testers should check |
 | --- | --- | --- |
 | Chat | Core beta | Send normal greetings, follow-up questions, and one command-like request. |
-| Local AI | Experimental | `qwen3:1.7b` is the current Steam Deck balance pick after direct tests across Qwen, Llama, Gemma, Phi, DeepSeek, Mistral, SmolLM2, and TinyLlama. |
+| Local AI | Experimental | See [local model recommendations](local-ai-models.md). Current picks: Pi/Ubuntu `qwen2.5:1.5b`, Steam/Bazzite `qwen3:1.7b`, RTX 4070 desktop `gemma4:e4b`. |
 | OpenRouter AI | Recommended beta | Best default for polished replies and lower host load. |
 | Memory | Core beta | Save, hide, delete, and correct a simple fact. |
 | Calendar | Core beta | Connect Google, read events, and create one test event. |

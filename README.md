@@ -152,13 +152,14 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 The installer detects your hardware, RAM, and platform, then preselects the local model it thinks fits best. You can still override the choice during setup.
 
 - Best experience: **OpenRouter**
-- Recommended Raspberry Pi / Ubuntu local quality: **qwen2.5:1.5b**
-- Fast Raspberry Pi / Ubuntu local fallback: **qwen2.5:0.5b**
-- Recommended Steam Deck local quality: **qwen3:1.7b**
-- Fast Steam Deck local fallback: **qwen3:0.6b**
-- Steam Deck non-Qwen alternatives from direct Ollama testing: **Mistral 7B** is strongest but slow; **Gemma3 4B** and **Phi4 Mini** are good quality fallbacks; **SmolLM2 1.7B** is a useful lightweight fallback.
+- Raspberry Pi / Ubuntu local quality: **qwen2.5:1.5b**
+- Steam Deck / Bazzite local quality: **qwen3:1.7b**
+- RTX 4070-class desktop local quality: **gemma4:e4b**
+- Fast general local fallback: **qwen2.5:1.5b**
 - Safe/legacy fallback: **gemma3:1b**
 - Ubuntu Desktop VM validation: **50GB disk**, CPU-only Ollama, **qwen2.5:1.5b**
+
+For platform-specific rankings from the latest direct Ollama benchmarks, see [Local AI model recommendations](docs/local-ai-models.md).
 
 ## Requirements
 

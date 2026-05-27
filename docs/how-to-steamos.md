@@ -79,6 +79,8 @@ Good non-Qwen experiments:
 - `smollm2:1.7b` is a lightweight fallback when speed matters.
 - `deepseek-r1` was not a good fit for Caroline-style short conversational replies in this test.
 
+For the cross-platform model table, see [Local AI model recommendations](local-ai-models.md).
+
 The SteamOS beta install disables the Node-RED editor route by default.
 
 ## View From Another Computer
