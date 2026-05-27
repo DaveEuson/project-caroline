@@ -962,15 +962,7 @@ curl -fsSL "https://raw.githubusercontent.com/\${REPO_OWNER}/\${REPO_NAME}/\${RE
 chmod 700 "\$INSTALLER"
 NO_COLOR=1 TERM=dumb CAROLINE_NONINTERACTIVE=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="\$REPO_CHANNEL" CAROLINE_REPO_URL="\$REPO_URL" bash "\$INSTALLER" >> "\$LOG" 2>&1
 echo "\$(date -Is) Project: Caroline GUI update complete" >> "\$LOG"
-RESTART_CMD="\$(command -v systemctl || true)"
-RESTART_UNIT="caroline-restart-\$(date +%s)"
-if command -v systemd-run >/dev/null 2>&1 && [ -n "\$RESTART_CMD" ]; then
-  if ! systemd-run --user --unit="\$RESTART_UNIT" --collect --on-active=1s "\$RESTART_CMD" --user restart caroline.service >/tmp/caroline-restart.log 2>&1; then
-    nohup bash -lc 'sleep 1; systemctl --user restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
-  fi
-else
-  nohup bash -lc 'sleep 1; systemctl --user restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
-fi
+nohup bash -lc 'sleep 1; systemctl --user restart caroline.service' >/tmp/caroline-restart.log 2>&1 & || true
 UPDATE_EOF
 chmod +x "$REAL_HOME/.local/bin/caroline-update"
 say "${GREEN}  ✓ SteamOS update helper ready${RESET}"

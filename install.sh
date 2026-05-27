@@ -2245,15 +2245,7 @@ fi
 echo "$(date -Is) Update available: ${LOCAL_COMMIT:-unknown} -> ${REMOTE_COMMIT:0:7}" >> "$LOG"
 NO_COLOR=1 TERM=dumb SUDO_USER="$TARGET_USER" USER="$TARGET_USER" HOME="$TARGET_HOME" CAROLINE_NONINTERACTIVE=true CAROLINE_PRESERVE_UPDATE_LOG=true CAROLINE_DEFER_SERVICE_RESTART=true CAROLINE_CHANNEL="$REPO_CHANNEL" bash "$INSTALLER" --noninteractive >> "$LOG" 2>&1
 echo "$(date -Is) Project: Caroline GUI update complete" >> "$LOG"
-RESTART_CMD="$(command -v systemctl || true)"
-RESTART_UNIT="caroline-restart-$(date +%s)"
-if command -v systemd-run >/dev/null 2>&1 && [ -n "$RESTART_CMD" ]; then
-  if ! systemd-run --unit="$RESTART_UNIT" --collect --on-active=1s "$RESTART_CMD" restart caroline.service >/tmp/caroline-restart.log 2>&1; then
-    nohup bash -lc 'sleep 1; systemctl restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
-  fi
-else
-  nohup bash -lc 'sleep 1; systemctl restart caroline.service' >/tmp/caroline-restart.log 2>&1 &
-fi
+nohup bash -lc 'sleep 1; systemctl restart caroline.service' >/tmp/caroline-restart.log 2>&1 & || true
 EOF
 sudo chmod 755 /usr/local/sbin/caroline-update
 sudo chown root:root /usr/local/sbin/caroline-update
