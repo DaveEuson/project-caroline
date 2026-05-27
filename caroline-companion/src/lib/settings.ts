@@ -84,7 +84,18 @@ const DEFAULTS: AppSettings = {
 };
 
 function migrateSocketUrl(url: string) {
-  return String(url || DEFAULTS.socketUrl).replace(":1880/ws/caroline", ":8080/ws/caroline");
+  const value = String(url || DEFAULTS.socketUrl).replace(":1880/ws/caroline", ":8080/ws/caroline");
+  try {
+    const parsed = new URL(value);
+    const isLoopback = ["127.0.0.1", "localhost", "::1", "[::1]"].includes(parsed.hostname);
+    if (parsed.port === "8088" && !isLoopback) {
+      parsed.port = "8080";
+      return parsed.toString();
+    }
+  } catch {
+    // Keep malformed/incomplete values editable in the settings UI.
+  }
+  return value;
 }
 
 function normalizeAvatarId(value: unknown, fallback = "caroline") {
