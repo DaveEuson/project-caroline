@@ -209,6 +209,17 @@ const HOST_FEATURES = [
 ] as const;
 type HostFeatureKey = typeof HOST_FEATURES[number][0];
 type HostFeatureSettings = Record<HostFeatureKey, boolean>;
+type SettingsSectionId = "buddy" | "host" | "identity" | "ai" | "connect" | "widgets" | "privacy" | "app";
+const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; icon: string; label: string }> = [
+  { id: "buddy", icon: "☻", label: "Buddy" },
+  { id: "host", icon: "⌂", label: "Host" },
+  { id: "identity", icon: "ID", label: "Identity" },
+  { id: "ai", icon: "AI", label: "AI" },
+  { id: "connect", icon: "⇄", label: "Connect" },
+  { id: "widgets", icon: "▦", label: "Widgets" },
+  { id: "privacy", icon: "◈", label: "Privacy" },
+  { id: "app", icon: "☰", label: "App" },
+];
 const HOST_FEATURE_DEFAULTS: HostFeatureSettings = {
   weather: true,
   datetime: true,
@@ -1003,6 +1014,7 @@ export default function App() {
   );
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<SettingsSectionId>("buddy");
   const [status, setStatus] = useState<CarolineSocketStatus>("offline");
   const [hostMessages, setHostMessages] = useState<Record<string, ChatMessage[]>>(() => {
     const savedHistory = loadChatHistory();
@@ -2167,132 +2179,201 @@ export default function App() {
         {/* ── Settings panel (shown when settingsOpen) ──────── */}
         {settingsOpen && (
           <section className="settings-panel" aria-label="Settings">
-
-            <div className="settings-group settings-group-wide">
-              <label htmlFor="saved-host">Saved Buddy</label>
-              <div className="settings-row">
-                <select
-                  id="saved-host"
-                  value={settings.activeHostId}
-                  onChange={(e) => handleSelectHost(e.target.value)}
+            <nav className="settings-section-tabs" aria-label="Settings sections">
+              {SETTINGS_SECTIONS.map((section) => (
+                <button
+                  type="button"
+                  className={settingsSection === section.id ? "active" : ""}
+                  key={section.id}
+                  onClick={() => setSettingsSection(section.id)}
+                  aria-pressed={settingsSection === section.id}
+                  title={section.label}
                 >
-                  {settings.hosts.map((host) => (
-                    <option value={host.id} key={host.id}>
-                      {buddyDisplayName(host, buddyStates[host.id])}
-                      {inferDeviceTypeForHost(host, buddyStates[host.id]) ? ` (${inferDeviceTypeForHost(host, buddyStates[host.id])})` : ""}
-                    </option>
-                  ))}
-                </select>
-                <button type="button" onClick={handleAddHost}>
-                  New
+                  <span className="settings-tab-icon">{section.icon}</span>
+                  <span>{section.label}</span>
                 </button>
-                <button type="button" onClick={handleRemoveHost} disabled={settings.hosts.length <= 1}>
-                  Remove
-                </button>
-              </div>
+              ))}
+            </nav>
+
+            <div className="settings-command-strip" aria-label="Host setup commands">
+              <button type="button" onClick={handleLoadHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                {hostSetupBusy ? "Working..." : "Load Host"}
+              </button>
+              <button type="button" onClick={handleSaveHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                Save Host
+              </button>
+              <button type="button" onClick={handleOpenGoogleSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                Google
+              </button>
+              <button type="button" onClick={handleOpenSpotifySetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                Spotify
+              </button>
+              <button type="button" onClick={handleTestDiscord} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
+                Discord
+              </button>
+              <button type="button" onClick={() => openExternalUrl(activeHostHttpBase)} disabled={!activeHostHttpBase}>
+                Host UI
+              </button>
+              <button type="button" onClick={() => openExternalUrl(activeHostSecureVoiceUrl)} disabled={!activeHostSecureVoiceUrl}>
+                Voice
+              </button>
             </div>
 
-            <div className="settings-group">
-              <label htmlFor="host-ai-name">Buddy Name</label>
-              <input
-                id="host-ai-name"
-                value={activeHost()?.aiName || inferBuddyAiName(activeHost())}
-                onChange={(e) => updateActiveHost({ aiName: e.target.value, avatarId: inferAvatarId(e.target.value) })}
-              />
+            <div className="settings-section-status">
+              <span>{hostSetupBase || "No host address yet"}</span>
+              {hostSetupStatus && <strong>{hostSetupStatus}</strong>}
             </div>
 
-            <div className="settings-group">
-              <label htmlFor="user-name">Your Name</label>
-              <input
-                id="user-name"
-                value={settings.userName || activeHostUserName}
-                onChange={(e) => setSettings({ ...settings, userName: e.target.value })}
-                placeholder="Dave"
-              />
-            </div>
+            <div className="settings-section-body">
+              <section className="settings-page" hidden={settingsSection !== "buddy"} aria-label="Buddy settings">
+                <div className="settings-page-title">Buddy</div>
+                <div className="settings-page-grid">
+                  <div className="settings-group settings-group-wide">
+                    <label htmlFor="saved-host">Saved Buddy</label>
+                    <div className="settings-row">
+                      <select
+                        id="saved-host"
+                        value={settings.activeHostId}
+                        onChange={(e) => handleSelectHost(e.target.value)}
+                      >
+                        {settings.hosts.map((host) => (
+                          <option value={host.id} key={host.id}>
+                            {buddyDisplayName(host, buddyStates[host.id])}
+                            {inferDeviceTypeForHost(host, buddyStates[host.id]) ? ` (${inferDeviceTypeForHost(host, buddyStates[host.id])})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="button" onClick={handleAddHost}>New</button>
+                      <button type="button" onClick={handleRemoveHost} disabled={settings.hosts.length <= 1}>Remove</button>
+                    </div>
+                  </div>
 
-            <div className="settings-group">
-              <label htmlFor="pairing-code">
-                SYNC Code{" "}
-                <span
-                  className="help-tip"
-                  title="Enter the code shown on the Project: Caroline kiosk screen. Leave blank if the host does not require one."
-                >
-                  ?
-                </span>
-              </label>
-              <input
-                id="pairing-code"
-                value={settings.pairingCode}
-                onChange={(e) => updateActiveHost({ pairingCode: e.target.value })}
-                placeholder="Code from kiosk screen"
-                maxLength={16}
-              />
-            </div>
+                  <div className="settings-group">
+                    <label htmlFor="host-ai-name">Buddy Name</label>
+                    <input
+                      id="host-ai-name"
+                      value={activeHost()?.aiName || inferBuddyAiName(activeHost())}
+                      onChange={(e) => updateActiveHost({ aiName: e.target.value, avatarId: inferAvatarId(e.target.value) })}
+                    />
+                  </div>
 
-            <div className="settings-group">
-              <label htmlFor="socket-url">Host Address</label>
-              <div className="settings-row">
-                <input
-                  id="socket-url"
-                  className="mono"
-                  value={settings.socketUrl}
-                  onChange={(e) => updateActiveHost({ socketUrl: e.target.value })}
-                  spellCheck={false}
-                />
-                <button type="button" onClick={handleConnect}>
-                  Connect
-                </button>
-              </div>
-            </div>
+                  <div className="settings-group">
+                    <label htmlFor="user-name">Your Name</label>
+                    <input
+                      id="user-name"
+                      value={settings.userName || activeHostUserName}
+                      onChange={(e) => setSettings({ ...settings, userName: e.target.value })}
+                      placeholder="Dave"
+                    />
+                  </div>
 
-            <div className="settings-group">
-              <label htmlFor="host-device-type">Device</label>
-              <select
-                id="host-device-type"
-                value={activeHost()?.deviceType || ""}
-                onChange={(e) => updateActiveHost({ deviceType: normalizeDeviceType(e.target.value) })}
-              >
-                {HOST_DEVICE_TYPES.map((deviceType) => (
-                  <option value={deviceType} key={deviceType || "unknown"}>
-                    {deviceType || "Unknown"}
-                  </option>
-                ))}
-              </select>
-            </div>
+                  <div className="settings-group">
+                    <label htmlFor="pairing-code">
+                      SYNC Code{" "}
+                      <span
+                        className="help-tip"
+                        title="Enter the code shown on the Project: Caroline kiosk screen. Leave blank if the host does not require one."
+                      >
+                        ?
+                      </span>
+                    </label>
+                    <input
+                      id="pairing-code"
+                      value={settings.pairingCode}
+                      onChange={(e) => updateActiveHost({ pairingCode: e.target.value })}
+                      placeholder="Code from kiosk screen"
+                      maxLength={16}
+                    />
+                  </div>
 
-            <details className="settings-advanced host-setup-panel" open>
-              <summary>Host Setup Hub</summary>
-              <div className="host-setup-body">
-                <div className="host-setup-actions">
-                  <button type="button" onClick={handleLoadHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
-                    {hostSetupBusy ? "Working..." : "Load From Host"}
-                  </button>
-                  <button type="button" onClick={handleSaveHostSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
-                    Save To Host
-                  </button>
-                  <button type="button" onClick={handleOpenGoogleSetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
-                    Connect Google
-                  </button>
-                  <button type="button" onClick={handleOpenSpotifySetup} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
-                    Connect Spotify
-                  </button>
-                  <button type="button" onClick={handleTestDiscord} disabled={hostSetupBusy || !hostSetupBaseAvailable}>
-                    Test Discord
-                  </button>
-                  <button type="button" onClick={() => openExternalUrl(activeHostHttpBase)} disabled={!activeHostHttpBase}>
-                    Open Host UI
-                  </button>
-                  <button type="button" onClick={() => openExternalUrl(activeHostSecureVoiceUrl)} disabled={!activeHostSecureVoiceUrl}>
-                    Voice Page
-                  </button>
+                  <div className="settings-group">
+                    <label htmlFor="host-device-type">Device</label>
+                    <select
+                      id="host-device-type"
+                      value={activeHost()?.deviceType || ""}
+                      onChange={(e) => updateActiveHost({ deviceType: normalizeDeviceType(e.target.value) })}
+                    >
+                      {HOST_DEVICE_TYPES.map((deviceType) => (
+                        <option value={deviceType} key={deviceType || "unknown"}>
+                          {deviceType || "Unknown"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="settings-group settings-group-wide">
+                    <label htmlFor="socket-url">Host Address</label>
+                    <div className="settings-row">
+                      <input
+                        id="socket-url"
+                        className="mono"
+                        value={settings.socketUrl}
+                        onChange={(e) => updateActiveHost({ socketUrl: e.target.value })}
+                        spellCheck={false}
+                      />
+                      <button type="button" onClick={handleConnect}>Connect</button>
+                    </div>
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-name">Host Label</label>
+                    <input
+                      id="host-name"
+                      value={activeHost()?.name || ""}
+                      onChange={(e) => updateActiveHost({ name: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <label htmlFor="host-avatar-id">Buddy Avatar</label>
+                    <select
+                      id="host-avatar-id"
+                      value={activeAvatarId}
+                      onChange={(e) => updateActiveHost({ avatarId: e.target.value })}
+                    >
+                      <option value="caroline">Caroline</option>
+                      <option value="carl">Carl</option>
+                      <option value="catoline">Catoline</option>
+                      <option value="robot">Robot</option>
+                    </select>
+                  </div>
+
+                  <div className="settings-group settings-group-wide">
+                    <label htmlFor="companion-name">Client Display Name</label>
+                    <input
+                      id="companion-name"
+                      value={settings.companionName}
+                      onChange={(e) => setSettings({ ...settings, companionName: e.target.value })}
+                      placeholder={`${chatUserName(settings, activeHostUserName)}'s Companion`}
+                    />
+                    <p className="settings-note">Shown to the host when this computer connects.</p>
+                  </div>
+
+                  <div className="settings-group settings-group-wide">
+                    <button
+                      type="button"
+                      className="full-width-btn"
+                      onClick={handleDiscoverHosts}
+                      disabled={isDiscovering}
+                    >
+                      {isDiscovering ? "Searching network..." : "Find Project: Caroline Hosts on Network"}
+                    </button>
+                    {discoveredHosts.length > 0 && (
+                      <div className="discovered-hosts">
+                        <p className="settings-note discovered-label">Tap a host to connect:</p>
+                        {discoveredHosts.map((h) => (
+                          <button type="button" key={h.url} onClick={() => handleUseDiscoveredHost(h)} title={h.url}>
+                            Project: Caroline @ {h.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </section>
 
-                <div className="host-setup-status-row">
-                  <span>{hostSetupBase || "No host address yet"}</span>
-                  {hostSetupStatus && <strong>{hostSetupStatus}</strong>}
-                </div>
-
+              <section className="settings-page" hidden={settingsSection !== "host"} aria-label="Host status">
+                <div className="settings-page-title">Host</div>
                 <div className="host-setup-cards" aria-label="Host setup status">
                   {hostSetupCards.map((card) => (
                     <div className={`host-setup-card ${card.tone}`} key={card.key}>
@@ -2314,79 +2395,11 @@ export default function App() {
                     <span className="host-health-chip">Discord: {hostHealthLabel(hostHealth.discord?.configured, hostHealth.discord?.enabled || hostHealth.discord?.channelConfigured)}</span>
                   </div>
                 )}
+              </section>
 
-                <div className="host-privacy-panel">
-                  <div className="host-setup-section-title">Privacy</div>
-                  <div className="host-privacy-actions">
-                    <button type="button" onClick={handleRefreshHostPrivacy} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
-                      {hostPrivacyBusy ? "Working..." : "Refresh Privacy"}
-                    </button>
-                    <button type="button" onClick={() => handleClearHostPrivacy({ history: true }, "Clear host chat")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
-                      Clear Chat
-                    </button>
-                    <button type="button" onClick={() => handleClearHostPrivacy({ memory: true }, "Clear host memory")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
-                      Clear Memory
-                    </button>
-                    <button type="button" onClick={() => handleClearHostPrivacy({ history: true, memory: true, profile: true }, "Reset host privacy data")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
-                      Reset Privacy
-                    </button>
-                  </div>
-
-                  <div className="host-privacy-status">
-                    {hostPrivacyStatus || (hostPrivacy ? "Host privacy data loaded." : "Load host setup or refresh privacy to view host data.")}
-                  </div>
-
-                  <div className="host-privacy-stats">
-                    <span><strong>{hostPrivacyCounts.chatMessages || 0}</strong> chat</span>
-                    <span><strong>{hostPrivacyCounts.memoryShards || 0}</strong> memory</span>
-                    <span><strong>{hostPrivacyCounts.tasks || 0}</strong> tasks</span>
-                    <span><strong>{hostPrivacyRetention.privacyMode ? "Private" : "Normal"}</strong> mode</span>
-                    <span><strong>{formatHostRetention(hostPrivacyRetention.historyRetentionMs)}</strong> chat TTL</span>
-                    <span><strong>{formatHostRetention(hostPrivacyRetention.memoryRetentionMs)}</strong> memory TTL</span>
-                  </div>
-
-                  {hostPrivacyIntegrations.length > 0 && (
-                    <div className="host-health-list" aria-label="Host privacy integration status">
-                      {hostPrivacyIntegrations.map(([key, info]) => {
-                        const enabled = info.enabled !== false;
-                        const state = !enabled ? "off" : (info.connected ? "connected" : (info.configured ? "configured" : "off"));
-                        return (
-                          <span className="host-health-chip" key={`privacy-${key}`}>
-                            {info.label || key}: {state}{info.model ? ` / ${info.model}` : ""}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {hostPrivacyFiles.length > 0 && (
-                    <div className="host-privacy-files">
-                      {hostPrivacyFiles.map((file) => (
-                        <div className="host-privacy-file" key={`${file.label || "file"}-${file.path || ""}`}>
-                          <span>{file.label || "Host file"}</span>
-                          <code>{file.path || "unknown path"}</code>
-                          <em>{file.exists ? formatHostBytes(file.bytes) : "empty"}</em>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="host-memory-list">
-                    {hostMemoryShards.slice(0, 6).map((shard) => (
-                      <div className="host-memory-item" key={shard.id || shard.text}>
-                        <span>{shard.text || "Untitled memory"}</span>
-                        <button type="button" onClick={() => handleDeleteHostMemoryShard(shard)} disabled={hostPrivacyBusy}>
-                          Delete
-                        </button>
-                      </div>
-                    ))}
-                    {hostMemoryShards.length === 0 && <div className="host-memory-empty">No host memory shards loaded.</div>}
-                  </div>
-                </div>
-
-                <div className="host-setup-grid">
-                  <div className="host-setup-section-title">Identity</div>
-
+              <section className="settings-page" hidden={settingsSection !== "identity"} aria-label="Identity settings">
+                <div className="settings-page-title">Identity & Place</div>
+                <div className="settings-page-grid">
                   <div className="settings-group">
                     <label htmlFor="host-setup-user-name">Your Name</label>
                     <input
@@ -2421,8 +2434,6 @@ export default function App() {
                       ))}
                     </select>
                   </div>
-
-                  <div className="host-setup-section-title">Place & Time</div>
 
                   <div className="settings-group">
                     <label htmlFor="host-setup-timezone">Timezone</label>
@@ -2489,9 +2500,12 @@ export default function App() {
                       placeholder="0"
                     />
                   </div>
+                </div>
+              </section>
 
-                  <div className="host-setup-section-title">AI</div>
-
+              <section className="settings-page" hidden={settingsSection !== "ai"} aria-label="AI settings">
+                <div className="settings-page-title">AI</div>
+                <div className="settings-page-grid">
                   <div className="settings-group">
                     <label htmlFor="host-setup-provider">AI Provider</label>
                     <select
@@ -2554,9 +2568,12 @@ export default function App() {
                       placeholder="qwen2.5:1.5b"
                     />
                   </div>
+                </div>
+              </section>
 
-                  <div className="host-setup-section-title">Integrations</div>
-
+              <section className="settings-page" hidden={settingsSection !== "connect"} aria-label="Integration settings">
+                <div className="settings-page-title">Connect</div>
+                <div className="settings-page-grid">
                   <div className="settings-group">
                     <label htmlFor="host-setup-spotify">Spotify Client ID</label>
                     <input
@@ -2712,130 +2729,134 @@ export default function App() {
                       placeholder="hey caroline, hey ai"
                     />
                   </div>
-
-                  <div className="host-setup-section-title">Widgets</div>
-
-                  <div className="host-feature-grid">
-                    {HOST_FEATURES.map(([key, label]) => (
-                      <label className="host-setup-check" key={key}>
-                        <input
-                          type="checkbox"
-                          checked={normalizeHostFeatures(hostSetup.features)[key]}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupFeature(key, e.target.checked)}
-                        />
-                        <span>{label}</span>
-                      </label>
-                    ))}
-                  </div>
                 </div>
-              </div>
-            </details>
+              </section>
 
-            <div className="settings-group settings-toggle-row">
-              <label htmlFor="dark-mode">Dark Mode</label>
-              <input
-                id="dark-mode"
-                type="checkbox"
-                checked={settings.darkMode}
-                onChange={(e) => setSettings({ ...settings, darkMode: e.target.checked })}
-              />
-            </div>
-
-            <div className="settings-group settings-group-wide">
-              <button
-                type="button"
-                className="full-width-btn"
-                onClick={handleDiscoverHosts}
-                disabled={isDiscovering}
-              >
-                {isDiscovering ? "Searching network..." : "Find Project: Caroline Hosts on Network"}
-              </button>
-              {discoveredHosts.length > 0 && (
-                <div className="discovered-hosts">
-                  <p className="settings-note discovered-label">
-                    Tap a host to connect:
-                  </p>
-                  {discoveredHosts.map((h) => (
-                    <button
-                      type="button"
-                      key={h.url}
-                      onClick={() => handleUseDiscoveredHost(h)}
-                      title={h.url}
-                    >
-                      Project: Caroline @ {h.label}
-                    </button>
+              <section className="settings-page" hidden={settingsSection !== "widgets"} aria-label="Widget settings">
+                <div className="settings-page-title">Widgets</div>
+                <div className="host-feature-grid">
+                  {HOST_FEATURES.map(([key, label]) => (
+                    <label className="host-setup-check" key={key}>
+                      <input
+                        type="checkbox"
+                        checked={normalizeHostFeatures(hostSetup.features)[key]}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => handleHostSetupFeature(key, e.target.checked)}
+                      />
+                      <span>{label}</span>
+                    </label>
                   ))}
                 </div>
-              )}
+              </section>
+
+              <section className="settings-page" hidden={settingsSection !== "privacy"} aria-label="Privacy settings">
+                <div className="settings-page-title">Privacy</div>
+                <div className="host-privacy-panel">
+                  <div className="host-privacy-actions">
+                    <button type="button" onClick={handleRefreshHostPrivacy} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      {hostPrivacyBusy ? "Working..." : "Refresh Privacy"}
+                    </button>
+                    <button type="button" onClick={() => handleClearHostPrivacy({ history: true }, "Clear host chat")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      Clear Chat
+                    </button>
+                    <button type="button" onClick={() => handleClearHostPrivacy({ memory: true }, "Clear host memory")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      Clear Memory
+                    </button>
+                    <button type="button" onClick={() => handleClearHostPrivacy({ history: true, memory: true, profile: true }, "Reset host privacy data")} disabled={hostPrivacyBusy || !hostSetupBaseAvailable}>
+                      Reset Privacy
+                    </button>
+                  </div>
+
+                  <div className="host-privacy-status">
+                    {hostPrivacyStatus || (hostPrivacy ? "Host privacy data loaded." : "Load host setup or refresh privacy to view host data.")}
+                  </div>
+
+                  <div className="host-privacy-stats">
+                    <span><strong>{hostPrivacyCounts.chatMessages || 0}</strong> chat</span>
+                    <span><strong>{hostPrivacyCounts.memoryShards || 0}</strong> memory</span>
+                    <span><strong>{hostPrivacyCounts.tasks || 0}</strong> tasks</span>
+                    <span><strong>{hostPrivacyRetention.privacyMode ? "Private" : "Normal"}</strong> mode</span>
+                    <span><strong>{formatHostRetention(hostPrivacyRetention.historyRetentionMs)}</strong> chat TTL</span>
+                    <span><strong>{formatHostRetention(hostPrivacyRetention.memoryRetentionMs)}</strong> memory TTL</span>
+                  </div>
+
+                  {hostPrivacyIntegrations.length > 0 && (
+                    <div className="host-health-list" aria-label="Host privacy integration status">
+                      {hostPrivacyIntegrations.map(([key, info]) => {
+                        const enabled = info.enabled !== false;
+                        const state = !enabled ? "off" : (info.connected ? "connected" : (info.configured ? "configured" : "off"));
+                        return (
+                          <span className="host-health-chip" key={`privacy-${key}`}>
+                            {info.label || key}: {state}{info.model ? ` / ${info.model}` : ""}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {hostPrivacyFiles.length > 0 && (
+                    <div className="host-privacy-files">
+                      {hostPrivacyFiles.map((file) => (
+                        <div className="host-privacy-file" key={`${file.label || "file"}-${file.path || ""}`}>
+                          <span>{file.label || "Host file"}</span>
+                          <code>{file.path || "unknown path"}</code>
+                          <em>{file.exists ? formatHostBytes(file.bytes) : "empty"}</em>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="host-memory-list">
+                    {hostMemoryShards.slice(0, 6).map((shard) => (
+                      <div className="host-memory-item" key={shard.id || shard.text}>
+                        <span>{shard.text || "Untitled memory"}</span>
+                        <button type="button" onClick={() => handleDeleteHostMemoryShard(shard)} disabled={hostPrivacyBusy}>
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                    {hostMemoryShards.length === 0 && <div className="host-memory-empty">No host memory shards loaded.</div>}
+                  </div>
+                </div>
+              </section>
+
+              <section className="settings-page" hidden={settingsSection !== "app"} aria-label="App settings">
+                <div className="settings-page-title">App</div>
+                <div className="settings-page-grid">
+                  <div className="settings-group settings-toggle-row">
+                    <label htmlFor="dark-mode">Dark Mode</label>
+                    <input
+                      id="dark-mode"
+                      type="checkbox"
+                      checked={settings.darkMode}
+                      onChange={(e) => setSettings({ ...settings, darkMode: e.target.checked })}
+                    />
+                  </div>
+
+                  <div className="settings-group">
+                    <button
+                      type="button"
+                      className="full-width-btn"
+                      onClick={handleCheckClientUpdates}
+                      disabled={isCheckingUpdate}
+                    >
+                      {isCheckingUpdate ? "Checking for Client Updates..." : "Check Client Updates"}
+                    </button>
+                    {updateMessage && <p className="settings-note">{updateMessage}</p>}
+                  </div>
+
+                  <div className="settings-group">
+                    <button
+                      type="button"
+                      className="full-width-btn danger-btn"
+                      onClick={handleDeleteAllChats}
+                    >
+                      Delete All Chats
+                    </button>
+                    <p className="settings-note">Clears saved companion transcripts and unread counts on this computer.</p>
+                  </div>
+                </div>
+              </section>
             </div>
-
-            <details className="settings-advanced">
-              <summary>More host details</summary>
-              <div className="settings-advanced-grid">
-                <div className="settings-group">
-                  <label htmlFor="host-name">Host Label</label>
-                  <input
-                    id="host-name"
-                    value={activeHost()?.name || ""}
-                    onChange={(e) => updateActiveHost({ name: e.target.value })}
-                  />
-                </div>
-
-                <div className="settings-group">
-                  <label htmlFor="host-avatar-id">Buddy Avatar</label>
-                  <select
-                    id="host-avatar-id"
-                    value={activeAvatarId}
-                    onChange={(e) => updateActiveHost({ avatarId: e.target.value })}
-                  >
-                    <option value="caroline">Caroline</option>
-                    <option value="carl">Carl</option>
-                    <option value="catoline">Catoline</option>
-                    <option value="robot">Robot</option>
-                  </select>
-                </div>
-
-                <div className="settings-group settings-group-wide">
-                  <label htmlFor="companion-name">Client Display Name</label>
-                  <input
-                    id="companion-name"
-                    value={settings.companionName}
-                    onChange={(e) => setSettings({ ...settings, companionName: e.target.value })}
-                    placeholder={`${chatUserName(settings, activeHostUserName)}'s Companion`}
-                  />
-                  <p className="settings-note">Shown to the host when this computer connects.</p>
-                </div>
-              </div>
-            </details>
-
-            <details className="settings-advanced">
-              <summary>Maintenance & privacy</summary>
-              <div className="settings-advanced-grid">
-                <div className="settings-group">
-                  <button
-                    type="button"
-                    className="full-width-btn"
-                    onClick={handleCheckClientUpdates}
-                    disabled={isCheckingUpdate}
-                  >
-                    {isCheckingUpdate ? "Checking for Client Updates..." : "Check Client Updates"}
-                  </button>
-                  {updateMessage && <p className="settings-note">{updateMessage}</p>}
-                </div>
-
-                <div className="settings-group">
-                  <button
-                    type="button"
-                    className="full-width-btn danger-btn"
-                    onClick={handleDeleteAllChats}
-                  >
-                    Delete All Chats
-                  </button>
-                  <p className="settings-note">Clears saved companion transcripts and unread counts on this computer.</p>
-                </div>
-              </div>
-            </details>
-
           </section>
         )}
 
