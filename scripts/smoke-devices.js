@@ -231,7 +231,7 @@ async function smokeTarget(target, opts) {
       context: { features: { calendar: false } },
     }, opts);
     const replyText = textFromChat(gated);
-    const gatedReply = /\b(not linked|connect|settings|off|disabled|not enabled)\b/i.test(replyText);
+    const gatedReply = /\bcalendar is turned off\b|\bcalendar widget is (?:turned )?off\b/i.test(replyText);
     checks.push(gated.response.ok && gatedReply ? pass('widget gating', replyText.slice(0, 160)) : fail('widget gating', `reply=${replyText.slice(0, 160)}`));
   } catch (error) {
     checks.push(fail('widget gating', error.message));
