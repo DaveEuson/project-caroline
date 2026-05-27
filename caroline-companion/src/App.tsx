@@ -86,6 +86,7 @@ type HostSetupSettings = {
   wakeWordEnabled: boolean;
   wakePhrases: string;
   features: HostFeatureSettings;
+  featuresUpdatedAt: number;
 };
 
 type HostHealth = {
@@ -260,6 +261,7 @@ const HOST_SETUP_DEFAULTS: HostSetupSettings = {
   wakeWordEnabled: false,
   wakePhrases: "hey caroline, hey ai",
   features: HOST_FEATURE_DEFAULTS,
+  featuresUpdatedAt: 0,
 };
 
 let localMessageId = Date.now();
@@ -685,6 +687,7 @@ function normalizeHostSetupSettings(value: unknown): HostSetupSettings {
     wakeWordEnabled: boolSetting(record, "wakeWordEnabled"),
     wakePhrases: stringSetting(record, "wakePhrases", HOST_SETUP_DEFAULTS.wakePhrases),
     features: normalizeHostFeatures(record.features),
+    featuresUpdatedAt: Number(record.featuresUpdatedAt) || 0,
   };
 }
 
@@ -853,6 +856,7 @@ function hostSettingsPayload(setup: HostSetupSettings) {
     wakeWordEnabled: setup.wakeWordEnabled,
     wakePhrases: setup.wakePhrases,
     features: normalizeHostFeatures(setup.features),
+    featuresUpdatedAt: setup.featuresUpdatedAt || Date.now(),
     setupComplete: true,
   };
 }
@@ -1611,6 +1615,7 @@ export default function App() {
         ...normalizeHostFeatures(previous.features),
         [field]: value,
       },
+      featuresUpdatedAt: Date.now(),
     }));
   }
 

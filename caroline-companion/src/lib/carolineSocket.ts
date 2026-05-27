@@ -68,7 +68,13 @@ function parseIncomingMessage(data: unknown): CarolineSocketMessage | null {
 
       const msgType = typeof record.type === "string" ? record.type : undefined;
 
-      if (msgType === "system_stats" || msgType === "client_heartbeat" || msgType === "assistant_typing") {
+      if (
+        msgType === "system_stats" ||
+        msgType === "client_heartbeat" ||
+        msgType === "assistant_typing" ||
+        msgType === "settings_changed" ||
+        msgType === "settings_confirmed"
+      ) {
         return null;
       }
 
