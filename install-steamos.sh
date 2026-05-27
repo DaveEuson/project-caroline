@@ -294,7 +294,13 @@ case "$HOME_LINUX_PROFILE" in
     ;;
 esac
 export CAROLINE_PLATFORM CAROLINE_HOST_DEVICE_TYPE CAROLINE_HARDWARE_PROFILE CAROLINE_HOME_LABEL
-CAROLINE_BIND_HOST="${CAROLINE_BIND_HOST:-127.0.0.1}"
+existing_bind_host() {
+  if [ -f "$CAROLINE_DIR/settings.js" ]; then
+    sed -n 's/.*uiHost: process\.env\.CAROLINE_BIND_HOST || "\([^"]*\)".*/\1/p' "$CAROLINE_DIR/settings.js" | head -1
+  fi
+}
+EXISTING_BIND_HOST="$(existing_bind_host)"
+CAROLINE_BIND_HOST="${CAROLINE_BIND_HOST:-${EXISTING_BIND_HOST:-127.0.0.1}}"
 export CAROLINE_BIND_HOST
 
 say "${BOLD}${CYAN}  Project: Caroline${RESET} ${DIM}${CAROLINE_HOME_LABEL} experimental installer v${CAROLINE_VERSION}${RESET}"
@@ -762,6 +768,7 @@ WorkingDirectory=${CAROLINE_DIR}
 Environment=PATH=${NODE_CURRENT}/bin:/usr/local/bin:/usr/bin:/bin
 Environment=CAROLINE_DIR=${CAROLINE_DIR}
 Environment=PORT=${CAROLINE_PORT}
+Environment=CAROLINE_BIND_HOST=${CAROLINE_BIND_HOST}
 ExecStart=${NODERED_RUNTIME}/node_modules/.bin/node-red --userDir ${CAROLINE_DIR} --port ${CAROLINE_PORT}
 UMask=0077
 Restart=on-failure
