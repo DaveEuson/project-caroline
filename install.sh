@@ -180,9 +180,12 @@ PALETTE_NODES=(
   "node-red-contrib-google-sheets"
 )
 
-OLLAMA_MODEL_VALUES=("qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
+OLLAMA_MODEL_VALUES=("qwen3:1.7b" "mistral:7b" "gemma4:e4b" "qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
 OLLAMA_MODEL_LABELS=(
-  "Recommended local quality; best Caroline balance"
+  "Recommended Steam Deck / light GPU quality; best small-host balance"
+  "Recommended NVIDIA 8GB quality; best RTX 2070-class balance"
+  "Strong GPU quality mode; best on 12GB+ VRAM"
+  "Conservative CPU/Pi/VM quality; best low-risk Linux balance"
   "Fast local fallback; quickest on small hardware"
   "Safe/legacy default; stable older-install choice"
 )
@@ -620,6 +623,103 @@ cpu_model_summary() {
   awk -F: '/model name|Hardware|Processor/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null
 }
 
+os_release_field() {
+  local _key="$1"
+  [ -r /etc/os-release ] || return 0
+  awk -F= -v key="$_key" '
+    $1 == key {
+      value=$0
+      sub(/^[^=]*=/, "", value)
+      gsub(/^"/, "", value)
+      gsub(/"$/, "", value)
+      print value
+      exit
+    }
+  ' /etc/os-release 2>/dev/null
+}
+
+os_label() {
+  local _id="${1:-$(os_release_field ID)}"
+  local _id_like="${2:-$(os_release_field ID_LIKE)}"
+  case "$_id" in
+    raspbian) printf 'Raspberry Pi OS' ;;
+    ubuntu) printf 'Ubuntu' ;;
+    debian) printf 'Debian' ;;
+    pop) printf 'Pop!_OS' ;;
+    linuxmint) printf 'Linux Mint' ;;
+    zorin) printf 'Zorin OS' ;;
+    elementary) printf 'elementary OS' ;;
+    bazzite) printf 'Bazzite' ;;
+    steamos) printf 'SteamOS' ;;
+    *)
+      if printf '%s' "$_id_like" | grep -qiE '(^| )(ubuntu)( |$)'; then
+        printf 'Ubuntu-family Linux'
+      elif printf '%s' "$_id_like" | grep -qiE '(^| )(debian)( |$)'; then
+        printf 'Debian-family Linux'
+      else
+        printf 'Unrecognized Linux'
+      fi
+      ;;
+  esac
+}
+
+is_supported_apt_os() {
+  local _id="${1:-$(os_release_field ID)}"
+  local _id_like="${2:-$(os_release_field ID_LIKE)}"
+  case "$_id" in
+    raspbian|debian|ubuntu|pop|linuxmint|zorin|elementary)
+      return 0
+      ;;
+  esac
+  printf '%s' "$_id_like" | grep -qiE '(^| )(ubuntu|debian)( |$)'
+}
+
+gpu_vram_mb() {
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null |
+      awk 'NR==1 {gsub(/[^0-9]/, "", $1); found=1; print int($1)} END {if (!found) print 0}'
+  else
+    echo 0
+  fi
+}
+
+gpu_summary() {
+  local _line _name _mem _gpu
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    _line="$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 || true)"
+    if [ -n "$_line" ]; then
+      _name="${_line%%,*}"
+      _mem="${_line#*,}"
+      _name="$(printf '%s' "$_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+      _mem="$(printf '%s' "$_mem" | tr -dc '0-9')"
+      case "$_name" in
+        *NVIDIA*|*nvidia*) printf '%s' "$_name" ;;
+        *) printf 'NVIDIA %s' "$_name" ;;
+      esac
+      [ -n "$_mem" ] && printf ' (%sMB VRAM)' "$_mem"
+      return 0
+    fi
+  fi
+
+  if command -v lspci >/dev/null 2>&1; then
+    _gpu="$(lspci 2>/dev/null | awk -F': ' '/VGA compatible controller|3D controller|Display controller/ {print $2; exit}')"
+    if [ -n "$_gpu" ]; then
+      printf '%s' "$_gpu"
+      return 0
+    fi
+  fi
+
+  local _vendor
+  for _vendor in /sys/class/drm/card*/device/vendor; do
+    [ -r "$_vendor" ] || continue
+    case "$(cat "$_vendor" 2>/dev/null)" in
+      0x10de) printf 'NVIDIA GPU'; return 0 ;;
+      0x1002|0x1022) printf 'AMD GPU'; return 0 ;;
+      0x8086) printf 'Intel GPU'; return 0 ;;
+    esac
+  done
+}
+
 is_steam_deck() {
   local _facts
   _facts="$(
@@ -638,8 +738,10 @@ caroline_hardware_profile() {
     printf 'Steam Deck / SteamOS-compatible PC'
   elif is_raspberry_pi; then
     printf 'Raspberry Pi'
+  elif gpu_summary | grep -qiE 'nvidia|geforce|rtx|gtx|quadro'; then
+    printf 'Linux x86_64 with NVIDIA GPU'
   elif printf '%s' "$_arch" | grep -qiE '^(x86_64|amd64)$'; then
-    printf 'Ubuntu/Linux x86_64'
+    printf '%s x86_64' "$(os_label)"
   elif printf '%s' "$_arch" | grep -qiE '^(aarch64|arm64|armv)'; then
     printf 'Linux ARM'
   else
@@ -654,7 +756,7 @@ caroline_device_type() {
     printf 'Steam'
   elif is_raspberry_pi; then
     printf 'Pi'
-  elif [ -r /etc/os-release ] && grep -qiE '^ID=(ubuntu|pop|debian)' /etc/os-release; then
+  elif [ -r /etc/os-release ] && grep -qiE '^ID=(ubuntu|pop|debian|linuxmint|zorin|elementary)' /etc/os-release; then
     printf 'Ubuntu'
   else
     printf 'Ubuntu'
@@ -663,19 +765,29 @@ caroline_device_type() {
 
 recommended_ollama_model() {
   local _ram_mb="${1:-$(total_ram_mb)}"
+  local _gpu_vram_mb="${2:-$(gpu_vram_mb)}"
+  local _gpu_summary="${3:-$(gpu_summary)}"
   local _arch
   _arch="$(uname -m 2>/dev/null || echo unknown)"
 
   if [ "$_ram_mb" -gt 0 ] && [ "$_ram_mb" -lt 4096 ]; then
     printf 'qwen2.5:0.5b'
-  elif is_steam_deck; then
+  elif is_wsl; then
     printf 'qwen2.5:1.5b'
+  elif is_steam_deck; then
+    printf 'qwen3:1.7b'
   elif is_raspberry_pi; then
     if [ "$_ram_mb" -ge 6000 ]; then
       printf 'qwen2.5:1.5b'
     else
       printf 'qwen2.5:0.5b'
     fi
+  elif printf '%s' "$_gpu_summary" | grep -qiE 'nvidia|geforce|rtx|gtx|quadro' && [ "$_gpu_vram_mb" -ge 11000 ]; then
+    printf 'gemma4:e4b'
+  elif printf '%s' "$_gpu_summary" | grep -qiE 'nvidia|geforce|rtx|gtx|quadro' && [ "$_gpu_vram_mb" -ge 7000 ]; then
+    printf 'mistral:7b'
+  elif printf '%s' "$_gpu_summary" | grep -qiE 'nvidia|geforce|rtx|gtx|quadro' && [ "$_gpu_vram_mb" -ge 3500 ]; then
+    printf 'qwen3:1.7b'
   elif printf '%s' "$_arch" | grep -qiE '^(x86_64|amd64)$'; then
     printf 'qwen2.5:1.5b'
   else
@@ -686,18 +798,28 @@ recommended_ollama_model() {
 recommended_ollama_reason() {
   local _model="$1"
   local _ram_mb="${2:-0}"
+  local _gpu_vram_mb="${3:-$(gpu_vram_mb)}"
+  local _gpu_summary="${4:-$(gpu_summary)}"
   if is_wsl; then
     printf 'WSL detected; use OpenRouter or Windows Ollama, but this is the best remote/local target.'
   elif is_steam_deck; then
-    printf 'Steam Deck-class hardware should have enough RAM/CPU for the balanced local model.'
+    printf 'Steam Deck-class hardware detected; qwen3:1.7b is the best tested local balance.'
   elif [ "$_ram_mb" -gt 0 ] && [ "$_ram_mb" -lt 4096 ]; then
     printf 'Under 4GB RAM detected, so the fastest small local model is safer.'
   elif is_raspberry_pi && [ "$_model" = "qwen2.5:0.5b" ]; then
     printf 'Raspberry Pi with limited RAM detected, so responsiveness wins over quality.'
   elif is_raspberry_pi; then
     printf 'Raspberry Pi with enough RAM detected; this was the best local Caroline balance in testing.'
+  elif printf '%s' "$_gpu_summary" | grep -qiE 'nvidia|geforce|rtx|gtx|quadro' && [ "$_gpu_vram_mb" -ge 11000 ]; then
+    printf 'NVIDIA GPU with 12GB-class VRAM detected; gemma4:e4b is the tested quality pick.'
+  elif printf '%s' "$_gpu_summary" | grep -qiE 'nvidia|geforce|rtx|gtx|quadro' && [ "$_gpu_vram_mb" -ge 7000 ]; then
+    printf 'NVIDIA GPU with 8GB-class VRAM detected; mistral:7b is the best tested balance.'
+  elif printf '%s' "$_gpu_summary" | grep -qiE 'nvidia|geforce|rtx|gtx|quadro' && [ "$_gpu_vram_mb" -ge 3500 ]; then
+    printf 'NVIDIA GPU detected, but VRAM is below 8GB; qwen3:1.7b keeps local chat responsive.'
+  elif [ -n "$_gpu_summary" ]; then
+    printf 'GPU detected but VRAM is unknown; using the conservative Linux local model.'
   else
-    printf 'General Linux hardware detected; this is the best local Caroline balance in testing.'
+    printf 'CPU-only or unknown-GPU Linux hardware detected; this is the conservative local model.'
   fi
 }
 
@@ -732,6 +854,8 @@ telemetry_emit() {
   local _os_name
   local _arch
   local _device_model
+  local _gpu_summary
+  local _gpu_vram_mb
   local _node_version
   local _npm_version
   local _node_red_version
@@ -748,6 +872,8 @@ telemetry_emit() {
   _os_name=$(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-$ID $VERSION_ID}" || echo "unknown")
   _arch=$(uname -m 2>/dev/null || echo "unknown")
   _device_model="$(caroline_device_model)"
+  _gpu_summary="$(gpu_summary)"
+  _gpu_vram_mb="$(gpu_vram_mb)"
   _node_version="$(safe_cmd_version node --version)"
   _npm_version="$(safe_cmd_version npm --version)"
   _node_red_version="$(safe_cmd_version node-red --version)"
@@ -769,6 +895,8 @@ telemetry_emit() {
     --arg os "$_os_name" \
     --arg arch "$_arch" \
     --arg deviceModel "$_device_model" \
+    --arg gpu "$_gpu_summary" \
+    --argjson gpuVramMb "${_gpu_vram_mb:-0}" \
     --arg aiProvider "${AI_PROVIDER:-}" \
     --arg ollamaModel "${OLLAMA_MODEL:-}" \
     --arg nodeVersion "$_node_version" \
@@ -793,7 +921,9 @@ telemetry_emit() {
       platform: {
         os: $os,
         arch: $arch,
-        deviceModel: $deviceModel
+        deviceModel: $deviceModel,
+        gpu: $gpu,
+        gpuVramMb: $gpuVramMb
       },
       kioskMode: $kiosk,
       aiProvider: $aiProvider,
@@ -889,12 +1019,29 @@ echo ""
 sleep 1
 
 # ── OS VERSION CHECK ─────────────────────────────────────────
-OS_ID=$(. /etc/os-release 2>/dev/null && echo "$ID" || echo "unknown")
-OS_VER=$(. /etc/os-release 2>/dev/null && echo "$VERSION_CODENAME" || echo "unknown")
-if [[ "$OS_ID" != "raspbian" && "$OS_ID" != "debian" && "$OS_ID" != "ubuntu" ]]; then
+OS_ID="$(os_release_field ID)"
+OS_ID="${OS_ID:-unknown}"
+OS_LIKE="$(os_release_field ID_LIKE)"
+OS_PRETTY="$(os_release_field PRETTY_NAME)"
+OS_PRETTY="${OS_PRETTY:-$OS_ID}"
+OS_VER="$(os_release_field VERSION_CODENAME)"
+OS_VER="${OS_VER:-$(os_release_field VERSION_ID)}"
+OS_VER="${OS_VER:-unknown}"
+OS_SUPPORT_LABEL="$(os_label "$OS_ID" "$OS_LIKE")"
+
+echo -e "${CYAN}  Detected OS:${RESET} ${BOLD}${OS_PRETTY}${RESET} ${DIM}(${OS_SUPPORT_LABEL})${RESET}"
+if [[ "$OS_ID" == "steamos" || "$OS_ID" == "bazzite" ]]; then
+  echo -e "${YELLOW}  ⚠ ${OS_SUPPORT_LABEL} uses the home-directory installer.${RESET}"
+  echo -e "${DIM}    Run: ./install-steamos.sh${RESET}"
+  echo -e "${DIM}    Or from GitHub: curl -fsSL ${CAROLINE_RAW_BASE}/${CAROLINE_CHANNEL}/install-steamos.sh | bash${RESET}"
+  exit 1
+elif ! is_supported_apt_os "$OS_ID" "$OS_LIKE"; then
   echo -e "${YELLOW}  ⚠ Unrecognized OS: ${OS_ID} ${OS_VER}${RESET}"
-  echo -e "${DIM}  Caroline is designed for Raspberry Pi OS, with 64-bit Ubuntu/Debian/Linux as an alternate path.${RESET}"
-  echo -e "${DIM}  Continuing anyway — things may break.${RESET}"
+  echo -e "${DIM}  Acknowledged beta paths: Raspberry Pi OS, Ubuntu Server/Desktop, Debian, Pop!_OS, Linux Mint, Zorin OS, elementary OS.${RESET}"
+  echo -e "${DIM}  Continuing anyway — package names or service setup may break.${RESET}"
+  echo ""
+else
+  echo -e "${DIM}  Acknowledged beta path. Raspberry Pi OS and Ubuntu remain the most tested public installs.${RESET}"
   echo ""
 fi
 
@@ -926,16 +1073,16 @@ echo ""
 echo -e "${MAGENTA}  // CAROLINE ARCHIVE — ASSISTANT CORE${RESET}"
 echo ""
 echo -e "${DIM}  Best experience: OpenRouter. Fast, coherent, and usually costs pennies per month.${RESET}"
-echo -e "${DIM}  Recommended local quality: qwen2.5:1.5b. Best Caroline balance from local testing.${RESET}"
-echo -e "${DIM}  Fast local fallback: qwen2.5:0.5b. Quickest on small hardware.${RESET}"
-echo -e "${DIM}  Safe/legacy default: gemma3:1b. Stable older-install choice.${RESET}"
+echo -e "${DIM}  Local AI is selected from OS, CPU architecture, RAM, and GPU/VRAM when detectable.${RESET}"
 TOTAL_RAM_MB="$(total_ram_mb)"
 SYSTEM_ARCH="$(uname -m 2>/dev/null || echo unknown)"
 DEVICE_MODEL="$(caroline_device_model)"
 CPU_MODEL="$(cpu_model_summary)"
+GPU_SUMMARY="$(gpu_summary)"
+GPU_VRAM_MB="$(gpu_vram_mb)"
 HARDWARE_PROFILE="$(caroline_hardware_profile)"
-RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB")"
-RECOMMENDED_OLLAMA_REASON="$(recommended_ollama_reason "$RECOMMENDED_OLLAMA_MODEL" "$TOTAL_RAM_MB")"
+RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB" "$GPU_VRAM_MB" "$GPU_SUMMARY")"
+RECOMMENDED_OLLAMA_REASON="$(recommended_ollama_reason "$RECOMMENDED_OLLAMA_MODEL" "$TOTAL_RAM_MB" "$GPU_VRAM_MB" "$GPU_SUMMARY")"
 if is_wsl; then
   WSL_WINDOWS_HOST_IP="$(wsl_windows_host_ip)"
   if [ -n "$WSL_WINDOWS_HOST_IP" ]; then
@@ -954,11 +1101,19 @@ fi
 if [ -n "$CPU_MODEL" ]; then
   echo -e "${DIM}    CPU: ${CPU_MODEL}${RESET}"
 fi
+if [ -n "$GPU_SUMMARY" ]; then
+  echo -e "${DIM}    GPU: ${GPU_SUMMARY}${RESET}"
+else
+  echo -e "${DIM}    GPU: not detected; using CPU-only/local fallback guidance${RESET}"
+fi
 echo -e "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
 echo -e "${DIM}    ${RECOMMENDED_OLLAMA_REASON}${RESET}"
 echo ""
 echo -e "${DIM}  Local model options you can type if you install Ollama:${RESET}"
-echo -e "${DIM}    qwen2.5:1.5b  recommended local quality; best Caroline balance.${RESET}"
+echo -e "${DIM}    qwen3:1.7b    Steam Deck / light GPU quality; best small-host balance.${RESET}"
+echo -e "${DIM}    mistral:7b    NVIDIA 8GB quality; best RTX 2070-class balance.${RESET}"
+echo -e "${DIM}    gemma4:e4b    strong GPU quality mode; best on 12GB+ VRAM.${RESET}"
+echo -e "${DIM}    qwen2.5:1.5b  conservative CPU/Pi/VM quality; low-risk Linux balance.${RESET}"
 echo -e "${DIM}    qwen2.5:0.5b  fast local fallback; quickest on small hardware.${RESET}"
 echo -e "${DIM}    gemma3:1b      safe/legacy default; stable older-install choice.${RESET}"
 echo ""
@@ -1446,6 +1601,11 @@ BUILD_COMMIT="$(git -C "$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || echo u
 BUILD_BRANCH="$(git -C "$CLONE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
 BUILD_REPO="$(git -C "$CLONE_DIR" config --get remote.origin.url 2>/dev/null || echo "$CAROLINE_REPO_URL")"
 BUILD_INSTALLED_AT="$(date -Iseconds)"
+BUILD_GPU_SUMMARY="${GPU_SUMMARY:-$(gpu_summary)}"
+BUILD_GPU_VRAM_MB="${GPU_VRAM_MB:-$(gpu_vram_mb)}"
+case "$BUILD_GPU_VRAM_MB" in
+  ''|*[!0-9]*) BUILD_GPU_VRAM_MB=0 ;;
+esac
 jq -n \
   --arg version "$CAROLINE_VERSION" \
   --arg commit "$BUILD_COMMIT" \
@@ -1456,7 +1616,9 @@ jq -n \
   --arg hostname "$(hostname)" \
   --arg deviceType "$(caroline_device_type)" \
   --arg hardwareProfile "$(caroline_hardware_profile)" \
-  '{ version: $version, commit: $commit, branch: $branch, channel: $channel, repo: $repo, installedAt: $installedAt, hostname: $hostname, deviceType: $deviceType, hardwareProfile: $hardwareProfile }' \
+  --arg gpu "$BUILD_GPU_SUMMARY" \
+  --argjson gpuVramMb "$BUILD_GPU_VRAM_MB" \
+  '{ version: $version, commit: $commit, branch: $branch, channel: $channel, repo: $repo, installedAt: $installedAt, hostname: $hostname, deviceType: $deviceType, hardwareProfile: $hardwareProfile, gpu: $gpu, gpuVramMb: $gpuVramMb }' \
   > "$CAROLINE_DIR/caroline_build.json"
 sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_DIR/caroline_build.json"
 printf '%s\n' "$CAROLINE_CHANNEL" > "$CAROLINE_DIR/caroline_channel"

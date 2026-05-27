@@ -175,6 +175,7 @@ During install, record:
 
 - OS and version.
 - CPU architecture from `uname -m`.
+- GPU from `nvidia-smi --query-gpu=name,memory.total --format=csv,noheader` when NVIDIA is available, otherwise `lspci | grep -Ei 'vga|3d|display'`.
 - RAM from `free -h`.
 - Whether you selected kiosk mode.
 - Whether you installed Ollama.

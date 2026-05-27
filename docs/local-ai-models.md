@@ -67,6 +67,7 @@ Full popular + Gemma 4 direct Ollama benchmark, May 26, 2026. Warm average exclu
 ## Practical Guidance
 
 - Use OpenRouter for the public beta default if API use is acceptable.
+- The Linux installers now check OS, CPU architecture, RAM, and detectable GPU/VRAM before picking a default local model.
 - Use `qwen3:1.7b` for Steam Deck and low-power Bazzite handheld/laptop-style hosts.
 - Use `mistral:7b` for Bazzite or Linux NVIDIA laptops with RTX 2070-class GPUs and 8GB VRAM.
 - Use `gemma4:e4b` on RTX 4070-class desktops when quality matters more than first-token delay.

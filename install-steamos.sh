@@ -121,6 +121,39 @@ gpu_vram_mb() {
     echo 0
   fi
 }
+gpu_summary() {
+  local line name mem gpu vendor
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    line="$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 || true)"
+    if [ -n "$line" ]; then
+      name="${line%%,*}"
+      mem="${line#*,}"
+      name="$(printf '%s' "$name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+      mem="$(printf '%s' "$mem" | tr -dc '0-9')"
+      case "$name" in
+        *NVIDIA*|*nvidia*) printf '%s' "$name" ;;
+        *) printf 'NVIDIA %s' "$name" ;;
+      esac
+      [ -n "$mem" ] && printf ' (%sMB VRAM)' "$mem"
+      return 0
+    fi
+  fi
+  if command -v lspci >/dev/null 2>&1; then
+    gpu="$(lspci 2>/dev/null | awk -F': ' '/VGA compatible controller|3D controller|Display controller/ {print $2; exit}')"
+    if [ -n "$gpu" ]; then
+      printf '%s' "$gpu"
+      return 0
+    fi
+  fi
+  for vendor in /sys/class/drm/card*/device/vendor; do
+    [ -r "$vendor" ] || continue
+    case "$(cat "$vendor" 2>/dev/null)" in
+      0x10de) printf 'NVIDIA GPU'; return 0 ;;
+      0x1002|0x1022) printf 'AMD GPU'; return 0 ;;
+      0x8086) printf 'Intel GPU'; return 0 ;;
+    esac
+  done
+}
 recommended_ollama_model() {
   local ram_mb="${1:-$(total_ram_mb)}"
   if [ "$ram_mb" -gt 0 ] && [ "$ram_mb" -lt 4096 ]; then
@@ -266,7 +299,7 @@ supported_home_linux_profile() {
 HOME_LINUX_PROFILE="$(supported_home_linux_profile || true)"
 if [ -z "$HOME_LINUX_PROFILE" ]; then
   say "${RED}This experimental installer is only for SteamOS-compatible home-directory installs.${RESET}"
-  say "${DIM}Supported here: SteamOS and Bazzite. Use install.sh for Raspberry Pi OS, Ubuntu, or Debian.${RESET}"
+  say "${DIM}Supported here: SteamOS and Bazzite. Use install.sh for Raspberry Pi OS, Ubuntu, Debian, or Ubuntu-family desktops.${RESET}"
   exit 1
 fi
 
@@ -381,6 +414,7 @@ say "${MAGENTA}  // CAROLINE ARCHIVE - ASSISTANT CORE${RESET}"
 TOTAL_RAM_MB="$(total_ram_mb)"
 CPU_MODEL="$(cpu_model_summary)"
 GPU_VRAM_MB="$(gpu_vram_mb)"
+GPU_SUMMARY="$(gpu_summary)"
 RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB")"
 say "${DIM}  Best experience: OpenRouter. Use your API key in Settings -> AI.${RESET}"
 if [ "$CAROLINE_PLATFORM" = "bazzite" ] && [ "$GPU_VRAM_MB" -ge 7000 ]; then
@@ -396,8 +430,12 @@ say "${CYAN}  Detected hardware:${RESET} ${BOLD}${CAROLINE_HARDWARE_PROFILE}${RE
 if [ -n "$CPU_MODEL" ]; then
   say "${DIM}    CPU: ${CPU_MODEL}${RESET}"
 fi
-if [ "$GPU_VRAM_MB" -gt 0 ]; then
+if [ -n "$GPU_SUMMARY" ]; then
+  say "${DIM}    GPU: ${GPU_SUMMARY}${RESET}"
+elif [ "$GPU_VRAM_MB" -gt 0 ]; then
   say "${DIM}    NVIDIA VRAM: ${GPU_VRAM_MB}MB${RESET}"
+else
+  say "${DIM}    GPU: not detected; using SteamOS/local fallback guidance${RESET}"
 fi
 say "${CYAN}  Suggested local model:${RESET} ${BOLD}${RECOMMENDED_OLLAMA_MODEL}${RESET}"
     say "${DIM}    Local model support is experimental; Ollama can be installed as a user service without changing system packages.${RESET}"
@@ -569,7 +607,9 @@ BUILD_COMMIT="$(git -C "$CLONE_DIR" rev-parse --short HEAD 2>/dev/null || echo u
 BUILD_BRANCH="$(git -C "$CLONE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "$CAROLINE_CHANNEL")"
 BUILD_INSTALLED_AT="$(date -Is)"
 BUILD_HOSTNAME="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo steamdeck)"
-export BUILD_COMMIT BUILD_BRANCH BUILD_INSTALLED_AT BUILD_HOSTNAME CAROLINE_VERSION CAROLINE_REPO_URL CAROLINE_CHANNEL
+BUILD_GPU_SUMMARY="${GPU_SUMMARY:-$(gpu_summary)}"
+BUILD_GPU_VRAM_MB="${GPU_VRAM_MB:-$(gpu_vram_mb)}"
+export BUILD_COMMIT BUILD_BRANCH BUILD_INSTALLED_AT BUILD_HOSTNAME BUILD_GPU_SUMMARY BUILD_GPU_VRAM_MB CAROLINE_VERSION CAROLINE_REPO_URL CAROLINE_CHANNEL
 node <<'NODE_BUILD'
 const fs = require('fs');
 const path = process.env.CAROLINE_DIR;
@@ -583,7 +623,9 @@ const build = {
   hostname: process.env.BUILD_HOSTNAME || '',
   platform: process.env.CAROLINE_PLATFORM || 'steamos',
   deviceType: process.env.CAROLINE_HOST_DEVICE_TYPE || 'Steam',
-  hardwareProfile: process.env.CAROLINE_HARDWARE_PROFILE || 'Steam Deck / SteamOS'
+  hardwareProfile: process.env.CAROLINE_HARDWARE_PROFILE || 'Steam Deck / SteamOS',
+  gpu: process.env.BUILD_GPU_SUMMARY || '',
+  gpuVramMb: Number(process.env.BUILD_GPU_VRAM_MB || 0) || 0
 };
 fs.writeFileSync(`${path}/caroline_build.json`, JSON.stringify(build, null, 2) + '\n');
 NODE_BUILD

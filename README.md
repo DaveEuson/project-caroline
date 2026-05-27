@@ -109,6 +109,8 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 | Raspberry Pi OS Desktop 64-bit | Validated primary beta | Dedicated kiosk screen |
 | Ubuntu Server 64-bit | Supported | Server/client mode from another browser |
 | Ubuntu Desktop 64-bit | Validated | Server/client mode from another browser; local kiosk mode is less tested |
+| Debian 12 64-bit | Supported beta-family | Server/client mode; less tested than Ubuntu |
+| Pop!_OS / Linux Mint / Zorin / elementary | Acknowledged Ubuntu-family beta | Linux desktops and GPU laptops; treat as smoke-test targets |
 | Steam Deck / SteamOS | Smoke-validated nightly | Repurposed handheld desk terminal |
 | Bazzite 44 / NVIDIA laptop | Smoke-validated beta | GPU-backed local AI host in server/client mode |
 | Phone / tablet browser | Mobile client view | Quick chat, status, settings, and remote controls on your LAN |
@@ -118,6 +120,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 
 - Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
 - Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter as the preferred AI path, and lazy-loaded visual media.
+- Debian and Ubuntu-family desktops are now acknowledged by the installer so testers see a clear beta-family message instead of an unrecognized-OS warning.
 - Steam Deck / SteamOS support tracks nightly and is smoke-validated in server/client mode by stable IP; mDNS hostnames can be slower from Windows networks.
 - Bazzite 44 with NVIDIA RTX 2070 Max-Q is smoke-validated as a LAN host with local Ollama. `mistral:7b` is the recommended default; `qwen3:1.7b` is the fast fallback.
 - Phone and tablet browsers are lightweight Caroline clients, not separate installs; they work best on the same trusted LAN as the host.
@@ -149,10 +152,10 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 
 ## AI Options
 
-The installer detects your hardware, RAM, and platform, then preselects the local model it thinks fits best. You can still override the choice during setup.
+The installer detects your OS, CPU architecture, RAM, and GPU/VRAM when available, then preselects the local model it thinks fits best. You can still override the choice during setup.
 
 - Best experience: **OpenRouter**
-- Raspberry Pi / Ubuntu local quality: **qwen2.5:1.5b**
+- Raspberry Pi / Ubuntu CPU-only local quality: **qwen2.5:1.5b**
 - Steam Deck local quality: **qwen3:1.7b**
 - Bazzite / RTX 2070 local quality: **mistral:7b**
 - RTX 4070-class desktop local quality: **gemma4:e4b**
@@ -164,7 +167,7 @@ For platform-specific rankings from the latest direct Ollama benchmarks, see [Lo
 
 ## Requirements
 
-- 64-bit Raspberry Pi OS or Ubuntu; SteamOS is experimental on nightly
+- 64-bit Raspberry Pi OS, Ubuntu, Debian, or Ubuntu-family Linux; SteamOS/Bazzite use the experimental home-directory installer on nightly
 - 4GB RAM minimum; 6-8GB is better for local AI
 - 50GB disk recommended for Ubuntu VM local Ollama testing; 12GB images are too small for the recommended model after OS and runtime packages
 - Internet during install

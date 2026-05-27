@@ -81,7 +81,7 @@ Recommended answers:
 - Kiosk mode: **No** for testing
 - Kiosk mode: **Yes** only if this is a dedicated display machine
 
-For local Ollama, `qwen2.5:1.5b` is validated on a 50GB Ubuntu Desktop VM with CPU-only Ollama. Use `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice. Strong GPU desktops can use the [local model recommendations](local-ai-models.md) instead.
+For local Ollama, the installer checks CPU architecture, RAM, and detectable GPU/VRAM before choosing a model. `qwen2.5:1.5b` is validated on a 50GB Ubuntu Desktop VM with CPU-only Ollama. Use `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice. Strong GPU desktops can use the [local model recommendations](local-ai-models.md) instead.
 
 If kiosk or XRDP behaves strangely on Ubuntu Desktop, use server/client mode instead:
 
