@@ -239,6 +239,13 @@ for (const [surface, nodeId] of buildNodes) {
   test(`${surface}: safe non-action replies`, () => {
     assertNoAction(nodeId, 'I have feedback', 'what Dave should change');
     assertNoAction(nodeId, 'what is on my calendar today', 'Calendar is not linked');
+    const disabledCalendarReply = String(directCommand(
+      nodeId,
+      'what is on my calendar today',
+      { features: { calendar: false } },
+      { googleConnected: true, features: { calendar: false } },
+    )?.payload?.reply || '');
+    assert(disabledCalendarReply.includes('Calendar is turned off'), `${surface}: disabled calendar should not look unlinked`);
     assertNoAction(nodeId, 'why are your responses so slow', 'local Ollama');
     assertNoAction(nodeId, 'hello', "I'm here");
     assertNoAction(nodeId, 'Make a 20-step plan for a tiny task', 'overkill');

@@ -24,6 +24,9 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Companion document drops no longer get misclassified as beta feedback when the attached file contains feedback/test wording.
 - Companion-saved widget changes now re-apply on open kiosks, including enabling the Memes widget without a manual refresh.
 - Kiosk chat placeholders now use the configured bot name instead of always saying Caroline.
+- Calendar chat replies now distinguish a disabled Calendar widget from an unlinked Google Calendar account.
+- Calendar refresh now de-duplicates events across selected calendars before updating the kiosk widget and chat context.
+- Calendar refresh attempts now appear in the Settings event log so connection failures are visible during testing.
 
 ## Removed
 

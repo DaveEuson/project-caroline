@@ -11013,9 +11013,11 @@ async function refreshCalendarWidget() {
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok || data.ok === false) throw new Error(data.error || 'Calendar refresh failed');
     updateCalendar(data.event || null, data.events || []);
+    if (typeof clog === 'function') clog('info', 'Calendar refresh: ' + (Array.isArray(data.events) ? data.events.length : 0) + ' event(s)');
     playBeep(900);
   } catch(e) {
     console.warn('[Caroline] calendar refresh failed:', e);
+    if (typeof clog === 'function') clog('err', 'Calendar refresh: ' + (e.message || 'failed'));
     if (/Google token missing|reconnect Google|token missing|not connected/i.test(e.message || '')) {
       setCalendarEmptyState('Calendar not connected', 'Connect Google in Settings');
     } else if (title) {
