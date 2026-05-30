@@ -89,6 +89,55 @@ function sha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
+function gitValue(args, fallback = 'unknown') {
+  const result = spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' });
+  if (result.status !== 0) return fallback;
+  return (result.stdout || '').trim() || fallback;
+}
+
+function projectVersion() {
+  const install = fs.readFileSync(path.join(ROOT, 'install.sh'), 'utf8');
+  const match = install.match(/^CAROLINE_VERSION="([^"]+)"/m);
+  return match ? match[1] : '0.3.0-dev';
+}
+
+function stampBuildMetadata(opts) {
+  const remote = `${opts.user}@${opts.host}`;
+  const script = [
+    `BUILD_FILE=${shellQuote(`${opts.remoteDir}/caroline_build.json`)} \\`,
+    `BUILD_VERSION=${shellQuote(projectVersion())} \\`,
+    `BUILD_COMMIT=${shellQuote(gitValue(['rev-parse', '--short', 'HEAD']))} \\`,
+    `BUILD_BRANCH=${shellQuote('nightly')} \\`,
+    `BUILD_CHANNEL=${shellQuote('nightly')} \\`,
+    `BUILD_REPO=${shellQuote(gitValue(['config', '--get', 'remote.origin.url'], 'https://github.com/Project-Caroline/project-caroline.git'))} \\`,
+    `node <<'NODE'`,
+    `const fs = require('fs');`,
+    `const file = process.env.BUILD_FILE;`,
+    `let build = {};`,
+    `try { build = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (error) { build = {}; }`,
+    `build.version = process.env.BUILD_VERSION;`,
+    `build.commit = process.env.BUILD_COMMIT;`,
+    `build.branch = process.env.BUILD_BRANCH;`,
+    `build.channel = process.env.BUILD_CHANNEL;`,
+    `build.repo = process.env.BUILD_REPO;`,
+    `build.installedAt = new Date().toISOString();`,
+    `fs.writeFileSync(file, JSON.stringify(build, null, 2) + '\\n');`,
+    `NODE`,
+  ].join('\n');
+  run(command('ssh'), [
+    '-o', 'BatchMode=yes',
+    '-o', 'ConnectTimeout=8',
+    remote,
+    script,
+  ]);
+  return {
+    version: projectVersion(),
+    commit: gitValue(['rev-parse', '--short', 'HEAD']),
+    branch: 'nightly',
+    channel: 'nightly',
+  };
+}
+
 function transformString(value, opts) {
   return value
     .replaceAll('/home/davee/caroline', opts.remoteDir)
@@ -204,6 +253,7 @@ function deploy(opts, payload) {
     remote,
     `if [ -d ${shellQuote(`${opts.remoteDir}/public`)} ]; then cp -p ${shellQuote(`${opts.remoteDir}/index.html`)} ${shellQuote(`${opts.remoteDir}/public/index.html`)}; fi`,
   ]);
+  stampBuildMetadata(opts);
   if (opts.restart) {
     run(command('ssh'), [
       '-o', 'BatchMode=yes',
