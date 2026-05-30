@@ -578,11 +578,20 @@
   .bot-body path { fill: #475569; }
 
   /* BOTTOM BAR */
-  #bottom-bar { height: 165px; flex-shrink: 0; display: flex; gap: 0; border-top: 1px solid rgba(var(--t-rgb1), 0.12); background: linear-gradient(180deg, rgba(5,5,10,0.95), rgba(12,8,20,0.98)); }
+  #bottom-bar { height: var(--bottom-bar-height, 165px); flex-shrink: 0; display: flex; gap: 0; position: relative; border-top: 1px solid rgba(var(--t-rgb1), 0.12); background: linear-gradient(180deg, rgba(5,5,10,0.95), rgba(12,8,20,0.98)); }
+  body.bottom-chat-expanded { --bottom-bar-height: min(42vh, 430px); }
+  body.bottom-chat-resizing { cursor: ns-resize; user-select: none; }
+  #bottom-chat-resize { position: absolute; top: -6px; left: 0; right: 0; height: 12px; cursor: ns-resize; z-index: 6; display: flex; align-items: center; justify-content: center; touch-action: none; }
+  #bottom-chat-resize::before { content: ""; width: 96px; height: 3px; border-radius: 999px; background: rgba(var(--t-rgb1),0.28); box-shadow: 0 0 10px rgba(var(--t-rgb1),0.16); opacity: 0.65; transition: opacity 0.16s, background 0.16s; }
+  #bottom-chat-resize:hover::before, body.bottom-chat-resizing #bottom-chat-resize::before { opacity: 1; background: rgba(var(--t-rgb1),0.55); }
   #bottom-chat { flex: 1; display: flex; flex-direction: column; padding: 10px 14px 8px; min-width: 0; border-right: 1px solid rgba(var(--t-rgb1), 0.08); }
   #bottom-chat #input-row { display:flex; align-items:center; gap:8px; padding:4px 0 0; flex-shrink:0; justify-content:flex-start; max-width:none; width:100%; }
   #bottom-chat #msg-input { flex:1; min-width:0; }
-  #bottom-chat-label { font-size: 10px; color: rgba(var(--t-rgb1),0.5); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; flex-shrink: 0; }
+  #bottom-chat-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; flex-shrink:0; }
+  #bottom-chat-label { font-size: 10px; color: rgba(var(--t-rgb1),0.5); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #bottom-chat-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .bottom-chat-control { width:30px; height:26px; border:1px solid rgba(var(--t-rgb1),0.26); border-radius:8px; background:rgba(var(--t-rgb1),0.08); color:var(--t-hex1); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; transition:background 0.16s,border-color 0.16s,transform 0.16s; }
+  .bottom-chat-control:hover { background:rgba(var(--t-rgb1),0.16); border-color:rgba(var(--t-rgb1),0.45); transform:translateY(-1px); }
   #bottom-chat-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
   #bottom-chat-msgs::-webkit-scrollbar { width: 2px; }
   #bottom-chat-msgs::-webkit-scrollbar-thumb { background: rgba(var(--t-rgb1),0.2); border-radius: 2px; }
@@ -1570,7 +1579,7 @@
     body.theme-cybercore #topbar::after { display:none; }
     body.theme-cybercore #bottom-bar { height:112px; }
     body.theme-cybercore #bottom-chat { padding:7px 10px; }
-    body.theme-cybercore #bottom-chat-label, body.theme-cybercore #bottom-chat-msgs { display:none; }
+    body.theme-cybercore #bottom-chat-head, body.theme-cybercore #bottom-chat-label, body.theme-cybercore #bottom-chat-msgs { display:none; }
     body.theme-cybercore #bottom-chat #input-row { padding:0; gap:7px; }
     body.theme-cybercore #msg-input { padding:10px 14px; font-size:14px; }
     body.theme-cybercore .touch-btn { width:44px; height:44px; font-size:17px; }
@@ -1745,6 +1754,35 @@
   body[data-ui-scale="xlarge"] #hist-btn,
   body[data-ui-scale="jumbo"] #settings-topbar-btn,
   body[data-ui-scale="jumbo"] #hist-btn { padding-left:8px; padding-right:8px; }
+
+  body.touch-mode .touch-btn { width:56px; height:56px; min-width:56px; font-size:22px; border-radius:12px; }
+  body.touch-mode .touch-btn i { font-size:23px; }
+  body.touch-mode .quick-btn,
+  body.touch-mode .settings-boot-btn,
+  body.touch-mode .settings-save-btn,
+  body.touch-mode .sys-btn,
+  body.touch-mode .detect-btn,
+  body.touch-mode .caro-chat-btn,
+  body.touch-mode .media-nav-btn,
+  body.touch-mode .bottom-chat-control,
+  body.touch-mode #todo-add-btn,
+  body.touch-mode #todo-clear-btn,
+  body.touch-mode #todo-close,
+  body.touch-mode #modal-cancel,
+  body.touch-mode #modal-confirm { min-height:44px; }
+  body.touch-mode .quick-btn { padding:13px 21px; border-radius:18px; }
+  body.touch-mode .settings-input,
+  body.touch-mode .settings-select { min-height:44px; }
+  body.touch-mode .feat-toggle { min-height:44px; padding:8px 12px; }
+  body.touch-mode .feat-toggle input[type=checkbox] { width:24px; height:24px; }
+  body.touch-mode .widget-close-btn { width:32px; height:32px; top:4px; right:4px; font-size:16px; opacity:0.78; }
+  body.touch-mode .widget-refresh-btn { min-width:36px; min-height:34px; }
+  body.touch-mode .message-like { width:34px; height:34px; font-size:16px; }
+  body.touch-mode .bc-msg .message-like { width:32px; height:32px; right:7px; bottom:7px; }
+  body.touch-mode .bc-msg.has-like { padding-right:47px; }
+  body.touch-mode .smart-btn { min-height:70px; }
+  body.touch-mode .smart-btn i { font-size:22px; }
+  body.touch-mode .smart-btn span { font-size:12px; }
 
   /* PHONE LAYOUT
      Keeps kiosk/desktop unchanged; this only applies to portrait phone-sized
@@ -2018,6 +2056,13 @@
       padding:9px 9px calc(8px + env(safe-area-inset-bottom, 0px));
       border-right:0;
       gap:6px;
+    }
+    #bottom-chat-resize,
+    #bottom-chat-expand-btn {
+      display:none !important;
+    }
+    #bottom-chat-head {
+      margin:0;
     }
     #bottom-chat-label {
       margin:0;
@@ -2414,6 +2459,10 @@
               <option value="comfortable">Comfortable</option>
               <option value="relaxed">Relaxed</option>
             </select>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Touch mode</div><div class="settings-sub">Bigger tap targets for kiosk screens</div></div>
+            <label class="feat-toggle" style="min-width:180px;justify-content:flex-start;"><input type="checkbox" id="set-touch-mode" onchange="applyTouchModeControl(this.checked)"/> <span class="settings-icon"><i class="ti ti-hand-click"></i></span>Touch-friendly</label>
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Theme colour</div><div class="settings-sub">Primary accent</div></div>
@@ -3565,8 +3614,14 @@
 </div>
 
 <div id="bottom-bar">
+  <div id="bottom-chat-resize" role="separator" aria-orientation="horizontal" aria-label="Resize recent conversation"></div>
   <div id="bottom-chat">
-    <div id="bottom-chat-label">💬 Recent conversation</div>
+    <div id="bottom-chat-head">
+      <div id="bottom-chat-label">💬 Recent conversation</div>
+      <div id="bottom-chat-actions">
+        <button class="bottom-chat-control" id="bottom-chat-expand-btn" type="button" onclick="toggleBottomChatExpanded(); playBeep(650);" title="Expand recent conversation" aria-label="Expand recent conversation" aria-expanded="false"><i class="ti ti-arrows-maximize"></i></button>
+      </div>
+    </div>
     <div id="bottom-chat-msgs"><div style="color:rgba(226,232,240,0.2);font-size:10px;font-family:'JetBrains Mono',monospace;text-align:center;margin-top:8px;">Say something...</div></div>
     <div id="voice-status" style="font-size:11px;color:rgba(var(--t-rgb1),0.4);font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;padding:4px 0 2px;flex-shrink:0;">● READY TO CHAT · ENTER TO SEND</div>
     <div id="input-row">
@@ -3618,6 +3673,7 @@ const BOOLEAN_DEFAULTS = {
   discordEnabled: false,
   wakeWordEnabled: false,
   setupComplete: false,
+  touchMode: false,
   highContrastText: true,
   reduceMonoLabels: true,
   privacyMode: false,
@@ -3647,7 +3703,7 @@ function normalizeOpenRouterModel(value) {
   };
   return legacy[v] || v || DEFAULT_OPENROUTER_MODEL;
 }
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', touchMode: false, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 S.aiModel = normalizeOpenRouterModel(S.aiModel);
 let settingsHydrated = false;
@@ -7723,9 +7779,11 @@ async function saveSettings() {
   const fontEl = document.getElementById('set-font');
   const scaleEl = document.getElementById('set-ui-scale');
   const densityEl = document.getElementById('set-ui-density');
+  const touchModeEl = document.getElementById('set-touch-mode');
   if (fontEl) S.uiFont = normalizeUiFont(fontEl.value);
   if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
   if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
+  if (touchModeEl) S.touchMode = !!touchModeEl.checked;
   if (displayPresetTouchedThisSession) localStorage.setItem('caroline_display_preset_touched', 'true');
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
@@ -7890,7 +7948,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, visionModel: S.visionModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, visionModel: S.visionModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, touchMode: !!S.touchMode, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -8226,6 +8284,8 @@ function syncDisplayControls() {
   setSelectValue('set-font', normalizeUiFont(S.uiFont));
   setSelectValue('set-ui-scale', normalizeUiScale(S.uiScale));
   setSelectValue('set-ui-density', normalizeUiDensity(S.uiDensity));
+  const touchEl = document.getElementById('set-touch-mode');
+  if (touchEl) touchEl.checked = parseSettingBool(S.touchMode, BOOLEAN_DEFAULTS.touchMode);
   const presetEl = document.getElementById('set-display-preset');
   if (presetEl) {
     const id = displayPresetForSettings();
@@ -8239,8 +8299,10 @@ function applyUiReadability() {
   S.uiFont = normalizeUiFont(S.uiFont);
   S.uiScale = normalizeUiScale(S.uiScale);
   S.uiDensity = normalizeUiDensity(S.uiDensity);
+  S.touchMode = parseSettingBool(S.touchMode, BOOLEAN_DEFAULTS.touchMode);
   document.body.dataset.uiScale = S.uiScale;
   document.body.dataset.uiDensity = S.uiDensity;
+  document.body.classList.toggle('touch-mode', S.touchMode);
   applyFont(S.uiFont);
   syncDisplayControls();
 }
@@ -8252,6 +8314,11 @@ function applyDisplayControls() {
   if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
   if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
   markDisplayPresetTouched();
+  applyUiReadability();
+}
+function applyTouchModeControl(checked) {
+  const touchEl = document.getElementById('set-touch-mode');
+  S.touchMode = parseSettingBool(checked !== undefined ? checked : touchEl?.checked, BOOLEAN_DEFAULTS.touchMode);
   applyUiReadability();
 }
 function applyDisplayPreset(presetId) {
@@ -8766,6 +8833,101 @@ function renderHistory(){
     d.appendChild(senderEl); d.appendChild(bodyEl);
     if (e.role === 'caroline') d.appendChild(buildMessageLikeButton(e));
     c.appendChild(d);
+  });
+}
+const BOTTOM_CHAT_COLLAPSED_HEIGHT = 165;
+const BOTTOM_CHAT_EXPANDED_HEIGHT = 360;
+const BOTTOM_CHAT_MIN_HEIGHT = 130;
+const BOTTOM_CHAT_MAX_RATIO = 0.58;
+function bottomChatIsPhoneLayout() {
+  return window.matchMedia && window.matchMedia('(max-width: 820px) and (orientation: portrait)').matches;
+}
+function clampBottomChatHeight(value) {
+  const viewportMax = Math.max(240, Math.round((window.innerHeight || 800) * BOTTOM_CHAT_MAX_RATIO));
+  const n = Math.round(Number(value) || BOTTOM_CHAT_EXPANDED_HEIGHT);
+  return Math.min(viewportMax, Math.max(BOTTOM_CHAT_MIN_HEIGHT, n));
+}
+function setBottomChatPanelHeight(value) {
+  document.body.style.setProperty('--bottom-bar-height', clampBottomChatHeight(value) + 'px');
+}
+function updateBottomChatExpandButton(expanded) {
+  const btn = document.getElementById('bottom-chat-expand-btn');
+  if (!btn) return;
+  btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  btn.title = expanded ? 'Collapse recent conversation' : 'Expand recent conversation';
+  btn.setAttribute('aria-label', btn.title);
+  const icon = btn.querySelector('i');
+  if (icon) icon.className = expanded ? 'ti ti-arrows-minimize' : 'ti ti-arrows-maximize';
+}
+function setBottomChatExpanded(expanded, options = {}) {
+  const on = !!expanded && !bottomChatIsPhoneLayout();
+  document.body.classList.toggle('bottom-chat-expanded', on);
+  if (on) {
+    const saved = Number(localStorage.getItem('caroline_bottom_chat_height') || 0);
+    setBottomChatPanelHeight(options.height || saved || BOTTOM_CHAT_EXPANDED_HEIGHT);
+  } else {
+    document.body.style.removeProperty('--bottom-bar-height');
+  }
+  if (options.persist !== false) localStorage.setItem('caroline_bottom_chat_expanded', on ? 'true' : 'false');
+  updateBottomChatExpandButton(on);
+  setTimeout(scrollChatToBottom, 40);
+}
+function toggleBottomChatExpanded() {
+  setBottomChatExpanded(!document.body.classList.contains('bottom-chat-expanded'));
+}
+function setupBottomChatExpansion() {
+  const handle = document.getElementById('bottom-chat-resize');
+  if (!handle || handle.dataset.ready === 'true') return;
+  handle.dataset.ready = 'true';
+  if (localStorage.getItem('caroline_bottom_chat_expanded') === 'true') {
+    setBottomChatExpanded(true, { persist: false });
+  } else {
+    updateBottomChatExpandButton(false);
+  }
+  let startY = 0;
+  let startHeight = BOTTOM_CHAT_COLLAPSED_HEIGHT;
+  const finishResize = (ev) => {
+    document.body.classList.remove('bottom-chat-resizing');
+    window.removeEventListener('pointermove', moveResize);
+    window.removeEventListener('pointerup', finishResize);
+    window.removeEventListener('pointercancel', finishResize);
+    try { handle.releasePointerCapture(ev.pointerId); } catch(e) {}
+    const h = clampBottomChatHeight(parseFloat(getComputedStyle(document.getElementById('bottom-bar')).height));
+    if (h <= BOTTOM_CHAT_COLLAPSED_HEIGHT + 18) {
+      setBottomChatExpanded(false);
+    } else {
+      localStorage.setItem('caroline_bottom_chat_height', String(h));
+      setBottomChatExpanded(true, { height: h });
+    }
+  };
+  const moveResize = (ev) => {
+    const next = clampBottomChatHeight(startHeight + (startY - ev.clientY));
+    document.body.classList.add('bottom-chat-expanded');
+    setBottomChatPanelHeight(next);
+    updateBottomChatExpandButton(true);
+  };
+  handle.addEventListener('pointerdown', (ev) => {
+    if (bottomChatIsPhoneLayout()) return;
+    ev.preventDefault();
+    startY = ev.clientY;
+    startHeight = parseFloat(getComputedStyle(document.getElementById('bottom-bar')).height) || BOTTOM_CHAT_COLLAPSED_HEIGHT;
+    document.body.classList.add('bottom-chat-resizing');
+    try { handle.setPointerCapture(ev.pointerId); } catch(e) {}
+    window.addEventListener('pointermove', moveResize);
+    window.addEventListener('pointerup', finishResize);
+    window.addEventListener('pointercancel', finishResize);
+  });
+  window.addEventListener('resize', () => {
+    if (bottomChatIsPhoneLayout()) {
+      document.body.style.removeProperty('--bottom-bar-height');
+      updateBottomChatExpandButton(false);
+      return;
+    }
+    if (document.body.classList.contains('bottom-chat-expanded')) {
+      const h = clampBottomChatHeight(parseFloat(getComputedStyle(document.getElementById('bottom-bar')).height));
+      setBottomChatPanelHeight(h);
+      localStorage.setItem('caroline_bottom_chat_height', String(h));
+    }
   });
 }
 async function clearHistory(){
@@ -9374,7 +9536,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','uiFont','uiScale','uiDensity','aiModel','visionModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','uiFont','uiScale','uiDensity','touchMode','aiModel','visionModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();
@@ -12134,6 +12296,7 @@ setInterval(updateWifi, piPerfInterval(30000, 60000));
 applyTheme(S.theme);
 applyFont(S.uiFont);
 applyUiReadability();
+setupBottomChatExpansion();
 applyAvatar(S.avatar);
 applyPiPerformanceMode();
 applyAutoTheme();
@@ -12294,6 +12457,11 @@ const ONB_QUESTIONS = [
     prompt:onboardingHomeBasePrompt,
     placeholder: onboardingHomeBaseUrl,
     defaultValue:onboardingHomeBaseUrl },
+  { id:'display-touch', type:'chips', save:'config.touchMode', prompt:'How are you going to poke at this console most often?', options:[
+    { label:'Touchscreen kiosk', value:true, reply:'Finger-friendly controls enabled. No tiny button nonsense.' },
+    { label:'Steam Deck / couch', value:true, reply:'Bigger tap targets. Three-foot readability mode has backup.' },
+    { label:'Mouse and keyboard', value:false, reply:'Classic compact controls. Precision tools online.' }
+  ]},
   { id:'warning', type:'chips', save:'personality.warning', prompt:'What warning label should I put on your brain today?', options:[
     { label:'Opens 47 tabs',              value:'tabs',     reply:'Tabbed reality detected. I will help close loops.' },
     { label:'Do not interrupt the thought', value:'deep',   reply:'Focus perimeter set.' },
@@ -12421,7 +12589,7 @@ function _onbLoadConfig(){
   const widgets = Object.assign({}, FEATURE_DEFAULTS, S.features || {});
   ONB_WIDGETS.forEach(w=>{ if(widgets[w.id] === undefined) widgets[w.id] = w.defaultOn !== false; });
   S.onboardingModules = m;
-  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', cityName: S.cityName||'', lat: S.lat||0, lng: S.lng||0, tidesStation: S.tidesStation||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_CONFIG_URL, modules: m, widgets };
+  return { userName: S.userName||'', aiName: S.aiName||'Caroline', zipCode: S.zipcode||S.zipCode||'', location: S.location||S.cityName||'', cityName: S.cityName||'', lat: S.lat||0, lng: S.lng||0, tidesStation: S.tidesStation||'', timezone: S.timezone||'', host: S.nodeRedUrl||DEFAULT_NODE_RED_CONFIG_URL, touchMode: parseSettingBool(S.touchMode, BOOLEAN_DEFAULTS.touchMode), modules: m, widgets };
 }
 function _onbModuleReady(id){
   const def = ONB_MODULES.find(m=>m.id===id);
@@ -13023,6 +13191,7 @@ function renderChatStep(){
     }).join('');
     grid.innerHTML=`
       <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>Place ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
+      <div class="caro-summary-card"><h4>Display</h4><p>Touch mode: ${onbState.config.touchMode === true ? 'On' : 'Off'}<br>Recent conversation can expand from the bottom tray.</p></div>
       <div class="caro-summary-card"><h4>Personality</h4><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
       <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}<br>${getAvatarPersona(a.id).summary}</p></div>
       <div class="caro-summary-card"><h4>Widgets</h4><ul>${wList}</ul></div>
@@ -13044,6 +13213,7 @@ async function finalizeOnboarding(){
   S.lng              = onbState.config.lng          || S.lng        || 0;
   S.tidesStation     = onbState.config.tidesStation || S.tidesStation || '';
   S.timezone         = onbState.config.timezone     || S.timezone   || Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  S.touchMode        = parseSettingBool(onbState.config.touchMode, parseSettingBool(S.touchMode, BOOLEAN_DEFAULTS.touchMode));
   const _onbHost = onbState.config.host || '';
   if (_onbHost) {
     S.nodeRedUrl = normalizeConfiguredNodeRedUrl(_onbHost.startsWith('http') ? _onbHost : 'http://' + _onbHost + ':8080');
@@ -13086,6 +13256,7 @@ async function finalizeOnboarding(){
       spotifyClientId: S.spotifyClientId,
       hueIp: S.hueIp,
       hueKey: S.hueKey,
+      touchMode: !!S.touchMode,
       features: S.features,
       onboardingModules: S.onboardingModules,
       personalityPrompt: S.personalityPrompt,

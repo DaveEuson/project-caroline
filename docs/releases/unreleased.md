@@ -11,6 +11,8 @@ Draft notes for the next public beta. Move these into a versioned release note f
 - Added Screen Ask support from the companion app, routing one captured screenshot through cloud vision when an OpenRouter key is configured.
 - Added WSL-aware Windows desktop launchers for Start Server, Open Caroline, browser kiosk mode, and Companion app installation.
 - Improved local browser login setup with installer password choice, clearer saved-password output, and a Settings > System reset action.
+- Added an expandable Recent Conversation tray on the kiosk with a one-tap expand/collapse button and drag handle for desktop/kiosk layouts.
+- Added Touch Mode to first-boot setup and Look & Feel settings for larger tap targets on touchscreen kiosks and couch/Deck use.
 
 ## Changed
 
