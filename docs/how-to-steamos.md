@@ -103,7 +103,7 @@ The browser origin guard allows local/private Caroline pages and blocks non-priv
 
 ## Current Limits
 
-- Local Ollama on SteamOS is experimental and may be slower than OpenRouter on first replies.
+- Local Ollama on SteamOS is experimental and may be slower than OpenRouter with Gemini 2.5 Flash Lite on first replies.
 - HTTPS/voice proxy is not configured yet.
 - Kiosk mode is a fullscreen browser launcher, not a locked-down appliance mode yet.
 - Auto-start before login may require:

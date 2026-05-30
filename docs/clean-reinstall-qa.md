@@ -52,7 +52,7 @@ After reboot, open:
 http://<pi-or-vm-ip>:8080/
 ```
 
-If you enabled Caroline's optional local browser login, username is `caroline`; on the Caroline host, view the generated password with:
+If you enabled Caroline's optional local browser login, username is `caroline`. The installer can generate the password or let you choose one. On the Caroline host, view the saved password with:
 
 ```bash
 cat ~/caroline/caroline_admin_password.txt

@@ -47,6 +47,16 @@ Chat history is saved locally on the computer running the companion app. Use **S
 
 Install the `.deb` package from the release page. If your desktop blocks the first launch, open the app from the application menu after install or run it once from a terminal to see missing dependency messages.
 
+## Windows / WSL Notes
+
+For a Caroline host installed in Ubuntu WSL, use the Windows `.msi` Companion release. The WSL installer also creates a **Project Caroline - Install Companion** desktop shortcut that downloads and starts the same installer.
+
+Use this companion URL for the local WSL host:
+
+```text
+ws://127.0.0.1:8080/ws/caroline
+```
+
 ## Steam Deck Notes
 
 Use Desktop Mode and launch the `.AppImage` release asset. SteamOS does not include Debian package tools by default, so the `.deb` package is for Ubuntu/Pop!_OS rather than the Deck.

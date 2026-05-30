@@ -9,6 +9,7 @@ Start here if you are new to Raspberry Pi, Ubuntu, SSH, or home-server setup.
 | A Raspberry Pi with a screen | [How to install Caroline on Raspberry Pi OS](how-to-raspberry-pi-os.md) |
 | A spare PC, mini PC, VM, or server | [How to install Caroline on Ubuntu Server](how-to-ubuntu-server.md) |
 | A normal Ubuntu desktop computer | [How to install Caroline on Ubuntu Desktop](how-to-ubuntu-desktop.md) |
+| A Windows PC with Ubuntu WSL | [How to install Caroline in WSL on Windows](how-to-wsl.md) |
 | A Steam Deck in Desktop Mode | [Experimental Steam Deck / SteamOS install](how-to-steamos.md) |
 | A phone or tablet on the same Wi-Fi | No install needed: open `http://DEVICE-IP:8080/` after Caroline is running |
 | A Windows, Ubuntu/Pop!_OS, or Steam Deck desktop client | [How to install the Companion app](companion-client.md) |
@@ -49,7 +50,7 @@ Accept the local certificate warning once. The normal HTTP URL remains best for 
 
 Then open **Settings** and add only what you need:
 
-- **AI:** OpenRouter API key for the best experience, or local Ollama with the installer-recommended model for your hardware
+- **AI:** OpenRouter API key for the recommended Gemini 2.5 Flash Lite cloud model, or local Ollama with the installer-recommended model for your hardware
 - **Connect:** Google Calendar, Spotify, Hue, or [Discord](discord.md)
 - **Widgets:** location, weather, tides, and video channels
 

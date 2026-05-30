@@ -18,6 +18,7 @@ Caroline has one **host** and as many **clients** as you want on your local netw
 - The kiosk is the host's own fullscreen browser view, ideal for a wall screen or desk display.
 - A phone or tablet can open `http://YOUR-CAROLINE-IP:8080/` as a mobile-friendly touch view for quick chat, avatar presence, status, settings, and light remote control without the full widget wall.
 - Any browser on your network can open `http://YOUR-CAROLINE-IP:8080/` for the same dashboard and chat.
+- On Windows with Ubuntu WSL, the Linux host can run in WSL while Windows desktop shortcuts open Caroline, run a browser kiosk, or install the Companion app.
 - Chrome or Chromium can use the secure voice URL `https://YOUR-CAROLINE-IP:8444/` for microphone and wake-word access.
 - The Companion app is a retro messenger-style desktop client that can pair with multiple Caroline hosts, switch between buddies, keep local chat history, and clear saved chats for privacy.
 
@@ -100,7 +101,7 @@ https://YOUR-CAROLINE-IP:8444/
 On a Raspberry Pi kiosk, the installer prefers Chromium because Firefox does not support Caroline's browser wake-word input.
 
 The normal `http://YOUR-CAROLINE-IP:8080/` URL still works for typing/chat. On phones and tablets, the mobile layout focuses on the avatar, chat, connection status, settings, and compact controls instead of trying to squeeze every kiosk widget onto a small screen.
-The installer can optionally protect the web UI and proxied local admin APIs with a local browser login. If enabled, username is `caroline`; on the Caroline host, read the generated password with `cat ~/caroline/caroline_admin_password.txt`.
+The installer can optionally protect the web UI and proxied local admin APIs with a local browser login. If enabled, username is `caroline`; you can let Caroline generate the password or choose your own. On the Caroline host, read the saved password with `cat ~/caroline/caroline_admin_password.txt`, or reset it later from Settings > System.
 
 ## Choose Your Setup
 
@@ -114,17 +115,18 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 | Steam Deck / SteamOS | Smoke-validated nightly | Repurposed handheld desk terminal |
 | Bazzite 44 / NVIDIA laptop | Smoke-validated beta | GPU-backed local AI host in server/client mode |
 | Phone / tablet browser | Mobile client view | Quick chat, status, settings, and remote controls on your LAN |
-| WSL Ubuntu | Dev/test only | Windows-side browser testing |
+| WSL Ubuntu on Windows | Nightly dev/test beta | Windows-side browser, kiosk launcher, and Companion installer shortcuts |
 
 ## Current Beta Reality
 
 - Raspberry Pi OS Desktop and Ubuntu are the main public beta paths.
-- Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter as the preferred AI path, and lazy-loaded visual media.
+- Raspberry Pi OS Desktop kiosk mode is smoke-validated with the automatic Pi performance profile, OpenRouter with Gemini 2.5 Flash Lite as the preferred AI path, and lazy-loaded visual media.
 - Debian and Ubuntu-family desktops are now acknowledged by the installer so testers see a clear beta-family message instead of an unrecognized-OS warning.
 - Steam Deck / SteamOS support tracks nightly and is smoke-validated in server/client mode by stable IP; mDNS hostnames can be slower from Windows networks.
 - Bazzite 44 with NVIDIA RTX 2070 Max-Q is smoke-validated as a LAN host with local Ollama. `mistral:7b` is the recommended default; `qwen3:1.7b` is the fast fallback.
 - Phone and tablet browsers are lightweight Caroline clients, not separate installs; they work best on the same trusted LAN as the host.
-- OpenRouter is the best AI experience for speed and answer quality.
+- WSL Ubuntu is a Windows testing path: Caroline runs as Linux services, while Windows shortcuts open the browser view, launch kiosk mode, or install the Companion app.
+- OpenRouter with Gemini 2.5 Flash Lite is the recommended cloud AI default for speed, answer quality, and low cost.
 - Ollama is private and local, but small hardware can be slower and less polished.
 - Ubuntu Desktop server/client mode is validated on a 50GB VM with CPU-only Ollama using `qwen2.5:1.5b`.
 - Caroline is designed for trusted local networks. Do not expose it directly to the public internet.
@@ -138,6 +140,7 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 - [How to install on Raspberry Pi OS](docs/how-to-raspberry-pi-os.md)
 - [How to install on Ubuntu Server](docs/how-to-ubuntu-server.md)
 - [How to install on Ubuntu Desktop](docs/how-to-ubuntu-desktop.md)
+- [How to install in WSL on Windows](docs/how-to-wsl.md)
 - [Experimental Steam Deck / SteamOS install](docs/how-to-steamos.md)
 - [How to install the Companion app](docs/companion-client.md)
 - [How to set up SSH and a stable IP](docs/network-prep.md)
@@ -155,7 +158,10 @@ The installer can optionally protect the web UI and proxied local admin APIs wit
 
 The installer detects your OS, CPU architecture, RAM, and GPU/VRAM when available, then preselects the local model it thinks fits best. You can still override the choice during setup.
 
-- Best experience: **OpenRouter**
+- Best cloud default: **OpenRouter + Gemini 2.5 Flash Lite**
+- Ultra-budget hosted fallback: **Mistral Small 24B Instruct**
+- Free hosted experiment: **OpenRouter Free**
+- Quality hosted fallback: **DeepSeek V3.2**
 - Raspberry Pi / Ubuntu CPU-only local quality: **qwen2.5:1.5b**
 - Steam Deck local quality: **qwen3:1.7b**
 - Bazzite / RTX 2070 local quality: **mistral:7b**
@@ -179,7 +185,7 @@ For platform-specific rankings from the latest direct Ollama benchmarks, see [Lo
 
 Add these later in **Settings**:
 
-- OpenRouter API key for the best AI experience
+- OpenRouter API key for the recommended Gemini 2.5 Flash Lite cloud AI path
 - Google Calendar OAuth
 - Spotify client ID
 - Philips Hue bridge/key

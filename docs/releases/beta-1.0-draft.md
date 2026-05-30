@@ -45,7 +45,7 @@ Beta 1.0 is the "new tester can actually try it" milestone: clearer install path
 
 ## Beta 1.0 Known Limits
 
-- OpenRouter is still the recommended public beta AI path for polished replies and lower device load.
+- OpenRouter with `google/gemini-2.5-flash-lite` is the recommended public beta AI path for polished replies, low cost, and lower device load.
 - Local Ollama remains experimental, especially on Raspberry Pi and Steam Deck-class hardware.
 - Discord setup still requires a Discord bot token for the self-hosted channel/DM bridge.
 - Browser microphone support requires HTTPS or localhost; plain LAN HTTP is typing/chat only.

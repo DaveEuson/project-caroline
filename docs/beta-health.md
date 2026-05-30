@@ -32,7 +32,7 @@ This page is the human-verified public beta health snapshot. It is not live tele
 | --- | --- | --- |
 | Chat | Core beta | Send normal greetings, follow-up questions, and one command-like request. |
 | Local AI | Experimental | See [local model recommendations](local-ai-models.md). The installer now checks OS, CPU architecture, RAM, and detectable GPU/VRAM. Current picks: Pi/Ubuntu CPU-only `qwen2.5:1.5b`, Steam Deck `qwen3:1.7b`, Bazzite RTX 2070 `mistral:7b`, RTX 4070 desktop `gemma4:e4b`. |
-| OpenRouter AI | Recommended beta | Best default for polished replies and lower host load. |
+| OpenRouter AI | Recommended beta | Best default is `google/gemini-2.5-flash-lite` for polished replies, low cost, and lower host load. Budget fallback: `mistralai/mistral-small-24b-instruct-2501`; free experiment: `openrouter/free`. |
 | Memory | Core beta | Save, hide, delete, and correct a simple fact. |
 | Calendar | Core beta | Connect Google, read events, and create one test event. |
 | Tasks | Core beta | Add, complete, and refresh tasks. |
@@ -42,7 +42,7 @@ This page is the human-verified public beta health snapshot. It is not live tele
 
 ## Known Beta Risks
 
-- Local models can be slow or odd on small hardware. OpenRouter is still the best public beta default.
+- Local models can be slow or odd on small hardware. OpenRouter with Gemini 2.5 Flash Lite is still the best public beta default.
 - Discord self-hosted bot setup is powerful but not beginner-friendly yet.
 - Some browser voice input paths need HTTPS or localhost, especially from a phone or remote browser.
 - Optional integrations can show confusing states when credentials are partly configured.

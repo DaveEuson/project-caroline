@@ -37,6 +37,7 @@ desktop.ini
 .vscode/
 .idea/
 .codex-worktrees/
+.codex-caroline-vm*
 *.swp
 *.swo
 
@@ -49,6 +50,7 @@ flows.pi-backup-*.json
 Screenshots/PXL_*
 Screenshot_*.png.jpg
 qa-artifacts/
+.tmp/
 .deploy/
 reports/
 scripts/__pycache__/

@@ -79,7 +79,7 @@ Recommended answers:
 - Kiosk mode: **Yes** if this Pi has a dedicated screen
 - Telemetry: your choice; it is optional
 
-You can add an OpenRouter API key later in Caroline Settings for faster, better replies.
+You can add an OpenRouter API key later in Caroline Settings for faster, better replies. The recommended cloud default is `google/gemini-2.5-flash-lite`.
 For local Ollama, use `qwen2.5:1.5b` for recommended quality, `qwen2.5:0.5b` for the fast fallback, or `gemma3:1b` for the safe legacy choice.
 
 ## 5. Reboot
@@ -120,7 +120,7 @@ Accept the local certificate warning once. Typing/chat still works at the normal
 
 Open **Settings** and add only what you need:
 
-- **AI:** OpenRouter API key
+- **AI:** OpenRouter API key for Gemini 2.5 Flash Lite
 - **Connect:** Google Calendar, Spotify, Hue, Discord
 - **Widgets:** location, weather, tides, video channels
 

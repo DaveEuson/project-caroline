@@ -1,12 +1,25 @@
 # Local AI Model Recommendations
 
-These recommendations are based on direct Ollama benchmark runs using Project: Caroline-style conversational prompts. OpenRouter is still the best public beta default when you want the most polished replies with the least host load.
+These recommendations are based on direct Ollama and OpenRouter benchmark runs using Project: Caroline-style conversational prompts. OpenRouter with `google/gemini-2.5-flash-lite` is the best public beta default when you want polished replies with the least host load.
+
+## OpenRouter Quick Picks
+
+OpenRouter pricing can change, and real Caroline conversations may use more context than these short benchmark prompts. Treat the costs below as rough relative guidance, not a billing promise.
+
+| Use | Model | Benchmark result | Cost note |
+| --- | --- | --- | --- |
+| Recommended default | `google/gemini-2.5-flash-lite` | 10/10 coherence, ~1.15s average | About $0.0023 per 100 short test replies |
+| Ultra-budget paid | `mistralai/mistral-small-24b-instruct-2501` | 9/10 coherence, ~0.81s average | About $0.0009 per 100 short test replies |
+| Free experimental | `openrouter/free` | 9.5/10 coherence, ~1.9s average | Free, but variable and rate-limited |
+| Quality fallback | `deepseek/deepseek-v3.2` | 10/10 coherence, ~2.24s average | About $0.0041 per 100 short test replies |
+| Premium/legacy | `anthropic/claude-haiku-4.5` | 9/10 coherence, ~1.77s average | About $0.033 per 100 short test replies; not the default |
 
 ## Quick Picks
 
 | Platform | Recommended local model | Fast fallback | Notes |
 | --- | --- | --- | --- |
 | Raspberry Pi OS Desktop | `qwen2.5:1.5b` | `qwen2.5:0.5b` | Prefer OpenRouter on Pi when possible. Local AI is experimental on small hardware. |
+| Windows WSL / Ubuntu WSL | `gemma3:4b` | `qwen2.5:1.5b` | Install Ollama inside WSL so Caroline can use `localhost:11434` without Windows bridge networking. |
 | Ubuntu Desktop / Server CPU-only | `qwen2.5:1.5b` | `qwen2.5:0.5b` | Validated as the conservative Linux/VM path. Use at least a 50GB disk if testing local Ollama. |
 | Steam Deck / SteamOS | `qwen3:1.7b` | `smollm2:1.7b` or `qwen3:0.6b` | Best measured Steam Deck balance. `mistral:7b` is higher quality but too slow for default. |
 | Bazzite / RTX 2070 Max-Q | `mistral:7b` | `qwen3:1.7b` | Best 2070 balance from the full popular + Gemma 4 sweep. `gemma4:e4b` matched quality but spills CPU/GPU on 8GB VRAM. |
@@ -66,7 +79,10 @@ Full popular + Gemma 4 direct Ollama benchmark, May 26, 2026. Warm average exclu
 
 ## Practical Guidance
 
-- Use OpenRouter for the public beta default if API use is acceptable.
+- Use OpenRouter with `google/gemini-2.5-flash-lite` for the public beta default if API use is acceptable.
+- Use `mistralai/mistral-small-24b-instruct-2501` when cost is the priority and the user still wants a paid, reliable hosted model.
+- Use `openrouter/free` only as an experimental free option because availability and rate limits can vary.
+- Keep `anthropic/claude-haiku-4.5` as a premium/legacy selectable option, not the recommended default.
 - The Linux installers now check OS, CPU architecture, RAM, and detectable GPU/VRAM before picking a default local model.
 - Use `qwen3:1.7b` for Steam Deck and low-power Bazzite handheld/laptop-style hosts.
 - Use `mistral:7b` for Bazzite or Linux NVIDIA laptops with RTX 2070-class GPUs and 8GB VRAM.

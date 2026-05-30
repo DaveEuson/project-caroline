@@ -129,7 +129,7 @@ You normally do not need Node-RED unless you are debugging or customizing flows.
 
 Open **Settings**:
 
-- **AI:** add OpenRouter API key
+- **AI:** add OpenRouter API key for Gemini 2.5 Flash Lite, or use the installer-recommended local Ollama model
 - **Connect:** add Google, Spotify, Hue, or Discord if needed
 - **Widgets:** set location, timezone, weather, and video channels
 

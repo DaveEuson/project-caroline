@@ -166,11 +166,15 @@ bool_json() {
 CAROLINE_VERSION="0.3.0-beta.4"
 CAROLINE_REPO_URL="https://github.com/Project-Caroline/project-caroline.git"
 CAROLINE_RAW_BASE="https://raw.githubusercontent.com/Project-Caroline/project-caroline"
+COMPANION_VERSION="0.1.12"
+COMPANION_RELEASE_URL="https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v${COMPANION_VERSION}"
+COMPANION_WINDOWS_MSI="Windows_Project.Caroline.Companion_${COMPANION_VERSION}_x64_en-US.msi"
+COMPANION_WINDOWS_MSI_URL="https://github.com/Project-Caroline/project-caroline/releases/download/companion-v${COMPANION_VERSION}/${COMPANION_WINDOWS_MSI}"
 NODE_RED_PORT=1880
 KIOSK_PORT=8080
 HTTPS_PROXY_PORT=8443
 HTTPS_UI_PORT=8444
-AI_MODEL="anthropic/claude-haiku-4.5"
+AI_MODEL="google/gemini-2.5-flash-lite"
 OLLAMA_URL_DEFAULT="http://localhost:11434"
 CAROLINE_TELEMETRY_ENDPOINT="${CAROLINE_TELEMETRY_ENDPOINT:-}"
 
@@ -180,10 +184,11 @@ PALETTE_NODES=(
   "node-red-contrib-google-sheets"
 )
 
-OLLAMA_MODEL_VALUES=("qwen3:1.7b" "mistral:7b" "gemma4:e4b" "qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
+OLLAMA_MODEL_VALUES=("qwen3:1.7b" "mistral:7b" "gemma3:4b" "gemma4:e4b" "qwen2.5:1.5b" "qwen2.5:0.5b" "gemma3:1b")
 OLLAMA_MODEL_LABELS=(
   "Recommended Steam Deck / light GPU quality; best small-host balance"
   "Recommended NVIDIA 8GB quality; best RTX 2070-class balance"
+  "Recommended WSL chat fallback; better short replies on desktop-class CPUs"
   "Strong GPU quality mode; best on 12GB+ VRAM"
   "Conservative CPU/Pi/VM quality; best low-risk Linux balance"
   "Fast local fallback; quickest on small hardware"
@@ -263,6 +268,7 @@ CAROLINE_AUTH_DIR="/etc/caroline"
 CAROLINE_HTPASSWD_PATH="$CAROLINE_AUTH_DIR/caroline.htpasswd"
 CAROLINE_ADMIN_PASSWORD_PATH="$CAROLINE_DIR/caroline_admin_password.txt"
 CAROLINE_LOCAL_AUTH="${CAROLINE_LOCAL_AUTH:-}"
+CAROLINE_GENERATE_ADMIN_PASSWORD="${CAROLINE_GENERATE_ADMIN_PASSWORD:-false}"
 
 cleanup_install_swap() {
   tput cnorm 2>/dev/null || true
@@ -350,7 +356,7 @@ configure_admin_auth() {
   local _hash
 
   sudo mkdir -p "$CAROLINE_AUTH_DIR"
-  if [ -z "$_password" ] && [ -s "$CAROLINE_ADMIN_PASSWORD_PATH" ]; then
+  if [ -z "$_password" ] && [ "$CAROLINE_GENERATE_ADMIN_PASSWORD" != "true" ] && [ -s "$CAROLINE_ADMIN_PASSWORD_PATH" ]; then
     _password="$(cat "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true)"
   fi
   if [ -z "$_password" ]; then
@@ -359,12 +365,71 @@ configure_admin_auth() {
 
   _hash="$(openssl passwd -apr1 "$_password")"
   printf 'caroline:%s\n' "$_hash" | sudo tee "$CAROLINE_HTPASSWD_PATH" >/dev/null
-  sudo chown root:www-data "$CAROLINE_HTPASSWD_PATH" 2>/dev/null || sudo chown root:root "$CAROLINE_HTPASSWD_PATH"
+  sudo chown "$REAL_USER":www-data "$CAROLINE_HTPASSWD_PATH" 2>/dev/null || sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_HTPASSWD_PATH"
   sudo chmod 640 "$CAROLINE_HTPASSWD_PATH" 2>/dev/null || sudo chmod 600 "$CAROLINE_HTPASSWD_PATH"
 
   printf '%s\n' "$_password" > "$CAROLINE_ADMIN_PASSWORD_PATH"
   sudo chown "$REAL_USER":"$REAL_USER" "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true
   chmod 600 "$CAROLINE_ADMIN_PASSWORD_PATH" 2>/dev/null || true
+}
+
+prompt_admin_password_choice() {
+  local _password=""
+  local _confirm=""
+
+  [ "$LOCAL_AUTH_ENABLED" = "true" ] || return 0
+
+  if [ -n "${CAROLINE_ADMIN_PASSWORD:-}" ]; then
+    echo -e "${DIM}  Local browser login password supplied by CAROLINE_ADMIN_PASSWORD.${RESET}"
+    return 0
+  fi
+
+  if ! can_prompt; then
+    return 0
+  fi
+
+  echo ""
+  echo -e "${MAGENTA}  // LOCAL LOGIN PASSWORD${RESET}"
+  echo ""
+  echo -e "${DIM}  Username is always: caroline${RESET}"
+
+  if [ -s "$CAROLINE_ADMIN_PASSWORD_PATH" ]; then
+    echo -e "${DIM}  Existing password file found: ${CAROLINE_ADMIN_PASSWORD_PATH}${RESET}"
+    if ask_yes_no "Keep the existing local browser login password?" "y"; then
+      return 0
+    fi
+  fi
+
+  if ask_yes_no "Use a generated local browser login password?" "y"; then
+    CAROLINE_GENERATE_ADMIN_PASSWORD="true"
+    export CAROLINE_GENERATE_ADMIN_PASSWORD
+    echo -e "${DIM}  Caroline will generate and save a password for you.${RESET}"
+    return 0
+  fi
+
+  while :; do
+    read -rsp "  Choose local browser login password (8+ chars): " _password </dev/tty
+    echo "" >/dev/tty
+    read -rsp "  Confirm local browser login password: " _confirm </dev/tty
+    echo "" >/dev/tty
+    if [ -z "$_password" ]; then
+      echo -e "${YELLOW}  Password left blank; Caroline will generate one.${RESET}"
+      CAROLINE_GENERATE_ADMIN_PASSWORD="true"
+      export CAROLINE_GENERATE_ADMIN_PASSWORD
+      return 0
+    fi
+    if [ "${#_password}" -lt 8 ]; then
+      echo -e "${YELLOW}  Please use at least 8 characters.${RESET}"
+      continue
+    fi
+    if [ "$_password" != "$_confirm" ]; then
+      echo -e "${YELLOW}  Passwords did not match. Try again.${RESET}"
+      continue
+    fi
+    CAROLINE_ADMIN_PASSWORD="$_password"
+    export CAROLINE_ADMIN_PASSWORD
+    return 0
+  done
 }
 
 normalize_auth_choice() {
@@ -593,6 +658,428 @@ EOF
   chown "$REAL_USER:$REAL_USER" "$WINDOWED_LAUNCHER" "$KIOSK_LAUNCHER" 2>/dev/null || true
 }
 
+wsl_distro_name() {
+  if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+    printf '%s' "$WSL_DISTRO_NAME"
+  else
+    printf 'Ubuntu'
+  fi
+}
+
+wsl_windows_desktop_dir() {
+  local _desktop_win
+  local _desktop_wsl
+  command -v powershell.exe >/dev/null 2>&1 || return 1
+  command -v wslpath >/dev/null 2>&1 || return 1
+
+  _desktop_win="$(powershell.exe -NoProfile -Command "[Environment]::GetFolderPath('Desktop')" 2>/dev/null | tr -d '\r' | tail -1)"
+  [ -n "$_desktop_win" ] || return 1
+
+  _desktop_wsl="$(wslpath -u "$_desktop_win" 2>/dev/null || true)"
+  [ -n "$_desktop_wsl" ] || return 1
+  printf '%s' "$_desktop_wsl"
+}
+
+write_wsl_start_helper() {
+  local _bin_dir="$REAL_HOME/.local/bin"
+  local _helper="$_bin_dir/caroline-wsl-start"
+  mkdir -p "$_bin_dir"
+
+  cat > "$_helper" << EOF
+#!/bin/bash
+set -e
+
+NO_WAIT="false"
+if [ "\${1:-}" = "--no-wait" ]; then
+  NO_WAIT="true"
+fi
+
+KIOSK_URL="http://localhost:${KIOSK_PORT}/"
+BACKEND_HEALTH_URL="http://127.0.0.1:${NODE_RED_PORT}/health"
+KEEPALIVE_PID="/tmp/caroline-wsl-keepalive.pid"
+
+print_banner() {
+  echo ""
+  echo "  =========================================================="
+  echo "   PROJECT: CAROLINE // WSL SERVER CONSOLE"
+  echo "   Recovered assistant core - local Windows bridge"
+  echo "  =========================================================="
+  echo ""
+}
+
+print_open_hint() {
+  echo "  Browser link:"
+  echo "    \$KIOSK_URL"
+  echo ""
+  echo "  Tip: Windows Terminal usually lets you Ctrl+click the link."
+  echo "  If not, copy and paste it into your browser."
+}
+
+wait_to_close() {
+  if [ "\$NO_WAIT" != "true" ]; then
+    echo ""
+    read -r -p "Press Enter to close this console..."
+  fi
+}
+
+print_banner
+echo "[01] Checking Caroline services..."
+
+caroline_backend_ready() {
+  local _code
+  _code="\$(curl -s -o /dev/null -w "%{http_code}" "\$BACKEND_HEALTH_URL" 2>/dev/null || true)"
+  case "\$_code" in
+    2*|3*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+ensure_wsl_keepalive() {
+  if [ -s "\$KEEPALIVE_PID" ] && kill -0 "\$(cat "\$KEEPALIVE_PID" 2>/dev/null)" 2>/dev/null; then
+    return 0
+  fi
+  nohup bash -lc 'while true; do sleep 3600; done' >/dev/null 2>&1 &
+  echo "\$!" > "\$KEEPALIVE_PID"
+}
+
+if ! command -v systemctl >/dev/null 2>&1; then
+  echo "[!] systemctl is not available in this WSL distro."
+  echo "Enable systemd in /etc/wsl.conf, run 'wsl.exe --shutdown' from Windows, then retry."
+  wait_to_close
+  exit 1
+fi
+
+if ! systemctl list-unit-files caroline.service >/dev/null 2>&1; then
+  echo "[!] caroline.service is not installed yet. Run the Project: Caroline installer first."
+  wait_to_close
+  exit 1
+fi
+
+if caroline_backend_ready; then
+  ensure_wsl_keepalive
+  echo "[OK] Caroline is already online."
+  print_open_hint
+  wait_to_close
+  exit 0
+fi
+
+if sudo -n true 2>/dev/null; then
+  SUDO_CMD="sudo -n"
+else
+  if [ "\$NO_WAIT" = "true" ]; then
+    echo "[WAIT] Caroline is still waking up; the Windows launcher will keep checking."
+    echo "       If this stays offline, rerun Start Server and enter your Linux password when prompted."
+    if systemctl is-active --quiet caroline 2>/dev/null; then
+      ensure_wsl_keepalive
+    fi
+    exit 0
+  fi
+  echo "[02] Permission check. Enter your Linux sudo password if prompted."
+  sudo -v
+  SUDO_CMD="sudo"
+fi
+
+echo "[03] Starting nginx and Caroline..."
+\$SUDO_CMD systemctl start nginx
+\$SUDO_CMD systemctl start caroline
+ensure_wsl_keepalive
+
+READY="false"
+for _i in \$(seq 1 30); do
+  if caroline_backend_ready; then
+    READY="true"
+    break
+  fi
+  sleep 1
+done
+
+if [ "\$READY" = "true" ]; then
+  echo "[OK] Caroline is online."
+  print_open_hint
+else
+  echo "[!] Caroline services were started, but backend health did not answer yet."
+  echo "    Check logs inside WSL:"
+  echo "    sudo journalctl -u caroline -n 120 --no-pager"
+fi
+
+wait_to_close
+EOF
+
+  chmod +x "$_helper"
+  chown "$REAL_USER:$REAL_USER" "$_helper" 2>/dev/null || true
+}
+
+write_wsl_windows_shortcuts() {
+  local _desktop_dir
+  local _folder
+  local _folder_win
+  local _distro
+  local _shortcut_script
+  local _shortcut_script_win
+
+  _desktop_dir="$(wsl_windows_desktop_dir 2>/dev/null || true)"
+  [ -n "$_desktop_dir" ] || return 1
+
+  _folder="$_desktop_dir/Project Caroline"
+  mkdir -p "$_folder"
+  _folder_win="$(wslpath -w "$_folder" 2>/dev/null | tr -d '\r')"
+  _distro="$(wsl_distro_name)"
+
+  cat > "$_folder/Start Server.cmd" << EOF
+@echo off
+title Project: Caroline - Start Server
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Start Server.ps1"
+EOF
+
+  cat > "$_folder/Start Server.ps1" << EOF
+\$ErrorActionPreference = "Continue"
+\$Host.UI.RawUI.WindowTitle = "Project: Caroline - Start Server"
+\$Distro = "${_distro}"
+\$Url = "http://localhost:${KIOSK_PORT}/"
+
+function Show-CarolineHeader {
+  Clear-Host
+  Write-Host ""
+  Write-Host "  ==========================================================" -ForegroundColor DarkCyan
+  Write-Host "   PROJECT: CAROLINE // START SERVER" -ForegroundColor Cyan
+  Write-Host "   Recovered assistant core - Windows / WSL bridge" -ForegroundColor DarkGray
+  Write-Host "  ==========================================================" -ForegroundColor DarkCyan
+  Write-Host ""
+}
+
+function Test-CarolineBackend {
+  & wsl.exe -d \$Distro -- bash -lc "curl -fsS --max-time 3 http://127.0.0.1:${NODE_RED_PORT}/health >/dev/null 2>&1"
+  return \$LASTEXITCODE -eq 0
+}
+
+function Invoke-CarolineStart {
+  param([switch]\$Interactive)
+  \$cmd = "~/.local/bin/caroline-wsl-start --no-wait"
+  if (\$Interactive) { \$cmd = "~/.local/bin/caroline-wsl-start" }
+  & wsl.exe -d \$Distro -- bash -lc \$cmd
+  \$script:LastCarolineStartCode = \$LASTEXITCODE
+}
+
+function Show-CarolineLink {
+  Write-Host ""
+  Write-Host "  Open Caroline:" -ForegroundColor Yellow
+  Write-Host "    \$Url" -ForegroundColor Cyan
+  Write-Host ""
+  Write-Host "  Tip: Ctrl+click the URL in Windows Terminal, or press O below." -ForegroundColor DarkGray
+}
+
+function Convert-CarolineSecureString {
+  param([Security.SecureString]\$Secure)
+  if (\$null -eq \$Secure -or \$Secure.Length -eq 0) { return "" }
+  \$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR(\$Secure)
+  try {
+    return [Runtime.InteropServices.Marshal]::PtrToStringBSTR(\$bstr)
+  } finally {
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR(\$bstr)
+  }
+}
+
+function Read-CarolinePasswordChoice {
+  Write-Host ""
+  Write-Host "  Local browser login user: caroline" -ForegroundColor Yellow
+  Write-Host "  Leave blank to generate a strong password." -ForegroundColor DarkGray
+  \$firstSecure = Read-Host "New password" -AsSecureString
+  \$first = Convert-CarolineSecureString \$firstSecure
+  if ([string]::IsNullOrWhiteSpace(\$first)) { return "" }
+  if (\$first.Length -lt 8) {
+    Write-Host "[CHECK NEEDED] Password must be at least 8 characters." -ForegroundColor Red
+    return \$null
+  }
+  \$confirmSecure = Read-Host "Confirm password" -AsSecureString
+  \$confirm = Convert-CarolineSecureString \$confirmSecure
+  if (\$first -ne \$confirm) {
+    Write-Host "[CHECK NEEDED] Passwords did not match." -ForegroundColor Red
+    return \$null
+  }
+  return \$first
+}
+
+function Reset-CarolinePassword {
+  if (-not (Test-CarolineBackend)) {
+    Write-Host "[CHECK NEEDED] Caroline is not online yet. Press R to retry start, then press P again." -ForegroundColor Red
+    return
+  }
+  \$password = Read-CarolinePasswordChoice
+  if (\$null -eq \$password) { return }
+  \$payload = @{ password = \$password } | ConvertTo-Json -Compress
+  \$endpoint = "http://127.0.0.1:${NODE_RED_PORT}/admin/local-auth/reset"
+  Write-Host ""
+  Write-Host "[AUTH] Updating local browser login..." -ForegroundColor Cyan
+  \$result = \$payload | & wsl.exe -d \$Distro -- bash -lc "curl -fsS --max-time 8 -X POST -H 'Content-Type: application/json' --data-binary @- \$endpoint"
+  if (\$LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace(\$result)) {
+    Write-Host "[CHECK NEEDED] Password reset request failed." -ForegroundColor Red
+    return
+  }
+  try {
+    \$data = \$result | ConvertFrom-Json
+  } catch {
+    Write-Host "[CHECK NEEDED] Password reset returned an unreadable response." -ForegroundColor Red
+    return
+  }
+  if (-not \$data.ok) {
+    \$message = if (\$data.error) { \$data.error } else { "Unknown reset failure." }
+    Write-Host "[CHECK NEEDED] \$message" -ForegroundColor Red
+    return
+  }
+  Write-Host "[OK] Local browser login updated." -ForegroundColor Green
+  Write-Host ""
+  Write-Host "  Username: caroline" -ForegroundColor Yellow
+  Write-Host "  Password: \$($data.password)" -ForegroundColor Cyan
+  Write-Host "  Saved on host: \$($data.passwordPath)" -ForegroundColor DarkGray
+  if (\$data.warning) { Write-Host "  Warning: \$($data.warning)" -ForegroundColor Yellow }
+  try {
+    Set-Clipboard -Value ([string]\$data.password)
+    Write-Host "  Password copied to clipboard." -ForegroundColor Green
+  } catch {
+    Write-Host "  Copy the password before closing this window." -ForegroundColor Yellow
+  }
+  Write-Host ""
+  Write-Host "  Refresh Caroline and sign in with the new password if prompted." -ForegroundColor DarkGray
+}
+
+Show-CarolineHeader
+Write-Host "[01] Starting WSL services..." -ForegroundColor Cyan
+Invoke-CarolineStart | Out-Host
+Start-Sleep -Seconds 2
+
+if (-not (Test-CarolineBackend)) {
+  Write-Host ""
+  Write-Host "[02] Caroline needs an interactive start. Enter your Linux password if prompted." -ForegroundColor Yellow
+  Invoke-CarolineStart -Interactive | Out-Host
+}
+
+Show-CarolineHeader
+if (Test-CarolineBackend) {
+  Write-Host "[ONLINE] Caroline is awake and listening." -ForegroundColor Green
+  Show-CarolineLink
+} else {
+  Write-Host "[CHECK NEEDED] WSL started, but Caroline did not answer health checks." -ForegroundColor Red
+  Write-Host "Run this inside WSL for logs:" -ForegroundColor Yellow
+  Write-Host "  sudo journalctl -u caroline -n 120 --no-pager" -ForegroundColor DarkGray
+  Show-CarolineLink
+}
+
+\$done = \$false
+while (-not \$done) {
+  Write-Host ""
+  \$choice = Read-Host "Press O to open, P to reset password, R to retry start, L for logs, or Enter to close"
+  switch -Regex (\$choice) {
+    '^[oO]$' {
+      Start-Process \$Url
+      Write-Host "Opened \$Url" -ForegroundColor Green
+    }
+    '^[pP]$' {
+      Reset-CarolinePassword
+    }
+    '^[rR]$' {
+      Show-CarolineHeader
+      Write-Host "[RETRY] Starting Caroline services..." -ForegroundColor Cyan
+      Invoke-CarolineStart | Out-Host
+      if (Test-CarolineBackend) {
+        Write-Host "[ONLINE] Caroline is awake and listening." -ForegroundColor Green
+        Show-CarolineLink
+      } else {
+        Write-Host "[CHECK NEEDED] Still not healthy." -ForegroundColor Red
+      }
+    }
+    '^[lL]$' {
+      & wsl.exe -d \$Distro -- bash -lc "journalctl -u caroline -n 80 --no-pager 2>/dev/null || sudo journalctl -u caroline -n 80 --no-pager"
+    }
+    default { \$done = \$true }
+  }
+}
+EOF
+
+  cat > "$_folder/Open Caroline.cmd" << EOF
+@echo off
+title Project: Caroline - Open
+wsl.exe -d "${_distro}" -- bash -lc "~/.local/bin/caroline-wsl-start --no-wait"
+start "" "http://localhost:${KIOSK_PORT}/"
+EOF
+
+  cat > "$_folder/Run Kiosk.cmd" << 'EOF'
+@echo off
+title Project: Caroline - Kiosk
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Run Kiosk.ps1"
+EOF
+
+  cat > "$_folder/Run Kiosk.ps1" << EOF
+\$ErrorActionPreference = "Stop"
+wsl.exe -d "${_distro}" -- bash -lc "~/.local/bin/caroline-wsl-start --no-wait"
+\$url = "http://localhost:${KIOSK_PORT}/"
+\$edge = Join-Path \$env:ProgramFiles "Microsoft\\Edge\\Application\\msedge.exe"
+\$chrome = Join-Path \$env:ProgramFiles "Google\\Chrome\\Application\\chrome.exe"
+\$chromeX86 = Join-Path \${env:ProgramFiles(x86)} "Google\\Chrome\\Application\\chrome.exe"
+if (Test-Path \$edge) {
+  Start-Process \$edge -ArgumentList @("--kiosk", \$url, "--edge-kiosk-type=fullscreen", "--no-first-run")
+} elseif (Test-Path \$chrome) {
+  Start-Process \$chrome -ArgumentList @("--kiosk", \$url, "--no-first-run")
+} elseif (Test-Path \$chromeX86) {
+  Start-Process \$chromeX86 -ArgumentList @("--kiosk", \$url, "--no-first-run")
+} else {
+  Start-Process \$url
+}
+EOF
+
+  cat > "$_folder/Install Companion App.cmd" << 'EOF'
+@echo off
+title Project: Caroline - Install Companion
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install Companion App.ps1"
+EOF
+
+  cat > "$_folder/Install Companion App.ps1" << EOF
+\$ErrorActionPreference = "Stop"
+\$version = "${COMPANION_VERSION}"
+\$url = "${COMPANION_WINDOWS_MSI_URL}"
+\$asset = "${COMPANION_WINDOWS_MSI}"
+\$destination = Join-Path \$env:TEMP \$asset
+Write-Host "Downloading Project: Caroline Companion \$version..."
+Invoke-WebRequest -Uri \$url -OutFile \$destination
+Write-Host "Starting installer..."
+Start-Process msiexec.exe -ArgumentList @("/i", "\`"\$destination\`"") -Wait
+Write-Host "Done. Companion release: ${COMPANION_RELEASE_URL}"
+Read-Host "Press Enter to close"
+EOF
+
+  _shortcut_script="$_folder/Create Desktop Shortcuts.ps1"
+  cat > "$_shortcut_script" << EOF
+\$ErrorActionPreference = "Stop"
+\$desktop = [Environment]::GetFolderPath("Desktop")
+\$folder = "${_folder_win}"
+\$shell = New-Object -ComObject WScript.Shell
+
+function New-CarolineShortcut {
+  param(
+    [string]\$Name,
+    [string]\$Target,
+    [string]\$Icon
+  )
+  \$shortcut = \$shell.CreateShortcut((Join-Path \$desktop \$Name))
+  \$shortcut.TargetPath = \$Target
+  \$shortcut.WorkingDirectory = \$folder
+  \$shortcut.IconLocation = \$Icon
+  \$shortcut.Save()
+}
+
+\$shell32 = Join-Path \$env:SystemRoot "System32\\shell32.dll"
+New-CarolineShortcut "Project Caroline - Start Server.lnk" (Join-Path \$folder "Start Server.cmd") "\$shell32,137"
+New-CarolineShortcut "Project Caroline - Open.lnk" (Join-Path \$folder "Open Caroline.cmd") "\$shell32,220"
+New-CarolineShortcut "Project Caroline - Kiosk.lnk" (Join-Path \$folder "Run Kiosk.cmd") "\$shell32,167"
+New-CarolineShortcut "Project Caroline - Install Companion.lnk" (Join-Path \$folder "Install Companion App.cmd") "\$shell32,13"
+EOF
+
+  _shortcut_script_win="$(wslpath -w "$_shortcut_script" 2>/dev/null | tr -d '\r')"
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$_shortcut_script_win" >/dev/null 2>&1 || true
+
+  printf '%s' "$_folder"
+  return 0
+}
+
 safe_cmd_version() {
   local _cmd="$1"
   shift || true
@@ -773,7 +1260,11 @@ recommended_ollama_model() {
   if [ "$_ram_mb" -gt 0 ] && [ "$_ram_mb" -lt 4096 ]; then
     printf 'qwen2.5:0.5b'
   elif is_wsl; then
-    printf 'qwen2.5:1.5b'
+    if [ "$_ram_mb" -ge 12000 ]; then
+      printf 'gemma3:4b'
+    else
+      printf 'qwen2.5:1.5b'
+    fi
   elif is_steam_deck; then
     printf 'qwen3:1.7b'
   elif is_raspberry_pi; then
@@ -801,7 +1292,11 @@ recommended_ollama_reason() {
   local _gpu_vram_mb="${3:-$(gpu_vram_mb)}"
   local _gpu_summary="${4:-$(gpu_summary)}"
   if is_wsl; then
-    printf 'WSL detected; use OpenRouter or Windows Ollama, but this is the best remote/local target.'
+    if [ "$_model" = "gemma3:4b" ]; then
+      printf 'WSL detected with enough RAM; installing Ollama inside WSL avoids Windows bridge networking.'
+    else
+      printf 'WSL detected; local Ollama inside WSL avoids Windows bridge networking, but RAM is tight so the conservative model is safer.'
+    fi
   elif is_steam_deck; then
     printf 'Steam Deck-class hardware detected; qwen3:1.7b is the best tested local balance.'
   elif [ "$_ram_mb" -gt 0 ] && [ "$_ram_mb" -lt 4096 ]; then
@@ -1072,7 +1567,7 @@ echo ""
 
 echo -e "${MAGENTA}  // CAROLINE ARCHIVE — ASSISTANT CORE${RESET}"
 echo ""
-echo -e "${DIM}  Best experience: OpenRouter. Fast, coherent, and usually costs pennies per month.${RESET}"
+echo -e "${DIM}  Best experience: OpenRouter with Gemini 2.5 Flash Lite. Fast, coherent, and usually costs pennies per month.${RESET}"
 echo -e "${DIM}  Local AI is selected from OS, CPU architecture, RAM, and GPU/VRAM when detectable.${RESET}"
 TOTAL_RAM_MB="$(total_ram_mb)"
 SYSTEM_ARCH="$(uname -m 2>/dev/null || echo unknown)"
@@ -1084,14 +1579,10 @@ HARDWARE_PROFILE="$(caroline_hardware_profile)"
 RECOMMENDED_OLLAMA_MODEL="$(recommended_ollama_model "$TOTAL_RAM_MB" "$GPU_VRAM_MB" "$GPU_SUMMARY")"
 RECOMMENDED_OLLAMA_REASON="$(recommended_ollama_reason "$RECOMMENDED_OLLAMA_MODEL" "$TOTAL_RAM_MB" "$GPU_VRAM_MB" "$GPU_SUMMARY")"
 if is_wsl; then
-  WSL_WINDOWS_HOST_IP="$(wsl_windows_host_ip)"
-  if [ -n "$WSL_WINDOWS_HOST_IP" ]; then
-    OLLAMA_URL_DEFAULT="http://${WSL_WINDOWS_HOST_IP}:11434"
-  fi
   echo ""
-  echo -e "${YELLOW}  ⚠ WSL detected. Installing Linux Ollama inside WSL is not recommended for this beta.${RESET}"
-  echo -e "${DIM}    Use OpenRouter, or install Ollama for Windows and set Caroline's Ollama URL to:${RESET}"
-  echo -e "${DIM}    ${OLLAMA_URL_DEFAULT}${RESET}"
+  echo -e "${CYAN}  WSL detected. Local Ollama will run inside WSL when selected.${RESET}"
+  echo -e "${DIM}    This keeps Caroline on ${OLLAMA_URL_DEFAULT} and avoids Windows bridge/firewall setup.${RESET}"
+  echo -e "${DIM}    Windows Ollama can still be used manually, but it is no longer the recommended WSL path.${RESET}"
 fi
 echo ""
 echo -e "${CYAN}  Detected hardware:${RESET} ${BOLD}${HARDWARE_PROFILE}${RESET} ${DIM}(${SYSTEM_ARCH}, ${TOTAL_RAM_MB:-0}MB RAM)${RESET}"
@@ -1126,10 +1617,7 @@ if [ "$TOTAL_RAM_MB" -gt 0 ] && [ "$TOTAL_RAM_MB" -lt 4096 ]; then
   echo ""
 fi
 
-if is_wsl; then
-  INSTALL_OLLAMA="N"
-  echo -e "${DIM}  Install experimental local Ollama fallback on this device? (y/N): N  (WSL: use Windows Ollama or OpenRouter)${RESET}"
-elif [ "$CAROLINE_NONINTERACTIVE" = "true" ]; then
+if [ "$CAROLINE_NONINTERACTIVE" = "true" ]; then
   INSTALL_OLLAMA="N"
   echo -e "${DIM}  Install experimental local Ollama fallback on this device? (y/N): N  (noninteractive update)${RESET}"
 else
@@ -1141,7 +1629,7 @@ echo ""
 if [ "$INSTALL_OLLAMA" = "y" ] || [ "$INSTALL_OLLAMA" = "Y" ]; then
   AI_PROVIDER="ollama"
   echo -e "${DIM}  Choose a local model. ${RECOMMENDED_OLLAMA_MODEL} is selected for this hardware.${RESET}"
-  echo -e "${DIM}  OpenRouter is still the best Caroline experience.${RESET}"
+  echo -e "${DIM}  OpenRouter with Gemini 2.5 Flash Lite is still the best Caroline experience.${RESET}"
   OLLAMA_MODEL="$(choose_ollama_model "$RECOMMENDED_OLLAMA_MODEL")"
   echo ""
   echo -e "${DIM}  Selected ${OLLAMA_MODEL}. The installer will download it after the core services are ready.${RESET}"
@@ -1274,6 +1762,7 @@ if [ -z "$LOCAL_AUTH_ENABLED" ]; then
 fi
 if [ "$LOCAL_AUTH_ENABLED" = "true" ]; then
   echo -e "${DIM}  Local browser login: enabled${RESET}"
+  prompt_admin_password_choice
 else
   echo -e "${DIM}  Local browser login: disabled${RESET}"
 fi
@@ -2067,6 +2556,7 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | if (.zipcode and ((.zipCode // "") == "")) then .zipCode = .zipcode else . end
     | if (((.piIp // "") == "") or (.piIp == "localhost") or (.piIp == "127.0.0.1")) then .piIp = $defaults.piIp else . end
     | if (((.nodeRedUrl // "") == "") or ((.nodeRedUrl // "") | test("^https?://(localhost|127[.]0[.]0[.]1)(:|/|$)")) or ((.nodeRedUrl // "") | test(":1880/?$")) or ((.nodeRedUrl // "") | contains("[PI_IP]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
+    | if ($isWsl and ((.nodeRedUrl // "") | test("^https?://172[.](1[6-9]|2[0-9]|3[0-1])[.]"))) then .nodeRedUrl = $defaults.nodeRedUrl else . end
     | ($existing.piIp // "") as $oldPiIp
     | ($existing.nodeRedUrl // "") as $oldNodeRedUrl
     | if (($oldPiIp != "")
@@ -2079,6 +2569,7 @@ if [ -s "$SETTINGS_PATH" ] && jq empty "$SETTINGS_PATH" >/dev/null 2>&1; then
     | .localAuthEnabled = $defaults.localAuthEnabled
     | if $preserveKiosk then . else .kioskMode = $currentKiosk end
   ' \
+    --argjson isWsl "$([ -n "${WSL_DISTRO_NAME:-}" ] && echo true || echo false)" \
     --argjson preserveKiosk "$([ "$CAROLINE_NONINTERACTIVE" = "true" ] && echo true || echo false)" \
     --argjson currentKiosk "$CURRENT_KIOSK_MODE" \
     "$DEFAULT_SETTINGS_PATH" "$SETTINGS_PATH" > "$MERGED_SETTINGS_PATH"
@@ -2309,8 +2800,17 @@ CHROMIUM_WINDOWED_PROFILE_DIR="$REAL_HOME/.config/caroline/chromium-window"
 
 echo -e "${YELLOW}  ► Creating desktop launch shortcuts...${RESET}"
 if is_wsl; then
-  echo -e "${DIM}  WSL server/client mode detected — use your Windows browser instead.${RESET}"
-  echo -e "${DIM}  Open: http://localhost:${KIOSK_PORT}/${RESET}"
+  write_wsl_start_helper
+  WSL_SHORTCUT_DIR="$(write_wsl_windows_shortcuts 2>/dev/null || true)"
+  if [ -n "$WSL_SHORTCUT_DIR" ]; then
+    echo -e "${GREEN}  ✓ Windows desktop launchers created for WSL${RESET}"
+    echo -e "${DIM}    Folder: ${WSL_SHORTCUT_DIR}${RESET}"
+    echo -e "${DIM}    Open:   http://localhost:${KIOSK_PORT}/${RESET}"
+  else
+    echo -e "${YELLOW}  ⚠ Could not create Windows desktop launchers from WSL.${RESET}"
+    echo -e "${DIM}    Start helper: ${REAL_HOME}/.local/bin/caroline-wsl-start${RESET}"
+    echo -e "${DIM}    Open:         http://localhost:${KIOSK_PORT}/${RESET}"
+  fi
 elif has_desktop_environment; then
   if ensure_browser; then
     if [ "${BROWSER_FAMILY:-}" = "chromium" ]; then
@@ -2465,13 +2965,14 @@ echo -e "${CYAN}  │${RESET}  HTTPS proxy: https://${BROWSER_HOST_FINAL}:${HTTP
 if [ "$LOCAL_AUTH_ENABLED" = "true" ]; then
 echo -e "${CYAN}  │${RESET}  Login user:  ${BOLD}caroline${RESET}"
 echo -e "${CYAN}  │${RESET}  Login pass:  ${BOLD}cat ${CAROLINE_ADMIN_PASSWORD_PATH}${RESET}"
+echo -e "${CYAN}  │${RESET}  Password file:${BOLD} ${CAROLINE_ADMIN_PASSWORD_PATH}${RESET}"
 else
 echo -e "${CYAN}  │${RESET}  Login:       disabled for this local install"
 fi
 if [ "$AI_PROVIDER" = "ollama" ]; then
 echo -e "${CYAN}  │${RESET}  AI Core:     Local — Ollama (${OLLAMA_MODEL})"
 else
-echo -e "${CYAN}  │${RESET}  AI Core:     Cloud — OpenRouter (add key in settings)"
+echo -e "${CYAN}  │${RESET}  AI Core:     Cloud — OpenRouter / Gemini 2.5 Flash Lite"
 fi
 echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 echo ""
@@ -2501,6 +3002,8 @@ elif is_wsl; then
   echo -e "${CYAN}  │${RESET}  Windows browser:   ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  Inside WSL:        ${BOLD}http://localhost:${KIOSK_PORT}/${RESET}"
   echo -e "${CYAN}  │${RESET}  WSL network IP:    http://${PI_IP_FINAL}:${KIOSK_PORT}/"
+  echo -e "${CYAN}  │${RESET}  Desktop folder:    ${BOLD}Project Caroline${RESET}"
+  echo -e "${CYAN}  │${RESET}  Shortcuts:         Start Server, Open, Kiosk, Install Companion"
   echo -e "${CYAN}  │${RESET}  If it fails:       restart WSL or Windows, then retry localhost"
   echo -e "${CYAN}  └─────────────────────────────────────────────────────────┘${RESET}"
 else
@@ -2521,10 +3024,10 @@ echo -e "${CYAN}  ┌───────────────────�
 echo -e "${CYAN}  │  CONFIGURE MANUALLY AFTER REBOOT                        │${RESET}"
 echo -e "${CYAN}  ├─────────────────────────────────────────────────────────┤${RESET}"
 if [ "$AI_PROVIDER" = "openrouter" ]; then
-echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add in Caroline Settings > AI"
+echo -e "${CYAN}  │${RESET}  ${YELLOW}⚡ OpenRouter API key${RESET} — add in Settings > AI for Gemini 2.5 Flash Lite"
 fi
 if is_wsl; then
-echo -e "${CYAN}  │${RESET}  ${DIM}Ollama on Windows${RESET}  — optional; set URL to ${OLLAMA_URL_DEFAULT}"
+echo -e "${CYAN}  │${RESET}  ${DIM}Ollama in WSL${RESET}      — optional local fallback at ${OLLAMA_URL_DEFAULT}"
 fi
 echo -e "${CYAN}  │${RESET}  ${DIM}Discord token${RESET}        — Settings > Connect (optional)"
 echo -e "${CYAN}  │${RESET}  ${DIM}Spotify client ID${RESET}    — Settings > Connect (optional)"

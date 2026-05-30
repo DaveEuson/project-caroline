@@ -2469,18 +2469,23 @@
             <div>
               <span class="ai-mode-kicker" id="ai-mode-kicker">Cloud mode</span>
               <strong class="ai-mode-title" id="ai-mode-title">OpenRouter: faster hosted AI</strong>
-              <div class="ai-mode-copy" id="ai-mode-copy">Best for polished conversation, calendar parsing, and lower load on Pi or Steam Deck.</div>
+              <div class="ai-mode-copy" id="ai-mode-copy">Recommended default: Gemini 2.5 Flash Lite for polished replies, low cost, and lower load on Pi or Steam Deck.</div>
             </div>
           </div>
           <div id="openrouter-model-row" style="margin-top:14px">
             <div class="settings-row">
               <div><div class="settings-label">OpenRouter model</div><div class="settings-sub">Requires an OpenRouter API key</div></div>
               <select class="settings-select" id="set-model" onchange="S.aiModel=this.value;updateAiConfigIndicator()">
-                <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 — Fast</option>
-                <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Balanced</option>
-                <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-                <option value="openai/gpt-4o">GPT-4o</option>
-                <option value="google/gemini-flash-1.5">Gemini Flash</option>
+                <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite - recommended / lowest cost</option>
+                <option value="google/gemini-2.5-flash">Gemini 2.5 Flash - stronger replies</option>
+                <option value="mistralai/mistral-small-3.2-24b-instruct">Mistral Small 3.2 24B - current budget</option>
+                <option value="mistralai/mistral-small-24b-instruct-2501">Mistral Small 24B - tested budget</option>
+                <option value="deepseek/deepseek-v3.2">DeepSeek V3.2 - quality fallback</option>
+                <option value="openai/gpt-4o-mini">GPT-4o Mini - OpenAI budget fallback</option>
+                <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 - premium fast</option>
+                <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5 - premium quality</option>
+                <option value="openrouter/free">OpenRouter Free - experimental pool</option>
+                <option value="openai/gpt-4o">GPT-4o - legacy expensive</option>
               </select>
             </div>
           </div>
@@ -2507,9 +2512,10 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr class="rec-table-row"><td>OpenRouter</td><td>Cloud</td><td>⚡⚡⚡⚡⚡</td><td>Best experience</td><td></td></tr>
+                    <tr class="rec-table-row"><td>Gemini 2.5 Flash Lite</td><td>Cloud</td><td>⚡⚡⚡⚡⚡</td><td>Recommended OpenRouter default</td><td></td></tr>
                     <tr class="rec-table-row"><td>qwen3:1.7b</td><td>~1.4 GB</td><td>⚡⚡⚡⚡</td><td>Steam Deck quality pick</td><td><button type="button" class="detect-btn" onclick="startPull('qwen3:1.7b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>mistral:7b</td><td>~4.1 GB</td><td>⚡⚡⚡</td><td>Bazzite / RTX 2070 quality pick</td><td><button type="button" class="detect-btn" onclick="startPull('mistral:7b')">Pull</button></td></tr>
+                    <tr class="rec-table-row"><td>gemma3:4b</td><td>~3.3 GB</td><td>⚡⚡⚡</td><td>WSL / desktop responsive fallback</td><td><button type="button" class="detect-btn" onclick="startPull('gemma3:4b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>gemma4:e4b</td><td>~7.4 GB</td><td>⚡⚡</td><td>Desktop quality mode</td><td><button type="button" class="detect-btn" onclick="startPull('gemma4:e4b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>qwen3:0.6b</td><td>~522 MB</td><td>⚡⚡⚡⚡⚡</td><td>Steam Deck fast fallback</td><td><button type="button" class="detect-btn" onclick="startPull('qwen3:0.6b')">Pull</button></td></tr>
                     <tr class="rec-table-row"><td>qwen2.5:1.5b</td><td>~986 MB</td><td>⚡⚡⚡</td><td>Raspberry Pi local quality</td><td><button type="button" class="detect-btn" onclick="startPull('qwen2.5:1.5b')">Pull</button></td></tr>
@@ -2552,6 +2558,11 @@
                   <span class="ollama-pull-preset-title">Bazzite best</span>
                   <span class="ollama-pull-preset-model">mistral:7b</span>
                   <span class="ollama-pull-preset-meta">Best RTX 2070 balance. Coherent, fast, and 100% GPU-resident.</span>
+                </button>
+                <button type="button" class="ollama-pull-preset" onclick="selectOllamaPullModel('gemma3:4b')">
+                  <span class="ollama-pull-preset-title">WSL chat</span>
+                  <span class="ollama-pull-preset-model">gemma3:4b</span>
+                  <span class="ollama-pull-preset-meta">Good short-reply fallback when a 7B model feels too dramatic.</span>
                 </button>
                 <button type="button" class="ollama-pull-preset" onclick="selectOllamaPullModel('gemma4:e4b')">
                   <span class="ollama-pull-preset-title">Desktop quality</span>
@@ -2625,11 +2636,11 @@
         <div class="settings-section">
           <h3>Connection</h3>
           <div class="settings-row">
-            <div><div class="settings-label">Node-RED URL</div><div class="settings-sub">Auto-detected through Caroline</div></div>
+            <div><div class="settings-label">Caroline Host URL</div><div class="settings-sub">Gateway for chat, settings, and integrations</div></div>
             <div class="input-detect-row">
               <input class="settings-input" id="set-nodered-url" type="text" placeholder="Auto" style="width:200px" oninput="updateSpotifyRedirectDisplay()"/>
-              <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Node-RED URL"><i class="ti ti-copy"></i></button>
-              <span id="nodered-url-status" class="nodered-status" title="Node-RED reachability">•</span>
+              <button type="button" class="detect-btn" id="copy-nodered-url-btn" onclick="copyNodeRedUrl()" title="Copy Caroline Host URL"><i class="ti ti-copy"></i></button>
+              <span id="nodered-url-status" class="nodered-status" title="Caroline host reachability">•</span>
             </div>
           </div>
           <div id="openrouter-key-row">
@@ -2989,6 +3000,10 @@
             </div>
           </div>
           <div class="settings-row" style="margin-top:14px;">
+            <div><div class="settings-label">Local browser login</div><div class="settings-sub" id="local-login-status">Username: caroline</div></div>
+            <button class="sys-btn" id="reset-local-login-btn" type="button" onclick="resetLocalLoginPassword(this)">Reset Password</button>
+          </div>
+          <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">Wipe all memory</div><div class="settings-sub">Delete settings, history &amp; personality — she won't be happy</div></div>
             <button class="sys-btn danger" id="factory-reset-btn" onclick="wipeMemory(this)">💀 Factory Reset</button>
           </div>
@@ -3242,7 +3257,7 @@
   <button id="news-ticker-close" type="button" onclick="toggleNewsTicker(false)" title="Hide news ticker" aria-label="Hide news ticker"><i class="ti ti-x"></i></button>
 </div>
 
-<div id="offline-banner">⚡ NODE-RED UNREACHABLE — chat unavailable until reconnected <button id="offline-reconnect-btn" type="button" onclick="retryNodeRedConnection()">Reconnect</button></div>
+<div id="offline-banner">⚡ CAROLINE BACKEND UNREACHABLE — chat unavailable until reconnected <button id="offline-reconnect-btn" type="button" onclick="retryNodeRedConnection()">Reconnect</button></div>
 
 <div id="main">
   <div id="left">
@@ -3620,8 +3635,21 @@ const SAME_ORIGIN_NODE_RED_URL = (window.location.origin && /^https?:$/.test(win
   : '';
 const DEFAULT_NODE_RED_CONFIG_URL = SAME_ORIGIN_NODE_RED_URL || ('http://' + (window.location.hostname || 'localhost') + ':' + NODE_RED_CONFIG_PORT);
 const DEFAULT_NODE_RED_URL = DEFAULT_NODE_RED_CONFIG_URL;
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: 'anthropic/claude-haiku-4.5', visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULT_OPENROUTER_MODEL = 'google/gemini-2.5-flash-lite';
+function normalizeOpenRouterModel(value) {
+  const v = String(value || '').trim();
+  const legacy = {
+    'google/gemini-flash-1.5': DEFAULT_OPENROUTER_MODEL,
+    'google/gemini-pro-1.5': 'google/gemini-2.5-flash',
+    'google/gemini-flash-latest': 'google/gemini-2.5-flash',
+    '~google/gemini-flash-latest': 'google/gemini-2.5-flash',
+    'anthropic/claude-sonnet-4-5': 'anthropic/claude-sonnet-4.5'
+  };
+  return legacy[v] || v || DEFAULT_OPENROUTER_MODEL;
+}
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
+S.aiModel = normalizeOpenRouterModel(S.aiModel);
 let settingsHydrated = false;
 let serverSettingsLoaded = false;
 
@@ -3644,6 +3672,28 @@ function applyPiPerformanceMode() {
   document.body.classList.toggle('resource-saver', enabled);
 }
 
+function browserHostIsLocalHost() {
+  const h = String(window.location.hostname || '').trim().toLowerCase();
+  return !h || h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]';
+}
+
+function isWslBridgeIpHost(host) {
+  const h = String(host || '').trim().toLowerCase();
+  const m = h.match(/^172\.(\d+)\./);
+  return !!(m && Number(m[1]) >= 16 && Number(m[1]) <= 31);
+}
+
+function isNodeRedHttpPort(port) {
+  const p = String(port || '');
+  if (!p || p === String(NODE_RED_CONFIG_PORT) || p === '8080') return true;
+  try {
+    const defaultPort = new URL(DEFAULT_NODE_RED_CONFIG_URL).port;
+    return !!defaultPort && p === defaultPort;
+  } catch(e) {
+    return false;
+  }
+}
+
 function normalizeConfiguredNodeRedUrl(value) {
   let u = String(value || '').trim();
   if (!u || u.includes('[PI_IP]')) u = DEFAULT_NODE_RED_CONFIG_URL;
@@ -3652,7 +3702,11 @@ function normalizeConfiguredNodeRedUrl(value) {
     const target = new URL(u);
     const sameHost = target.hostname === window.location.hostname;
     const localTarget = ['localhost','127.0.0.1','::1','[::1]'].includes(target.hostname);
-    if (SAME_ORIGIN_NODE_RED_URL && target.protocol === 'http:' && sameHost && (!target.port || target.port === String(NODE_RED_CONFIG_PORT))) {
+    const nodeRedPort = isNodeRedHttpPort(target.port);
+    if (SAME_ORIGIN_NODE_RED_URL && target.protocol === 'http:' && sameHost && nodeRedPort) {
+      u = SAME_ORIGIN_NODE_RED_URL;
+    }
+    if (SAME_ORIGIN_NODE_RED_URL && target.protocol === 'http:' && nodeRedPort && browserHostIsLocalHost() && isWslBridgeIpHost(target.hostname)) {
       u = SAME_ORIGIN_NODE_RED_URL;
     }
     if (target.protocol === 'https:' && target.port === String(SECURE_VOICE_PORT) && (sameHost || localTarget || isPrivateIpHost(target.hostname))) {
@@ -3660,7 +3714,6 @@ function normalizeConfiguredNodeRedUrl(value) {
     }
     const browserHost = window.location.hostname || '';
     const browserHostIsRemote = browserHost && !['localhost','127.0.0.1','::1','[::1]'].includes(browserHost);
-    const nodeRedPort = !target.port || target.port === String(NODE_RED_CONFIG_PORT);
     if (browserHostIsRemote && nodeRedPort && target.hostname !== browserHost && isPrivateIpHost(target.hostname)) {
       u = DEFAULT_NODE_RED_CONFIG_URL;
     }
@@ -3684,6 +3737,7 @@ function publicNodeRedUrlFrom(url) {
       if (host) return 'http://' + host + ':8080';
     }
     if (isLocalHostName(target.hostname) && savedPiHost && !isLocalHostName(savedPiHost)) {
+      if (browserHostIsLocalHost() && isWslBridgeIpHost(savedPiHost)) return DEFAULT_NODE_RED_CONFIG_URL;
       return 'http://' + savedPiHost + ':8080';
     }
   } catch(e) {}
@@ -3859,6 +3913,7 @@ function mergeServerSettings(d, options = {}) {
   if (d.zipcode && !d.zipCode) d.zipCode = d.zipcode;
   if (d.piIp && !d.nodeRedUrl) d.nodeRedUrl = SAME_ORIGIN_NODE_RED_URL || ('http://' + d.piIp + ':8080');
   if (d.nodeRedUrl) d.nodeRedUrl = normalizeConfiguredNodeRedUrl(d.nodeRedUrl);
+  if (d.aiModel) d.aiModel = normalizeOpenRouterModel(d.aiModel);
   if (serverFeatureState) d.features = serverFeatureState;
   normalizeSettingsBooleans(d);
   Object.keys(d).forEach(k => {
@@ -3875,6 +3930,7 @@ function mergeServerSettings(d, options = {}) {
   });
   S.features = normalizeFeatureState(S.features, { repairAllOff: false });
   normalizeSettingsBooleans(S);
+  S.aiModel = normalizeOpenRouterModel(S.aiModel);
   S.discordMode = normalizeDiscordMode(S.discordMode);
   if (typeof normalizeAvatarIndex === 'function') S.avatar = normalizeAvatarIndex(S.avatar);
   if (typeof syncSelectedAvatarId === 'function') syncSelectedAvatarId(S.avatar);
@@ -4080,8 +4136,10 @@ async function refreshIntegrationHealth() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     integrationHealth = await r.json();
     if (integrationHealth.google) S.googleConnected = parseSettingBool(integrationHealth.google.connected, parseSettingBool(S.googleConnected));
+    if (integrationHealth.hostDeviceType) S.hostDeviceType = integrationHealth.hostDeviceType;
+    if (integrationHealth.build && integrationHealth.build.hardwareProfile) S.hardwareProfile = integrationHealth.build.hardwareProfile;
     if (integrationHealth.aiProvider) S.aiProvider = integrationHealth.aiProvider;
-    if (integrationHealth.aiModel) S.aiModel = integrationHealth.aiModel;
+    if (integrationHealth.aiModel) S.aiModel = normalizeOpenRouterModel(integrationHealth.aiModel);
     if (integrationHealth.ollamaModel) S.ollamaModel = integrationHealth.ollamaModel;
     localStorage.setItem('caro_settings', JSON.stringify(S));
   } catch(e) {
@@ -4104,7 +4162,7 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   const providerEl = document.getElementById('set-ai-provider');
   if (providerEl) providerEl.value = provider;
   const modelEl = document.getElementById('set-model');
-  if (modelEl) modelEl.value = S.aiModel || 'anthropic/claude-haiku-4.5';
+  if (modelEl) modelEl.value = S.aiModel || DEFAULT_OPENROUTER_MODEL;
   setInputValue('set-orkey', S.openrouterKey || '', { allowBlank });
   setInputValue('set-nodered-url', S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL, { allowBlank });
   setInputValue('set-hueip', S.hueIp || '', { allowBlank });
@@ -4402,7 +4460,7 @@ function updateAboutPanel() {
   set('about-user', S.userName || 'not set');
   set('about-ai', S.aiName || 'Caroline');
   set('about-home', [S.cityName || S.location || '', S.timezone || ''].filter(Boolean).join(' · ') || 'not set');
-  set('about-provider', (S.aiProvider || 'openrouter') + ' · ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'qwen2.5:1.5b') : (S.aiModel || 'anthropic/claude-haiku-4.5')));
+  set('about-provider', (S.aiProvider || 'openrouter') + ' · ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'qwen2.5:1.5b') : (S.aiModel || DEFAULT_OPENROUTER_MODEL)));
   set('about-memory', (setupMemory ? 'setup memory saved' : 'setup memory empty') + ' · ' + (importedMemory ? 'imported profile saved' : 'no imported profile'));
   set('about-widgets', enabledWidgets.length + '/' + FEATURE_KEYS.length + ' enabled: ' + enabledWidgets.join(', '));
 }
@@ -4553,6 +4611,8 @@ async function runSystemCheck(options = {}) {
         [health.version || '', commit ? 'commit ' + commit : '', health.hostDeviceType || ''].filter(Boolean).join(' · ')
       );
       integrationHealth = Object.assign({}, integrationHealth, health);
+      if (health.hostDeviceType) S.hostDeviceType = health.hostDeviceType;
+      if (health.build && health.build.hardwareProfile) S.hardwareProfile = health.build.hardwareProfile;
       if (health.aiProvider) S.aiProvider = health.aiProvider;
       if (health.aiModel) S.aiModel = health.aiModel;
       if (health.ollamaModel) S.ollamaModel = health.ollamaModel;
@@ -4714,7 +4774,7 @@ async function copyBuildInfo() {
     'Version: v' + VERSION,
     'Build: ' + shortBuildLabel(),
     'Installed: ' + (buildInfo.installedAt || 'not installed by script'),
-    'Node-RED: ' + (S.nodeRedUrl || DEFAULT_NODE_RED_URL),
+    'Host API: ' + (S.nodeRedUrl || DEFAULT_NODE_RED_URL),
     'AI: ' + (S.aiProvider || 'openrouter') + ' / ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || '') : (S.aiModel || ''))
   ].join('\n');
   try {
@@ -4749,7 +4809,7 @@ function buildIssueReportUrl() {
     '- Installed: ' + (buildInfo.installedAt || 'not installed by script'),
     '- Source: ' + (buildInfo.repo || buildInfo.source || 'unknown'),
     '- AI provider: ' + (S.aiProvider || 'openrouter'),
-    '- AI model: ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'qwen2.5:1.5b') : (S.aiModel || 'anthropic/claude-haiku-4.5')),
+    '- AI model: ' + ((S.aiProvider === 'ollama') ? (S.ollamaModel || 'qwen2.5:1.5b') : (S.aiModel || DEFAULT_OPENROUTER_MODEL)),
     '- Browser: ' + (navigator.userAgent || 'unknown').replace(/\s+/g, ' ').slice(0, 180),
     '- Widgets enabled: ' + (enabledWidgets.length ? enabledWidgets.join(', ') : 'none'),
     '',
@@ -4812,8 +4872,8 @@ function renderUsageStats() {
   if (!el) return;
   const inTok  = Math.ceil(_usage.inChars  / 4);
   const outTok = Math.ceil(_usage.outChars / 4);
-  // Haiku pricing: $0.80/1M in, $4.00/1M out (via OpenRouter, rough blended)
-  const costUsd = ((inTok * 0.0000008) + (outTok * 0.000004)).toFixed(5);
+  // Gemini 2.5 Flash Lite pricing estimate: $0.10/1M in, $0.40/1M out via OpenRouter.
+  const costUsd = ((inTok * 0.0000001) + (outTok * 0.0000004)).toFixed(5);
   el.innerHTML = `
     <div class="usage-row"><span>Messages sent</span><span class="usage-val">${_usage.msgs}</span></div>
     <div class="usage-row"><span>Est. input tokens</span><span class="usage-val">${inTok.toLocaleString()}</span></div>
@@ -5087,6 +5147,46 @@ async function resetPrivacyData(btn) {
   await refreshPrivacyDashboard({ quiet: true });
   if (btn) { btn.disabled = false; btn.textContent = original || 'Reset Privacy Data'; }
 }
+async function resetLocalLoginPassword(btn) {
+  const entered = window.prompt('Enter a new local login password for user "caroline". Leave blank to generate one.');
+  if (entered === null) return;
+  if (entered && entered.length < 8) {
+    showSettingsFeedback('Password must be at least 8 characters', true);
+    return;
+  }
+  if (!entered && !confirm('Generate a new local login password? You will need the new password after refresh.')) return;
+  const original = btn ? btn.textContent : '';
+  const status = document.getElementById('local-login-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Resetting...'; }
+  if (status) status.textContent = 'Updating local login...';
+  try {
+    const resp = await fetchJsonWithTimeout(httpBase() + '/admin/local-auth/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: entered }),
+      timeoutMs: 7000
+    }, 'Local login reset');
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data.ok) throw new Error(data.error || ('HTTP ' + resp.status));
+    const password = String(data.password || '');
+    const path = String(data.passwordPath || '~/caroline/caroline_admin_password.txt');
+    if (status) status.textContent = 'Updated. Password saved at ' + path;
+    try {
+      await navigator.clipboard.writeText(password);
+      showSettingsFeedback('Local login password reset and copied');
+    } catch(e) {
+      window.prompt('Copy the new Caroline password:', password);
+      showSettingsFeedback('Local login password reset');
+    }
+    alert('Local browser login updated.\n\nUsername: caroline\nPassword: ' + password + '\n\nSaved on host: ' + path + '\n\nRefresh and sign in with the new password if prompted.');
+  } catch(e) {
+    if (status) status.textContent = 'Reset failed: ' + e.message;
+    showSettingsFeedback('Local login reset failed', true);
+    console.warn('[Caroline] local login reset failed:', e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = original || 'Reset Password'; }
+  }
+}
 let pendingSwatch = S.theme;
 let spotifyToken = localStorage.getItem('spotify_token') || '';
 let spotifyPollInterval = null;
@@ -5114,7 +5214,7 @@ function getNodeRedUrl() {
   u = (u || DEFAULT_NODE_RED_URL).replace(/\/+$/, '') || DEFAULT_NODE_RED_URL;
   if (S) S.nodeRedUrl = publicNodeRedUrlFrom(u);
   const field = document.getElementById('set-nodered-url');
-  if (field && !field.value.trim()) field.value = configured;
+  if (field && (!field.value.trim() || (browserHostIsLocalHost() && isWslBridgeIpHost(normalizeHostCandidate(field.value))))) field.value = configured;
   return u;
 }
 function isLocalHostName(host) {
@@ -5386,7 +5486,7 @@ function showSpotifyAuthDialog(authUrl, clientId, redirectUri) {
   const copyRedirectBtn = isRelay ? '' : `<button type="button" onclick="copySpotifyAuthText('${spotifyHtmlEscape(redirectUri)}','Redirect URI copied')" style="background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.45);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy Redirect URI</button>`;
   const footerNote = isRelay
     ? `<div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Using the built-in Caroline integration. If you want a private app, enter a Custom Client ID in Spotify settings.</div>`
-    : `<div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Client ID ending ${spotifyHtmlEscape(shortIdSuffix(clientId))}. If Spotify says <strong style="color:#fca5a5;">redirect_uri mismatch</strong>, the URI above is not saved in your Spotify app yet, or the Node-RED URL changed.</div>`;
+    : `<div style="margin-top:14px;font-size:10px;line-height:1.5;color:#94a3b8;">Client ID ending ${spotifyHtmlEscape(shortIdSuffix(clientId))}. If Spotify says <strong style="color:#fca5a5;">redirect_uri mismatch</strong>, the URI above is not saved in your Spotify app yet, or the Caroline Host URL changed.</div>`;
   wrap.innerHTML = `
     <div role="dialog" aria-modal="true" aria-labelledby="spotify-auth-title" style="width:min(620px,100%);background:#090713;border:1px solid rgba(29,185,84,.45);border-radius:14px;box-shadow:0 0 40px rgba(0,0,0,.6),0 0 28px rgba(29,185,84,.16);padding:22px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;">
@@ -5727,7 +5827,7 @@ function updateFeatWarnings() {
      const hasToken = localStorage.getItem('spotify_token');
      if (!hasToken) warn('ℹ️ Spotify enabled — connect account in Settings -> Connect');
   }
-  if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Node-RED URL set to receive events');
+  if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Caroline Host URL set to receive events');
 }
 
 async function testNodeRedUrl() {
@@ -5741,12 +5841,12 @@ async function testNodeRedUrl() {
   }
   const base = getNodeRedUrl();
   try {
-    const r = await fetchJsonWithTimeout(base + '/admin/get-settings', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Node-RED status');
+    const r = await fetchJsonWithTimeout(base + '/admin/get-settings', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Caroline host status');
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    if (status) { status.textContent = '✓'; status.className = 'nodered-status ok'; status.title = 'Node-RED reachable'; }
+    if (status) { status.textContent = '✓'; status.className = 'nodered-status ok'; status.title = 'Caroline host reachable'; }
     return true;
   } catch(e) {
-    if (status) { status.textContent = '✕'; status.className = 'nodered-status err'; status.title = 'Node-RED unreachable: ' + e.message; }
+    if (status) { status.textContent = '✕'; status.className = 'nodered-status err'; status.title = 'Caroline host unreachable: ' + e.message; }
     return false;
   }
 }
@@ -5804,7 +5904,7 @@ function toggleSettings() {
     document.getElementById('set-channel').value = S.defaultChannel;
     document.getElementById('set-auto-theme').checked = parseSettingBool(S.autoTheme, BOOLEAN_DEFAULTS.autoTheme);
     document.getElementById('set-ainame').value = S.aiName || 'Caroline';
-    document.getElementById('set-model').value = S.aiModel || 'anthropic/claude-haiku-4.5';
+    document.getElementById('set-model').value = S.aiModel || DEFAULT_OPENROUTER_MODEL;
     document.getElementById('set-nodered-url').value = S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL;
     setTimeout(testNodeRedUrl, 80);
     applySettingsToForm({ allowBlank: true });
@@ -6218,21 +6318,28 @@ function renderAiModeCard(provider) {
   } else {
     kicker.textContent = 'Cloud mode';
     title.textContent = 'OpenRouter: faster hosted AI';
-    copy.textContent = 'Best for polished conversation, calendar parsing, and lower load on Pi or Steam Deck.';
+    copy.textContent = 'Recommended default: Gemini 2.5 Flash Lite for polished replies, low cost, and lower load on Pi or Steam Deck.';
   }
 }
 
 function _shortModelName(provider, model) {
   if (provider === 'ollama') return (model || S.ollamaModel || 'Ollama').replace(/:.+/, m => m); // keep tag
   const map = {
+    'google/gemini-2.5-flash-lite': 'Gemini Flash Lite',
+    'google/gemini-2.5-flash': 'Gemini 2.5 Flash',
+    'mistralai/mistral-small-3.2-24b-instruct': 'Mistral Small 3.2',
+    'mistralai/mistral-small-24b-instruct-2501': 'Mistral Small',
+    'openrouter/free': 'OpenRouter Free',
+    'deepseek/deepseek-v3.2': 'DeepSeek V3.2',
     'anthropic/claude-haiku-4.5': 'Haiku 4.5',
     'anthropic/claude-haiku-4-5': 'Haiku 4.5',
+    'anthropic/claude-sonnet-4.5': 'Sonnet 4.5',
     'anthropic/claude-sonnet-4-5': 'Sonnet 4.5',
     'anthropic/claude-sonnet-4-6': 'Sonnet 4.6',
     'anthropic/claude-opus-4': 'Opus 4',
     'openai/gpt-4o-mini': 'GPT-4o mini',
     'openai/gpt-4o': 'GPT-4o',
-    'google/gemini-flash-1.5': 'Gemini Flash',
+    'google/gemini-flash-1.5': 'Gemini Flash Legacy',
     'google/gemini-pro-1.5': 'Gemini Pro',
   };
   const m = model || S.aiModel || '';
@@ -6259,6 +6366,7 @@ function updateAiConfigIndicator(provider) {
 const OLLAMA_RECOMMENDED_MODELS = [
   'qwen3:1.7b',
   'mistral:7b',
+  'gemma3:4b',
   'gemma4:e4b',
   'qwen3:0.6b',
   'qwen2.5:1.5b',
@@ -6267,14 +6375,69 @@ const OLLAMA_RECOMMENDED_MODELS = [
 ];
 const OLLAMA_RECOMMENDED = new Set(OLLAMA_RECOMMENDED_MODELS);
 let _cachedOllamaModels = null;
+let _ollamaModelsSource = '';
+let _ollamaHostReachable = false;
+
+function normalizeOllamaBase(base) {
+  base = String(base || '').trim();
+  if (!/^https?:\/\//i.test(base)) base = 'http://' + base;
+  return base.replace(/\/+$/, '');
+}
+
+function browserLocalOllamaCandidates() {
+  const configured = normalizeOllamaBase(S.ollamaUrl || 'http://localhost:11434');
+  const candidates = [configured];
+  const pageHost = String(location.hostname || '').replace(/^\[|\]$/g, '').toLowerCase();
+  const localPage = pageHost === 'localhost' || pageHost === '127.0.0.1' || pageHost === '::1';
+  if (localPage) {
+    candidates.push('http://localhost:11434', 'http://127.0.0.1:11434');
+  }
+  return [...new Set(candidates)];
+}
+
+async function fetchOllamaTagsFromBase(base) {
+  const directUrl = normalizeOllamaBase(base) + '/api/tags';
+  const r = await fetchJsonWithTimeout(directUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Direct Ollama tags');
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.ok === false) throw new Error((d && d.error) || ('HTTP ' + r.status + ' from ' + directUrl));
+  return Object.assign({ sourceBase: normalizeOllamaBase(base) }, d);
+}
 
 async function fetchDirectOllamaTags() {
-  let base = (S.ollamaUrl || 'http://localhost:11434').trim();
-  if (!/^https?:\/\//i.test(base)) base = 'http://' + base;
-  const directUrl = base.replace(/\/+$/, '') + '/api/tags';
-  const r = await fetchJsonWithTimeout(directUrl, { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Direct Ollama tags');
-  if (!r.ok) throw new Error('HTTP ' + r.status + ' from ' + directUrl);
-  return r.json();
+  let lastError = null;
+  for (const base of browserLocalOllamaCandidates()) {
+    try {
+      return await fetchOllamaTagsFromBase(base);
+    } catch(e) {
+      lastError = e;
+    }
+  }
+  throw lastError || new Error('Ollama unreachable');
+}
+
+async function fetchHostOllamaTags(label) {
+  const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, label || 'Ollama tags');
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.ok === false) throw new Error((d && d.error) || ('HTTP ' + r.status));
+  return d;
+}
+
+function setOllamaStatus(kind, message) {
+  const dot  = document.getElementById('ollama-status-dot');
+  const text = document.getElementById('ollama-status-text');
+  const ram  = document.getElementById('ollama-ram-text');
+  if (!dot || !text) return;
+  const colors = {
+    ok: '#34d399',
+    warn: '#fbbf24',
+    off: '#4b5563'
+  };
+  dot.style.background = colors[kind] || colors.off;
+  text.textContent = message;
+  text.style.color = kind === 'ok'
+    ? 'rgba(52,211,153,0.9)'
+    : (kind === 'warn' ? 'rgba(251,191,36,0.8)' : 'rgba(226,232,240,0.4)');
+  if (ram) ram.textContent = '';
 }
 
 function _renderOllamaCards(models) {
@@ -6308,6 +6471,28 @@ function _renderOllamaCards(models) {
   if (!current && models.length) document.getElementById('set-ollama-model').value = models[0].name;
 }
 
+function updateOllamaLoadControl() {
+  const btn = document.getElementById('ollama-load-btn');
+  const statusEl = document.getElementById('ollama-load-status');
+  if (!btn) return;
+  const browserOnly = _ollamaModelsSource === 'browser' && !_ollamaHostReachable;
+  const hostOffline = _ollamaModelsSource === 'offline' && !_ollamaHostReachable;
+  btn.disabled = browserOnly || hostOffline;
+  btn.title = browserOnly
+    ? 'These models are visible to this browser, but the Caroline host cannot reach Ollama yet.'
+    : (hostOffline ? 'The Caroline host cannot reach Ollama yet.' : 'Warm up the selected model on the configured Caroline host.');
+  btn.textContent = browserOnly || hostOffline ? 'Host Offline' : 'Load Model';
+  if (browserOnly && statusEl) {
+    statusEl.style.display = '';
+    statusEl.style.color = 'rgba(251,191,36,0.9)';
+    statusEl.textContent = 'Models are installed on this computer, but the Caroline host cannot use them until the Ollama URL points to something the host can reach.';
+  } else if (hostOffline && statusEl) {
+    statusEl.style.display = '';
+    statusEl.style.color = '#f87171';
+    statusEl.textContent = 'Caroline cannot reach Ollama yet. Start Ollama on the host, install Ollama inside WSL, or switch to OpenRouter.';
+  }
+}
+
 async function fetchOllamaStatus() {
   const dot  = document.getElementById('ollama-status-dot');
   const text = document.getElementById('ollama-status-text');
@@ -6316,8 +6501,9 @@ async function fetchOllamaStatus() {
   try {
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-ps', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama ps');
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    const running = d.models || [];
+    const d = await r.json().catch(() => ({}));
+    if (d.ok === false) throw new Error(d.error || 'Ollama unreachable');
+    const running = Array.isArray(d.models) ? d.models : [];
     if (running.length) {
       const m = running[0];
       const bytes = m.size_vram || m.size || 0;
@@ -6336,10 +6522,7 @@ async function fetchOllamaStatus() {
     }
     return running;
   } catch(e) {
-    dot.style.background = '#4b5563';
-    text.textContent     = 'Offline — is Ollama running?';
-    text.style.color     = 'rgba(226,232,240,0.4)';
-    if (ram) ram.textContent = '';
+    setOllamaStatus('off', 'Offline — is Ollama running?');
     return [];
   }
 }
@@ -6349,31 +6532,38 @@ async function fetchOllamaModels() {
   const btn = document.getElementById('ollama-fetch-btn');
   if (_cachedOllamaModels) _renderOllamaCards(_cachedOllamaModels);
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-  fetchOllamaStatus();
+  await fetchOllamaStatus();
   try {
-    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Ollama tags');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    const models = d.models || [];
+    const d = await fetchHostOllamaTags('Ollama tags');
+    const models = Array.isArray(d.models) ? d.models : [];
     _cachedOllamaModels = models;
+    _ollamaModelsSource = 'host';
+    _ollamaHostReachable = true;
     _renderOllamaCards(models);
+    updateOllamaLoadControl();
     clog('info', 'Ollama models: ' + models.map(m => m.name).join(', '));
   } catch(e) {
+    _ollamaHostReachable = false;
     try {
       const direct = await fetchDirectOllamaTags();
-      const models = direct.models || [];
+      const models = Array.isArray(direct.models) ? direct.models : [];
       if (models.length) {
         _cachedOllamaModels = models;
+        _ollamaModelsSource = 'browser';
         _renderOllamaCards(models);
+        setOllamaStatus('warn', 'Browser sees Ollama models — Caroline host URL needs fix');
+        updateOllamaLoadControl();
         clog('info', 'Ollama direct fallback: ' + models.map(m => m.name).join(', '));
         return;
       }
     } catch(fallbackErr) {
       console.error('[Caroline] Direct Ollama fallback failed:', fallbackErr);
     }
+    _ollamaModelsSource = 'offline';
     if (!_cachedOllamaModels && cards) {
       cards.innerHTML = '<span style="font-size:11px;color:#f87171;font-family:\'JetBrains Mono\',monospace;">Ollama unreachable — is it running?</span>';
     }
+    updateOllamaLoadControl();
     clog('err', 'Ollama tags: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '⟳ Refresh'; }
@@ -6382,11 +6572,12 @@ async function fetchOllamaModels() {
 
 async function _bootOllamaScan() {
   try {
-    const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-status', { timeoutMs: NODE_RED_TIMEOUT_MS }, 'Boot Ollama scan');
-    if (!r.ok) return;
-    const d = await r.json();
+    const d = await fetchHostOllamaTags('Boot Ollama scan');
     if (d.models && d.models.length) {
       _cachedOllamaModels = d.models;
+      _ollamaModelsSource = 'host';
+      _ollamaHostReachable = true;
+      updateOllamaLoadControl();
       clog('info', '[boot] Ollama: ' + d.models.length + ' model(s) ready');
     }
   } catch(e) { /* Ollama not running — silent */ }
@@ -6426,6 +6617,7 @@ async function startPull(model) {
   if (statusEl) { statusEl.style.display = ''; statusEl.textContent = '⏳ Requesting pull for ' + model + '…'; }
   if (btn) { btn.disabled = true; }
   try {
+    await fetchHostOllamaTags('Ollama pull preflight');
     const r = await fetchJsonWithTimeout(httpBase() + '/admin/ollama-pull', {
       method: 'POST',
       timeoutMs: NODE_RED_TIMEOUT_MS,
@@ -6441,7 +6633,7 @@ async function startPull(model) {
       if (statusEl) statusEl.textContent = '✗ ' + (d.error || 'Pull failed');
     }
   } catch(e) {
-    if (statusEl) statusEl.textContent = '✗ Node-RED unreachable — pull ' + model + ' manually';
+    if (statusEl) statusEl.textContent = '✗ Caroline host cannot reach Ollama — pull ' + model + ' manually';
     clog('err', 'ollama-pull: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; }
@@ -6452,6 +6644,14 @@ async function loadOllamaModel() {
   const model = (document.getElementById('set-ollama-model') || {}).value || S.ollamaModel || 'qwen2.5:1.5b';
   const statusEl = document.getElementById('ollama-load-status');
   const btn = document.getElementById('ollama-load-btn');
+  if (_ollamaModelsSource === 'browser' && !_ollamaHostReachable) {
+    if (statusEl) {
+      statusEl.style.display = '';
+      statusEl.style.color = 'rgba(251,191,36,0.9)';
+      statusEl.textContent = 'Cannot load from Caroline yet: the browser sees Ollama, but the Caroline host does not. Use Ollama inside WSL or fix the Ollama URL first.';
+    }
+    return;
+  }
   const startedAt = Date.now();
   let timer = null;
   if (statusEl) {
@@ -6734,7 +6934,7 @@ async function testAiConnection(btn) {
         const models = direct.models || [];
         const ms = Date.now() - start;
         if (models.length) {
-          result.textContent = '✓ Ollama direct online — Node-RED proxy timed out — ' + models.length + ' model' + (models.length !== 1 ? 's' : '') + ' — ' + ms + 'ms';
+        result.textContent = '✓ Ollama direct online — Caroline host proxy timed out — ' + models.length + ' model' + (models.length !== 1 ? 's' : '') + ' — ' + ms + 'ms';
           result.style.color = 'rgba(251,191,36,0.9)';
           return;
         }
@@ -6952,9 +7152,9 @@ async function copyNodeRedUrl() {
       btn.innerHTML = '<i class="ti ti-check"></i>';
       setTimeout(() => { btn.innerHTML = old; }, 1400);
     }
-    clog('info', 'Copied Node-RED URL');
+    clog('info', 'Copied Caroline Host URL');
   } catch(e) {
-    console.warn('[Caroline] Copy Node-RED URL failed:', e);
+    console.warn('[Caroline] Copy Caroline Host URL failed:', e);
     if (inp) inp.select();
   }
 }
@@ -7101,8 +7301,8 @@ async function refreshGoogleStatus() {
     renderIntegrationStatus();
     return data;
   } catch(e) {
-    if (statusEl) { statusEl.textContent = 'Node-RED offline'; statusEl.style.color = 'rgba(226,232,240,0.3)'; }
-    if (legacyStatusEl) { legacyStatusEl.textContent = 'Node-RED offline'; legacyStatusEl.style.color = 'rgba(226,232,240,0.3)'; }
+    if (statusEl) { statusEl.textContent = 'Caroline host offline'; statusEl.style.color = 'rgba(226,232,240,0.3)'; }
+    if (legacyStatusEl) { legacyStatusEl.textContent = 'Caroline host offline'; legacyStatusEl.style.color = 'rgba(226,232,240,0.3)'; }
     return null;
   }
 }
@@ -7531,7 +7731,7 @@ async function saveSettings() {
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
   S.autoTheme = document.getElementById('set-auto-theme').checked;
   collectFeatureCheckboxesFromForm();
-  S.aiModel = document.getElementById('set-model').value;
+  S.aiModel = normalizeOpenRouterModel(document.getElementById('set-model').value);
   const newName = resolveSettingsAiName(S.aiName);
   S.aiName = newName;
   document.getElementById('topbar-name').textContent = newName;
@@ -7557,7 +7757,7 @@ async function saveSettings() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving...'; }
   try {
 
-  // Node-RED URL — normalise and keep piIp in sync for backward compat
+  // Caroline Host URL — stored as nodeRedUrl for backward compatibility.
   const prevRuntimeNrUrl = getNodeRedUrl();
   let rawNrUrl = document.getElementById('set-nodered-url').value.trim();
   S.nodeRedUrl = normalizeConfiguredNodeRedUrl(rawNrUrl || S.nodeRedUrl || DEFAULT_NODE_RED_CONFIG_URL);
@@ -9443,7 +9643,7 @@ async function sendAiHttpMessage(text, context) {
         message: text,
         source: 'display',
         aiProvider: provider,
-        aiModel: S.aiModel || 'anthropic/claude-haiku-4.5',
+        aiModel: S.aiModel || DEFAULT_OPENROUTER_MODEL,
         visionModel: S.visionModel || 'google/gemini-2.5-flash',
         openrouterKey: S.openrouterKey || '',
         ollamaUrl: S.ollamaUrl || 'http://localhost:11434',

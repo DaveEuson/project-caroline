@@ -117,7 +117,7 @@ Accept the local certificate warning once. The normal HTTP URL still works for t
 
 Open **Settings**:
 
-- **AI:** add OpenRouter API key
+- **AI:** add OpenRouter API key for Gemini 2.5 Flash Lite, or use the installer-recommended local Ollama model
 - **Connect:** add Google Calendar, Spotify, Hue, or Discord if needed
 - **Widgets:** set location, timezone, weather, tides, and video channels
 
