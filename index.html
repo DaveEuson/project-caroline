@@ -9752,7 +9752,14 @@ function sendMessage(options = {}){
   nudgeAiMoodForInteraction(0.5);
   _trackSend(displayText || t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
-  const ctx = Object.assign({ activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]) }, extraContext);
+  const ctx = Object.assign({
+    activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]),
+    dashboard: {
+      weather: summarizeBriefWeather(),
+      calendar: summarizeBriefCalendar(),
+      mood: { user: clampMood(S.userMood), assistant: clampMood(S.aiMood) }
+    }
+  }, extraContext);
   if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
   queuedMemorySuggestion = suggestMemoryCandidate(displayText || t);
   sendAiHttpMessage(t, ctx);

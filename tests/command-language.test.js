@@ -72,9 +72,11 @@ function runNode(id, msg, initialStore = {}, initialFiles = {}) {
   };
   const result = vm.runInNewContext(`(function(){\n${node.func}\n})()`, sandbox, { timeout: 1500 });
   runNode.lastWrites = writes;
+  runNode.lastStore = store;
   return result;
 }
 runNode.lastWrites = {};
+runNode.lastStore = {};
 
 function directCommand(nodeId, text, payload = {}, initialStore = {}) {
   const out = runNode(nodeId, { payload: Object.assign({ content: text, aiProvider: 'ollama' }, payload) }, initialStore);
@@ -296,6 +298,47 @@ for (const [surface, nodeId] of buildNodes) {
     const tomorrowReply = String(directCommand(nodeId, 'what is on my calendar tomorrow', {}, store)?.payload?.reply || '');
     assert(tomorrowReply.includes('Tomorrow All-Day Check'), `${surface}: tomorrow reply should include tomorrow's all-day event`);
     assert(!tomorrowReply.includes('Today All-Day Check'), `${surface}: tomorrow reply should not include today's all-day event`);
+  });
+
+  test(`${surface}: explicit mood numbers update mood locally`, () => {
+    const reply = String(directCommand(nodeId, 'I am having a hard day. I am feeling like a 4 today')?.payload?.reply || '');
+    assert(reply.includes('[SET_USER_MOOD:4]'), `${surface}: reply should carry mood update tag`);
+    assert(reply.includes('4/11'), `${surface}: reply should acknowledge the selected mood`);
+    assert.strictEqual(runNode.lastStore.userMood, 4, `${surface}: flow/global mood should be updated`);
+    assert(!/\b(task|focus|calendar|checklist)\b/i.test(reply), `${surface}: low mood acknowledgement should not pivot to productivity`);
+  });
+
+  test(`${surface}: weather reads use dashboard context instead of drifting generic`, () => {
+    const reply = String(directCommand(nodeId, 'Awesome. What is the weather like today?', {
+      context: {
+        dashboard: {
+          weather: {
+            current: 'Chula Vista, CA: 62°F Clear sky',
+            forecast: ['Sat 69° 54°', 'Sun 73° 57°'],
+            sunrise: '05:42 AM',
+            sunset: '07:49 PM',
+          },
+        },
+      },
+    })?.payload?.reply || '');
+    assert(/Right now: Chula Vista, CA: 62°F Clear sky/i.test(reply), `${surface}: weather reply should use the dashboard reading`);
+    assert(!/what do you want to focus|i am here/i.test(reply), `${surface}: weather should not become a generic focus prompt`);
+  });
+
+  test(`${surface}: calendar reads collapse repeated same-time events`, () => {
+    const today = localDateKey(0);
+    const start = `${today}T15:00:00-07:00`;
+    const end = `${today}T15:30:00-07:00`;
+    const store = {
+      googleConnected: true,
+      timezone: 'America/Los_Angeles',
+      caroline_calendar: [
+        { id: 'event-a', title: 'Model Test', summary: 'Model Test', start, end },
+        { id: 'event-b', title: 'Model Test', summary: 'Model Test', start, end },
+      ],
+    };
+    const reply = String(directCommand(nodeId, 'what is on my calendar today', {}, store)?.payload?.reply || '');
+    assert.strictEqual((reply.match(/Model Test/g) || []).length, 1, `${surface}: duplicate event should appear once`);
   });
 
   test(`${surface}: priority guardrails bypass stale low mood`, () => {
