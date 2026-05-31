@@ -1023,6 +1023,8 @@ if [ "$CAROLINE_BIND_HOST" != "127.0.0.1" ] && [ "$CAROLINE_BIND_HOST" != "local
 fi
 say "${CYAN}  Open command:${RESET} ${BOLD}caroline-steamos-open${RESET}"
 say "${CYAN}  Kiosk command:${RESET} ${BOLD}caroline-steamos-kiosk${RESET}"
+say "${CYAN}  Desktop launchers:${RESET} ${BOLD}Project: Caroline${RESET} and ${BOLD}Project: Caroline Kiosk${RESET}"
+say "${CYAN}  Gaming Mode:${RESET} add ${BOLD}Project: Caroline Kiosk${RESET} as a non-Steam game from Steam Desktop Mode"
 say "${CYAN}  Logs:${RESET} ${BOLD}journalctl --user -u caroline -f${RESET}"
 if [ "$AI_PROVIDER" = "ollama" ]; then
   say "${CYAN}  Ollama logs:${RESET} ${BOLD}journalctl --user -u ollama -f${RESET}"

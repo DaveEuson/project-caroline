@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Project Caroline Steam Deck Installer
+Comment=Install Project: Caroline on Steam Deck without typing terminal commands
+Exec=bash -lc "set -e; clear; printf '\\nProject: Caroline Steam Deck Installer\\n\\n'; printf 'This launcher downloads the current public Steam Deck installer and opens the guided setup.\\n\\n'; tmp=\"${TMPDIR:-/tmp}/project-caroline-steamos-install.sh\"; if ! command -v curl >/dev/null 2>&1; then printf 'curl is required but was not found. Open Discover, install curl, then try again.\\n'; read -r -p 'Press Enter to close...' _; exit 1; fi; curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install-steamos.sh | tr -d '\\r' > \"$tmp\"; chmod 700 \"$tmp\"; CAROLINE_CHANNEL=release bash \"$tmp\"; printf '\\nProject: Caroline installer finished.\\n'; read -r -p 'Press Enter to close this window...' _"
+Terminal=true
+Icon=applications-games
+Categories=Game;Utility;

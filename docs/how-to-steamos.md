@@ -20,13 +20,36 @@ It does **not** install system packages with `pacman`, change SteamOS read-only 
 
 When you choose local AI, the installer can download Ollama's Linux archive into your home directory, start `ollama.service` with `systemctl --user`, and pull the selected model. This is experimental and can take a while because the Ollama runtime archive and first model pull are both large.
 
-## Install
+## Easiest Install: Downloadable Launcher
+
+Use this path if you are comfortable using the Steam Deck desktop but do not want to type commands in Konsole.
+
+1. Hold the power button and choose **Switch to Desktop**.
+2. Open Firefox and go to the Project: Caroline GitHub page.
+3. Download [`Project-Caroline-SteamDeck-Installer.desktop`](../Project-Caroline-SteamDeck-Installer.desktop).
+4. Open **Downloads** in Dolphin.
+5. If SteamOS asks whether the file can run, choose **Allow Launching** or open **Properties -> Permissions** and enable **Is executable**.
+6. Double-click **Project Caroline Steam Deck Installer**.
+7. A terminal window opens automatically and runs the guided installer.
+
+This launcher uses the public `release` channel. It does not disable SteamOS read-only mode, install system packages with `pacman`, or ask you to paste commands.
+
+After install, Caroline creates two Desktop Mode launchers:
+
+- **Project: Caroline** opens the normal windowed dashboard.
+- **Project: Caroline Kiosk** opens the fullscreen couch/kiosk view.
+
+To add Caroline to Gaming Mode, open Steam in Desktop Mode, choose **Games -> Add a Non-Steam Game to My Library**, and select **Project: Caroline Kiosk**.
+
+## Console Install
 
 In Steam Deck Desktop Mode, open Konsole and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/nightly/install-steamos.sh | tr -d '\r' | bash -s --
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/release/install-steamos.sh | tr -d '\r' | CAROLINE_CHANNEL=release bash -s --
 ```
+
+For nightly testing, replace `release` with `nightly`.
 
 Then open Caroline on the Deck:
 
