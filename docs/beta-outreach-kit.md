@@ -31,8 +31,8 @@ Start with warm and semi-warm audiences before public communities.
 - Main repo: https://github.com/Project-Caroline/project-caroline
 - Beta tester guide: https://github.com/Project-Caroline/project-caroline/blob/release/docs/beta-testing.md
 - Offline demo: https://project-caroline.github.io/project-caroline/
-- Latest host release: https://github.com/Project-Caroline/project-caroline/releases/tag/v0.3.0-beta.4
-- Latest Companion release: https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.12
+- Latest host release: https://github.com/Project-Caroline/project-caroline/releases/tag/v0.3.0-beta.5
+- Latest Companion release: https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.13
 
 ## Short Personal Post
 

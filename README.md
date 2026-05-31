@@ -63,24 +63,24 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/n
 Exact frozen beta tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.4/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.4
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.5/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.5
 ```
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
 
 The optional desktop companion app is released separately:
 
-[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.12)
+[Download Project: Caroline Companion](https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.13)
 
 Use the platform-named installer for your computer:
 
 | Platform | Release asset |
 |---|---|
-| Windows | `Windows_Project.Caroline.Companion_0.1.12_x64_en-US.msi` |
-| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.12_amd64.deb` |
-| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.12_amd64.AppImage` |
-| Mac Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.12_aarch64.dmg` |
-| Mac Intel | `MacIntel_Project.Caroline.Companion_0.1.12_x64.dmg` |
+| Windows | `Windows_Project.Caroline.Companion_0.1.13_x64_en-US.msi` |
+| Ubuntu / Pop!_OS | `Linux_Project.Caroline.Companion_0.1.13_amd64.deb` |
+| Steam Deck Desktop Mode | `Linux_Project.Caroline.Companion_0.1.13_amd64.AppImage` |
+| Mac Apple Silicon | `MacAppleSilicon_Project.Caroline.Companion_0.1.13_aarch64.dmg` |
+| Mac Intel | `MacIntel_Project.Caroline.Companion_0.1.13_x64.dmg` |
 
 The companion pairs with the `SYNC:` code shown on each Caroline host and talks to:
 
@@ -207,9 +207,9 @@ Settings, API keys, tasks, and memory are preserved.
 
 - **Release:** the `release` branch is the recommended public beta channel.
 - **Nightly/dev:** the `nightly` branch gets the newest tested work first.
-- **Frozen tags:** tags such as `v0.3.0-beta.4` are exact snapshots.
+- **Frozen tags:** tags such as `v0.3.0-beta.5` are exact snapshots.
 
-For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.4 notes](docs/releases/v0.3.0-beta.4.md).
+For release notes, tagging, and Ubuntu/Pi QA steps, see [Release process](docs/release.md) and [v0.3.0-beta.5 notes](docs/releases/v0.3.0-beta.5.md).
 
 ## Uninstall
 

@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # This intentionally avoids pacman/system package installs and does not disable
 # SteamOS read-only mode. Everything lives under the deck user's home directory.
 
-CAROLINE_VERSION="0.3.0-beta.4"
+CAROLINE_VERSION="0.3.0-beta.5"
 CAROLINE_REPO_URL="${CAROLINE_REPO_URL:-https://github.com/Project-Caroline/project-caroline.git}"
 CAROLINE_CHANNEL="${CAROLINE_CHANNEL:-nightly}"
 CAROLINE_PORT="${CAROLINE_PORT:-8080}"

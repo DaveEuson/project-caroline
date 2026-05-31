@@ -9,6 +9,7 @@ Project: Caroline keeps human-readable release notes in this folder.
 
 ## Published Notes
 
+- [v0.3.0-beta.5](v0.3.0-beta.5.md)
 - [v0.3.0-beta.4](v0.3.0-beta.4.md)
 - [v0.3.0-beta.3](v0.3.0-beta.3.md)
 - [v0.3.0-beta.2](v0.3.0-beta.2.md)

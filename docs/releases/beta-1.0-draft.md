@@ -15,7 +15,7 @@ Beta 1.0 is the "new tester can actually try it" milestone: clearer install path
 - Local model recommendations by platform, including Steam Deck, Bazzite RTX 2070-class hosts, and RTX 4070-class desktops.
 - Clearer beta docs for install, clean reinstall QA, Discord, Google OAuth, network prep, model recommendations, and tester reports.
 
-## Added Since v0.3.0-beta.4
+## Added In The v0.3.0-beta.5 Foundation
 
 - Privacy Dashboard for nightly builds, showing chat/memory counts, retention state, integration status, and host/browser data locations without exposing saved secrets.
 - Host privacy endpoints for Companion setup workflows: `/admin/privacy-summary` and `/admin/privacy-clear`.
@@ -25,7 +25,7 @@ Beta 1.0 is the "new tester can actually try it" milestone: clearer install path
 - GPU/VRAM-aware installer reporting and local model selection.
 - Debian and Ubuntu-family OS acknowledgement for Pop!_OS, Linux Mint, Zorin OS, and elementary OS.
 
-## Changed Since v0.3.0-beta.4
+## Changed In The v0.3.0-beta.5 Foundation
 
 - Companion Host Setup Hub is split into smaller sections for Buddy, Host, Identity, AI, Connect, Widgets, Privacy, and App.
 - Companion Host Setup Hub can refresh privacy status, view host memory shards, and clear host chat, memory, or profile prompts from the desktop app.
@@ -34,7 +34,7 @@ Beta 1.0 is the "new tester can actually try it" milestone: clearer install path
 - `install.sh` now redirects SteamOS/Bazzite users to `install-steamos.sh` instead of continuing toward an apt failure.
 - Screen Ask now uses a dedicated cloud vision model setting so screenshot questions do not inherit a text-only or provider-incompatible chat model.
 
-## Fixed Since v0.3.0-beta.4
+## Fixed In The v0.3.0-beta.5 Foundation
 
 - Clear Chat and Clear Memory now clear host-side Caroline data as well as browser-local data when the host endpoint is available.
 - Update Caroline status now strips terminal color/spinner control codes before showing progress in Settings.

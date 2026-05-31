@@ -64,7 +64,7 @@ http://localhost:8080/
 
 The WSL installer includes a Windows-side **Install Companion** launcher. You can also download it manually:
 
-https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.12
+https://github.com/Project-Caroline/project-caroline/releases/tag/companion-v0.1.13
 
 Use this Companion WebSocket URL for a local WSL host:
 

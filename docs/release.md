@@ -8,7 +8,7 @@ Use this when promoting Project: Caroline from the moving `nightly` branch to a 
 |---|---|---|
 | Nightly/dev | `nightly` branch | Latest tested fixes and experiments |
 | Release | `release` branch | Recommended public install |
-| Frozen tag | GitHub release tag, for example `v0.3.0-beta.4` | Exact archived build |
+| Frozen tag | GitHub release tag, for example `v0.3.0-beta.5` | Exact archived build |
 
 The regular install command follows `release`:
 
@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/r
 A tagged release can be installed by replacing `release` with the tag and passing the channel:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.4/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.4
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.5/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.5
 ```
 
 ## Release Checklist
@@ -29,7 +29,7 @@ Use this checklist before promoting `nightly` to `release`.
 ### 1. Prepare The Notes
 
 1. Update [Unreleased](releases/unreleased.md).
-2. Move the unreleased notes into a versioned file, for example `docs/releases/v0.3.0-beta.4.md`.
+2. Move the unreleased notes into a versioned file, for example `docs/releases/v0.3.0-beta.5.md`.
 3. Update [Release notes](releases/README.md) so the new file appears under Published Notes.
 4. Keep `Known Issues` honest. It is better to name a limitation than let users discover it cold.
 
@@ -119,8 +119,8 @@ git push origin release
 4. Create and push an annotated tag from `release`:
 
 ```bash
-git tag -a v0.3.0-beta.4 -m "Project: Caroline v0.3.0 beta 4"
-git push origin release v0.3.0-beta.4
+git tag -a v0.3.0-beta.5 -m "Project: Caroline v0.3.0 beta 5"
+git push origin release v0.3.0-beta.5
 ```
 
 5. Create a GitHub Release from the tag with short notes and known limitations.
@@ -131,7 +131,7 @@ git push origin release v0.3.0-beta.4
 If a release goes bad, reinstall the last known-good tag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.4/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.4
+curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v0.3.0-beta.5/install.sh | tr -d '\r' | bash -s -- --channel v0.3.0-beta.5
 ```
 
 For SteamOS, use the SteamOS installer from a known-good commit or tag:

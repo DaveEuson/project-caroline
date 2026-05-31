@@ -22,9 +22,9 @@ Built for Raspberry Pi and Ubuntu, Caroline runs as a fullscreen cyberpunk dashb
 
 For beta tester recruiting, use the [Beta Outreach Kit](beta-outreach-kit.md). It includes approved links, post drafts, and places to avoid until the first outside reports are in.
 
-## v0.3.0-beta.4 Release Blurb
+## v0.3.0-beta.5 Release Blurb
 
-Project: Caroline v0.3.0-beta.4 is the public beta platform-validation build: a local-first AI kiosk for Raspberry Pi OS, Ubuntu, experimental Steam Deck setups, and phone browsers on your LAN, with chat, memory, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, video, and ambient dashboard widgets. It adds clearer Pi/Ubuntu/SteamOS install guidance, stronger companion pairing and multi-host buddy support, first-run personality questions, safer widget guardrails, a first-pass mobile browser layout, and a validated `0.1.12` desktop Companion app.
+Project: Caroline v0.3.0-beta.5 is the public beta polish build: a local-first AI kiosk for Raspberry Pi OS, Ubuntu, WSL, experimental Steam Deck/Bazzite setups, and phone browsers on your LAN, with chat, memory, Google Calendar, local tasks, Spotify, Philips Hue, Discord relay, weather, news, video, and ambient dashboard widgets. It adds privacy controls, WSL launchers, GPU-aware installer recommendations, expanded companion setup, document review, Screen Ask, touch mode, an expandable conversation tray, OpenRouter Gemini Flash Lite defaults, cleaner local-AI failure handling, and a validated `0.1.13` Project: Caroline Companion app.
 
 ## One-Liners
 
