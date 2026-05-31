@@ -2886,7 +2886,7 @@
               <details>
                 <summary style="font-size:9px;color:rgba(226,232,240,0.35);font-family:'JetBrains Mono',monospace;cursor:pointer;list-style:none;text-align:right;">▸ or paste JSON directly</summary>
                 <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-                  <textarea id="sa-paste-area" rows="5" placeholder='{"type":"service_account","project_id":"..."}' style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(var(--t-rgb1),0.2);border-radius:8px;color:rgba(226,232,240,0.8);font-family:'JetBrains Mono',monospace;font-size:9px;padding:7px;box-sizing:border-box;resize:vertical;"></textarea>
+                  <textarea id="sa-paste-area" rows="5" placeholder="{&quot;type&quot;:&quot;service_account&quot;,&quot;project_id&quot;:&quot;...&quot;}" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(var(--t-rgb1),0.2);border-radius:8px;color:rgba(226,232,240,0.8);font-family:'JetBrains Mono',monospace;font-size:9px;padding:7px;box-sizing:border-box;resize:vertical;"></textarea>
                   <button onclick="submitPastedServiceAccount()" style="align-self:flex-end;background:rgba(var(--t-rgb1),0.1);border:1px solid rgba(var(--t-rgb1),0.3);border-radius:10px;padding:6px 14px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;">✔ Use Pasted JSON</button>
                 </div>
               </details>
@@ -2956,9 +2956,9 @@
           <h3>Video channels</h3>
           <div id="ch-list"></div>
           <div id="add-channel-row">
-            <input class="settings-input" id="new-ch-icon" placeholder="TV" style="width:44px;text-align:center;"/>
-            <input class="settings-input" id="new-ch-name" placeholder="Channel name"/>
-            <input class="settings-input" id="new-ch-url" placeholder="HLS .m3u8 URL or YouTube video ID"/>
+            <input class="settings-input" id="new-ch-icon" type="text" placeholder="TV" style="width:44px;text-align:center;"/>
+            <input class="settings-input" id="new-ch-name" type="text" placeholder="Channel name"/>
+            <input class="settings-input" id="new-ch-url" type="text" placeholder="HLS .m3u8 URL or YouTube video ID"/>
             <button class="add-ch-btn" onclick="addCustomChannel()">+ Add</button>
           </div>
         </div>
@@ -3226,7 +3226,7 @@
     <span id="news-modal-source"></span>
   </div>
   <div id="news-modal-inner">
-    <img id="news-modal-img" alt=""/>
+    <img id="news-modal-img" src="about:blank" alt=""/>
     <div id="news-modal-title"></div>
     <div id="news-modal-desc"></div>
     <div id="news-modal-link"></div>
@@ -3398,13 +3398,13 @@
       <div class="widget" id="widget-meme" style="display:none">
         <div class="widget-label" style="display:flex;justify-content:space-between;align-items:center;">Meme<button onclick="fetchMeme()" title="New meme" style="background:none;border:none;color:rgba(226,232,240,0.35);cursor:pointer;font-size:14px;padding:0;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='rgba(226,232,240,0.8)'" onmouseout="this.style.color='rgba(226,232,240,0.35)'">⟳</button></div>
         <div id="meme-placeholder" style="font-size:10px;color:rgba(226,232,240,0.3);font-family:'JetBrains Mono',monospace;">Loading...</div>
-        <img id="meme-img" src="" alt="" style="display:none" onclick="openMemeOverlay()"/>
+        <img id="meme-img" src="about:blank" alt="" style="display:none" onclick="openMemeOverlay()"/>
         <div id="meme-title"></div>
       </div>
     </div>
 
     <div id="meme-overlay" onclick="closeMemeOverlay()">
-      <img id="meme-overlay-img" src="" alt=""/>
+      <img id="meme-overlay-img" src="about:blank" alt=""/>
     </div>
 
     <div id="uptime">⏱ UPTIME: 0m</div>
@@ -3427,7 +3427,7 @@
         <div class="pulse-ring"></div>
         <div class="listen-ring"></div>
         <div id="avatar-wrap">
-          <img id="av-gif" data-src="assets/caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
+          <img id="av-gif" src="about:blank" data-src="assets/caroline.gif" class="avatar-svg" alt="Caroline" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-crt" viewBox="0 0 100 100">
             <g class="bot-body"><path d="M 45 65 L 45 75 L 35 80 L 65 80 L 55 75 L 55 65 Z"/></g>
             <g class="bot-head">
@@ -3450,8 +3450,8 @@
             <path d="M 54 74 Q 60 78 66 74" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <path d="M 50 88 L 58 93 L 50 98 Z" fill="var(--t-hex2)"/><path d="M 70 88 L 62 93 L 70 98 Z" fill="var(--t-hex2)"/>
           </svg>
-          <img id="av-cat" data-src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
-          <img id="av-robot" data-src="assets/Robot-Awake.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
+          <img id="av-cat" src="about:blank" data-src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
+          <img id="av-robot" src="about:blank" data-src="assets/Robot-Awake.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
           <svg class="avatar-svg hidden" id="av-frog-pilot" viewBox="0 0 120 120" role="img" aria-label="Frog Pilot placeholder">
             <defs>
               <linearGradient id="frogHelmet" x1="0" x2="1" y1="0" y2="1">
@@ -3488,12 +3488,12 @@
             <path d="M42 60 Q50 65 58 60" stroke="var(--t-hex2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <line x1="15" y1="48" x2="85" y2="48" stroke="var(--t-hex1)" stroke-width="0.5" opacity="0.3"/>
           </svg>
-          <img id="av-carl" data-src="assets/Carl-awake.gif" class="avatar-svg hidden" alt="Carl" onerror="this.style.display='none'"/>
-          <img id="av-custom" src="" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
-          <img id="av-happy" data-src="assets/caroline-happy.gif" class="avatar-svg" alt="Caroline Happy" onerror="this.style.display='none'"/>
-          <img id="av-sleeping" data-src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
-          <img id="av-carl-sleeping" data-src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
-          <img id="av-robot-sleeping" data-src="assets/Robot-Sleeping.gif" class="avatar-svg" alt="Robot Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-carl" src="about:blank" data-src="assets/Carl-awake.gif" class="avatar-svg hidden" alt="Carl" onerror="this.style.display='none'"/>
+          <img id="av-custom" src="about:blank" class="avatar-svg hidden" alt="Custom" style="display:none;"/>
+          <img id="av-happy" src="about:blank" data-src="assets/caroline-happy.gif" class="avatar-svg" alt="Caroline Happy" onerror="this.style.display='none'"/>
+          <img id="av-sleeping" src="about:blank" data-src="assets/caroline-sleeping.gif" class="avatar-svg" alt="Caroline Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-carl-sleeping" src="about:blank" data-src="assets/Carl-asleep.gif" class="avatar-svg" alt="Carl Sleeping" onerror="this.style.display='none'"/>
+          <img id="av-robot-sleeping" src="about:blank" data-src="assets/Robot-Sleeping.gif" class="avatar-svg" alt="Robot Sleeping" onerror="this.style.display='none'"/>
         </div>
       </div>
       <button class="nav-btn" onclick="changeAvatar(1); playBeep(800);">❯</button>
@@ -3543,7 +3543,7 @@
             <button class="media-nav-btn" onclick="changeMediaChannel(1)" title="Next"><i class="ti ti-chevron-right"></i></button>
           </div>
           <div class="media-frame-wrap">
-            <iframe id="media-iframe" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <iframe id="media-iframe" title="Video player" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
             <video id="media-video" autoplay muted playsinline controls></video>
             <div id="media-fallback-card">
               <div id="media-fallback-icon"><i class="ti ti-device-tv" aria-hidden="true"></i></div>
@@ -3560,7 +3560,7 @@
       <div id="now-playing-panel" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(var(--t-rgb1),0.08);">
         <div class="news-header" style="margin-bottom:6px;">🎵 Now Playing</div>
         <div id="np-content" style="display:flex;align-items:center;gap:8px;">
-          <img id="np-art" style="display:none;width:36px;height:36px;border-radius:4px;flex-shrink:0" alt="art"/>
+          <img id="np-art" src="about:blank" style="display:none;width:36px;height:36px;border-radius:4px;flex-shrink:0" alt="art"/>
           <div style="min-width:0;flex:1;">
             <div id="np-track" style="font-size:10px;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Not playing</div>
             <div id="np-artist" style="font-size:11px;color:rgba(226,232,240,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;"></div>
@@ -12290,7 +12290,7 @@ setInterval(updateWifi, piPerfInterval(30000, 60000));
     const src = el.dataset.src || el.getAttribute('src') || '';
     if (!src) return;
     el.dataset.src = src.split('?')[0] + '?v=' + ts;
-    if (el.getAttribute('src')) el.src = el.dataset.src;
+    if (el.getAttribute('src') && el.getAttribute('src') !== 'about:blank') el.src = el.dataset.src;
   });
 })();
 applyTheme(S.theme);

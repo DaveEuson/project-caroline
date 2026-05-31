@@ -1,0 +1,12 @@
+{
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "aria-label-misuse": "off",
+    "autocomplete-password": "off",
+    "no-autoplay": "off",
+    "no-implicit-button-type": "off",
+    "no-inline-style": "off",
+    "text-content": "off",
+    "void-style": "off"
+  }
+}
