@@ -1,6 +1,6 @@
-# Caroline Companion
+# Project: Caroline Companion App
 
-Small retro messenger-style desktop companion for Project Caroline.
+Small retro messenger-style desktop companion for Project: Caroline.
 
 This app is intentionally simple: one chat window, saved buddy profiles for Caroline/Carl/Catoline, per-host device labels, and a small helper that talks to the Node-RED WebSocket flow.
 
@@ -51,7 +51,7 @@ When the companion connects, it sends:
   "clientId": "saved-device-id",
   "clientName": "Dave's Companion",
   "pairingCode": "ABC123",
-  "appVersion": "0.1.0"
+      "appVersion": "0.1.13"
 }
 ```
 

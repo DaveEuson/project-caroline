@@ -79,11 +79,11 @@ jobs:
         with:
           projectPath: caroline-companion
           tagName: ${{ github.ref_name }}
-          releaseName: 'Caroline Companion ${{ github.ref_name }}'
+          releaseName: 'Project: Caroline Companion App (PCA) ${{ github.ref_name }}'
           releaseBody: |
-            ## Caroline Companion ${{ github.ref_name }}
+            ## Project: Caroline Companion App (PCA) ${{ github.ref_name }}
 
-            A retro AIM-style chat window for your Caroline AI.
+            A classic messenger-style desktop chat companion for Project: Caroline.
 
             **Download the right file for your platform:**
             - Windows → `Windows_Project.Caroline.Companion_*_x64_en-US.msi`
@@ -94,6 +94,6 @@ jobs:
 
             **First run on Mac:** Right-click the app → Open (bypasses the unsigned app warning).
           releaseDraft: false
-          prerelease: false
+          prerelease: true
           assetNamePattern: ${{ matrix.assetNamePattern }}
           args: --target ${{ matrix.target }}
