@@ -7,6 +7,10 @@ This is a living document of planned features and long-term goals. Order within 
 ### Steam Deck First Experience
 Make Steam Deck the friendliest Caroline host: a no-typing installer launcher, Gaming Mode launch guidance, controller-first kiosk controls, a Steam activity widget, and a games hub that can track recently played titles and launch trusted local games.
 
+First pass source lives in `caroline-deck-installer/`: a Tauri installer and maintenance app for SteamOS with fixed install, update, repair, uninstall, open, and kiosk actions.
+
+The kiosk now has the first Steam Hub pass: controller navigation, Steam Library/Downloads shortcuts, configurable game launch tiles, local launch history, and a host-side `/steam/recent` route so the browser does not hold the Steam API key.
+
 ### Companion Setup Hub
 Use the desktop Companion app as a friendly setup location for Caroline hosts. The goal is to let users pair with a host, edit host settings, connect integrations, check system status, and finish confusing setup steps from a normal desktop window instead of doing everything on the kiosk screen.
 

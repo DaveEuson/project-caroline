@@ -1,0 +1,21 @@
+[package]
+name = "caroline-deck-installer"
+version = "0.1.0"
+description = "Steam Deck installer and maintenance app for Project: Caroline"
+authors = ["Project Caroline"]
+license = "MIT"
+repository = ""
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "caroline_deck_installer_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

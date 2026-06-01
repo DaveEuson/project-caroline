@@ -34,6 +34,8 @@ Use this path if you are comfortable using the Steam Deck desktop but do not wan
 
 This launcher uses the public `release` channel. It does not disable SteamOS read-only mode, install system packages with `pacman`, or ask you to paste commands.
 
+Nightly source also includes a graphical **Project: Caroline Deck Installer** in `caroline-deck-installer/`. It is meant to become the AppImage path for Steam Deck users who want install, update, repair, uninstall, and launch buttons instead of a terminal window.
+
 After install, Caroline creates two Desktop Mode launchers:
 
 - **Project: Caroline** opens the normal windowed dashboard.
@@ -72,6 +74,17 @@ http://localhost:8080/
 ```
 
 If the Deck is across the room, open `Settings` -> `Look & Feel` -> `Display preset` and choose `Steam Deck - 3 ft`, `Couch / small TV`, or `Wall kiosk`.
+
+## Steam Hub Widget
+
+Turn on **Settings -> Widgets -> Steam Hub** to add a Deck-focused rail widget. The first pass gives you:
+
+- Steam Library and Downloads shortcut buttons.
+- Custom game launch tiles using `appid | game name` lines.
+- Local recent-launch history for games started from Caroline.
+- Host-side recently played sync through `/steam/recent` when you add a Steam ID and Steam Web API key.
+
+The widget uses Steam protocol links such as `steam://run/620`, so it is designed for trusted local Steam Deck use.
 
 ## Useful Commands
 

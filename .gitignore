@@ -27,6 +27,9 @@ carlinemoodtracker-*.json
 node_modules/
 npm-debug.log*
 .npm/
+caroline-deck-installer/dist/
+caroline-deck-installer/src-tauri/target/
+caroline-deck-installer/src-tauri/gen/
 
 # ── OS JUNK ───────────────────────────────────────────────────
 .DS_Store

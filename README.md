@@ -68,7 +68,7 @@ curl -fsSL https://raw.githubusercontent.com/Project-Caroline/project-caroline/v
 
 Caroline installs Node.js, Node-RED, nginx, the web UI, optional local AI, and the system service.
 
-Steam Deck users can skip command typing by downloading [Project-Caroline-SteamDeck-Installer.desktop](Project-Caroline-SteamDeck-Installer.desktop) in Desktop Mode and double-clicking it from Dolphin. It opens a terminal automatically, downloads the SteamOS-safe installer, and creates **Project: Caroline** and **Project: Caroline Kiosk** launchers.
+Steam Deck users can skip command typing by downloading [Project-Caroline-SteamDeck-Installer.desktop](Project-Caroline-SteamDeck-Installer.desktop) in Desktop Mode and double-clicking it from Dolphin. It opens a terminal automatically, downloads the SteamOS-safe installer, and creates **Project: Caroline** and **Project: Caroline Kiosk** launchers. Nightly source also includes `caroline-deck-installer/`, a polished Deck Installer app for install, update, repair, uninstall, and launch actions.
 
 The optional desktop companion app is released separately:
 

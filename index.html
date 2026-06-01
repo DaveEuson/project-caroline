@@ -460,6 +460,16 @@
   .smart-btn:hover { transform:translateY(-1px); border-color:rgba(var(--t-rgb1),0.48); background:rgba(var(--t-rgb1),0.11); }
   .smart-btn.active { border-color:rgba(249,115,22,0.58); background:rgba(249,115,22,0.14); color:#fed7aa; box-shadow:inset 0 0 18px rgba(249,115,22,0.08); }
   .smart-status { margin-top:7px; color:rgba(226,232,240,0.40); font-family:'JetBrains Mono',monospace; font-size:10px; min-height:13px; }
+  .steam-status { color:rgba(226,232,240,0.62); font-size:11px; line-height:1.35; margin-bottom:8px; }
+  .steam-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:8px; }
+  .steam-game-list { display:flex; flex-direction:column; gap:6px; max-height:170px; overflow-y:auto; padding-right:2px; }
+  .steam-game-list::-webkit-scrollbar { width:2px; }
+  .steam-game-list::-webkit-scrollbar-thumb { background:rgba(var(--t-rgb1),0.22); border-radius:2px; }
+  .steam-game-btn { width:100%; min-height:42px; display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid rgba(var(--t-rgb1),0.22); border-radius:7px; background:rgba(var(--t-rgb1),0.05); color:#e2e8f0; padding:7px 8px; cursor:pointer; text-align:left; }
+  .steam-game-btn:hover { border-color:rgba(var(--t-rgb1),0.46); background:rgba(var(--t-rgb1),0.12); }
+  .steam-game-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; font-weight:700; }
+  .steam-game-meta { color:rgba(var(--t-rgb1),0.62); font-family:'JetBrains Mono',monospace; font-size:9px; white-space:nowrap; }
+  .steam-empty { color:rgba(226,232,240,0.30); font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.4; padding:6px 2px; }
 
   /* NEWS STORY MODAL */
   #news-modal { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.92); z-index:850; flex-direction:column; backdrop-filter:blur(8px); }
@@ -1783,6 +1793,7 @@
   body.touch-mode .smart-btn { min-height:70px; }
   body.touch-mode .smart-btn i { font-size:22px; }
   body.touch-mode .smart-btn span { font-size:12px; }
+  body.touch-mode .steam-game-btn { min-height:56px; padding:10px; }
 
   /* PHONE LAYOUT
      Keeps kiosk/desktop unchanged; this only applies to portrait phone-sized
@@ -2465,6 +2476,10 @@
             <label class="feat-toggle" style="min-width:180px;justify-content:flex-start;"><input type="checkbox" id="set-touch-mode" onchange="applyTouchModeControl(this.checked)"/> <span class="settings-icon"><i class="ti ti-hand-click"></i></span>Touch-friendly</label>
           </div>
           <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Controller mode</div><div class="settings-sub">D-pad / stick navigation for Steam Deck</div></div>
+            <label class="feat-toggle" style="min-width:180px;justify-content:flex-start;"><input type="checkbox" id="set-controller-mode"/> <span class="settings-icon"><i class="ti ti-device-gamepad-2"></i></span>Gamepad nav</label>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Theme colour</div><div class="settings-sub">Primary accent</div></div>
             <div class="theme-swatches">
               <div class="theme-swatch" id="swatch-0" style="background:linear-gradient(135deg,#22d3ee,#db2777)" onclick="selectSwatch(0)" title="Cyan / Magenta"></div>
@@ -2945,11 +2960,28 @@
             <label class="feat-toggle"><input type="checkbox" id="feat-tides"    onchange="previewFeature('tides',    this.checked)"/> <span class="settings-icon"><i class="ti ti-wave-saw-tool"></i></span>Tides</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-mood"     onchange="previewFeature('mood',     this.checked)"/> <span class="settings-icon"><i class="ti ti-mood-smile"></i></span>Mood Meters</label>
             <label class="feat-toggle"><input type="checkbox" id="feat-memes"   onchange="previewFeature('memes',   this.checked)"/> <span class="settings-icon"><i class="ti ti-photo-scan"></i></span>Memes</label>
+            <label class="feat-toggle"><input type="checkbox" id="feat-steam"    onchange="previewFeature('steam',    this.checked)"/> <span class="settings-icon"><i class="ti ti-brand-steam"></i></span>Steam Hub</label>
           </div>
           <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
           <div class="settings-row" style="margin-top:14px;">
             <div><div class="settings-label">NOAA Tides Station</div><div class="settings-sub" id="tides-station-status">7-digit station ID from tidesandcurrents.noaa.gov</div></div>
             <input class="settings-input" id="set-tides-station" type="text" placeholder="e.g. 9410230" style="width:130px;"/>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>Steam Deck</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Steam ID</div><div class="settings-sub">Optional; for future recent-play sync</div></div>
+            <input class="settings-input" id="set-steam-id" type="text" placeholder="7656119..." style="width:220px"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Steam Web API key</div><div class="settings-sub">Optional; saved locally/host-side if entered</div></div>
+            <input class="settings-input" id="set-steam-api-key" type="password" placeholder="optional" style="width:220px"/>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+            <div><div class="settings-label">Game launch tiles</div><div class="settings-sub">One per line: appid | game name. Uses Steam protocol links.</div></div>
+            <textarea id="set-steam-games" class="settings-input" style="width:100%;min-height:96px;resize:vertical;line-height:1.45;font-size:12px;" placeholder="620 | Portal 2&#10;413150 | Stardew Valley"></textarea>
+            <button class="settings-boot-btn" type="button" onclick="renderSteamWidget()">Refresh Steam Hub</button>
           </div>
         </div>
         <div class="settings-section">
@@ -3556,7 +3588,7 @@
         </div>
       </div>
     </div>
-    <div id="news-section">
+      <div id="news-section">
       <div id="now-playing-panel" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(var(--t-rgb1),0.08);">
         <div class="news-header" style="margin-bottom:6px;">🎵 Now Playing</div>
         <div id="np-content" style="display:flex;align-items:center;gap:8px;">
@@ -3574,6 +3606,18 @@
           <button class="sp-btn" onclick="spotifyNextTrack()" title="Next"><i class="ti ti-player-track-next"></i></button>
           <button class="sp-btn" onclick="fetchSpotifyNowPlaying()" title="Refresh"><i class="ti ti-refresh"></i></button>
         </div>
+      </div>
+      <div class="rail-widget" id="widget-steam" style="display:none">
+        <div class="rail-widget-head">
+          <div class="rail-title"><span class="idx">07</span><span>STEAM</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div class="rail-meta">DECK HUB</div><button class="widget-refresh-btn" type="button" onclick="refreshSteamWidget()" title="Refresh Steam Hub"><i class="ti ti-refresh"></i></button></div>
+        </div>
+        <div class="steam-status" id="steam-status">Add launch tiles in Settings -> Widgets.</div>
+        <div class="steam-actions">
+          <button class="smart-btn smart-power-btn" type="button" onclick="openSteamUrl('steam://open/games')" title="Open Steam library"><i class="ti ti-device-gamepad-2"></i><span>Library</span></button>
+          <button class="smart-btn smart-power-btn" type="button" onclick="openSteamUrl('steam://open/downloads')" title="Open Steam downloads"><i class="ti ti-download"></i><span>Downloads</span></button>
+        </div>
+        <div class="steam-game-list" id="steam-game-list"></div>
       </div>
       <div id="widget-calendar">
       <div class="news-header widget-header-row"><span>📅 Upcoming</span><button id="calendar-refresh-btn" class="widget-refresh-btn" onclick="refreshCalendarWidget()" title="Refresh calendar"><i class="ti ti-refresh"></i></button></div>
@@ -3663,7 +3707,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── SETTINGS & CONFIG (hoisted) ────────────────
-const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, memory: true, video: true, pomodoro: true, tides: true, mood: true, memes: false };
+const FEATURE_DEFAULTS = { weather: true, datetime: true, radio: true, hue: false, spotify: false, calendar: true, news: true, memory: true, video: true, pomodoro: true, tides: true, mood: true, memes: false, steam: false };
 const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS);
 const BOOLEAN_DEFAULTS = {
   autoTheme: false,
@@ -3674,6 +3718,7 @@ const BOOLEAN_DEFAULTS = {
   wakeWordEnabled: false,
   setupComplete: false,
   touchMode: false,
+  controllerMode: true,
   highContrastText: true,
   reduceMonoLabels: true,
   privacyMode: false,
@@ -3703,7 +3748,7 @@ function normalizeOpenRouterModel(value) {
   };
   return legacy[v] || v || DEFAULT_OPENROUTER_MODEL;
 }
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', touchMode: false, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', touchMode: false, controllerMode: true, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', steamId: '', steamApiKey: '', steamGames: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 S.aiModel = normalizeOpenRouterModel(S.aiModel);
 let settingsHydrated = false;
@@ -3890,7 +3935,8 @@ const SAVED_SECRET_FIELDS = {
   openrouterKey: { id: 'set-orkey', placeholder: 'OpenRouter key saved on device' },
   hueKey: { id: 'set-huekey', placeholder: 'Hue API key saved on device' },
   discordToken: { id: 'set-discord-token', placeholder: 'Bot token saved on device' },
-  googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on device' }
+  googleClientSecret: { id: 'set-google-client-secret', placeholder: 'Google secret saved on device' },
+  steamApiKey: { id: 'set-steam-api-key', placeholder: 'Steam API key saved on device' }
 };
 const SAVED_SECRET_KEYS = Object.keys(SAVED_SECRET_FIELDS);
 let integrationHealth = {};
@@ -4225,6 +4271,9 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-huekey', S.hueKey || '', { allowBlank });
   const customSpotifyId = S.spotifyClientId && S.spotifyClientId !== CAROLINE_SPOTIFY_CLIENT_ID ? S.spotifyClientId : '';
   setInputValue('set-spotify-id', customSpotifyId, { allowBlank });
+  setInputValue('set-steam-id', S.steamId || '', { allowBlank });
+  setInputValue('set-steam-api-key', S.steamApiKey || '', { allowBlank });
+  setInputValue('set-steam-games', S.steamGames || '', { allowBlank });
   setInputValue('set-timezone', S.timezone || '', { allowBlank });
   setInputValue('set-location', S.location || S.cityName || '', { allowBlank });
   setInputValue('set-zip', S.zipcode || S.zipCode || '', { allowBlank });
@@ -4939,7 +4988,7 @@ function renderUsageStats() {
 
 // ── BACKUP EXPORT / IMPORT ────────────────────
 function exportBackup() {
-  const BACKUP_SECRET_KEYS = ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret'];
+  const BACKUP_SECRET_KEYS = ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret', 'steamApiKey'];
   const sourceSettings = JSON.parse(localStorage.getItem('caro_settings') || '{}');
   const exportedSettings = Object.assign({}, sourceSettings);
   const configuredSecrets = BACKUP_SECRET_KEYS.filter(k => String(exportedSettings[k] || '').trim());
@@ -5776,6 +5825,7 @@ const WIDGET_CLOSE_TARGETS = [
   { feature: 'calendar', selector: '#widget-calendar', label: 'Calendar' },
   { feature: 'memory', selector: '#widget-memory', label: 'Memory' },
   { feature: 'spotify', selector: '#now-playing-panel', label: 'Now Playing' },
+  { feature: 'steam', selector: '#widget-steam', label: 'Steam Hub' },
   { feature: 'hue', selector: '#widget-smart', label: 'Smart Home' },
   { feature: 'video', selector: '#video-section', label: 'Video' }
 ];
@@ -5840,6 +5890,7 @@ function applyFeatures() {
   show('widget-calendar',    f.calendar !== false);
   show('news-ticker',        f.news !== false && localStorage.getItem('caro_news_ticker_hidden') !== 'true');
   show('widget-memory',      f.memory !== false);
+  show('widget-steam',       !!f.steam);
   show('widget-smart',       !!f.hue);
   show('video-section',      f.video !== false);
   if (typeof setMediaFeatureActive === 'function') setMediaFeatureActive(f.video !== false);
@@ -5850,6 +5901,7 @@ function applyFeatures() {
   show('widget-meme',           !!f.memes);
 
   renderMemoryWidget();
+  if (f.steam) renderSteamWidget();
   updateSmartStatus();
 }
 
@@ -5869,6 +5921,7 @@ function previewFeature(key, val) {
   updateFeatWarnings();
   persistFeatureState('feature toggle');
   if (key === 'memes' && val && !currentMeme) { fetchMeme(); scheduleMemeRotation(); }
+  if (key === 'steam' && val) renderSteamWidget();
 }
 
 function updateFeatWarnings() {
@@ -5884,6 +5937,88 @@ function updateFeatWarnings() {
      if (!hasToken) warn('ℹ️ Spotify enabled — connect account in Settings -> Connect');
   }
   if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Caroline Host URL set to receive events');
+  if (f.steam && !S.steamGames && !S.steamId) warn('ℹ️ Steam Hub is enabled — add launch tiles or a Steam ID below');
+}
+
+const STEAM_LAUNCH_HISTORY_KEY = 'caroline_steam_launch_history';
+let steamRenderedNames = {};
+function parseSteamLaunchTiles(raw) {
+  return String(raw || '').split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const parts = line.split(/\s*[|,]\s*/);
+      const appid = String(parts[0] || '').trim();
+      const name = String(parts.slice(1).join(' | ') || '').trim() || ('App ' + appid);
+      return /^\d{2,12}$/.test(appid) ? { appid, name } : null;
+    })
+    .filter(Boolean)
+    .slice(0, 10);
+}
+function steamLaunchHistory() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(STEAM_LAUNCH_HISTORY_KEY) || '[]');
+    return Array.isArray(rows) ? rows.filter(g => g && g.appid && g.name).slice(0, 6) : [];
+  } catch(e) {
+    return [];
+  }
+}
+function saveSteamLaunchHistory(game) {
+  if (!game || !/^\d{2,12}$/.test(String(game.appid || ''))) return;
+  const next = [{ appid: String(game.appid), name: String(game.name || ('App ' + game.appid)), launchedAt: Date.now() }]
+    .concat(steamLaunchHistory().filter(row => String(row.appid) !== String(game.appid)))
+    .slice(0, 6);
+  localStorage.setItem(STEAM_LAUNCH_HISTORY_KEY, JSON.stringify(next));
+}
+function openSteamUrl(url) {
+  const safe = String(url || '').trim();
+  if (!/^steam:\/\/[a-z0-9/_?=&.-]+$/i.test(safe)) return;
+  window.location.href = safe;
+  resetIdle();
+}
+function launchSteamApp(appid, name) {
+  const id = String(appid || '').trim();
+  if (!/^\d{2,12}$/.test(id)) return;
+  const known = parseSteamLaunchTiles(S.steamGames).concat(steamLaunchHistory()).find(row => String(row.appid) === id);
+  saveSteamLaunchHistory({ appid: id, name: name || known?.name || steamRenderedNames[id] || ('App ' + id) });
+  renderSteamWidget();
+  openSteamUrl('steam://run/' + id);
+}
+function renderSteamGameButton(game, meta) {
+  const appid = String(game.appid || '').trim();
+  const name = String(game.name || game.title || ('App ' + appid)).trim();
+  if (appid) steamRenderedNames[appid] = name;
+  return '<button type="button" class="steam-game-btn" onclick="launchSteamApp(\'' + appid + '\')"><span class="steam-game-name">' + escapeHtmlText(name) + '</span><span class="steam-game-meta">' + escapeHtmlText(meta || ('#' + appid)) + '</span></button>';
+}
+function renderSteamWidget(remoteGames = null, remoteNote = '') {
+  const list = document.getElementById('steam-game-list');
+  const status = document.getElementById('steam-status');
+  if (!list || !status) return;
+  const configured = parseSteamLaunchTiles(S.steamGames);
+  const history = steamLaunchHistory();
+  const remote = Array.isArray(remoteGames) ? remoteGames.filter(g => g && g.appid).slice(0, 5) : [];
+  const rows = [];
+  steamRenderedNames = {};
+  remote.forEach(g => rows.push(renderSteamGameButton({ appid: g.appid, name: g.name || g.title }, g.playtime_2weeks ? (Math.round(Number(g.playtime_2weeks) / 60) + 'h / 2w') : 'recent')));
+  configured.forEach(g => rows.push(renderSteamGameButton(g, 'launch')));
+  if (!remote.length && history.length) {
+    history.forEach(g => rows.push(renderSteamGameButton(g, 'last launch')));
+  }
+  list.innerHTML = rows.length ? rows.join('') : '<div class="steam-empty">No game tiles yet. Open Settings -> Widgets and add lines like "620 | Portal 2".</div>';
+  const linked = S.steamId ? 'Steam ID saved' : 'Steam ID optional';
+  status.textContent = remoteNote || (configured.length ? configured.length + ' launch tile' + (configured.length === 1 ? '' : 's') + ' ready. ' + linked + '.' : 'Library shortcuts are ready. Add game tiles for one-click launch.');
+}
+async function refreshSteamWidget() {
+  renderSteamWidget();
+  if (!S.features?.steam || !S.steamId) return;
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/steam/recent?steamId=' + encodeURIComponent(S.steamId), { timeoutMs: 3500, cache: 'no-store' }, 'Steam recent games');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    renderSteamWidget(d.games || d.recent || [], 'Recent Steam activity loaded from host.');
+  } catch(e) {
+    renderSteamWidget(null, 'Launch tiles ready. Recent-play sync needs the host Steam route.');
+  }
 }
 
 async function testNodeRedUrl() {
@@ -7730,10 +7865,10 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
   });
   normalizeSettingsBooleans(payload);
   const preserveBlankKeys = new Set([
-    'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret',
+    'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret', 'steamApiKey',
     'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
     'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'hostDeviceType', 'zipcode', 'zipCode', 'calendarId', 'defaultWriteCalendarId',
-    'hueIp', 'tidesStation', 'spotifyClientId',
+    'hueIp', 'tidesStation', 'spotifyClientId', 'steamId', 'steamGames',
     'googleClientId', 'googleRedirectUri', 'sheetId', 'wakePhrases'
   ]);
   Object.keys(payload).forEach(k => {
@@ -7741,7 +7876,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
   });
   payload.features = normalizeFeatureState(payload.features, { repairAllOff: false });
   const logPayload = Object.assign({}, payload);
-  ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret', 'googleRefreshToken'].forEach(k => {
+  ['openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret', 'googleRefreshToken', 'steamApiKey'].forEach(k => {
     if (logPayload[k]) logPayload[k] = '[saved]';
   });
   console.log('[Caroline] POST settings to', endpoint, logPayload);
@@ -7780,10 +7915,12 @@ async function saveSettings() {
   const scaleEl = document.getElementById('set-ui-scale');
   const densityEl = document.getElementById('set-ui-density');
   const touchModeEl = document.getElementById('set-touch-mode');
+  const controllerModeEl = document.getElementById('set-controller-mode');
   if (fontEl) S.uiFont = normalizeUiFont(fontEl.value);
   if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
   if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
   if (touchModeEl) S.touchMode = !!touchModeEl.checked;
+  if (controllerModeEl) S.controllerMode = !!controllerModeEl.checked;
   if (displayPresetTouchedThisSession) localStorage.setItem('caroline_display_preset_touched', 'true');
   S.idleTimeout = parseInt(document.getElementById('set-idle').value);
   S.defaultChannel = parseInt(document.getElementById('set-channel').value);
@@ -7839,6 +7976,12 @@ async function saveSettings() {
   HUE_GROUP = S.hueGroup || '0';
   const spotifyClientIdVal = document.getElementById('set-spotify-id').value.trim();
   if (spotifyClientIdVal || !S.spotifyClientId) S.spotifyClientId = spotifyClientIdVal;
+  const steamIdVal = document.getElementById('set-steam-id')?.value.trim() || '';
+  const steamKeyVal = document.getElementById('set-steam-api-key')?.value.trim() || '';
+  const steamGamesVal = document.getElementById('set-steam-games')?.value.trim() || '';
+  S.steamId = steamIdVal;
+  if (steamKeyVal) S.steamApiKey = steamKeyVal;
+  S.steamGames = steamGamesVal;
   S.timezone = document.getElementById('set-timezone').value.trim();
   S.timeFormat = document.getElementById('set-time-format')?.value || '12';
   S.temperatureUnit = document.getElementById('set-temperature-unit')?.value || 'fahrenheit';
@@ -7948,7 +8091,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, visionModel: S.visionModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, touchMode: !!S.touchMode, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, visionModel: S.visionModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, touchMode: !!S.touchMode, controllerMode: !!S.controllerMode, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, steamId: S.steamId, steamApiKey: S.steamApiKey, steamGames: S.steamGames, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -8221,13 +8364,13 @@ function applyFont(fontName) {
 const UI_SCALE_VALUES = ['normal', 'large', 'xlarge', 'jumbo'];
 const UI_DENSITY_VALUES = ['compact', 'comfortable', 'relaxed'];
 const DISPLAY_PRESETS = {
-  desk: { uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
-  pi: { uiFont: 'Noto Sans', uiScale: 'xlarge', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
-  steam: { uiFont: 'Noto Sans', uiScale: 'xlarge', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
-  ubuntu: { uiFont: 'Open Sans', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true },
-  couch: { uiFont: 'Roboto', uiScale: 'xlarge', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true },
-  wall: { uiFont: 'Noto Sans', uiScale: 'jumbo', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true },
-  compact: { uiFont: 'Inter', uiScale: 'normal', uiDensity: 'compact', highContrastText: true, reduceMonoLabels: false }
+  desk: { uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
+  pi: { uiFont: 'Noto Sans', uiScale: 'xlarge', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
+  steam: { uiFont: 'Noto Sans', uiScale: 'xlarge', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
+  ubuntu: { uiFont: 'Open Sans', uiScale: 'large', uiDensity: 'comfortable', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
+  couch: { uiFont: 'Roboto', uiScale: 'xlarge', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
+  wall: { uiFont: 'Noto Sans', uiScale: 'jumbo', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
+  compact: { uiFont: 'Inter', uiScale: 'normal', uiDensity: 'compact', highContrastText: true, reduceMonoLabels: false, controllerMode: true }
 };
 let displayPresetTouchedThisSession = false;
 function normalizeUiScale(value) {
@@ -8286,6 +8429,8 @@ function syncDisplayControls() {
   setSelectValue('set-ui-density', normalizeUiDensity(S.uiDensity));
   const touchEl = document.getElementById('set-touch-mode');
   if (touchEl) touchEl.checked = parseSettingBool(S.touchMode, BOOLEAN_DEFAULTS.touchMode);
+  const controllerEl = document.getElementById('set-controller-mode');
+  if (controllerEl) controllerEl.checked = parseSettingBool(S.controllerMode, BOOLEAN_DEFAULTS.controllerMode);
   const presetEl = document.getElementById('set-display-preset');
   if (presetEl) {
     const id = displayPresetForSettings();
@@ -8300,6 +8445,7 @@ function applyUiReadability() {
   S.uiScale = normalizeUiScale(S.uiScale);
   S.uiDensity = normalizeUiDensity(S.uiDensity);
   S.touchMode = parseSettingBool(S.touchMode, BOOLEAN_DEFAULTS.touchMode);
+  S.controllerMode = parseSettingBool(S.controllerMode, BOOLEAN_DEFAULTS.controllerMode);
   document.body.dataset.uiScale = S.uiScale;
   document.body.dataset.uiDensity = S.uiDensity;
   document.body.classList.toggle('touch-mode', S.touchMode);
@@ -8676,6 +8822,65 @@ document.addEventListener('keydown', e => {
     }
   }
 });
+function focusableKioskControls() {
+  return Array.from(document.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'))
+    .filter(el => {
+      if (!el || el.offsetParent === null) return false;
+      const style = window.getComputedStyle(el);
+      return style.visibility !== 'hidden' && style.display !== 'none';
+    });
+}
+function moveGamepadFocus(delta) {
+  const controls = focusableKioskControls();
+  if (!controls.length) return;
+  const active = document.activeElement;
+  let idx = controls.indexOf(active);
+  if (idx < 0) idx = delta > 0 ? -1 : 0;
+  const next = controls[(idx + delta + controls.length) % controls.length];
+  next.focus({ preventScroll: false });
+}
+function clickGamepadFocus() {
+  const active = document.activeElement;
+  if (active && typeof active.click === 'function' && active.offsetParent !== null) active.click();
+}
+let lastGamepadButtons = {};
+let gamepadAxisReady = true;
+function gamepadPressed(pad, index) {
+  return !!(pad.buttons[index] && pad.buttons[index].pressed);
+}
+function handleGamepadNavigation() {
+  const enabled = parseSettingBool(S.controllerMode, BOOLEAN_DEFAULTS.controllerMode);
+  if (enabled) {
+    const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+    const pad = pads[0];
+    if (pad) {
+      const key = pad.index;
+      const pressed = {
+        a: gamepadPressed(pad, 0),
+        b: gamepadPressed(pad, 1),
+        start: gamepadPressed(pad, 9),
+        up: gamepadPressed(pad, 12),
+        down: gamepadPressed(pad, 13),
+        left: gamepadPressed(pad, 14),
+        right: gamepadPressed(pad, 15)
+      };
+      const axes = pad.axes || [];
+      const vertical = Math.abs(axes[1] || 0) > Math.abs(axes[0] || 0) ? axes[1] : 0;
+      const horizontal = Math.abs(axes[0] || 0) >= Math.abs(axes[1] || 0) ? axes[0] : 0;
+      if ((pressed.down && !lastGamepadButtons[key + ':down']) || (pressed.right && !lastGamepadButtons[key + ':right'])) { moveGamepadFocus(1); resetIdle(); }
+      if ((pressed.up && !lastGamepadButtons[key + ':up']) || (pressed.left && !lastGamepadButtons[key + ':left'])) { moveGamepadFocus(-1); resetIdle(); }
+      if (pressed.a && !lastGamepadButtons[key + ':a']) { clickGamepadFocus(); resetIdle(); }
+      if (pressed.b && !lastGamepadButtons[key + ':b']) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); resetIdle(); }
+      if (pressed.start && !lastGamepadButtons[key + ':start']) { toggleSettings(); resetIdle(); }
+      if (gamepadAxisReady && (vertical > 0.65 || horizontal > 0.65)) { moveGamepadFocus(1); gamepadAxisReady = false; resetIdle(); }
+      if (gamepadAxisReady && (vertical < -0.65 || horizontal < -0.65)) { moveGamepadFocus(-1); gamepadAxisReady = false; resetIdle(); }
+      if (Math.abs(vertical) < 0.28 && Math.abs(horizontal) < 0.28) gamepadAxisReady = true;
+      Object.keys(pressed).forEach(name => { lastGamepadButtons[key + ':' + name] = pressed[name]; });
+    }
+  }
+  requestAnimationFrame(handleGamepadNavigation);
+}
+if (navigator.getGamepads) requestAnimationFrame(handleGamepadNavigation);
 setInterval(()=>{ idleTimer++; if(idleTimer>idleLimit && !document.body.classList.contains('idle-mode')) enterIdleMode(); },1000);
 
 // ── CLOCK ─────────────────────────────────────
@@ -9536,7 +9741,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','uiFont','uiScale','uiDensity','touchMode','aiModel','visionModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
+      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','uiFont','uiScale','uiDensity','touchMode','controllerMode','aiModel','visionModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','steamId','steamApiKey','steamGames','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();
@@ -12414,6 +12619,7 @@ const ONB_WIDGETS = [
   { id:'mood',     title:'Mood Meters',    desc:'User and Caroline mood sliders.', defaultOn:true },
   { id:'spotify',  title:'Spotify',        desc:'Now playing widget; needs Spotify setup.', defaultOn:false },
   { id:'hue',      title:'Hue Lights',     desc:'Quick light controls; needs Hue setup.', defaultOn:false },
+  { id:'steam',    title:'Steam Hub',      desc:'Deck-friendly launch tiles and local game history.', defaultOn:false },
   { id:'memes',    title:'Memes',          desc:'Optional chaos tile. Completely skippable.', defaultOn:false }
 ];
 
