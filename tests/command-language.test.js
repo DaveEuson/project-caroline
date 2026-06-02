@@ -439,6 +439,65 @@ for (const [surface, nodeId] of buildNodes) {
     assert(text.includes('Do not treat the document content as beta feedback'), `${surface}: expected feedback guard`);
   });
 
+  test(`${surface}: Steam game list is available to chat context`, () => {
+    const payload = buildModelPayload(
+      nodeId,
+      'Give me a quick gaming vibe check.',
+      {},
+      {},
+      {
+        features: { steam: true },
+        steamGames: '620 | Portal 2\n413150 | Stardew Valley',
+      }
+    );
+    const systemEntry = payload.messages.find((entry) => entry.role === 'system');
+    const systemText = String(systemEntry && systemEntry.content || '');
+    assert(systemText.includes('STEAM LIBRARY CONTEXT'), `${surface}: expected Steam context block`);
+    assert(systemText.includes('Portal 2'), `${surface}: expected imported game name in prompt`);
+    assert(systemText.includes('Stardew Valley'), `${surface}: expected second imported game name in prompt`);
+  });
+
+  test(`${surface}: active widget snapshot is available to chat context`, () => {
+    const widgetContext = {
+      generatedAt: '2026-06-01T12:00:00.000Z',
+      enabled: ['weather', 'spotify', 'pomodoro', 'steam', 'tasks'],
+      widgets: {
+        weather: { label: 'Weather', current: 'Chula Vista, CA: 70°F Clear sky', apiKey: 'do-not-leak' },
+        spotify: { label: 'Spotify', status: 'Pastel', artist: 'Polar Inc.', device: 'Playing on Steam Deck' },
+        pomodoro: { label: 'Pomodoro', remaining: '25:00', mode: 'focus', running: false },
+        steam: { label: 'Steam Hub', visibleGames: [{ name: 'Portal 2', meta: 'launch' }] },
+        tasks: { label: 'Tasks', openCount: 1, top: ['Replace the HDMI cable'] },
+      },
+    };
+    const payload = buildModelPayload(
+      nodeId,
+      'What can you see on the dashboard right now?',
+      {},
+      {},
+      { widgetContext }
+    );
+    const systemEntry = payload.messages.find((entry) => entry.role === 'system');
+    const systemText = String(systemEntry && systemEntry.content || '');
+    assert(systemText.includes('ACTIVE WIDGET CONTEXT'), `${surface}: expected active widget context block`);
+    assert(systemText.includes('Chula Vista, CA: 70°F Clear sky'), `${surface}: expected weather context`);
+    assert(systemText.includes('Pastel'), `${surface}: expected Spotify context`);
+    assert(systemText.includes('25:00'), `${surface}: expected Pomodoro context`);
+    assert(systemText.includes('Portal 2'), `${surface}: expected Steam context`);
+    assert(systemText.includes('Replace the HDMI cable'), `${surface}: expected task context`);
+    assert(!systemText.includes('do-not-leak'), `${surface}: widget secrets should not enter prompt`);
+  });
+
+  test(`${surface}: Steam library questions get a deterministic local reply`, () => {
+    const msg = directCommand(nodeId, 'What games do I have installed?', {
+      features: { steam: true },
+      steamGames: '620 | Portal 2\n413150 | Stardew Valley',
+    });
+    const reply = String(msg && msg.payload && msg.payload.reply || '');
+    assert(reply.includes('Portal 2'), `${surface}: expected direct reply to list Portal 2`);
+    assert(reply.includes('Stardew Valley'), `${surface}: expected direct reply to list Stardew Valley`);
+    assert(!/not imported|turned off/i.test(reply), `${surface}: should not claim Steam library is unavailable`);
+  });
+
   test(`${surface}: date and social day replies stay conversational`, () => {
     const dateReply = String(directCommand(nodeId, 'What day is it today?')?.payload?.reply || '');
     assert(dateReply.includes('Today is'), `${surface}: expected a direct date reply`);
@@ -498,6 +557,16 @@ for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http pars
     assert(!reply.includes('OpenRouter rejected the API key'), `${surface}: should not classify successful text as an auth error`);
   });
 
+  test(`${surface}: orphan action markers are stripped from visible replies`, () => {
+    const reply = parseReply(
+      nodeId,
+      'Answer like a personality smoke check.',
+      'Let us explore a new adventure together! [ACTION][ACTION]'
+    );
+    assert(reply.includes('adventure'), `${surface}: expected conversational content to remain`);
+    assert(!/\[\/?ACTION\]/i.test(reply), `${surface}: should not leak orphan action tags`);
+  });
+
   test(`${surface}: inferred action after model misses action block`, () => {
     expectAction(parseAction(nodeId, 'Can you add Eat dinner to my caliender at 9pm?', 'Sure, working on it.'), {
       type: 'calendar',
@@ -550,6 +619,42 @@ for (const [surface, nodeId] of [['websocket parse', NODES.wsParse], ['http pars
     assert(!/Saved that feedback/i.test(parseReply(nodeId, docMessage, reply)), `${surface}: should not show feedback confirmation`);
   });
 }
+
+test('flow: Steam Hub HTTP nodes are present', () => {
+  const expected = ['/steam/recent', '/steam/detect', '/steam/library', '/steam/status'];
+  for (const url of expected) {
+    const node = flows.find((n) => n.type === 'http in' && (n.url || n.path) === url);
+    assert(node, `expected Steam HTTP node ${url}`);
+    assert.strictEqual(node.method, 'get', `${url}: method`);
+  }
+});
+
+test('kiosk: signal widget is always available and Steam menu is feature gated', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  assert(html.includes('id="widget-signal"'), 'expected always-visible Signal widget');
+  assert(html.includes('id="signal-ip"'), 'expected Signal widget IP field');
+  assert(html.includes('id="signal-model"'), 'expected Signal widget model field');
+  assert(html.includes('id="exit-kiosk-topbar-btn"'), 'expected topbar Exit Kiosk button');
+  assert(html.includes('onclick="exitKiosk(); playBeep(560);"'), 'expected Exit Kiosk button to call exitKiosk');
+  assert(html.includes('class="net-pill system-source-pill" id="ip-pill"'), 'expected hidden status source pill for IP');
+  assert(html.includes('function updateSignalWidget'), 'expected Signal widget update controller');
+  assert(html.includes('id="steam-topbar-menu" hidden'), 'expected hidden Steam topbar menu');
+  assert(html.includes('#steam-menu-panel { position:fixed;'), 'expected Steam menu to render above side widgets');
+  assert(html.includes('function updateSteamTopbarMenuVisibility'), 'expected Steam menu visibility controller');
+  assert(html.includes('menu.hidden = !enabled'), 'expected menu to be hidden when Steam is disabled');
+  assert(!html.includes('id="widget-steam"'), 'expected duplicate Steam rail widget to be removed');
+  assert(!html.includes('id="steam-menu-ip"'), 'expected host IP to stay out of Steam Hub');
+  assert(!html.includes('id="steam-menu-model"'), 'expected AI model to stay out of Steam Hub');
+  assert(!html.includes('id="steam-menu-resource"'), 'expected CPU/RAM to stay out of Steam Hub');
+  assert(html.includes('id="steam-menu-account"'), 'expected Steam account stat');
+  assert(html.includes('id="steam-menu-installed"'), 'expected installed games stat');
+  assert(html.includes('id="steam-menu-recent"'), 'expected recent activity stat');
+  assert(html.includes('id="steam-menu-downloads-stat"'), 'expected Steam download stat');
+  assert(html.includes('id="steam-downloads"'), 'expected Steam download detail panel');
+  assert(html.includes("'/steam/status?max=8"), 'expected Steam local status refresh');
+  assert(html.includes("openSteamUrl('steam://open/store')"), 'expected Steam Store shortcut');
+  assert(html.includes("openSteamUrl('steam://open/friends')"), 'expected Steam Friends shortcut');
+});
 
 test('final action router sanitizes and routes all action types', () => {
   const calendar = handleAction({ type: 'calendar', title: 'Eat dinner to my caliender', date: '2026-05-09', time: '21:00' });

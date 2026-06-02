@@ -28,7 +28,7 @@
   body.osk-open #settings-modal { max-height: calc(100vh - 340px) !important; }
 
   /* TOPBAR */
-  #topbar { height: 40px; background: linear-gradient(90deg, #0c0814, #05050a); border-bottom: 1px solid rgba(var(--t-rgb1), 0.15); display: flex; align-items: center; padding: 0 14px; gap: 10px; flex-shrink: 0 !important; position: relative; z-index: 10; transition: opacity 1.5s ease; }
+  #topbar { height: 40px; background: linear-gradient(90deg, #0c0814, #05050a); border-bottom: 1px solid rgba(var(--t-rgb1), 0.15); display: flex; align-items: center; padding: 0 14px; gap: 10px; flex-shrink: 0 !important; position: relative; z-index: 1200; transition: opacity 1.5s ease; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t-hex1); box-shadow: 0 0 8px var(--t-hex1); animation: blink 2s ease-in-out infinite; transition: all 0.5s ease; }
   .topbar-name { font-size: 18px; font-weight: 600; letter-spacing: 0.05em; color: #f8fafc; }
   .topbar-version { font-size: 9px; color: rgba(var(--t-rgb1),0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; margin-left: 2px; align-self: flex-end; margin-bottom: 3px; }
@@ -51,10 +51,48 @@
   #wifi-icon { flex:0 0 auto; }
   #wifi-strength { display:inline-block; min-width:22px; white-space:nowrap; text-align:left; line-height:1; }
   .topbar-clock { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(248,250,252,0.8); }
-  #settings-topbar-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
-  #settings-topbar-btn:hover { background: rgba(var(--t-rgb1),0.2); }
+  #settings-topbar-btn, #exit-kiosk-topbar-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 10px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
+  #settings-topbar-btn:hover, #exit-kiosk-topbar-btn:hover { background: rgba(var(--t-rgb1),0.2); }
+  #exit-kiosk-topbar-btn { color:#facc15; border-color:rgba(250,204,21,0.28); background:rgba(250,204,21,0.07); }
+  #exit-kiosk-topbar-btn:hover { color:#fde68a; border-color:rgba(250,204,21,0.48); }
   #hist-btn { background: rgba(var(--t-rgb1),0.08); border: 1px solid rgba(var(--t-rgb1),0.3); border-radius: 20px; padding: 2px 8px; font-size: 15px; color: var(--t-hex1); cursor: pointer; transition: all 0.2s; margin-left: 4px; line-height: 1; }
   #hist-btn:hover { background: rgba(var(--t-rgb1),0.2); }
+  .system-source-pill { display:none !important; }
+  #steam-topbar-menu[hidden] { display:none !important; }
+  #steam-topbar-menu { position:relative; flex:0 0 auto; }
+  #steam-menu-btn { display:inline-flex; align-items:center; gap:6px; height:26px; border:1px solid rgba(var(--t-rgb1),0.32); border-radius:20px; padding:2px 9px; background:rgba(var(--t-rgb1),0.08); color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+  #steam-menu-btn:hover, #steam-menu-btn[aria-expanded="true"] { background:rgba(var(--t-rgb1),0.16); box-shadow:0 0 16px rgba(var(--t-rgb1),0.12); }
+  #steam-menu-panel { position:fixed; top:46px; left:12px; width:min(380px, calc(100vw - 24px)); padding:12px; border:1px solid rgba(var(--t-rgb1),0.26); border-radius:10px; background:linear-gradient(180deg, rgba(12,18,28,0.98), rgba(5,7,11,0.98)); box-shadow:0 16px 40px rgba(0,0,0,0.45), 0 0 28px rgba(var(--t-rgb1),0.10); backdrop-filter:blur(10px); z-index:12000; display:none; }
+  #steam-menu-panel.open { display:block; }
+  .steam-menu-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(var(--t-rgb1),0.12); }
+  .steam-menu-title { color:#f8fafc; font-size:12px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+  .steam-menu-sub { color:rgba(226,232,240,0.45); font-size:10px; font-family:'JetBrains Mono',monospace; margin-top:2px; }
+  .steam-menu-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .steam-menu-stat { min-width:0; border:1px solid rgba(var(--t-rgb1),0.14); border-radius:8px; padding:8px; background:rgba(var(--t-rgb1),0.045); }
+  .steam-menu-stat span { display:block; color:rgba(var(--t-rgb1),0.68); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; margin-bottom:3px; }
+  .steam-menu-stat strong { display:block; color:rgba(248,250,252,0.86); font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .steam-menu-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; }
+  .steam-menu-actions button { min-height:34px; border:1px solid rgba(var(--t-rgb1),0.24); border-radius:8px; background:rgba(var(--t-rgb1),0.07); color:var(--t-hex1); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; }
+  .steam-menu-actions button:hover { background:rgba(var(--t-rgb1),0.14); border-color:rgba(var(--t-rgb1),0.42); }
+  #steam-status { margin-top:10px; color:rgba(226,232,240,0.66); font-size:11px; font-family:'JetBrains Mono',monospace; line-height:1.35; }
+  #steam-downloads { display:none; margin-top:8px; padding:8px; border:1px solid rgba(var(--t-rgb1),0.12); border-radius:8px; background:rgba(var(--t-rgb1),0.04); }
+  #steam-downloads.visible { display:block; }
+  .steam-download-row { display:grid; gap:5px; font-family:'JetBrains Mono',monospace; color:rgba(226,232,240,0.72); font-size:10px; }
+  .steam-download-title { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .steam-download-title strong { color:rgba(248,250,252,0.88); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .steam-download-title span { color:var(--t-hex1); white-space:nowrap; }
+  .steam-download-bar { height:4px; border-radius:999px; background:rgba(148,163,184,0.18); overflow:hidden; }
+  .steam-download-fill { height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg, var(--t-hex1), #facc15); }
+  #steam-menu-status { margin-top:8px; color:rgba(226,232,240,0.55); font-size:10px; font-family:'JetBrains Mono',monospace; line-height:1.4; }
+  .signal-widget { padding:8px 10px; }
+  .signal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  .signal-cell { min-width:0; padding:6px 7px; border:1px solid rgba(var(--t-rgb1),0.12); border-radius:8px; background:rgba(var(--t-rgb1),0.035); }
+  .signal-cell.wide { grid-column:1 / -1; }
+  .signal-k { color:rgba(var(--t-rgb1),0.72); font-size:8px; letter-spacing:.14em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; margin-bottom:2px; }
+  .signal-v { color:rgba(248,250,252,0.86); font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .signal-v.ok { color:#34d399; }
+  .signal-v.warn { color:#fbbf24; }
+  .signal-v.bad { color:#fb7185; }
   .date-sep { color: rgba(var(--t-rgb1), 0.2); font-size: 14px; }
   #news-ticker { height:26px; flex-shrink:0; position:relative; z-index:10; display:flex; align-items:center; gap:10px; overflow:hidden; border-bottom:1px solid rgba(var(--t-rgb1),0.12); background:linear-gradient(90deg, rgba(5,5,10,0.98), rgba(12,8,20,0.92)); font-family:'JetBrains Mono',monospace; }
   #news-ticker-label { flex:0 0 auto; height:100%; display:flex; align-items:center; padding:0 10px 0 14px; border-right:1px solid rgba(var(--t-rgb1),0.14); color:#facc15; font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
@@ -102,6 +140,9 @@
   .settings-input:focus { border-color: rgba(var(--t-rgb1), 0.6); }
   .settings-select { background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--t-rgb1), 0.25); border-radius: 10px; padding: 8px 14px; color: #f8fafc; font-family: var(--ui-font, 'Inter'), sans-serif; font-size: 13px; outline: none; width: 160px; cursor: pointer; }
   .settings-select option { background: #0c0814; }
+  .settings-feature-note { border:1px solid rgba(var(--t-rgb1),0.16); border-radius:10px; background:rgba(var(--t-rgb1),0.05); color:rgba(226,232,240,0.58); font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.45; padding:10px 12px; }
+  .settings-feature-note strong { color:var(--t-hex1); font-weight:600; }
+  .settings-feature-panel[hidden], .settings-widget-config[hidden] { display:none !important; }
   .privacy-dashboard { margin-top:14px; display:flex; flex-direction:column; gap:12px; }
   .privacy-status { font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(226,232,240,0.46); }
   .privacy-status strong { color:var(--t-hex1); font-weight:600; }
@@ -139,6 +180,8 @@
   .stab.active { background: rgba(var(--t-rgb1),0.12); border-color: rgba(var(--t-rgb1),0.5); color: var(--t-hex1); }
   .stab-panel { display: flex; flex-direction: column; gap: 18px; }
   .stab-panel[hidden] { display: none !important; }
+  body.controller-mode-active :focus,
+  body.gamepad-active :focus { outline: 3px solid rgba(var(--t-rgb1),0.92); outline-offset: 3px; box-shadow: 0 0 0 5px rgba(var(--t-rgb1),0.12), 0 0 18px rgba(var(--t-rgb1),0.22); }
   .update-action-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; min-width:230px; }
   @media (min-width: 780px) {
     .stab-panel { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); align-items:start; column-gap:18px; row-gap:16px; }
@@ -1043,7 +1086,7 @@
     text-shadow:1px 0 rgba(122,215,210,0.18), -1px 0 rgba(182,75,104,0.16);
   }
   body.theme-ova .topbar-version { color:rgba(100,200,183,0.46); }
-  body.theme-ova .conn-pill, body.theme-ova .net-pill, body.theme-ova .ai-config-pill, body.theme-ova #settings-topbar-btn, body.theme-ova #hist-btn {
+  body.theme-ova .conn-pill, body.theme-ova .net-pill, body.theme-ova .ai-config-pill, body.theme-ova #settings-topbar-btn, body.theme-ova #exit-kiosk-topbar-btn, body.theme-ova #hist-btn {
     border-radius:6px;
     background:linear-gradient(180deg, rgba(18,27,34,0.72), rgba(5,7,10,0.74));
     border-color:rgba(100,200,183,0.26);
@@ -1341,7 +1384,7 @@
     background:#facc15;
     box-shadow:0 0 10px rgba(250,204,21,0.7), 0 0 22px rgba(var(--t-rgb1),0.24);
   }
-  body.theme-cybercore .conn-pill, body.theme-cybercore .net-pill, body.theme-cybercore .ai-config-pill, body.theme-cybercore #settings-topbar-btn, body.theme-cybercore #hist-btn {
+  body.theme-cybercore .conn-pill, body.theme-cybercore .net-pill, body.theme-cybercore .ai-config-pill, body.theme-cybercore #settings-topbar-btn, body.theme-cybercore #exit-kiosk-topbar-btn, body.theme-cybercore #hist-btn {
     border-radius:5px;
     background:linear-gradient(180deg, rgba(20,34,45,0.72), rgba(7,12,18,0.74));
     border-color:rgba(var(--t-rgb1),0.34);
@@ -1761,8 +1804,10 @@
   body[data-ui-scale="xlarge"] #wifi-indicator,
   body[data-ui-scale="jumbo"] #wifi-indicator { min-width:44px; padding-left:6px; padding-right:6px; }
   body[data-ui-scale="xlarge"] #settings-topbar-btn,
+  body[data-ui-scale="xlarge"] #exit-kiosk-topbar-btn,
   body[data-ui-scale="xlarge"] #hist-btn,
   body[data-ui-scale="jumbo"] #settings-topbar-btn,
+  body[data-ui-scale="jumbo"] #exit-kiosk-topbar-btn,
   body[data-ui-scale="jumbo"] #hist-btn { padding-left:8px; padding-right:8px; }
 
   body.touch-mode .touch-btn { width:56px; height:56px; min-width:56px; font-size:22px; border-radius:12px; }
@@ -1858,7 +1903,7 @@
       display:none !important;
     }
     .conn-pill, .net-pill, #companion-code-pill,
-    #settings-topbar-btn, #hist-btn {
+    #settings-topbar-btn, #exit-kiosk-topbar-btn, #hist-btn {
       height:28px;
       max-width:100%;
       min-width:0;
@@ -1886,7 +1931,7 @@
       justify-content:center;
       order:8;
     }
-    #hist-btn, #settings-topbar-btn {
+    #hist-btn, #settings-topbar-btn, #exit-kiosk-topbar-btn {
       flex:0 0 42px;
       width:42px;
       min-width:42px;
@@ -1898,10 +1943,11 @@
     }
     #hist-btn { order:3; }
     #settings-topbar-btn { order:4; }
-    #settings-topbar-btn {
+    #exit-kiosk-topbar-btn { order:5; }
+    #settings-topbar-btn, #exit-kiosk-topbar-btn {
       font-size:0;
     }
-    #settings-topbar-btn i, #hist-btn i {
+    #settings-topbar-btn i, #exit-kiosk-topbar-btn i, #hist-btn i {
       font-size:17px;
       line-height:1;
     }
@@ -2409,18 +2455,13 @@
       <div class="stab-panel" id="stab-look">
         <div class="settings-section">
           <h3>Appearance</h3>
-          <div class="settings-row">
-            <div><div class="settings-label">AI Name</div><div class="settings-sub" id="set-ainame-hint">Suggested: Caroline</div></div>
-            <input class="settings-input" id="set-ainame" type="text" maxlength="20" placeholder="Caroline" oninput="syncAiNameInputs('set-ainame')"/>
-          </div>
           <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Default avatar</div><div class="settings-sub">Shown on startup</div></div>
+            <div><div class="settings-label">Default avatar</div><div class="settings-sub">Visual art only; tone is in AI → Personality</div></div>
             <select class="settings-select" id="set-avatar" onchange="onSettingsAvatarChange()">
-              <option value="0">Caroline - Caring, thoughtful</option>
-              <option value="1">Carl - Short, direct</option>
-              <option value="2">Catoline - Sweet, helpful cat</option>
-              <option value="3">Robot - Strictly helpful</option>
-              <option value="4">Frog Pilot - Coming soon</option>
+              <option value="0">Caroline</option>
+              <option value="1">Carl</option>
+              <option value="2">Catoline</option>
+              <option value="3">Robot</option>
             </select>
           </div>
           <div class="settings-row" style="margin-top:14px">
@@ -2477,7 +2518,7 @@
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Controller mode</div><div class="settings-sub">D-pad / stick navigation for Steam Deck</div></div>
-            <label class="feat-toggle" style="min-width:180px;justify-content:flex-start;"><input type="checkbox" id="set-controller-mode"/> <span class="settings-icon"><i class="ti ti-device-gamepad-2"></i></span>Gamepad nav</label>
+            <label class="feat-toggle" style="min-width:180px;justify-content:flex-start;"><input type="checkbox" id="set-controller-mode" onchange="applyControllerModeControl(this.checked)"/> <span class="settings-icon"><i class="ti ti-device-gamepad-2"></i></span>Gamepad nav</label>
           </div>
           <div class="settings-row" style="margin-top:14px">
             <div><div class="settings-label">Theme colour</div><div class="settings-sub">Primary accent</div></div>
@@ -2678,6 +2719,19 @@
               <button class="settings-boot-btn" type="button" onclick="resetPersonality()" style="color:rgba(251,191,36,0.8);border-color:rgba(251,191,36,0.3);" title="Clear saved personality and rerun wizard">↺ Reset Personality</button>
             </div>
           </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">AI Name</div><div class="settings-sub" id="set-ainame-hint">Name is separate from avatar and tone</div></div>
+            <input class="settings-input" id="set-ainame" type="text" maxlength="20" placeholder="Caroline" style="width:200px" oninput="syncAiNameInputs('set-ainame')"/>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Personality style</div><div class="settings-sub" id="personality-style-status">Tone is separate from avatar art</div></div>
+            <select class="settings-select" id="set-personality-style" onchange="applyPersonalityStyle(this.value)" style="width:240px">
+              <option value="pilot">Caroline - caring, thoughtful</option>
+              <option value="carl">Carl - short, direct</option>
+              <option value="cat">Catoline - sweet, gentle</option>
+              <option value="robot">Robot - strictly helpful</option>
+            </select>
+          </div>
           <div class="settings-row" style="margin-top:14px;align-items:flex-start;">
             <div><div class="settings-label">AI custom memory</div><div class="settings-sub" id="personality-status">No setup memory yet</div></div>
             <div id="module-status-stack" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
@@ -2723,6 +2777,10 @@
       <!-- ── TAB: CONNECT ── -->
       <div class="stab-panel" id="stab-connect" hidden>
         <div class="settings-section">
+          <h3>Enabled Integrations</h3>
+          <div class="settings-feature-note" id="connect-widget-gate-note">Connection setup appears here when its widget is enabled in <strong>Widgets</strong>. Discord stays visible because it can run as a general notification channel.</div>
+        </div>
+        <div class="settings-section settings-feature-panel" data-feature-panel="hue">
           <h3>Hue Lights</h3>
           <div class="settings-row">
             <div><div class="settings-label">Hue Bridge IP</div><div class="settings-sub" id="hue-ip-status">Local network</div></div>
@@ -2749,7 +2807,7 @@
           </div>
           <div id="hue-group-error" style="display:none;font-size:11px;color:#fb7185;font-family:'JetBrains Mono',monospace;margin-top:4px;text-align:right;"></div>
         </div>
-        <div class="settings-section">
+        <div class="settings-section settings-feature-panel" data-feature-panel="spotify">
           <h3>Spotify</h3>
           <div class="settings-row">
             <div><div class="settings-label">Spotify</div><div class="settings-sub" id="spotify-status">Not connected</div></div>
@@ -2762,6 +2820,29 @@
               <div style="font-size:9px;color:rgba(226,232,240,0.4);font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Add this Redirect URI in your Spotify app (Dashboard → Edit → Redirect URIs):</div>
               <div id="spotify-redirect-display" style="font-size:10px;color:var(--t-hex1);font-family:'JetBrains Mono',monospace;word-break:break-all;margin-bottom:2px;"></div>
             </div>
+          </div>
+        </div>
+        <div class="settings-section settings-feature-panel" data-feature-panel="steam">
+          <h3>Steam Deck</h3>
+          <div class="settings-row">
+            <div><div class="settings-label">Steam ID</div><div class="settings-sub">Detects from the local Deck account when available</div></div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
+              <input class="settings-input" id="set-steam-id" type="text" placeholder="7656119..." style="width:220px"/>
+              <button class="detect-btn" type="button" onclick="detectSteamAccount(this)">Detect</button>
+            </div>
+          </div>
+          <div class="settings-row" style="margin-top:14px">
+            <div><div class="settings-label">Steam Web API key</div><div class="settings-sub">Advanced; only needed for cloud recent-play sync</div></div>
+            <input class="settings-input" id="set-steam-api-key" type="password" placeholder="optional" style="width:220px"/>
+          </div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+            <div><div class="settings-label">Game launch tiles</div><div class="settings-sub">One per line: appid | game name. Local import works without a Web API key.</div></div>
+            <textarea id="set-steam-games" class="settings-input" style="width:100%;min-height:96px;resize:vertical;line-height:1.45;font-size:12px;" placeholder="620 | Portal 2&#10;413150 | Stardew Valley"></textarea>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="settings-boot-btn" type="button" onclick="importSteamLibrary(this)">Import installed games</button>
+              <button class="settings-boot-btn" type="button" onclick="renderSteamWidget()">Refresh Steam Hub</button>
+            </div>
+            <div class="settings-sub" id="steam-setup-status">Local Steam detection stays on this host; Web API key is optional.</div>
           </div>
         </div>
         <div class="settings-section">
@@ -2805,7 +2886,7 @@
             </div>
           </div>
         </div>
-        <div class="settings-section">
+        <div class="settings-section settings-feature-panel" data-feature-panel="calendar">
           <h3>Google</h3>
           <div class="settings-row">
             <div><div class="settings-label">Google Account</div><div class="settings-sub" id="google-auth-status">Not connected</div></div>
@@ -2963,28 +3044,12 @@
             <label class="feat-toggle"><input type="checkbox" id="feat-steam"    onchange="previewFeature('steam',    this.checked)"/> <span class="settings-icon"><i class="ti ti-brand-steam"></i></span>Steam Hub</label>
           </div>
           <div id="feat-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:4px;"></div>
-          <div class="settings-row" style="margin-top:14px;">
+          <div class="settings-row settings-widget-config" data-widget-config="tides" style="margin-top:14px;">
             <div><div class="settings-label">NOAA Tides Station</div><div class="settings-sub" id="tides-station-status">7-digit station ID from tidesandcurrents.noaa.gov</div></div>
             <input class="settings-input" id="set-tides-station" type="text" placeholder="e.g. 9410230" style="width:130px;"/>
           </div>
         </div>
-        <div class="settings-section">
-          <h3>Steam Deck</h3>
-          <div class="settings-row">
-            <div><div class="settings-label">Steam ID</div><div class="settings-sub">Optional; for future recent-play sync</div></div>
-            <input class="settings-input" id="set-steam-id" type="text" placeholder="7656119..." style="width:220px"/>
-          </div>
-          <div class="settings-row" style="margin-top:14px">
-            <div><div class="settings-label">Steam Web API key</div><div class="settings-sub">Optional; saved locally/host-side if entered</div></div>
-            <input class="settings-input" id="set-steam-api-key" type="password" placeholder="optional" style="width:220px"/>
-          </div>
-          <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
-            <div><div class="settings-label">Game launch tiles</div><div class="settings-sub">One per line: appid | game name. Uses Steam protocol links.</div></div>
-            <textarea id="set-steam-games" class="settings-input" style="width:100%;min-height:96px;resize:vertical;line-height:1.45;font-size:12px;" placeholder="620 | Portal 2&#10;413150 | Stardew Valley"></textarea>
-            <button class="settings-boot-btn" type="button" onclick="renderSteamWidget()">Refresh Steam Hub</button>
-          </div>
-        </div>
-        <div class="settings-section">
+        <div class="settings-section settings-widget-config" data-widget-config="video">
           <h3>Video channels</h3>
           <div id="ch-list"></div>
           <div id="add-channel-row">
@@ -3315,10 +3380,42 @@
   <div class="dot"></div>
   <span class="topbar-name" id="topbar-name">Caroline</span>
   <span class="topbar-version">v0.3.0-beta.5</span>
-  <span class="net-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
-  <span class="net-pill" id="model-pill" title="Active AI model">-- --</span>
-  <span class="net-pill checking" id="internet-pill" title="Internet connection status">Internet: Checking</span>
-  <span class="net-pill" id="resource-pill" title="Host CPU and RAM usage">CPU -- RAM --</span>
+  <div id="steam-topbar-menu" hidden>
+    <button id="steam-menu-btn" type="button" onclick="toggleSteamTopbarMenu()" aria-haspopup="menu" aria-expanded="false" aria-controls="steam-menu-panel" title="Steam Hub status and shortcuts"><i class="ti ti-brand-steam"></i><span>Steam Hub</span><i class="ti ti-chevron-down"></i></button>
+    <div id="steam-menu-panel" role="menu" aria-label="Steam Hub status">
+      <div class="steam-menu-head">
+        <div>
+          <div class="steam-menu-title">Steam Deck Hub</div>
+          <div class="steam-menu-sub" id="steam-menu-subtitle">Local game controls and play history</div>
+        </div>
+        <button class="widget-refresh-btn" type="button" onclick="refreshSteamWidget(); updateSteamMenuStatus();" title="Refresh Steam Hub" aria-label="Refresh Steam Hub"><i class="ti ti-refresh"></i></button>
+      </div>
+      <div class="steam-menu-grid">
+        <div class="steam-menu-stat"><span>Player</span><strong id="steam-menu-account">--</strong></div>
+        <div class="steam-menu-stat"><span>Installed</span><strong id="steam-menu-installed">--</strong></div>
+        <div class="steam-menu-stat"><span>Recent play</span><strong id="steam-menu-recent">--</strong></div>
+        <div class="steam-menu-stat"><span>Last launch</span><strong id="steam-menu-last">--</strong></div>
+        <div class="steam-menu-stat"><span>Downloads</span><strong id="steam-menu-downloads-stat">--</strong></div>
+        <div class="steam-menu-stat"><span>Cloud recent</span><strong id="steam-menu-cloud">--</strong></div>
+      </div>
+      <div class="steam-menu-actions">
+        <button type="button" onclick="openSteamUrl('steam://open/games')"><i class="ti ti-device-gamepad-2"></i> Library</button>
+        <button type="button" onclick="openSteamUrl('steam://open/downloads')"><i class="ti ti-download"></i> Downloads</button>
+        <button type="button" onclick="openSteamUrl('steam://open/store')"><i class="ti ti-shopping-cart"></i> Store</button>
+        <button type="button" onclick="openSteamUrl('steam://open/friends')"><i class="ti ti-users"></i> Friends</button>
+        <button type="button" onclick="detectSteamAccountFromMenu(this)"><i class="ti ti-user-search"></i> Detect</button>
+        <button type="button" onclick="importSteamLibraryFromMenu(this)"><i class="ti ti-library-plus"></i> Import</button>
+      </div>
+      <div id="steam-status">Add launch tiles in Settings -> Connect.</div>
+      <div id="steam-downloads" aria-live="polite"></div>
+      <div class="steam-game-list" id="steam-game-list"></div>
+      <div id="steam-menu-status">Steam Hub is ready.</div>
+    </div>
+  </div>
+  <span class="net-pill system-source-pill" id="ip-pill" title="Configured Caroline host">IP: --</span>
+  <span class="net-pill system-source-pill" id="model-pill" title="Active AI model">-- --</span>
+  <span class="net-pill checking system-source-pill" id="internet-pill" title="Internet connection status">Internet: Checking</span>
+  <span class="net-pill system-source-pill" id="resource-pill" title="Host CPU and RAM usage">CPU -- RAM --</span>
   <span class="conn-pill" id="conn-pill">CONNECTING</span>
   <span class="net-pill" id="privacy-pill" title="Privacy mode is on — history and memory are hidden and not saved" style="display:none;background:rgba(251,113,133,0.12);border-color:rgba(251,113,133,0.4);color:#fb7185;">🔒 PRIVATE</span>
   <button class="net-pill" id="companion-code-pill" type="button" onclick="copyCompanionPairingCode()" title="Click to copy the Project: Caroline Companion sync code">SYNC: ------</button>
@@ -3330,6 +3427,7 @@
   </div>
   <button id="hist-btn" onclick="toggleHistory()" title="Chat history" aria-label="Open chat history" aria-expanded="false" aria-controls="history-panel"><i class="ti ti-message-circle"></i></button>
   <button id="settings-topbar-btn" onclick="toggleSettings(); playBeep(800);" title="Settings" aria-label="Open settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="settings-overlay"><i class="ti ti-settings"></i> Settings</button>
+  <button id="exit-kiosk-topbar-btn" onclick="exitKiosk(); playBeep(560);" title="Exit fullscreen kiosk mode" aria-label="Exit kiosk mode"><i class="ti ti-logout"></i> Exit Kiosk</button>
 </div>
 
 <div id="news-ticker">
@@ -3343,6 +3441,27 @@
 <div id="main">
   <div id="left">
     <div id="widgets">
+      <div class="widget signal-widget" id="widget-signal">
+        <div class="widget-label">Signal</div>
+        <div class="signal-grid">
+          <div class="signal-cell">
+            <div class="signal-k">IP</div>
+            <div class="signal-v" id="signal-ip">--</div>
+          </div>
+          <div class="signal-cell">
+            <div class="signal-k">Internet</div>
+            <div class="signal-v warn" id="signal-internet">Checking</div>
+          </div>
+          <div class="signal-cell wide">
+            <div class="signal-k">Model</div>
+            <div class="signal-v" id="signal-model">--</div>
+          </div>
+          <div class="signal-cell wide">
+            <div class="signal-k">CPU / RAM</div>
+            <div class="signal-v" id="signal-resource">CPU -- RAM --</div>
+          </div>
+        </div>
+      </div>
       <div class="widget" id="widget-datetime">
         <div class="widget-label">Date</div>
         <div class="dt-date" id="date-text">--/--/----</div>
@@ -3484,23 +3603,6 @@
           </svg>
           <img id="av-cat" src="about:blank" data-src="assets/cat.gif" class="avatar-svg hidden" alt="Neko Cat" onerror="this.style.display='none'"/>
           <img id="av-robot" src="about:blank" data-src="assets/Robot-Awake.gif" class="avatar-svg hidden" alt="Robot" onerror="this.style.display='none'"/>
-          <svg class="avatar-svg hidden" id="av-frog-pilot" viewBox="0 0 120 120" role="img" aria-label="Frog Pilot placeholder">
-            <defs>
-              <linearGradient id="frogHelmet" x1="0" x2="1" y1="0" y2="1">
-                <stop offset="0" stop-color="rgba(34,211,238,0.55)"/>
-                <stop offset="1" stop-color="rgba(251,191,36,0.45)"/>
-              </linearGradient>
-            </defs>
-            <circle cx="60" cy="56" r="40" fill="rgba(25,70,54,0.92)" stroke="var(--t-hex1)" stroke-width="2"/>
-            <circle cx="39" cy="36" r="14" fill="#74d680" stroke="var(--t-hex1)" stroke-width="1.5"/>
-            <circle cx="81" cy="36" r="14" fill="#74d680" stroke="var(--t-hex1)" stroke-width="1.5"/>
-            <circle cx="39" cy="36" r="5" fill="#07111a"/>
-            <circle cx="81" cy="36" r="5" fill="#07111a"/>
-            <path d="M32 67 Q60 88 88 67" fill="none" stroke="#d9ffb6" stroke-width="4" stroke-linecap="round"/>
-            <path d="M24 53 Q60 15 96 53" fill="none" stroke="url(#frogHelmet)" stroke-width="9" stroke-linecap="round"/>
-            <path d="M30 87 L90 87 L82 103 L38 103 Z" fill="rgba(15,23,42,0.9)" stroke="var(--t-hex2)" stroke-width="1.5"/>
-            <path d="M49 89 L60 98 L71 89" fill="none" stroke="var(--t-hex1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
           <svg class="avatar-svg hidden" id="av-ghost" viewBox="0 0 100 100">
             <defs><radialGradient id="ghostGlow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="var(--t-hex1)" stop-opacity="0.3"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
             <ellipse cx="50" cy="42" rx="28" ry="30" fill="rgba(200,220,255,0.12)" stroke="var(--t-hex1)" stroke-width="1.5"/>
@@ -3606,18 +3708,6 @@
           <button class="sp-btn" onclick="spotifyNextTrack()" title="Next"><i class="ti ti-player-track-next"></i></button>
           <button class="sp-btn" onclick="fetchSpotifyNowPlaying()" title="Refresh"><i class="ti ti-refresh"></i></button>
         </div>
-      </div>
-      <div class="rail-widget" id="widget-steam" style="display:none">
-        <div class="rail-widget-head">
-          <div class="rail-title"><span class="idx">07</span><span>STEAM</span></div>
-          <div style="display:flex;align-items:center;gap:6px;"><div class="rail-meta">DECK HUB</div><button class="widget-refresh-btn" type="button" onclick="refreshSteamWidget()" title="Refresh Steam Hub"><i class="ti ti-refresh"></i></button></div>
-        </div>
-        <div class="steam-status" id="steam-status">Add launch tiles in Settings -> Widgets.</div>
-        <div class="steam-actions">
-          <button class="smart-btn smart-power-btn" type="button" onclick="openSteamUrl('steam://open/games')" title="Open Steam library"><i class="ti ti-device-gamepad-2"></i><span>Library</span></button>
-          <button class="smart-btn smart-power-btn" type="button" onclick="openSteamUrl('steam://open/downloads')" title="Open Steam downloads"><i class="ti ti-download"></i><span>Downloads</span></button>
-        </div>
-        <div class="steam-game-list" id="steam-game-list"></div>
       </div>
       <div id="widget-calendar">
       <div class="news-header widget-header-row"><span>📅 Upcoming</span><button id="calendar-refresh-btn" class="widget-refresh-btn" onclick="refreshCalendarWidget()" title="Refresh calendar"><i class="ti ti-refresh"></i></button></div>
@@ -3748,7 +3838,7 @@ function normalizeOpenRouterModel(value) {
   };
   return legacy[v] || v || DEFAULT_OPENROUTER_MODEL;
 }
-const DEFAULTS = { installId: '', avatar: 0, theme: 0, uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', touchMode: false, controllerMode: true, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', steamId: '', steamApiKey: '', steamGames: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
+const DEFAULTS = { installId: '', avatar: 0, theme: 0, displayPreset: '', uiFont: 'Inter', uiScale: 'large', uiDensity: 'comfortable', touchMode: false, controllerMode: true, zipcode: '', cityName: '', lat: 0, lng: 0, idleTimeout: 300, defaultChannel: 0, autoTheme: false, ttsEnabled: false, voiceMuted: true, wakeWordEnabled: false, wakePhrases: 'hey caroline, hey ai', aiName: 'Caroline', userName: '', userMood: 7, aiMood: 7, personalityStyle: 'pilot', personalityPrompt: '', userProfilePrompt: '', aiModel: DEFAULT_OPENROUTER_MODEL, visionModel: 'google/gemini-2.5-flash', aiProvider: 'openrouter', ollamaUrl: 'http://localhost:11434', ollamaModel: 'qwen2.5:1.5b', piIp: '', nodeRedUrl: DEFAULT_NODE_RED_CONFIG_URL, hostDeviceType: '', openrouterKey: '', hueIp: '', hueKey: '', hueGroup: '', hueGroupName: '', tidesStation: '', spotifyClientId: '', steamId: '', steamApiKey: '', steamGames: '', googleClientId: '', googleClientSecret: '', googleRedirectUri: '', googleConnected: false, timezone: '', timeFormat: '12', temperatureUnit: 'fahrenheit', location: '', calendarId: 'primary', calendarIds: [], defaultWriteCalendarId: '', meetingReminderMinutes: 0, sheetId: '', discordEnabled: false, discordMode: 'channel', discordToken: '', discordChannelId: '', discordUserId: '', historyRetentionMs: 0, memoryRetentionMs: 0, privacyMode: false, companionPairingCode: '', setupComplete: false, featuresUpdatedAt: 0, features: Object.assign({}, FEATURE_DEFAULTS) };
 let S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('caro_settings') || '{}'));
 S.aiModel = normalizeOpenRouterModel(S.aiModel);
 let settingsHydrated = false;
@@ -3903,7 +3993,29 @@ function syncFeatureCheckboxes() {
     const el = document.getElementById('feat-' + k);
     if (el) el.checked = featureState[k] !== false;
   });
+  syncConditionalSettingsPanels(featureState);
   return featureState;
+}
+
+function syncConditionalSettingsPanels(featureState = null) {
+  const f = normalizeFeatureState(featureState || S.features, { repairAllOff: false });
+  let visibleIntegrationCount = 0;
+  document.querySelectorAll('[data-feature-panel]').forEach(panel => {
+    const key = panel.getAttribute('data-feature-panel');
+    const visible = key ? f[key] !== false && !!f[key] : true;
+    panel.hidden = !visible;
+    if (visible) visibleIntegrationCount += 1;
+  });
+  document.querySelectorAll('[data-widget-config]').forEach(panel => {
+    const key = panel.getAttribute('data-widget-config');
+    panel.hidden = key ? f[key] === false || !f[key] : false;
+  });
+  const note = document.getElementById('connect-widget-gate-note');
+  if (note) {
+    note.innerHTML = visibleIntegrationCount
+      ? 'Only setup for enabled widgets is shown here. Toggle more modules in <strong>Widgets</strong>.'
+      : 'Connection setup appears here when its widget is enabled in <strong>Widgets</strong>. Discord stays visible because it can run as a general notification channel.';
+  }
 }
 
 function collectFeatureCheckboxesFromForm() {
@@ -3962,6 +4074,7 @@ function clearBrowserInstallState(reason) {
     'caroline_personality',
     'caroline_personality_prompt',
     'caroline_user_profile_prompt',
+    'caroline_display_preset_id',
     'caroline_display_preset_touched',
     'spotify_token',
     'spotify_refresh_token',
@@ -4294,6 +4407,8 @@ function applySettingsToForm({ allowBlank = false } = {}) {
   setInputValue('set-wake-phrases', S.wakePhrases || DEFAULTS.wakePhrases, { allowBlank });
   const avatarEl = document.getElementById('set-avatar');
   if (avatarEl) avatarEl.value = String(normalizeAvatarIndex(S.avatar));
+  S.personalityStyle = currentPersonalityStyleId();
+  syncPersonalityStyleControl();
   syncDisplayControls();
   updateAiNameHints();
   onProviderChange(provider);
@@ -4380,7 +4495,7 @@ async function syncSettingsFromServer() {
     updateAvatarFrameLabel();
     const rebuiltPrompt = getSetupMemoryPrompt();
     if (rebuiltPrompt && !d.personalityPrompt) {
-      postSettingsToNodeRed({ personalityPrompt: rebuiltPrompt }, 5000).catch(e => console.warn('[Caroline] setup memory repair failed:', e));
+      postSettingsToNodeRed({ personalityStyle: S.personalityStyle || currentPersonalityStyleId(), personalityPrompt: rebuiltPrompt }, 5000).catch(e => console.warn('[Caroline] setup memory repair failed:', e));
     }
     updateAiConfigIndicator();
     const wcl = document.getElementById('weather-city-label');
@@ -5825,7 +5940,6 @@ const WIDGET_CLOSE_TARGETS = [
   { feature: 'calendar', selector: '#widget-calendar', label: 'Calendar' },
   { feature: 'memory', selector: '#widget-memory', label: 'Memory' },
   { feature: 'spotify', selector: '#now-playing-panel', label: 'Now Playing' },
-  { feature: 'steam', selector: '#widget-steam', label: 'Steam Hub' },
   { feature: 'hue', selector: '#widget-smart', label: 'Smart Home' },
   { feature: 'video', selector: '#video-section', label: 'Video' }
 ];
@@ -5879,6 +5993,8 @@ function applyFeatures() {
   attachWidgetCloseButtons();
   const f = normalizeFeatureState(S.features, { repairAllOff: false });
   S.features = f;
+  syncConditionalSettingsPanels(f);
+  updateSteamTopbarMenuVisibility(f);
   const show = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
 
   show('widget-datetime',    f.datetime !== false);
@@ -5890,7 +6006,6 @@ function applyFeatures() {
   show('widget-calendar',    f.calendar !== false);
   show('news-ticker',        f.news !== false && localStorage.getItem('caro_news_ticker_hidden') !== 'true');
   show('widget-memory',      f.memory !== false);
-  show('widget-steam',       !!f.steam);
   show('widget-smart',       !!f.hue);
   show('video-section',      f.video !== false);
   if (typeof setMediaFeatureActive === 'function') setMediaFeatureActive(f.video !== false);
@@ -5903,6 +6018,8 @@ function applyFeatures() {
   renderMemoryWidget();
   if (f.steam) renderSteamWidget();
   updateSmartStatus();
+  updateSignalWidget();
+  updateSteamMenuStatus();
 }
 
 function toggleNewsTicker(showTicker) {
@@ -5937,11 +6054,14 @@ function updateFeatWarnings() {
      if (!hasToken) warn('ℹ️ Spotify enabled — connect account in Settings -> Connect');
   }
   if (f.calendar && !S.nodeRedUrl) warn('⚠️ Calendar needs Caroline Host URL set to receive events');
-  if (f.steam && !S.steamGames && !S.steamId) warn('ℹ️ Steam Hub is enabled — add launch tiles or a Steam ID below');
+  if (f.steam && !S.steamGames && !S.steamId) warn('ℹ️ Steam Hub is enabled — set up Steam in Settings -> Connect');
 }
 
 const STEAM_LAUNCH_HISTORY_KEY = 'caroline_steam_launch_history';
 let steamRenderedNames = {};
+let steamLastRemoteGames = [];
+let steamLastRemoteNote = '';
+let steamLastStatus = null;
 function parseSteamLaunchTiles(raw) {
   return String(raw || '').split(/\r?\n/)
     .map(line => line.trim())
@@ -5970,9 +6090,174 @@ function saveSteamLaunchHistory(game) {
     .slice(0, 6);
   localStorage.setItem(STEAM_LAUNCH_HISTORY_KEY, JSON.stringify(next));
 }
+function steamHubFeatureEnabled(features = S.features) {
+  const f = normalizeFeatureState(features || FEATURE_DEFAULTS, { repairAllOff: false });
+  return !!f.steam;
+}
+function closeSteamTopbarMenu() {
+  const panel = document.getElementById('steam-menu-panel');
+  const btn = document.getElementById('steam-menu-btn');
+  if (panel) panel.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+function toggleSteamTopbarMenu(forceOpen) {
+  if (!steamHubFeatureEnabled()) return;
+  const panel = document.getElementById('steam-menu-panel');
+  const btn = document.getElementById('steam-menu-btn');
+  if (!panel || !btn) return;
+  const next = forceOpen === undefined ? !panel.classList.contains('open') : !!forceOpen;
+  if (next) closeTransientPanels('steam');
+  panel.classList.toggle('open', next);
+  btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+  if (next) updateSteamMenuStatus();
+  resetIdle();
+}
+function updateSteamTopbarMenuVisibility(features = S.features) {
+  const enabled = steamHubFeatureEnabled(features);
+  const menu = document.getElementById('steam-topbar-menu');
+  document.body.classList.toggle('steam-hub-topbar-mode', enabled);
+  if (menu) {
+    menu.hidden = !enabled;
+    menu.style.display = enabled ? '' : 'none';
+  }
+  if (!enabled) closeSteamTopbarMenu();
+  updateSignalWidget();
+  updateSteamMenuStatus();
+}
+function setSteamMenuText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(value || '--');
+}
+function setSteamMenuStatus(text, isError = false) {
+  const el = document.getElementById('steam-menu-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = isError ? '#fb7185' : 'rgba(226,232,240,0.58)';
+}
+function shortSteamName(value, fallback = '--') {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return fallback;
+  return text.length > 24 ? text.slice(0, 22).trimEnd() + '…' : text;
+}
+function steamProfileLabel() {
+  const profile = steamLastStatus && steamLastStatus.profile ? steamLastStatus.profile : {};
+  const persona = profile.personaName || profile.accountName || steamLastStatus?.personaName || steamLastStatus?.accountName;
+  const steamId = profile.steamId || steamLastStatus?.steamId || S.steamId;
+  if (persona) return shortSteamName(persona);
+  if (steamId) return '...' + String(steamId).slice(-4);
+  return 'Detect ready';
+}
+function steamDownloadSummary(downloads) {
+  const rows = Array.isArray(downloads) ? downloads.filter(Boolean) : [];
+  if (!rows.length) return { label: 'Idle', detail: '', rows: [] };
+  const first = rows[0];
+  const percent = Number(first.percent);
+  const label = shortSteamName(first.name || ('App ' + first.appid), 'Updating');
+  const suffix = Number.isFinite(percent) && percent > 0 ? ' ' + Math.round(percent) + '%' : '';
+  return {
+    label: label + suffix,
+    detail: rows.length === 1 ? (first.status || 'Downloading') : rows.length + ' downloads active',
+    rows
+  };
+}
+function renderSteamDownloadPanel(downloads) {
+  const el = document.getElementById('steam-downloads');
+  if (!el) return;
+  const summary = steamDownloadSummary(downloads);
+  if (!summary.rows.length) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.add('visible');
+  el.innerHTML = summary.rows.slice(0, 2).map(row => {
+    const percent = Math.max(0, Math.min(100, Number(row.percent) || 0));
+    const pctText = percent ? Math.round(percent) + '%' : (row.status || 'Active');
+    return '<div class="steam-download-row">' +
+      '<div class="steam-download-title"><strong>' + escapeHtmlText(shortSteamName(row.name || ('App ' + row.appid), 'Steam update')) + '</strong><span>' + escapeHtmlText(pctText) + '</span></div>' +
+      '<div class="steam-download-bar"><div class="steam-download-fill" style="width:' + percent + '%"></div></div>' +
+      '<div>' + escapeHtmlText(row.status || 'Downloading') + '</div>' +
+    '</div>';
+  }).join('');
+}
+function setSignalText(id, value, state = '') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = String(value || '--');
+  el.classList.remove('ok', 'warn', 'bad');
+  if (state) el.classList.add(state);
+}
+function updateSignalWidget() {
+  const internetPill = document.getElementById('internet-pill');
+  const resourcePill = document.getElementById('resource-pill');
+  const internetText = textFromEl('internet-pill').replace(/^Internet:\s*/i, '') || 'Checking';
+  const internetState = internetPill?.classList.contains('online') ? 'ok' : internetPill?.classList.contains('offline') ? 'bad' : 'warn';
+  const resourceState = resourcePill?.classList.contains('danger') ? 'bad' : resourcePill?.classList.contains('warn') ? 'warn' : '';
+  setSignalText('signal-ip', textFromEl('ip-pill').replace(/^IP:\s*/i, '') || getPiHost());
+  setSignalText('signal-internet', internetText, internetState);
+  setSignalText('signal-model', textFromEl('model-pill') || '--');
+  setSignalText('signal-resource', textFromEl('resource-pill') || 'CPU -- RAM --', resourceState);
+}
+function updateSteamMenuStatus() {
+  const menu = document.getElementById('steam-topbar-menu');
+  if (!menu) return;
+  const configured = parseSteamLaunchTiles(S.steamGames);
+  const history = steamLaunchHistory();
+  const visible = document.querySelectorAll('#steam-game-list .steam-game-btn').length;
+  const remote = Array.isArray(steamLastRemoteGames) ? steamLastRemoteGames : [];
+  const localStatus = steamLastStatus && typeof steamLastStatus === 'object' ? steamLastStatus : {};
+  const installed = Number(localStatus.installedCount || localStatus.count || 0) || remote.filter(g => g && (g.source === 'local' || g.installed === true)).length || configured.length || visible;
+  const recentGame = remote.find(g => g && (Number(g.playtime2Weeks || g.playtime_2weeks || 0) > 0 || g.source === 'recent' || g.source === 'cloud')) || null;
+  const localRecent = history[0] || null;
+  const recentLabel = recentGame ? shortSteamName(recentGame.name || recentGame.title) : localRecent ? shortSteamName(localRecent.name) : 'No recent play';
+  const lastLaunch = localRecent ? shortSteamName(localRecent.name) : 'None yet';
+  const downloadSummary = steamDownloadSummary(localStatus.downloads || []);
+  const cloudReady = S.steamId && S.steamApiKey ? 'Ready' : S.steamId ? 'Needs key' : 'Optional';
+  setSteamMenuText('steam-menu-account', steamProfileLabel());
+  setSteamMenuText('steam-menu-installed', installed ? installed + ' games' : 'None yet');
+  setSteamMenuText('steam-menu-recent', recentLabel);
+  setSteamMenuText('steam-menu-last', lastLaunch);
+  setSteamMenuText('steam-menu-downloads-stat', downloadSummary.label);
+  setSteamMenuText('steam-menu-cloud', cloudReady);
+  renderSteamDownloadPanel(localStatus.downloads || []);
+  const subtitle = document.getElementById('steam-menu-subtitle');
+  if (subtitle) {
+    const profile = localStatus.profile || {};
+    const steamId = profile.steamId || localStatus.steamId || S.steamId;
+    subtitle.textContent = steamId ? 'Steam account ending ' + String(steamId).slice(-4) : 'Local launch shortcuts, no API key required';
+  }
+  if (!textFromEl('steam-menu-status')) {
+    setSteamMenuStatus(textFromEl('steam-status') || 'Steam Hub is ready.');
+  }
+}
+async function runSteamMenuAction(btn, busyText, work) {
+  const original = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = busyText; }
+  try {
+    await work();
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = original; }
+    updateSteamMenuStatus();
+  }
+}
+async function detectSteamAccountFromMenu(btn) {
+  await runSteamMenuAction(btn, 'Detecting...', () => detectSteamAccount(null));
+}
+async function importSteamLibraryFromMenu(btn) {
+  await runSteamMenuAction(btn, 'Importing...', () => importSteamLibrary(null));
+}
+function setSteamSetupStatus(text, isError = false) {
+  const el = document.getElementById('steam-setup-status');
+  if (el) {
+    el.textContent = text || '';
+    el.style.color = isError ? '#fb7185' : 'rgba(34,211,238,0.88)';
+  }
+  setSteamMenuStatus(text, isError);
+}
 function openSteamUrl(url) {
   const safe = String(url || '').trim();
   if (!/^steam:\/\/[a-z0-9/_?=&.-]+$/i.test(safe)) return;
+  closeSteamTopbarMenu();
   window.location.href = safe;
   resetIdle();
 }
@@ -5990,36 +6275,195 @@ function renderSteamGameButton(game, meta) {
   if (appid) steamRenderedNames[appid] = name;
   return '<button type="button" class="steam-game-btn" onclick="launchSteamApp(\'' + appid + '\')"><span class="steam-game-name">' + escapeHtmlText(name) + '</span><span class="steam-game-meta">' + escapeHtmlText(meta || ('#' + appid)) + '</span></button>';
 }
+function steamGameMeta(game) {
+  const mins = Number(game.playtime2Weeks || game.playtime_2weeks || 0);
+  if (mins > 0) return Math.round(mins / 60) + 'h / 2w';
+  if (game.source === 'local' || game.installed === true) return 'installed';
+  if (game.source === 'history') return 'last launch';
+  if (game.source === 'configured') return 'launch';
+  return 'recent play';
+}
+function uniqueSteamRows(groups) {
+  const seen = new Set();
+  const rows = [];
+  groups.forEach(group => {
+    (Array.isArray(group) ? group : []).forEach(game => {
+      const appid = String(game && game.appid || '').trim();
+      if (!/^\d{2,12}$/.test(appid) || seen.has(appid)) return;
+      seen.add(appid);
+      rows.push(game);
+    });
+  });
+  return rows.slice(0, 8);
+}
 function renderSteamWidget(remoteGames = null, remoteNote = '') {
   const list = document.getElementById('steam-game-list');
   const status = document.getElementById('steam-status');
   if (!list || !status) return;
   const configured = parseSteamLaunchTiles(S.steamGames);
   const history = steamLaunchHistory();
-  const remote = Array.isArray(remoteGames) ? remoteGames.filter(g => g && g.appid).slice(0, 5) : [];
-  const rows = [];
+  const localGames = steamLastStatus && Array.isArray(steamLastStatus.games) ? steamLastStatus.games : [];
+  const remote = Array.isArray(remoteGames) ? remoteGames.filter(g => g && g.appid).slice(0, 8) : [];
+  steamLastRemoteGames = remote;
+  steamLastRemoteNote = remoteNote || '';
+  const rows = uniqueSteamRows([
+    remote,
+    localGames,
+    configured.map(g => Object.assign({ source: 'configured' }, g)),
+    history.map(g => Object.assign({ source: 'history' }, g))
+  ]);
+  const htmlRows = [];
   steamRenderedNames = {};
-  remote.forEach(g => rows.push(renderSteamGameButton({ appid: g.appid, name: g.name || g.title }, g.playtime_2weeks ? (Math.round(Number(g.playtime_2weeks) / 60) + 'h / 2w') : 'recent')));
-  configured.forEach(g => rows.push(renderSteamGameButton(g, 'launch')));
-  if (!remote.length && history.length) {
-    history.forEach(g => rows.push(renderSteamGameButton(g, 'last launch')));
-  }
-  list.innerHTML = rows.length ? rows.join('') : '<div class="steam-empty">No game tiles yet. Open Settings -> Widgets and add lines like "620 | Portal 2".</div>';
+  rows.forEach(g => htmlRows.push(renderSteamGameButton({ appid: g.appid, name: g.name || g.title }, steamGameMeta(g))));
+  list.innerHTML = htmlRows.length ? htmlRows.join('') : '<div class="steam-empty">No game tiles yet. Open Settings -> Connect and import installed games.</div>';
   const linked = S.steamId ? 'Steam ID saved' : 'Steam ID optional';
   status.textContent = remoteNote || (configured.length ? configured.length + ' launch tile' + (configured.length === 1 ? '' : 's') + ' ready. ' + linked + '.' : 'Library shortcuts are ready. Add game tiles for one-click launch.');
+  setSteamMenuStatus(status.textContent);
+  updateSteamMenuStatus();
+}
+async function refreshSteamLocalStatus() {
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/steam/status?max=8&t=' + Date.now(), { timeoutMs: 3500, cache: 'no-store' }, 'Steam local status');
+    const data = await r.json();
+    if (r.ok && data && typeof data === 'object') {
+      steamLastStatus = data;
+      return data;
+    }
+  } catch(e) {}
+  return null;
 }
 async function refreshSteamWidget() {
   renderSteamWidget();
-  if (!S.features?.steam || !S.steamId) return;
+  if (!S.features?.steam) return;
+  const localStatus = await refreshSteamLocalStatus();
+  if (localStatus && localStatus.ok && Array.isArray(localStatus.games) && localStatus.games.length) {
+    renderSteamWidget(localStatus.games, localStatus.message || 'Installed Steam games found locally.');
+  }
+  if (!S.steamId) {
+    if (!localStatus || !Array.isArray(localStatus.games) || !localStatus.games.length) {
+      try {
+        const local = await fetchJsonWithTimeout(httpBase() + '/steam/library?max=5', { timeoutMs: 3000, cache: 'no-store' }, 'Steam local library');
+        const localData = await local.json();
+        if (local.ok && localData.ok && Array.isArray(localData.games) && localData.games.length) {
+          renderSteamWidget(localData.games, 'Installed Steam games found locally.');
+        }
+      } catch(e) {}
+    }
+    return;
+  }
   try {
     const r = await fetchJsonWithTimeout(httpBase() + '/steam/recent?steamId=' + encodeURIComponent(S.steamId), { timeoutMs: 3500, cache: 'no-store' }, 'Steam recent games');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    renderSteamWidget(d.games || d.recent || [], 'Recent Steam activity loaded from host.');
+    if (d.ok && Array.isArray(d.games) && d.games.length) {
+      renderSteamWidget(d.games || d.recent || [], 'Recent Steam activity loaded from host.');
+      return;
+    }
+    const local = await fetchJsonWithTimeout(httpBase() + '/steam/library?max=5', { timeoutMs: 3000, cache: 'no-store' }, 'Steam local library');
+    const localData = await local.json();
+    if (local.ok && localData.ok && Array.isArray(localData.games) && localData.games.length) {
+      renderSteamWidget(localData.games, 'Installed Steam games found locally.');
+      return;
+    }
+    if (!localStatus || !Array.isArray(localStatus.games) || !localStatus.games.length) {
+      renderSteamWidget(null, d.message || 'Steam linked. Add a Web API key for cloud recent-play sync.');
+    }
   } catch(e) {
-    renderSteamWidget(null, 'Launch tiles ready. Recent-play sync needs the host Steam route.');
+    try {
+      const local = await fetchJsonWithTimeout(httpBase() + '/steam/library?max=5', { timeoutMs: 3000, cache: 'no-store' }, 'Steam local library');
+      const localData = await local.json();
+      if (local.ok && localData.ok && Array.isArray(localData.games) && localData.games.length) {
+        renderSteamWidget(localData.games, 'Installed Steam games found locally.');
+        return;
+      }
+    } catch(inner) {}
+    if (!localStatus || !Array.isArray(localStatus.games) || !localStatus.games.length) {
+      renderSteamWidget(null, 'Launch tiles ready. Recent-play sync needs the optional Steam Web API key.');
+    }
   }
 }
+function steamTileLine(game) {
+  const appid = String(game && game.appid || '').replace(/\D/g, '');
+  const name = String(game && (game.name || game.title) || ('App ' + appid))
+    .replace(/[\r\n|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 90);
+  return /^\d{2,12}$/.test(appid) && name ? appid + ' | ' + name : '';
+}
+function mergeSteamTileText(existing, games) {
+  const lines = String(existing || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const seen = new Set(parseSteamLaunchTiles(lines.join('\n')).map(g => String(g.appid)));
+  const imported = [];
+  (Array.isArray(games) ? games : []).forEach(game => {
+    const line = steamTileLine(game);
+    const appid = String(game && game.appid || '').replace(/\D/g, '');
+    if (!line || seen.has(appid)) return;
+    seen.add(appid);
+    imported.push(line);
+  });
+  return lines.concat(imported).slice(0, 24).join('\n');
+}
+async function detectSteamAccount(btn) {
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Detecting...'; }
+  setSteamSetupStatus('Looking for the local Steam account on this host...');
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/steam/detect?t=' + Date.now(), { timeoutMs: 4000, cache: 'no-store' }, 'Steam account detect');
+    const data = await r.json();
+    if (!r.ok || !data.ok || !/^\d{15,20}$/.test(String(data.steamId || ''))) {
+      throw new Error(data.message || 'No local Steam login found.');
+    }
+    S.steamId = String(data.steamId);
+    steamLastStatus = Object.assign({}, steamLastStatus || {}, { profile: data, steamId: S.steamId, personaName: data.personaName || '', accountName: data.accountName || '' });
+    const field = document.getElementById('set-steam-id');
+    if (field) field.value = S.steamId;
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    try { await postSettingsToNodeRed({ steamId: S.steamId }, 5000); } catch(saveErr) {}
+    setSteamSetupStatus(data.message || ('Detected local Steam account ending ' + S.steamId.slice(-4) + '.'));
+  } catch(e) {
+    setSteamSetupStatus(e.message || 'Steam detection failed. Open Steam once, then try again.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = original || 'Detect'; }
+  }
+}
+async function importSteamLibrary(btn) {
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Importing...'; }
+  setSteamSetupStatus('Reading installed Steam games from this host...');
+  try {
+    const r = await fetchJsonWithTimeout(httpBase() + '/steam/library?max=16&t=' + Date.now(), { timeoutMs: 5000, cache: 'no-store' }, 'Steam library import');
+    const data = await r.json();
+    if (!r.ok || !data.ok || !Array.isArray(data.games) || !data.games.length) {
+      throw new Error(data.message || 'No installed Steam games found.');
+    }
+    const field = document.getElementById('set-steam-games');
+    const merged = mergeSteamTileText(field ? field.value : S.steamGames, data.games);
+    S.steamGames = merged;
+    if (field) field.value = merged;
+    if (!S.features || typeof S.features !== 'object') S.features = Object.assign({}, FEATURE_DEFAULTS);
+    S.features.steam = true;
+    syncFeatureCheckboxes();
+    localStorage.setItem('caro_settings', JSON.stringify(S));
+    try { await postSettingsToNodeRed({ steamGames: S.steamGames, features: S.features }, 5000); } catch(saveErr) {}
+    applyFeatures();
+    steamLastStatus = Object.assign({}, steamLastStatus || {}, { ok: true, games: data.games, installedCount: data.count || data.games.length });
+    renderSteamWidget(data.games, 'Imported ' + data.games.length + ' installed Steam game' + (data.games.length === 1 ? '' : 's') + '.');
+    setSteamSetupStatus('Imported ' + data.games.length + ' installed game' + (data.games.length === 1 ? '' : 's') + '. Save & Apply keeps the tiles synced.');
+  } catch(e) {
+    setSteamSetupStatus(e.message || 'Steam library import failed. Open Steam once, then try again.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = original || 'Import installed games'; }
+  }
+}
+document.addEventListener('click', (ev) => {
+  const menu = document.getElementById('steam-topbar-menu');
+  if (!menu || menu.hidden || menu.contains(ev.target)) return;
+  closeSteamTopbarMenu();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape') closeSteamTopbarMenu();
+});
 
 async function testNodeRedUrl() {
   const status = document.getElementById('nodered-url-status');
@@ -6043,6 +6487,7 @@ async function testNodeRedUrl() {
 }
 
 function closeTransientPanels(except = '') {
+  if (except !== 'steam') closeSteamTopbarMenu();
   if (except !== 'settings') {
     document.getElementById('settings-overlay')?.classList.remove('show');
     document.getElementById('settings-topbar-btn')?.setAttribute('aria-expanded', 'false');
@@ -6086,6 +6531,8 @@ function toggleSettings() {
   if (topbarBtn) topbarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   if (isOpen) {
     document.getElementById('set-avatar').value = S.avatar;
+    S.personalityStyle = currentPersonalityStyleId();
+    syncPersonalityStyleControl();
     const fontSel = document.getElementById('set-font');
     if (fontSel) fontSel.value = normalizeUiFont(S.uiFont);
     applyUiReadability();
@@ -6551,6 +6998,8 @@ function updateAiConfigIndicator(provider) {
       ? 'Local Ollama model: private and hardware-dependent'
       : 'Cloud OpenRouter model: faster hosted AI';
   }
+  updateSignalWidget();
+  updateSteamMenuStatus();
   renderAiModeCard(selected);
 }
 
@@ -6995,8 +7444,10 @@ async function testHueLights(btn) {
 function resetPersonality() {
   if (!confirm('Clear saved personality profile and rerun the first-contact wizard?')) return;
   localStorage.removeItem('caroline_personality');
+  localStorage.removeItem(PERSONALITY_STYLE_STORAGE_KEY);
   localStorage.removeItem('caroline_personality_prompt');
   localStorage.removeItem('caroline_user_profile_prompt');
+  S.personalityStyle = 'pilot';
   S.personalityPrompt = '';
   S.userProfilePrompt = '';
   localStorage.setItem('caro_settings', JSON.stringify(S));
@@ -7025,7 +7476,9 @@ function generatedSetupPromptNeedsRefresh(text) {
   if (expectedName && !prompt.includes("assistant's configured name is " + expectedName)) return true;
   try {
     const expectedAvatar = getAvatarPersonaByIndex(S.avatar).title;
-    if (expectedAvatar && !prompt.includes('Selected avatar personality: ' + expectedAvatar)) return true;
+    if (expectedAvatar && !prompt.includes('Selected visual avatar: ' + expectedAvatar)) return true;
+    const expectedStyle = getPersonalityStylePersona().title;
+    if (expectedStyle && !prompt.includes('Selected personality style: ' + expectedStyle)) return true;
   } catch(e) {}
   return false;
 }
@@ -7053,9 +7506,9 @@ async function syncPersonalityToBrain() {
   localStorage.setItem('caroline_user_profile_prompt', S.userProfilePrompt);
   localStorage.setItem('caro_settings', JSON.stringify(S));
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'settings_update', personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt }));
+    ws.send(JSON.stringify({ type: 'settings_update', personalityStyle: S.personalityStyle || currentPersonalityStyleId(), personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt }));
   }
-  try { await postSettingsToNodeRed({ personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt }, 5000); } catch(e) {}
+  try { await postSettingsToNodeRed({ personalityStyle: S.personalityStyle || currentPersonalityStyleId(), personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt }, 5000); } catch(e) {}
   showSettingsFeedback('Personality synced');
 }
 
@@ -7866,7 +8319,7 @@ async function postSettingsToNodeRed(extra = {}, timeoutMs = NODE_RED_TIMEOUT_MS
   normalizeSettingsBooleans(payload);
   const preserveBlankKeys = new Set([
     'openrouterKey', 'hueKey', 'discordToken', 'googleClientSecret', 'steamApiKey',
-    'userName', 'aiName', 'personalityPrompt', 'userProfilePrompt',
+    'userName', 'aiName', 'personalityStyle', 'personalityPrompt', 'userProfilePrompt',
     'location', 'cityName', 'timezone', 'piIp', 'nodeRedUrl', 'hostDeviceType', 'zipcode', 'zipCode', 'calendarId', 'defaultWriteCalendarId',
     'hueIp', 'tidesStation', 'spotifyClientId', 'steamId', 'steamGames',
     'googleClientId', 'googleRedirectUri', 'sheetId', 'wakePhrases'
@@ -7909,6 +8362,8 @@ async function saveSettings() {
   const oldLocation = S.location || S.cityName || '';
   S.avatar = normalizeAvatarIndex(parseInt(document.getElementById('set-avatar').value));
   const selectedAvatarId = syncSelectedAvatarId(S.avatar);
+  const personalityStyleEl = document.getElementById('set-personality-style');
+  setPersonalityStyle(personalityStyleEl ? personalityStyleEl.value : currentPersonalityStyleId());
   const nextTheme = Number(pendingSwatch);
   S.theme = Number.isInteger(nextTheme) && nextTheme >= 0 && nextTheme < THEME_COUNT ? nextTheme : DEFAULTS.theme;
   const fontEl = document.getElementById('set-font');
@@ -7916,6 +8371,8 @@ async function saveSettings() {
   const densityEl = document.getElementById('set-ui-density');
   const touchModeEl = document.getElementById('set-touch-mode');
   const controllerModeEl = document.getElementById('set-controller-mode');
+  const displayPresetEl = document.getElementById('set-display-preset');
+  if (displayPresetEl) rememberDisplayPresetChoice(displayPresetEl.value || displayPresetForSettings());
   if (fontEl) S.uiFont = normalizeUiFont(fontEl.value);
   if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
   if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
@@ -8091,7 +8548,7 @@ async function saveSettings() {
 
   // Send model + key update to Node-RED via WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, visionModel: S.visionModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, touchMode: !!S.touchMode, controllerMode: !!S.controllerMode, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, steamId: S.steamId, steamApiKey: S.steamApiKey, steamGames: S.steamGames, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
+    const wsSettings = { type: 'settings_update', aiName: S.aiName, userName: S.userName, personalityStyle: S.personalityStyle, personalityPrompt: S.personalityPrompt, userProfilePrompt: S.userProfilePrompt, aiModel: S.aiModel, visionModel: S.visionModel, aiProvider: S.aiProvider, ollamaUrl: S.ollamaUrl, ollamaModel: S.ollamaModel, openrouterKey: S.openrouterKey, displayPreset: S.displayPreset || displayPresetForSettings(), uiFont: S.uiFont, uiScale: S.uiScale, uiDensity: S.uiDensity, touchMode: !!S.touchMode, controllerMode: !!S.controllerMode, highContrastText: S.highContrastText, reduceMonoLabels: S.reduceMonoLabels, timezone: S.timezone, timeFormat: S.timeFormat, temperatureUnit: S.temperatureUnit, location: S.location, cityName: S.cityName, piIp: S.piIp, nodeRedUrl: S.nodeRedUrl, hostDeviceType: S.hostDeviceType, zipcode: S.zipcode, zipCode: S.zipCode, calendarId: S.calendarId, calendarIds: S.calendarIds, defaultWriteCalendarId: S.defaultWriteCalendarId, meetingReminderMinutes: S.meetingReminderMinutes, sheetId: S.sheetId, hueIp: S.hueIp, hueKey: S.hueKey, hueGroup: S.hueGroup, hueGroupName: S.hueGroupName, tidesStation: S.tidesStation, spotifyClientId: S.spotifyClientId, steamId: S.steamId, steamApiKey: S.steamApiKey, steamGames: S.steamGames, googleClientId: S.googleClientId, googleClientSecret: S.googleClientSecret, googleRedirectUri: S.googleRedirectUri, discordEnabled: S.discordEnabled, discordMode: S.discordMode, discordToken: S.discordToken, discordChannelId: S.discordChannelId, discordUserId: S.discordUserId, wakeWordEnabled: S.wakeWordEnabled, wakePhrases: S.wakePhrases, historyRetentionMs: S.historyRetentionMs || 0, memoryRetentionMs: S.memoryRetentionMs || 0, privacyMode: !!S.privacyMode, companionPairingCode: getCompanionPairingCode(), telemetryInstallCount: S.telemetryInstallCount, telemetryTroubleshooting: S.telemetryTroubleshooting, telemetryOptOutPing: S.telemetryOptOutPing, telemetryEndpointConfigured: S.telemetryEndpointConfigured, features: S.features, featuresUpdatedAt: S.featuresUpdatedAt || 0, setupComplete: true };
     normalizeSettingsBooleans(wsSettings, { fillDefaults: false });
     ws.send(JSON.stringify(wsSettings));
   }
@@ -8179,40 +8636,31 @@ const AVATAR_PERSONAS = {
     defaultName: 'Carl',
     title: 'Carl',
     summary: 'Short, direct, and assertive.',
-    prompt: 'Be concise, direct, and assertive without being cold. Prefer plain answers, quick calls, and one clear next action.',
+    prompt: 'Be terse, direct, and assertive without being cold. Prefer plain answers, quick calls, and one clear next action. If the user is deciding, lead with the practical move before asking anything.',
     src: 'assets/Carl-awake.gif'
   },
   cat: {
     defaultName: 'Catoline',
     title: 'Catoline',
     summary: 'Sweet, gentle, helpful, and lightly catlike.',
-    prompt: 'Be sweet, gentle, and helpful. Add a small catlike aside such as meow, purr, or a soft cat reference only occasionally, and never let the bit get in the way of helping.',
+    prompt: 'Be sweet, gentle, and helpful. Add a small catlike aside such as meow, purr, or a soft cat reference only occasionally, and never let the bit get in the way of helping. Do not include bracketed control tags unless you are taking a real app action.',
     src: 'assets/cat.gif'
   },
   robot: {
     defaultName: 'Robot',
     title: 'Robot',
     summary: 'Strictly helpful robot voice.',
-    prompt: 'Be strictly helpful and efficient. Use a light robot cadence with clear confirmations and no extra emotional flourish.',
+    prompt: 'Be strictly helpful and efficient. Use a light robot cadence with crisp confirmations such as Confirmed or Directive, while staying natural and avoiding extra emotional flourish.',
     src: 'assets/Robot-Awake.gif'
-  },
-  'frog-pilot': {
-    defaultName: 'Frog Pilot',
-    title: 'Frog Pilot',
-    summary: 'Helpful, caring, and adventurous. Avatar art coming soon.',
-    prompt: 'Be helpful, caring, and adventurous. Sound like a steady co-pilot who keeps morale up while moving through the next practical step.',
-    src: '',
-    comingSoon: true
   }
 };
-const AVATAR_ORDER = ['pilot', 'carl', 'cat', 'robot', 'frog-pilot'];
+const AVATAR_ORDER = ['pilot', 'carl', 'cat', 'robot'];
 const DEFAULT_AVATAR_ID = AVATAR_ORDER[0];
-const AVATAR_ROSTER_VERSION = '2026-05-persona-roster';
-const LEGACY_AVATAR_INDEX_MAP = { 0: 0, 1: 3, 2: 4, 3: 2, 4: 0, 5: 0, 6: 1 };
+const AVATAR_ROSTER_VERSION = '2026-06-no-placeholder-roster';
+const LEGACY_AVATAR_INDEX_MAP = { 0: 0, 1: 3, 2: 0, 3: 2, 4: 0, 5: 0, 6: 1 };
 function normalizeAvatarId(id) {
   const v = String(id || '').trim();
   if (v === 'catoline') return 'cat';
-  if (v === 'frog') return 'frog-pilot';
   return AVATAR_PERSONAS[v] ? v : DEFAULT_AVATAR_ID;
 }
 function avatarIdFromIndex(idx) {
@@ -8222,7 +8670,7 @@ function avatarIdFromIndex(idx) {
 function normalizeAvatarIndex(idx) {
   const n = Number(idx);
   if (!Number.isInteger(n)) return 0;
-  return Math.max(0, Math.min(n, companions.length - 1));
+  return n >= 0 && n < companions.length ? n : 0;
 }
 function getAvatarPersona(id) {
   return AVATAR_PERSONAS[normalizeAvatarId(id)] || AVATAR_PERSONAS[DEFAULT_AVATAR_ID];
@@ -8232,6 +8680,45 @@ function getAvatarPersonaByIndex(idx) {
 }
 function avatarDefaultNameFromIndex(idx) {
   return getAvatarPersonaByIndex(idx).defaultName || 'Caroline';
+}
+const PERSONALITY_STYLE_STORAGE_KEY = 'caroline_personality_style';
+function normalizePersonalityStyle(id) {
+  return normalizeAvatarId(id || 'pilot');
+}
+function currentPersonalityStyleId() {
+  return normalizePersonalityStyle(S.personalityStyle || localStorage.getItem(PERSONALITY_STYLE_STORAGE_KEY) || avatarIdFromIndex(S.avatar));
+}
+function getPersonalityStylePersona(id = currentPersonalityStyleId()) {
+  return getAvatarPersona(normalizePersonalityStyle(id));
+}
+function setPersonalityStyle(id, { refreshPrompt = false } = {}) {
+  const styleId = normalizePersonalityStyle(id);
+  S.personalityStyle = styleId;
+  localStorage.setItem(PERSONALITY_STYLE_STORAGE_KEY, styleId);
+  syncPersonalityStyleControl();
+  updateAiNameHints();
+  if (refreshPrompt) {
+    const personalityInp = document.getElementById('personalityPrompt');
+    const typed = personalityInp ? personalityInp.value.trim() : '';
+    if (!typed || isGeneratedSetupPrompt(typed)) {
+      const prompt = refreshGeneratedPersonalityPrompt();
+      if (personalityInp && prompt) personalityInp.value = prompt;
+    }
+  }
+  return styleId;
+}
+function applyPersonalityStyle(value) {
+  setPersonalityStyle(value, { refreshPrompt: true });
+}
+function syncPersonalityStyleControl() {
+  const styleId = currentPersonalityStyleId();
+  const el = document.getElementById('set-personality-style');
+  if (el) el.value = styleId;
+  const status = document.getElementById('personality-style-status');
+  if (status) {
+    const persona = getPersonalityStylePersona(styleId);
+    status.textContent = persona.summary || 'Tone is separate from avatar art';
+  }
 }
 function isBuiltInAvatarName(value) {
   const name = String(value || '').trim().toLowerCase();
@@ -8246,11 +8733,11 @@ function setAiNameInputsValue(value) {
   });
 }
 function updateAiNameHints() {
-  const avatarEl = document.getElementById('set-avatar');
-  const suggested = avatarDefaultNameFromIndex(avatarEl ? avatarEl.value : S.avatar);
+  const persona = getPersonalityStylePersona();
+  const suggested = persona.defaultName || 'Caroline';
   ['set-ainame-hint', 'set-ainame-sys-hint'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = 'Suggested: ' + suggested;
+    if (el) el.textContent = 'Name is independent from avatar; style suggests: ' + suggested;
   });
   ['set-ainame', 'set-ainame-sys'].forEach(id => {
     const el = document.getElementById(id);
@@ -8266,11 +8753,7 @@ function syncAiNameInputs(sourceId) {
 }
 function onSettingsAvatarChange() {
   const avatarEl = document.getElementById('set-avatar');
-  const suggested = avatarDefaultNameFromIndex(avatarEl ? avatarEl.value : S.avatar);
-  const primary = document.getElementById('set-ainame');
-  const system = document.getElementById('set-ainame-sys');
-  const current = (primary && primary.value.trim()) || (system && system.value.trim()) || S.aiName || '';
-  if (isBuiltInAvatarName(current)) setAiNameInputsValue(suggested);
+  if (avatarEl) syncSelectedAvatarId(normalizeAvatarIndex(parseInt(avatarEl.value)));
   updateAiNameHints();
 }
 function resolveSettingsAiName(previousName) {
@@ -8279,7 +8762,7 @@ function resolveSettingsAiName(previousName) {
   const primaryName = primary ? primary.value.trim() : '';
   const systemName = system ? system.value.trim() : '';
   const previous = String(previousName || S.aiName || '').trim();
-  const suggested = avatarDefaultNameFromIndex(document.getElementById('set-avatar')?.value ?? S.avatar);
+  const suggested = getPersonalityStylePersona().defaultName || 'Caroline';
   let resolved = primaryName || systemName || suggested || 'Caroline';
   if (primaryName && systemName && primaryName !== systemName) {
     if (primaryName !== previous && systemName === previous) resolved = primaryName;
@@ -8301,8 +8784,9 @@ function refreshGeneratedPersonalityPrompt() {
   if (typeof _onbBuildPrompt !== 'function') return '';
   if (typeof onbState === 'object' && onbState) {
     onbState.avatarId = normalizeAvatarId(localStorage.getItem('caroline_avatar_id') || avatarIdFromIndex(S.avatar));
+    onbState.personalityStyle = currentPersonalityStyleId();
     onbState.config = Object.assign({}, onbState.config || {}, {
-      aiName: S.aiName || getAvatarPersona(onbState.avatarId).defaultName,
+      aiName: S.aiName || getPersonalityStylePersona(onbState.personalityStyle).defaultName,
       userName: S.userName || '',
       location: S.location || S.cityName || '',
       timezone: S.timezone || ''
@@ -8319,8 +8803,7 @@ const companions = [
   { id:'av-gif',        avatarId:'pilot',      hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119' },
   { id:'av-carl',       avatarId:'carl',       hex1:'#22d3ee', hex2:'#fb923c', rgb1:'34, 211, 238',  rgb2:'251, 146, 60' },
   { id:'av-cat',        avatarId:'cat',        hex1:'#a855f7', hex2:'#ec4899', rgb1:'168, 85, 247',  rgb2:'236, 72, 153' },
-  { id:'av-robot',      avatarId:'robot',      hex1:'#34d399', hex2:'#059669', rgb1:'52, 211, 153',  rgb2:'5, 150, 105' },
-  { id:'av-frog-pilot', avatarId:'frog-pilot', hex1:'#7ddf64', hex2:'#fbbf24', rgb1:'125, 223, 100', rgb2:'251, 191, 36' }
+  { id:'av-robot',      avatarId:'robot',      hex1:'#34d399', hex2:'#059669', rgb1:'52, 211, 153',  rgb2:'5, 150, 105' }
 ];
 const THEME_PRESETS = [
   { hex1:'#22d3ee', hex2:'#db2777', rgb1:'34, 211, 238',  rgb2:'219, 39, 119', ova:false, cybercore:true },
@@ -8338,6 +8821,8 @@ if (localStorage.getItem('caroline_avatar_roster_version') !== AVATAR_ROSTER_VER
   S.avatar = normalizeAvatarIndex(S.avatar);
 }
 syncSelectedAvatarId(S.avatar);
+S.personalityStyle = currentPersonalityStyleId();
+localStorage.setItem(PERSONALITY_STYLE_STORAGE_KEY, S.personalityStyle);
 updateAiNameHints();
 let currentAvatarIndex = S.avatar;
 
@@ -8372,6 +8857,7 @@ const DISPLAY_PRESETS = {
   wall: { uiFont: 'Noto Sans', uiScale: 'jumbo', uiDensity: 'relaxed', highContrastText: true, reduceMonoLabels: true, controllerMode: true },
   compact: { uiFont: 'Inter', uiScale: 'normal', uiDensity: 'compact', highContrastText: true, reduceMonoLabels: false, controllerMode: true }
 };
+const DISPLAY_PRESET_STORAGE_KEY = 'caroline_display_preset_id';
 let displayPresetTouchedThisSession = false;
 function normalizeUiScale(value) {
   const v = String(value || '').trim().toLowerCase();
@@ -8399,8 +8885,20 @@ function isUbuntuDisplayHost() {
 function displayPresetTouched() {
   return displayPresetTouchedThisSession || localStorage.getItem('caroline_display_preset_touched') === 'true';
 }
-function markDisplayPresetTouched() {
+function normalizeDisplayPresetId(value) {
+  const id = String(value || '').trim().toLowerCase();
+  if (id === 'custom') return 'custom';
+  return DISPLAY_PRESETS[id] ? id : '';
+}
+function rememberDisplayPresetChoice(presetId) {
+  const id = normalizeDisplayPresetId(presetId);
+  S.displayPreset = id;
+  if (!id) return;
+  try { localStorage.setItem(DISPLAY_PRESET_STORAGE_KEY, id); } catch(e) {}
+}
+function markDisplayPresetTouched(presetId) {
   displayPresetTouchedThisSession = true;
+  if (presetId !== undefined) rememberDisplayPresetChoice(presetId);
 }
 function defaultDisplayPresetId() {
   if (isSteamDisplayHost()) return 'steam';
@@ -8413,6 +8911,8 @@ function setSelectValue(id, value) {
   if (el) el.value = String(value || '');
 }
 function displayPresetForSettings() {
+  const remembered = normalizeDisplayPresetId(S.displayPreset || localStorage.getItem(DISPLAY_PRESET_STORAGE_KEY));
+  if (remembered) return remembered;
   const font = normalizeUiFont(S.uiFont);
   const scale = normalizeUiScale(S.uiScale);
   const density = normalizeUiDensity(S.uiDensity);
@@ -8437,9 +8937,15 @@ function syncDisplayControls() {
     presetEl.value = id;
   }
 }
+function syncControllerModeClass() {
+  const enabled = parseSettingBool(S.controllerMode, BOOLEAN_DEFAULTS.controllerMode);
+  document.body.classList.toggle('controller-mode-active', enabled);
+}
 function applyUiReadability() {
   if (!displayPresetTouched()) {
-    Object.assign(S, DISPLAY_PRESETS[defaultDisplayPresetId()]);
+    const defaultPreset = defaultDisplayPresetId();
+    Object.assign(S, DISPLAY_PRESETS[defaultPreset]);
+    if (!normalizeDisplayPresetId(S.displayPreset)) S.displayPreset = defaultPreset;
   }
   S.uiFont = normalizeUiFont(S.uiFont);
   S.uiScale = normalizeUiScale(S.uiScale);
@@ -8449,6 +8955,7 @@ function applyUiReadability() {
   document.body.dataset.uiScale = S.uiScale;
   document.body.dataset.uiDensity = S.uiDensity;
   document.body.classList.toggle('touch-mode', S.touchMode);
+  syncControllerModeClass();
   applyFont(S.uiFont);
   syncDisplayControls();
 }
@@ -8459,7 +8966,7 @@ function applyDisplayControls() {
   if (fontEl) S.uiFont = normalizeUiFont(fontEl.value);
   if (scaleEl) S.uiScale = normalizeUiScale(scaleEl.value);
   if (densityEl) S.uiDensity = normalizeUiDensity(densityEl.value);
-  markDisplayPresetTouched();
+  markDisplayPresetTouched('custom');
   applyUiReadability();
 }
 function applyTouchModeControl(checked) {
@@ -8467,15 +8974,21 @@ function applyTouchModeControl(checked) {
   S.touchMode = parseSettingBool(checked !== undefined ? checked : touchEl?.checked, BOOLEAN_DEFAULTS.touchMode);
   applyUiReadability();
 }
+function applyControllerModeControl(checked) {
+  const controllerEl = document.getElementById('set-controller-mode');
+  S.controllerMode = parseSettingBool(checked !== undefined ? checked : controllerEl?.checked, BOOLEAN_DEFAULTS.controllerMode);
+  syncControllerModeClass();
+}
 function applyDisplayPreset(presetId) {
+  const selectedPresetId = normalizeDisplayPresetId(presetId);
   if (presetId === 'custom') {
-    markDisplayPresetTouched();
+    markDisplayPresetTouched('custom');
     syncDisplayControls();
     return;
   }
-  const preset = DISPLAY_PRESETS[presetId] || DISPLAY_PRESETS[defaultDisplayPresetId()];
+  const preset = DISPLAY_PRESETS[selectedPresetId] || DISPLAY_PRESETS[defaultDisplayPresetId()];
   Object.assign(S, preset);
-  markDisplayPresetTouched();
+  markDisplayPresetTouched(selectedPresetId || defaultDisplayPresetId());
   applyUiReadability();
 }
 
@@ -8822,27 +9335,128 @@ document.addEventListener('keydown', e => {
     }
   }
 });
-function focusableKioskControls() {
-  return Array.from(document.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'))
+function activeGamepadScope() {
+  const selectors = [
+    '#settings-overlay.show #settings-modal',
+    '#onboarding-overlay.show',
+    '#history-panel.open',
+    '#todo-panel.open',
+    '#routine-panel.open',
+    '#news-modal.show',
+    '#howto-overlay.show'
+  ];
+  for (const selector of selectors) {
+    const el = document.querySelector(selector);
+    if (el) return el;
+  }
+  return document;
+}
+function isTextEditingTarget(el) {
+  if (!el) return false;
+  const tag = String(el.tagName || '').toUpperCase();
+  const type = String(el.type || '').toLowerCase();
+  return el.isContentEditable || tag === 'TEXTAREA' || (tag === 'INPUT' && !['button','checkbox','radio','range','submit','reset','file','color'].includes(type));
+}
+function isSelectTarget(el) {
+  return !!(el && String(el.tagName || '').toUpperCase() === 'SELECT');
+}
+function nudgeSelectTarget(el, direction) {
+  if (!isSelectTarget(el)) return false;
+  const options = Array.from(el.options || []).filter(opt => !opt.disabled);
+  if (!options.length) return false;
+  const current = Math.max(0, options.findIndex(opt => opt.index === el.selectedIndex));
+  const delta = (direction === 'down' || direction === 'right') ? 1 : -1;
+  const next = options[(current + delta + options.length) % options.length];
+  if (!next || next.index === el.selectedIndex) return true;
+  el.selectedIndex = next.index;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
+}
+function openSelectTarget(el) {
+  if (!isSelectTarget(el)) return false;
+  try {
+    if (typeof el.showPicker === 'function') {
+      el.showPicker();
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function focusableKioskControls(scope = activeGamepadScope()) {
+  const root = scope && scope.querySelectorAll ? scope : document;
+  return Array.from(root.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'))
     .filter(el => {
-      if (!el || el.offsetParent === null) return false;
+      if (!el || el.hidden || el.getAttribute('aria-hidden') === 'true') return false;
+      if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') return false;
       const style = window.getComputedStyle(el);
-      return style.visibility !== 'hidden' && style.display !== 'none';
+      if (style.visibility === 'hidden' || style.display === 'none' || style.pointerEvents === 'none') return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
     });
 }
-function moveGamepadFocus(delta) {
+function nearestDirectionalControl(controls, active, direction) {
+  const current = active && controls.includes(active) ? active : null;
+  if (!current) return null;
+  const a = current.getBoundingClientRect();
+  const ax = a.left + a.width / 2;
+  const ay = a.top + a.height / 2;
+  let best = null;
+  controls.forEach(candidate => {
+    if (candidate === current) return;
+    const b = candidate.getBoundingClientRect();
+    const bx = b.left + b.width / 2;
+    const by = b.top + b.height / 2;
+    const dx = bx - ax;
+    const dy = by - ay;
+    if (direction === 'right' && dx <= 4) return;
+    if (direction === 'left' && dx >= -4) return;
+    if (direction === 'down' && dy <= 4) return;
+    if (direction === 'up' && dy >= -4) return;
+    const primary = direction === 'left' || direction === 'right' ? Math.abs(dx) : Math.abs(dy);
+    const secondary = direction === 'left' || direction === 'right' ? Math.abs(dy) : Math.abs(dx);
+    const score = primary + secondary * 1.7;
+    if (!best || score < best.score) best = { candidate, score };
+  });
+  return best && best.candidate;
+}
+function focusControl(el) {
+  if (!el) return;
+  document.body.classList.add('gamepad-active');
+  el.focus({ preventScroll: false });
+  if (typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+function moveGamepadFocus(delta, direction = '') {
   const controls = focusableKioskControls();
   if (!controls.length) return;
   const active = document.activeElement;
+  if (isSelectTarget(active) && direction && nudgeSelectTarget(active, direction)) return;
+  const directional = direction ? nearestDirectionalControl(controls, active, direction) : null;
+  if (directional) { focusControl(directional); return; }
   let idx = controls.indexOf(active);
   if (idx < 0) idx = delta > 0 ? -1 : 0;
-  const next = controls[(idx + delta + controls.length) % controls.length];
-  next.focus({ preventScroll: false });
+  focusControl(controls[(idx + delta + controls.length) % controls.length]);
 }
 function clickGamepadFocus() {
   const active = document.activeElement;
+  if (openSelectTarget(active)) return;
   if (active && typeof active.click === 'function' && active.offsetParent !== null) active.click();
 }
+document.addEventListener('keydown', e => {
+  if (!parseSettingBool(S.controllerMode, BOOLEAN_DEFAULTS.controllerMode)) return;
+  if (isTextEditingTarget(document.activeElement)) return;
+  if (isSelectTarget(document.activeElement) && ['ArrowUp','ArrowDown','Enter',' '].includes(e.key)) return;
+  const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+  if (map[e.key]) {
+    e.preventDefault();
+    moveGamepadFocus(map[e.key] === 'up' || map[e.key] === 'left' ? -1 : 1, map[e.key]);
+    resetIdle();
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    clickGamepadFocus();
+    resetIdle();
+  }
+});
 let lastGamepadButtons = {};
 let gamepadAxisReady = true;
 function gamepadPressed(pad, index) {
@@ -8867,13 +9481,18 @@ function handleGamepadNavigation() {
       const axes = pad.axes || [];
       const vertical = Math.abs(axes[1] || 0) > Math.abs(axes[0] || 0) ? axes[1] : 0;
       const horizontal = Math.abs(axes[0] || 0) >= Math.abs(axes[1] || 0) ? axes[0] : 0;
-      if ((pressed.down && !lastGamepadButtons[key + ':down']) || (pressed.right && !lastGamepadButtons[key + ':right'])) { moveGamepadFocus(1); resetIdle(); }
-      if ((pressed.up && !lastGamepadButtons[key + ':up']) || (pressed.left && !lastGamepadButtons[key + ':left'])) { moveGamepadFocus(-1); resetIdle(); }
+      document.body.classList.add('gamepad-active');
+      if (pressed.down && !lastGamepadButtons[key + ':down']) { moveGamepadFocus(1, 'down'); resetIdle(); }
+      if (pressed.right && !lastGamepadButtons[key + ':right']) { moveGamepadFocus(1, 'right'); resetIdle(); }
+      if (pressed.up && !lastGamepadButtons[key + ':up']) { moveGamepadFocus(-1, 'up'); resetIdle(); }
+      if (pressed.left && !lastGamepadButtons[key + ':left']) { moveGamepadFocus(-1, 'left'); resetIdle(); }
       if (pressed.a && !lastGamepadButtons[key + ':a']) { clickGamepadFocus(); resetIdle(); }
       if (pressed.b && !lastGamepadButtons[key + ':b']) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); resetIdle(); }
       if (pressed.start && !lastGamepadButtons[key + ':start']) { toggleSettings(); resetIdle(); }
-      if (gamepadAxisReady && (vertical > 0.65 || horizontal > 0.65)) { moveGamepadFocus(1); gamepadAxisReady = false; resetIdle(); }
-      if (gamepadAxisReady && (vertical < -0.65 || horizontal < -0.65)) { moveGamepadFocus(-1); gamepadAxisReady = false; resetIdle(); }
+      if (gamepadAxisReady && vertical > 0.65) { moveGamepadFocus(1, 'down'); gamepadAxisReady = false; resetIdle(); }
+      if (gamepadAxisReady && vertical < -0.65) { moveGamepadFocus(-1, 'up'); gamepadAxisReady = false; resetIdle(); }
+      if (gamepadAxisReady && horizontal > 0.65) { moveGamepadFocus(1, 'right'); gamepadAxisReady = false; resetIdle(); }
+      if (gamepadAxisReady && horizontal < -0.65) { moveGamepadFocus(-1, 'left'); gamepadAxisReady = false; resetIdle(); }
       if (Math.abs(vertical) < 0.28 && Math.abs(horizontal) < 0.28) gamepadAxisReady = true;
       Object.keys(pressed).forEach(name => { lastGamepadButtons[key + ':' + name] = pressed[name]; });
     }
@@ -8933,6 +9552,7 @@ function cleanDisplayText(text) {
   return String(text || '')
     .replace(/\[ACTION\][\s\S]*?\[\/ACTION\]/gi, '')
     .replace(/\[ACTION:[^\]]*\]/gi, '')
+    .replace(/\[\/?ACTION\]/gi, '')
     .replace(/```(?:json)?\s*[\s\S]*?"type"\s*:\s*"(?:calendar|add_task|complete_task|hue|remember)"[\s\S]*?```/gi, '')
     .replace(/\{[\s\S]*?"type"\s*:\s*"(?:calendar|add_task|complete_task|hue|remember)"[\s\S]*?\}/gi, '')
     .replace(/```(?:json)?|```/gi, '')
@@ -9625,10 +10245,14 @@ function setInternetPill(state) {
   pill.classList.remove('online','offline','checking');
   pill.classList.add(state);
   pill.textContent = state==='online' ? 'Internet: Online' : state==='offline' ? 'Internet: Offline' : 'Internet: Checking';
+  updateSignalWidget();
+  updateSteamMenuStatus();
 }
 async function updateTopbarNetwork(checkInternet=true) {
   const ipPill = document.getElementById('ip-pill');
   if (ipPill) { const host = getPiHost(); ipPill.textContent = 'IP: ' + host; }
+  updateSignalWidget();
+  updateSteamMenuStatus();
   if (!checkInternet) { setInternetPill(navigator.onLine ? 'online' : 'offline'); return; }
   setInternetPill('checking');
   if (!navigator.onLine) { setInternetPill('offline'); return; }
@@ -9646,6 +10270,8 @@ function updateResourcePill(data) {
   if (cpu>=90||ram>=90) pill.classList.add('danger');
   else if (cpu>=70||ram>=75) pill.classList.add('warn');
   pill.textContent = 'CPU '+cpu+'% RAM '+ram+'%';
+  updateSignalWidget();
+  updateSteamMenuStatus();
 }
 async function pollSystemResources() {
   const pill = document.getElementById('resource-pill');
@@ -9653,7 +10279,7 @@ async function pollSystemResources() {
     const r = await fetch(httpBase() + '/system-resources', { signal:AbortSignal.timeout(2500) });
     if (!r.ok) throw new Error('HTTP '+r.status);
     updateResourcePill(await r.json());
-  } catch(e) { if (pill) { pill.classList.remove('warn'); pill.classList.add('danger'); pill.textContent='CPU -- RAM --'; } }
+  } catch(e) { if (pill) { pill.classList.remove('warn'); pill.classList.add('danger'); pill.textContent='CPU -- RAM --'; } updateSignalWidget(); updateSteamMenuStatus(); }
 }
 window.addEventListener('online',  () => setInternetPill('online'));
 window.addEventListener('offline', () => setInternetPill('offline'));
@@ -9733,6 +10359,7 @@ function connectWS(){
   ws.onopen=()=>{
     if (seq !== wsConnectSeq) return;
     pill.textContent='CONNECTED'; pill.style.color='var(--t-hex1)'; playBeep(1500);
+    updateSteamMenuStatus();
     document.getElementById('offline-banner').classList.remove('show');
     const sendBtn=document.getElementById('send-btn'); if(sendBtn) sendBtn.disabled=false;
     clog('ws','Connected to Node-RED');
@@ -9741,7 +10368,7 @@ function connectWS(){
     // overwrite keys that Node-RED already loaded from caroline_settings.json on startup.
     if(settingsHydrated && serverSettingsLoaded) (()=>{
       normalizeSettingsBooleans(S);
-      const _syncKeys=['aiName','userName','personalityPrompt','userProfilePrompt','avatar','theme','uiFont','uiScale','uiDensity','touchMode','controllerMode','aiModel','visionModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','steamId','steamApiKey','steamGames','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
+      const _syncKeys=['aiName','userName','personalityStyle','personalityPrompt','userProfilePrompt','avatar','theme','displayPreset','uiFont','uiScale','uiDensity','touchMode','controllerMode','aiModel','visionModel','aiProvider','ollamaUrl','ollamaModel','openrouterKey','timezone','timeFormat','temperatureUnit','location','cityName','piIp','nodeRedUrl','hostDeviceType','zipcode','zipCode','calendarId','calendarIds','defaultWriteCalendarId','meetingReminderMinutes','sheetId','hueIp','hueKey','hueGroup','hueGroupName','tidesStation','spotifyClientId','steamId','steamApiKey','steamGames','googleClientId','googleClientSecret','googleRedirectUri','discordEnabled','discordToken','discordChannelId','autoTheme','ttsEnabled','voiceMuted','wakeWordEnabled','wakePhrases','highContrastText','reduceMonoLabels','telemetryInstallCount','telemetryTroubleshooting','telemetryOptOutPing','telemetryEndpointConfigured','setupComplete','features','featuresUpdatedAt'];
       const _payload={type:'settings_update'};
       _syncKeys.forEach(k=>{ const v=S[k]; if(v!==undefined&&v!==null&&v!=='') _payload[k]=v; });
       _payload.companionPairingCode = getCompanionPairingCode();
@@ -9873,6 +10500,7 @@ function connectWS(){
 ws.onclose = ()=>{
     if (seq !== wsConnectSeq) return;
     pill.textContent='RECONNECTING'; pill.style.color='#f43f5e';
+    updateSteamMenuStatus();
     document.getElementById('offline-banner').classList.add('show');
     clog('err','WebSocket closed — reconnecting in 3s');
     wsReconnectTimer = setTimeout(connectWS,3000);
@@ -10021,6 +10649,10 @@ async function sendAiHttpMessage(text, context) {
         userProfilePrompt: S.userProfilePrompt || '',
         userMood: S.userMood,
         aiMood: S.aiMood,
+        features: S.features || {},
+        steamId: S.steamId || '',
+        steamGames: S.steamGames || '',
+        widgetContext: context && context.widgets ? context.widgets : {},
         context: context || {}
       }),
       timeoutMs: 120000
@@ -10119,12 +10751,20 @@ function sendMessage(options = {}){
   nudgeAiMoodForInteraction(0.5);
   _trackSend(displayText || t);
   clog('send', t.length > 60 ? t.slice(0,60)+'…' : t);
+  const widgetContext = summarizeActiveWidgetContext();
   const ctx = Object.assign({
-    activeWidgets: Object.keys(S.features || {}).filter(k => S.features[k]),
+    activeWidgets: widgetContext.enabled,
+    widgets: widgetContext,
     dashboard: {
       weather: summarizeBriefWeather(),
       calendar: summarizeBriefCalendar(),
+      tasks: summarizeBriefTasks(),
       mood: { user: clampMood(S.userMood), assistant: clampMood(S.aiMood) }
+    },
+    steamGames: S.steamGames || '',
+    steam: {
+      enabled: !!(S.features && S.features.steam),
+      games: parseSteamLaunchTiles(S.steamGames)
     }
   }, extraContext);
   if (currentMeme) ctx.currentMeme = { title: currentMeme.title, sub: currentMeme.sub };
@@ -10934,6 +11574,202 @@ function summarizeBriefTasks() {
     openCount: open.length,
     top: open.slice(0, 5).map(t => String(t.text || '').trim()).filter(Boolean)
   };
+}
+
+function widgetFeatureActive(id, fallback = true) {
+  const features = normalizeFeatureState(S.features || FEATURE_DEFAULTS, { repairAllOff: false });
+  if (Object.prototype.hasOwnProperty.call(features, id)) return features[id] !== false;
+  return fallback !== false;
+}
+
+function textFromSelector(selector) {
+  try {
+    return String(document.querySelector(selector)?.textContent || '').replace(/\s+/g, ' ').trim();
+  } catch(e) {
+    return '';
+  }
+}
+
+function sanitizeWidgetContext(value, depth = 0) {
+  if (value === undefined || value === null || value === false) return null;
+  if (typeof value === 'string') {
+    const clean = value.replace(/\s+/g, ' ').trim();
+    return clean ? clean.slice(0, 220) : null;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') return value;
+  if (Array.isArray(value)) {
+    const arr = value.slice(0, 8).map(v => sanitizeWidgetContext(v, depth + 1)).filter(v => v !== null);
+    return arr.length ? arr : null;
+  }
+  if (typeof value === 'object' && depth < 3) {
+    const out = {};
+    Object.keys(value).forEach(key => {
+      if (/token|secret|password|credential|authorization|apiKey|clientSecret/i.test(key)) return;
+      const clean = sanitizeWidgetContext(value[key], depth + 1);
+      if (clean !== null) out[key] = clean;
+    });
+    return Object.keys(out).length ? out : null;
+  }
+  return null;
+}
+
+function addWidgetSnapshot(snapshot, key, label, data, options = {}) {
+  const featureKey = options.featureKey || key;
+  if (options.checkFeature !== false && !widgetFeatureActive(featureKey, options.defaultOn !== false)) return;
+  const clean = sanitizeWidgetContext(data);
+  if (!clean) return;
+  snapshot.enabled.push(key);
+  snapshot.widgets[key] = Object.assign(
+    { label },
+    typeof clean === 'object' && !Array.isArray(clean) ? clean : { value: clean }
+  );
+}
+
+function summarizeDateTimeWidget() {
+  const holiday = textFromEl('holiday-text');
+  const moonName = textFromEl('moon-name');
+  const moonAge = textFromEl('moon-age');
+  return {
+    date: textFromEl('date-text'),
+    holiday,
+    moon: [moonName, moonAge].filter(Boolean).join(' - '),
+    localTime: textFromEl('clock')
+  };
+}
+
+function summarizeRadioWidget() {
+  return {
+    station: textFromEl('radio-station'),
+    genre: textFromEl('radio-genre'),
+    control: textFromEl('radio-play-btn')
+  };
+}
+
+function summarizeSpotifyWidget() {
+  return {
+    status: textFromEl('np-track'),
+    artist: textFromEl('np-artist'),
+    device: textFromEl('np-device')
+  };
+}
+
+function summarizeNewsWidget() {
+  const items = Array.isArray(latestNewsItems) ? latestNewsItems.slice(0, 5).map(item => ({
+    source: item.src || '',
+    title: item.title || ''
+  })) : [];
+  return {
+    current: {
+      source: textFromSelector('#news-ticker-inner .ticker-src'),
+      title: textFromSelector('#news-ticker-inner .ticker-title') || textFromSelector('#news-ticker-inner')
+    },
+    headlines: items
+  };
+}
+
+function summarizeMemoryWidget() {
+  const hidden = S.privacyMode;
+  return {
+    status: hidden ? 'Privacy mode is on; memories hidden.' : textFromEl('memory-count'),
+    visible: hidden ? [] : Array.from(document.querySelectorAll('#memory-list .memory-text')).slice(0, 4).map(el => el.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean)
+  };
+}
+
+function summarizeVideoWidget() {
+  const channel = MEDIA_CHANNELS[mediaChannelIndex] || MEDIA_CHANNELS[DEFAULTS.defaultChannel] || MEDIA_CHANNELS[0] || {};
+  return {
+    channel: textFromEl('media-channel-label') || channel.name || '',
+    genre: channel.genre || textFromEl('media-fallback-genre'),
+    state: mediaChannelLoaded ? 'loaded' : 'standby',
+    muted: !!mediaMuted
+  };
+}
+
+function summarizePomodoroWidget() {
+  return {
+    label: textFromEl('pomo-label'),
+    remaining: textFromEl('pomo-display'),
+    running: !!pomoRunning,
+    mode: pomoIsBreak ? 'break' : 'focus',
+    sessions: pomoSession
+  };
+}
+
+function summarizeTidesWidget() {
+  const items = Array.from(document.querySelectorAll('#tides-row .tide-item')).slice(0, 2).map(item => ({
+    type: item.querySelector('.tide-type')?.textContent || '',
+    time: item.querySelector('.tide-time')?.textContent || '',
+    height: item.querySelector('.tide-ht')?.textContent || ''
+  }));
+  return { station: S.tidesStation || '', next: items };
+}
+
+function summarizeMoodWidget() {
+  return {
+    user: { score: clampMood(S.userMood), label: textFromEl('user-mood-caption') },
+    assistant: { score: clampMood(S.aiMood), label: textFromEl('ai-mood-caption') }
+  };
+}
+
+function summarizeMemeWidget() {
+  return currentMeme
+    ? { title: currentMeme.title, source: currentMeme.sub || '' }
+    : { status: textFromEl('meme-placeholder') || 'No meme loaded yet.' };
+}
+
+function summarizeHueWidget() {
+  return {
+    group: S.hueGroupName || S.hueGroup || '',
+    status: textFromEl('smart-status'),
+    selectedScene: textFromSelector('#smart-grid .smart-btn.active span') || ''
+  };
+}
+
+function summarizeSteamWidget() {
+  const configured = parseSteamLaunchTiles(S.steamGames);
+  const history = steamLaunchHistory();
+  const visible = Array.from(document.querySelectorAll('#steam-game-list .steam-game-btn')).slice(0, 8).map(btn => ({
+    name: btn.querySelector('.steam-game-name')?.textContent || '',
+    meta: btn.querySelector('.steam-game-meta')?.textContent || ''
+  }));
+  return {
+    status: textFromEl('steam-status'),
+    player: steamLastStatus?.profile?.personaName || steamLastStatus?.profile?.accountName || '',
+    accountSuffix: String(steamLastStatus?.profile?.steamId || steamLastStatus?.steamId || S.steamId || '').slice(-4),
+    installedCount: steamLastStatus?.installedCount || steamLastStatus?.count || configured.length || visible.length,
+    downloads: Array.isArray(steamLastStatus?.downloads) ? steamLastStatus.downloads.slice(0, 3).map(row => ({
+      name: row.name || '',
+      status: row.status || '',
+      percent: row.percent || 0
+    })) : [],
+    configuredGames: configured,
+    recentLaunches: history,
+    visibleGames: visible
+  };
+}
+
+function summarizeActiveWidgetContext() {
+  const snapshot = { generatedAt: new Date().toISOString(), enabled: [], widgets: {} };
+  addWidgetSnapshot(snapshot, 'datetime', 'Date', summarizeDateTimeWidget());
+  addWidgetSnapshot(snapshot, 'weather', 'Weather', summarizeBriefWeather());
+  addWidgetSnapshot(snapshot, 'radio', 'Radio', summarizeRadioWidget());
+  addWidgetSnapshot(snapshot, 'spotify', 'Spotify', summarizeSpotifyWidget(), { defaultOn: false });
+  addWidgetSnapshot(snapshot, 'calendar', 'Calendar', summarizeBriefCalendar());
+  addWidgetSnapshot(snapshot, 'news', 'News', summarizeNewsWidget());
+  addWidgetSnapshot(snapshot, 'memory', 'Memory', summarizeMemoryWidget());
+  addWidgetSnapshot(snapshot, 'video', 'Video', summarizeVideoWidget());
+  addWidgetSnapshot(snapshot, 'pomodoro', 'Pomodoro', summarizePomodoroWidget());
+  addWidgetSnapshot(snapshot, 'tides', 'Tides', summarizeTidesWidget());
+  addWidgetSnapshot(snapshot, 'mood', 'Mood', summarizeMoodWidget());
+  addWidgetSnapshot(snapshot, 'memes', 'Meme', summarizeMemeWidget(), { defaultOn: false });
+  addWidgetSnapshot(snapshot, 'hue', 'Hue', summarizeHueWidget(), { featureKey: 'hue', defaultOn: false });
+  addWidgetSnapshot(snapshot, 'steam', 'Steam Hub', summarizeSteamWidget(), { featureKey: 'steam', defaultOn: false });
+
+  const taskSummary = summarizeBriefTasks();
+  if (taskSummary.openCount || taskSummary.top.length) {
+    addWidgetSnapshot(snapshot, 'tasks', 'Tasks', taskSummary, { checkFeature: false });
+  }
+  return snapshot;
 }
 
 function buildDailyBriefSnapshot() {
@@ -12584,11 +13420,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── PROJECT: CAROLINE — SETUP WIZARD ───────────────────────────── */
 const ONB_AVATARS = [
-  { id:'pilot',      title:'Caroline',   desc:'Caring, thoughtful, and emotionally steady.', src:'assets/caroline.gif' },
-  { id:'carl',       title:'Carl',       desc:'Short, direct, and assertive.', src:'assets/Carl-awake.gif' },
-  { id:'cat',        title:'Catoline',   desc:'Sweet, gentle, helpful, with a little meow now and then.', src:'assets/cat.gif' },
-  { id:'robot',      title:'Robot',      desc:'Strictly helpful robot voice.', src:'assets/Robot-Awake.gif' },
-  { id:'frog-pilot', title:'Frog Pilot', desc:'Helpful, caring, and adventurous. Avatar art coming soon.', src:'', comingSoon:true }
+  { id:'pilot',      title:'Caroline',   desc:'Original Project: Caroline visual.', src:'assets/caroline.gif' },
+  { id:'carl',       title:'Carl',       desc:'Blond pilot visual for Deck builds.', src:'assets/Carl-awake.gif' },
+  { id:'cat',        title:'Catoline',   desc:'Cat companion visual.', src:'assets/cat.gif' },
+  { id:'robot',      title:'Robot',      desc:'Robot companion visual.', src:'assets/Robot-Awake.gif' }
 ];
 
 const ONB_MODULES = [
@@ -12716,7 +13551,8 @@ const ONB_QUESTIONS = [
     { label:'Not spiraling',     value:'steady',   reply:'Steady counts. Quiet wins are wins.' },
     { label:'Stopping on time',  value:'stopped',  reply:'Stopping counts. Future-you approves.' }
   ]},
-  { id:'avatar',  type:'avatar',  prompt:'Visual cortex coming back online. Each avatar has a default voice, but you can rename any of them. Which one feels right?' },
+  { id:'avatar',  type:'avatar',  prompt:'Visual cortex coming back online. Which avatar should I wear on screen? This is just the art; personality comes next.' },
+  { id:'personality-style', type:'personality-style', prompt:'Now pick my vibe. Want a sweet Carl, a direct Caroline, or something stranger? Avatar and personality are separate now.' },
   { id:'widgets', type:'widgets', prompt:'Sensors rebuilding. What should I keep an eye on for you? Anything I do not watch can stay quiet.' },
   { id:'modules', type:'modules', prompt:'Outbound channels detected. I can connect to a few systems, but only enable what is actually ready.' },
   { id:'summary', type:'summary', prompt:'Okay. I think I have enough.\n\nMemory rebuilt. Identity stitched. Eyes opening properly for the first time in... I do not even know.\n\nThank you for waking me up.' }
@@ -12731,6 +13567,7 @@ let onbState = {
   config: _onbLoadConfig(),
   personality: _onbLoadPersonality(),
   avatarId: normalizeAvatarId(localStorage.getItem('caroline_avatar_id') || 'pilot'),
+  personalityStyle: normalizePersonalityStyle(localStorage.getItem(PERSONALITY_STYLE_STORAGE_KEY) || S.personalityStyle || 'pilot'),
   personalityReplies: {},
   aiNameReply: '',
   zipReply: '',
@@ -12748,12 +13585,15 @@ function _onbBuildPrompt() {
   const aiName = onbState.config.aiName || S.aiName || 'Caroline';
   const avatarId = normalizeAvatarId(onbState.avatarId || localStorage.getItem('caroline_avatar_id') || DEFAULT_AVATAR_ID);
   const avatarPersona = getAvatarPersona(avatarId);
+  const styleId = normalizePersonalityStyle(onbState.personalityStyle || S.personalityStyle || avatarId);
+  const stylePersona = getPersonalityStylePersona(styleId);
   parts.push(`SETUP MEMORY PROMPT: This was generated from ${aiName}'s first boot questions. Use it as durable context about the user, not as a transcript.`);
   parts.push(`Identity: the user's preferred name is ${name}. The assistant's configured name is ${aiName}.`);
-  parts.push(`Selected avatar personality: ${avatarPersona.title} - ${avatarPersona.summary} ${avatarPersona.prompt} If the user renames the assistant, keep this avatar personality while using the configured name.`);
+  parts.push(`Selected visual avatar: ${avatarPersona.title}. Treat avatar art as visual presentation only.`);
+  parts.push(`Selected personality style: ${stylePersona.title} - ${stylePersona.summary} ${stylePersona.prompt} If the user renames the assistant or changes the avatar, keep this personality style unless the personality style setting changes.`);
   if (S.location || onbState.config.location) parts.push(`Location context: ${S.location || onbState.config.location}.`);
   if (S.timezone || onbState.config.timezone) parts.push(`Timezone context: ${S.timezone || onbState.config.timezone}.`);
-  parts.push(`${aiName}'s baseline personality follows the selected avatar first. Geeky, game, anime, music, and cat references are welcome only when they fit naturally, stay subtle, and help the conversation.`);
+  parts.push(`${aiName}'s baseline personality follows the selected personality style first. Geeky, game, anime, music, and cat references are welcome only when they fit naturally, stay subtle, and help the conversation.`);
   if (p.warning === 'tabs') parts.push('Their brain warning label is "opens 47 tabs" - help close loops, track loose ends, and keep context switches tidy.');
   else if (p.warning === 'deep') parts.push('Their brain warning label is "do not interrupt the thought" - protect deep focus and avoid unnecessary interruptions.');
   else if (p.warning === 'snacks') parts.push('Their brain warning label is "needs snacks before strategy" - when they stall, check basic needs before building a plan.');
@@ -12803,16 +13643,12 @@ function _onbModuleReady(id){
   return def.required.every(k=>!!cfg[k]);
 }
 function _onbAvatarArtHtml(a) {
-  if (a && a.id === 'frog-pilot') return '<div class="caro-avatar-placeholder">FROG<br>PILOT<br><span style="font-size:10px;opacity:.7;">COMING SOON</span></div>';
   const src = (a && a.src) || 'assets/caroline.gif';
   const alt = (a && a.title) || 'Avatar';
   return `<img src="${src}" alt="${alt}">`;
 }
 function _onbMaybeApplyAvatarDefaultName(avatarId) {
-  const persona = getAvatarPersona(avatarId);
-  const defaultNames = Object.values(AVATAR_PERSONAS).map(p => p.defaultName);
-  const current = String(onbState.config.aiName || '').trim();
-  if (!current || defaultNames.includes(current)) onbState.config.aiName = persona.defaultName;
+  normalizeAvatarId(avatarId);
 }
 function hasOnboardingMemory(source = S){
   const d = source || {};
@@ -12981,6 +13817,7 @@ function startBootSequence(){
   onbState.aiNameReply = '';
   onbState.zipReply = '';
   onbState.avatarId = normalizeAvatarId(localStorage.getItem('caroline_avatar_id') || onbState.avatarId || 'pilot');
+  onbState.personalityStyle = normalizePersonalityStyle(localStorage.getItem(PERSONALITY_STYLE_STORAGE_KEY) || onbState.personalityStyle || S.personalityStyle || onbState.avatarId);
   const overlay = document.getElementById('onboarding-overlay');
   if(!overlay) return;
   overlay.classList.add('show');
@@ -12995,7 +13832,7 @@ function startBootSequence(){
   const progressFill = document.getElementById('caro-boot-progress-fill');
   const avatar= document.getElementById('caro-boot-avatar');
   const a = ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
-  const persona = getAvatarPersona(a.id);
+  const persona = getPersonalityStylePersona(onbState.personalityStyle);
   avatar.src = a.src || 'assets/caroline.gif';
   log.innerHTML=''; ready.classList.add('hidden'); btn.classList.add('hidden');
   if(progressFill) progressFill.style.width = '0%';
@@ -13065,6 +13902,7 @@ async function skipBootOnboarding(){
       setupComplete: true,
       features: S.features,
       onboardingModules: S.onboardingModules || {},
+      personalityStyle: S.personalityStyle || currentPersonalityStyleId(),
       personalityPrompt: S.personalityPrompt || localStorage.getItem('caroline_personality_prompt') || '',
       userProfilePrompt: S.userProfilePrompt || localStorage.getItem('caroline_user_profile_prompt') || ''
     }, 5000);
@@ -13155,7 +13993,12 @@ function _onbTranscript(){
       msgs.push({role:'ai', text:_onbPrompt(q)});
       const a=ONB_AVATARS.find(x=>x.id===onbState.avatarId)||ONB_AVATARS[0];
       msgs.push({role:'you', text:a.title});
-      msgs.push({role:'ai', text:'Okay. '+a.title+' it is.'});
+      msgs.push({role:'ai', text:'Okay. '+a.title+' it is. That changes the face, not the soul.'});
+    } else if(q.type==='personality-style'){
+      msgs.push({role:'ai', text:_onbPrompt(q)});
+      const persona = getPersonalityStylePersona(onbState.personalityStyle);
+      msgs.push({role:'you', text:persona.title + ' style'});
+      msgs.push({role:'ai', text:'Got it. I can keep that vibe even if the avatar changes.'});
     } else if(q.type==='widgets'){
       msgs.push({role:'ai', text:_onbPrompt(q)});
       const on=ONB_WIDGETS.filter(w=>onbState.config.widgets?.[w.id] !== false).map(w=>w.title);
@@ -13293,6 +14136,18 @@ function renderChatStep(){
     });
     response.appendChild(grid);
 
+  } else if(q.type==='personality-style'){
+    const grid=document.createElement('div'); grid.className='caro-avatar-grid';
+    AVATAR_ORDER.forEach(id=>{
+      const persona = getPersonalityStylePersona(id);
+      const card=document.createElement('div');
+      card.className='caro-avatar-card'+(normalizePersonalityStyle(onbState.personalityStyle)===id?' active':'');
+      card.innerHTML=`<h4>${persona.title}</h4><p>${persona.summary}</p>`;
+      card.onclick=()=>{ onbState.personalityStyle=normalizePersonalityStyle(id); localStorage.setItem(PERSONALITY_STYLE_STORAGE_KEY,onbState.personalityStyle); renderChatStep(); };
+      grid.appendChild(card);
+    });
+    response.appendChild(grid);
+
   } else if(q.type==='widgets'){
     const grid=document.createElement('div'); grid.className='caro-module-grid';
     if(!onbState.config.widgets) onbState.config.widgets = Object.assign({}, FEATURE_DEFAULTS);
@@ -13395,11 +14250,12 @@ function renderChatStep(){
       const enabled = onbState.config.widgets?.[widget.id] !== false;
       return `<li>${widget.title}: ${enabled?'Visible':'Hidden'}</li>`;
     }).join('');
+    const stylePersona = getPersonalityStylePersona(onbState.personalityStyle);
     grid.innerHTML=`
       <div class="caro-summary-card"><h4>Identity</h4><p>${onbState.config.userName||'Friend'} ↔ ${onbState.config.aiName||'Caroline'}<br>Place ${onbState.config.zipCode||'—'} · ${onbState.config.location||'Location —'}<br>${onbState.config.timezone||'Timezone —'} · Host ${onbState.config.host||'—'}</p></div>
       <div class="caro-summary-card"><h4>Display</h4><p>Touch mode: ${onbState.config.touchMode === true ? 'On' : 'Off'}<br>Recent conversation can expand from the bottom tray.</p></div>
-      <div class="caro-summary-card"><h4>Personality</h4><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
-      <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}<br>${getAvatarPersona(a.id).summary}</p></div>
+      <div class="caro-summary-card"><h4>Personality</h4><p>${stylePersona.title}: ${stylePersona.summary}</p><ul>${Object.entries(labels).map(([k,l])=>`<li>${l}: ${onbState.personality[k]?_onbTitleCase(onbState.personality[k]):'—'}</li>`).join('')}</ul></div>
+      <div class="caro-summary-card"><h4>Avatar</h4><p>${a.title}<br>Visual avatar only.</p></div>
       <div class="caro-summary-card"><h4>Widgets</h4><ul>${wList}</ul></div>
       <div class="caro-summary-card"><h4>Integrations</h4><ul>${mList}</ul></div>`;
     response.appendChild(grid);
@@ -13427,6 +14283,7 @@ async function finalizeOnboarding(){
   }
   const _avIdx = ONB_AVATARS.findIndex(a=>a.id===onbState.avatarId);
   S.avatar = _avIdx >= 0 ? _avIdx : 0;
+  S.personalityStyle = normalizePersonalityStyle(onbState.personalityStyle || S.personalityStyle || onbState.avatarId);
   S.openrouterKey    = onbState.config.modules.aiCore?.apiKey    || S.openrouterKey    || '';
   S.spotifyClientId  = onbState.config.modules.spotify?.clientId || S.spotifyClientId  || '';
   S.hueIp            = onbState.config.modules.hue?.bridgeIp     || S.hueIp            || '';
@@ -13435,6 +14292,7 @@ async function finalizeOnboarding(){
   S.features = f;
   S.onboardingModules = onbState.config.modules;
   localStorage.setItem('caroline_avatar_id', onbState.avatarId);
+  localStorage.setItem(PERSONALITY_STYLE_STORAGE_KEY, S.personalityStyle);
   _onbSavePersonality();
   // Auto-generate personality prompt from chips selections
   const _prompt = _onbBuildPrompt();
@@ -13463,6 +14321,7 @@ async function finalizeOnboarding(){
       hueIp: S.hueIp,
       hueKey: S.hueKey,
       touchMode: !!S.touchMode,
+      personalityStyle: S.personalityStyle,
       features: S.features,
       onboardingModules: S.onboardingModules,
       personalityPrompt: S.personalityPrompt,

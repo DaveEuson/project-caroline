@@ -75,16 +75,20 @@ http://localhost:8080/
 
 If the Deck is across the room, open `Settings` -> `Look & Feel` -> `Display preset` and choose `Steam Deck - 3 ft`, `Couch / small TV`, or `Wall kiosk`.
 
-## Steam Hub Widget
+## Steam Hub
 
-Turn on **Settings -> Widgets -> Steam Hub** to add a Deck-focused rail widget. The first pass gives you:
+Turn on **Settings -> Widgets -> Steam Hub** to add a Deck-focused topbar dropdown. It gives you:
 
-- Steam Library and Downloads shortcut buttons.
+- Steam Library, Downloads, Store, and Friends shortcut buttons.
+- **Detect** for the local Steam account already signed in on the Deck.
+- **Import installed games** from local Steam library manifests, no Steam Web API key required.
+- Local player name, installed-game count, recent play, last Caroline launch, and download/update progress when Steam exposes it on disk.
 - Custom game launch tiles using `appid | game name` lines.
 - Local recent-launch history for games started from Caroline.
-- Host-side recently played sync through `/steam/recent` when you add a Steam ID and Steam Web API key.
+- Optional host-side recently played sync through `/steam/recent` when you add a Steam ID and Steam Web API key.
 
 The widget uses Steam protocol links such as `steam://run/620`, so it is designed for trusted local Steam Deck use.
+Caroline does not reuse Steam passwords, cookies, or client auth tokens.
 
 ## Useful Commands
 
